@@ -228,6 +228,16 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   };
 
+  const handleAddToGitignore = async (pattern: string) => {
+    try {
+      await window.electronAPI.gitignore.add(pattern);
+      await loadFiles();
+      await refreshStatus();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
   const handleStageHunk = async (patch: string) => {
     try {
       await window.electronAPI.status.stageLines(patch);
@@ -452,6 +462,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               onDiscardAll={handleDiscardAll}
               showDiscard={true}
               onStageFile={(p) => stageFiles([p])}
+              onAddToGitignore={handleAddToGitignore}
             />
 
             {/* Stage / Unstage action buttons */}
@@ -522,6 +533,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               onDiscardAll={handleDiscardAll}
               showDiscard={false}
               onUnstageFile={(p) => unstageFiles([p])}
+              onAddToGitignore={handleAddToGitignore}
             />
           </div>
 
@@ -999,7 +1011,8 @@ const FileListPanel: React.FC<{
   showDiscard: boolean;
   onStageFile?: (path: string) => void;
   onUnstageFile?: (path: string) => void;
-}> = ({ title, count, files, selectedFile, selectedPaths, onSelectFile, onToggleSelect, accentColor, treeView, onToggleTreeView, onDiscard, onDiscardAll, showDiscard, onStageFile, onUnstageFile }) => {
+  onAddToGitignore: (pattern: string) => void;
+}> = ({ title, count, files, selectedFile, selectedPaths, onSelectFile, onToggleSelect, accentColor, treeView, onToggleTreeView, onDiscard, onDiscardAll, showDiscard, onStageFile, onUnstageFile, onAddToGitignore }) => {
   const [confirmDiscardAll, setConfirmDiscardAll] = useState(false);
   const [collapsedDirs, setCollapsedDirs] = useState<Set<string>>(new Set());
   const tree = useMemo(() => buildTree(files), [files]);
@@ -1114,6 +1127,7 @@ const FileListPanel: React.FC<{
                 onDiscard={onDiscard}
                 onStageFile={onStageFile}
                 onUnstageFile={onUnstageFile}
+                onAddToGitignore={onAddToGitignore}
               />
             ))
           : files.map((f) => (
@@ -1128,6 +1142,7 @@ const FileListPanel: React.FC<{
                 onDiscard={() => onDiscard([f.path])}
                 onStage={onStageFile ? () => onStageFile(f.path) : undefined}
                 onUnstage={onUnstageFile ? () => onUnstageFile(f.path) : undefined}
+                onAddToGitignore={onAddToGitignore}
               />
             ))}
       </div>
@@ -1151,7 +1166,8 @@ const TreeNodeRow: React.FC<{
   onDiscard: (paths: string[]) => void;
   onStageFile?: (path: string) => void;
   onUnstageFile?: (path: string) => void;
-}> = ({ node, depth, selectedFile, selectedPaths, onSelectFile, onToggleSelect, collapsedDirs, onToggleDir, showDiscard, onDiscard, onStageFile, onUnstageFile }) => {
+  onAddToGitignore: (pattern: string) => void;
+}> = ({ node, depth, selectedFile, selectedPaths, onSelectFile, onToggleSelect, collapsedDirs, onToggleDir, showDiscard, onDiscard, onStageFile, onUnstageFile, onAddToGitignore }) => {
   const isDir = !node.file && node.children.length > 0;
   const isCollapsed = collapsedDirs.has(node.path);
 
@@ -1211,6 +1227,7 @@ const TreeNodeRow: React.FC<{
               onDiscard={onDiscard}
               onStageFile={onStageFile}
               onUnstageFile={onUnstageFile}
+              onAddToGitignore={onAddToGitignore}
             />
           ))}
       </>
@@ -1237,6 +1254,7 @@ const TreeNodeRow: React.FC<{
       onDiscard={() => onDiscard([file.path])}
       onStage={onStageFile ? () => onStageFile(file.path) : undefined}
       onUnstage={onUnstageFile ? () => onUnstageFile(file.path) : undefined}
+      onAddToGitignore={onAddToGitignore}
     />
   );
 };
@@ -1254,7 +1272,8 @@ const FlatFileRow: React.FC<{
   onDiscard: () => void;
   onStage?: () => void;
   onUnstage?: () => void;
-}> = ({ file, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage }) => {
+  onAddToGitignore: (pattern: string) => void;
+}> = ({ file, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore }) => {
   const fileName = file.path.split("/").pop() || file.path;
   const dirPath = file.path.includes("/")
     ? file.path.slice(0, file.path.lastIndexOf("/"))
@@ -1274,6 +1293,7 @@ const FlatFileRow: React.FC<{
       onDiscard={onDiscard}
       onStage={onStage}
       onUnstage={onUnstage}
+      onAddToGitignore={onAddToGitignore}
     />
   );
 };
@@ -1294,7 +1314,8 @@ const FileRow: React.FC<{
   onDiscard: () => void;
   onStage?: () => void;
   onUnstage?: () => void;
-}> = ({ file, name, dirPath, depth, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage }) => {
+  onAddToGitignore: (pattern: string) => void;
+}> = ({ file, name, dirPath, depth, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore }) => {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -1505,6 +1526,7 @@ const FileRow: React.FC<{
           onShowInFolder={showInFolder}
           onCopyPath={copyPath}
           onCopyFileName={copyFileName}
+          onAddToGitignore={onAddToGitignore}
         />
       )}
     </>
@@ -1640,7 +1662,8 @@ const FileContextMenu: React.FC<{
   onShowInFolder: () => void;
   onCopyPath: () => void;
   onCopyFileName: () => void;
-}> = ({ x, y, isStaged, onClose, onStage, onUnstage, onDiscard, onOpenFile, onShowInFolder, onCopyPath, onCopyFileName }) => {
+  onAddToGitignore: (pattern: string) => void;
+}> = ({ x, y, file, isStaged, onClose, onStage, onUnstage, onDiscard, onOpenFile, onShowInFolder, onCopyPath, onCopyFileName, onAddToGitignore }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
@@ -1780,6 +1803,42 @@ const FileContextMenu: React.FC<{
       >
         <IconFolder size={13} /> Show in folder
       </button>
+
+      {separator}
+
+      {/* Gitignore actions */}
+      <button
+        style={menuItemStyle}
+        onClick={() => { onAddToGitignore(file.path); onClose(); }}
+        onMouseEnter={handleItemHover}
+        onMouseLeave={handleItemLeave}
+      >
+        <IconGitignore size={13} /> Add file to .gitignore
+      </button>
+      {file.path.includes("/") && (
+        <button
+          style={menuItemStyle}
+          onClick={() => { onAddToGitignore(file.path.slice(0, file.path.lastIndexOf("/")) + "/"); onClose(); }}
+          onMouseEnter={handleItemHover}
+          onMouseLeave={handleItemLeave}
+        >
+          <IconGitignore size={13} /> Add folder to .gitignore
+        </button>
+      )}
+      {(() => {
+        const ext = file.path.includes(".") ? file.path.slice(file.path.lastIndexOf(".")) : "";
+        if (!ext) return null;
+        return (
+          <button
+            style={menuItemStyle}
+            onClick={() => { onAddToGitignore("*" + ext); onClose(); }}
+            onMouseEnter={handleItemHover}
+            onMouseLeave={handleItemLeave}
+          >
+            <IconGitignore size={13} /> Add *{ext} to .gitignore
+          </button>
+        );
+      })()}
 
       {separator}
 
@@ -1979,5 +2038,12 @@ const IconBranch: React.FC<{ size?: number }> = ({ size = 14 }) => (
     <circle cx="18" cy="6" r="3" />
     <circle cx="6" cy="18" r="3" />
     <path d="M18 9a9 9 0 0 1-9 9" />
+  </svg>
+);
+
+const IconGitignore: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
   </svg>
 );

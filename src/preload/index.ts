@@ -210,6 +210,10 @@ const electronAPI = {
     list: (global?: boolean): Promise<Record<string, string>> =>
       ipcRenderer.invoke(IPC.GIT_CONFIG.LIST, global),
   },
+  gitignore: {
+    add: (pattern: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.GITIGNORE.ADD, pattern),
+  },
   shell: {
     openFile: (filePath: string): Promise<void> =>
       ipcRenderer.invoke(IPC.SHELL.OPEN_FILE, filePath),

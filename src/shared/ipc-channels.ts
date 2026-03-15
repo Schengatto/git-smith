@@ -108,6 +108,9 @@ export const IPC = {
     SET: "git:config:set",
     LIST: "git:config:list",
   },
+  GITIGNORE: {
+    ADD: "git:gitignore:add",
+  },
   SHELL: {
     OPEN_FILE: "shell:open-file",
     SHOW_IN_FOLDER: "shell:show-in-folder",

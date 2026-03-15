@@ -8,6 +8,7 @@ import { registerDiffHandlers } from "./git-diff.ipc";
 import { registerStashHandlers } from "./git-stash.ipc";
 import { registerBlameHandlers } from "./git-blame.ipc";
 import { registerShellHandlers } from "./shell.ipc";
+import { registerGitignoreHandlers } from "./git-gitignore.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -20,4 +21,5 @@ export function registerAllHandlers() {
   registerStashHandlers();
   registerBlameHandlers();
   registerShellHandlers();
+  registerGitignoreHandlers();
 }
