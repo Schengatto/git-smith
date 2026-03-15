@@ -25,6 +25,12 @@
   --peach: #ffbe94;
   --mauve: #d4b0ff;
   --mauve-dim: rgba(212, 176, 255, 0.14);
+  --diff-ins-bg: rgba(46, 160, 46, 0.22);
+  --diff-ins-bg-strong: rgba(46, 160, 46, 0.30);
+  --diff-ins-color: #e8ffe6;
+  --diff-del-bg: rgba(200, 50, 60, 0.22);
+  --diff-del-bg-strong: rgba(200, 50, 60, 0.30);
+  --diff-del-color: #ffe0e6;
 }
 
 /* High-contrast light theme */
@@ -51,6 +57,12 @@
   --peach: #d85000;
   --mauve: #7028d4;
   --mauve-dim: rgba(112, 40, 212, 0.1);
+  --diff-ins-bg: rgba(46, 138, 26, 0.12);
+  --diff-ins-bg-strong: rgba(46, 138, 26, 0.18);
+  --diff-ins-color: #2e8a1a;
+  --diff-del-bg: rgba(184, 10, 48, 0.12);
+  --diff-del-bg-strong: rgba(184, 10, 48, 0.18);
+  --diff-del-color: #b80a30;
 }
 
 @layer base {
@@ -159,7 +171,29 @@
   --dv-drag-over-border-color: var(--accent);
 }
 
-/* diff2html dark theme overrides */
+/* diff2html theme overrides — override diff2html's own CSS variables */
+.diff2html-wrapper {
+  --d2h-ins-bg-color: var(--diff-ins-bg);
+  --d2h-ins-border-color: transparent;
+  --d2h-ins-highlight-bg-color: var(--diff-ins-bg-strong);
+  --d2h-ins-label-color: var(--diff-ins-color);
+  --d2h-del-bg-color: var(--diff-del-bg);
+  --d2h-del-border-color: transparent;
+  --d2h-del-highlight-bg-color: var(--diff-del-bg-strong);
+  --d2h-del-label-color: var(--diff-del-color);
+  --d2h-bg-color: var(--surface-0);
+  --d2h-border-color: var(--border-subtle);
+  --d2h-file-header-bg-color: var(--surface-1);
+  --d2h-file-header-border-color: var(--border-subtle);
+  --d2h-empty-placeholder-bg-color: var(--surface-1);
+  --d2h-empty-placeholder-border-color: var(--border-subtle);
+  --d2h-info-bg-color: rgba(137, 180, 250, 0.06);
+  --d2h-info-border-color: var(--border-subtle);
+  --d2h-line-border-color: var(--border-subtle);
+  --d2h-change-del-color: var(--diff-del-bg);
+  --d2h-change-ins-color: var(--diff-ins-bg);
+}
+
 .diff2html-wrapper .d2h-wrapper {
   background: transparent;
 }
@@ -193,22 +227,22 @@
 
 .diff2html-wrapper .d2h-ins .d2h-code-linenumber,
 .diff2html-wrapper .d2h-ins .d2h-code-line-ctn {
-  background: rgba(166,227,161,0.12);
-  color: var(--green);
+  background: var(--diff-ins-bg);
+  color: var(--diff-ins-color);
 }
 
 .diff2html-wrapper .d2h-del .d2h-code-linenumber,
 .diff2html-wrapper .d2h-del .d2h-code-line-ctn {
-  background: rgba(243,139,168,0.12);
-  color: var(--red);
+  background: var(--diff-del-bg);
+  color: var(--diff-del-color);
 }
 
 .diff2html-wrapper .d2h-ins .d2h-code-linenumber {
-  background: rgba(166,227,161,0.18);
+  background: var(--diff-ins-bg-strong);
 }
 
 .diff2html-wrapper .d2h-del .d2h-code-linenumber {
-  background: rgba(243,139,168,0.18);
+  background: var(--diff-del-bg-strong);
 }
 
 .diff2html-wrapper .d2h-info .d2h-code-linenumber,
@@ -222,11 +256,11 @@
 }
 
 .diff2html-wrapper .d2h-ins .d2h-code-line-prefix {
-  color: var(--green);
+  color: var(--diff-ins-color);
 }
 
 .diff2html-wrapper .d2h-del .d2h-code-line-prefix {
-  color: var(--red);
+  color: var(--diff-del-color);
 }
 
 .diff2html-wrapper .d2h-diff-tbody tr {
