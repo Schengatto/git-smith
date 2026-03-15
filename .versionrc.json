@@ -1,0 +1,17 @@
+{
+  "types": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "refactor", "section": "Refactoring" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "test", "section": "Tests" },
+    { "type": "build", "section": "Build System" },
+    { "type": "ci", "section": "CI/CD" },
+    { "type": "style", "hidden": true },
+    { "type": "chore", "hidden": true },
+    { "type": "revert", "section": "Reverts" }
+  ],
+  "commitUrlFormat": "https://github.com/Schengatto/git-expansion/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/Schengatto/git-expansion/compare/{{previousTag}}...{{currentTag}}"
+}

@@ -1,0 +1,130 @@
+import React, { useEffect, useRef } from "react";
+import { useUIStore } from "../../store/ui-store";
+import {
+  DockviewReact,
+  DockviewReadyEvent,
+  IDockviewPanelProps,
+} from "dockview";
+import { MenuBar } from "./MenuBar";
+import { Toolbar } from "./Toolbar";
+import { StatusBar } from "./StatusBar";
+import { WelcomeScreen } from "./WelcomeScreen";
+import { useRepoStore } from "../../store/repo-store";
+import { useCommandLogStore } from "../../store/command-log-store";
+import { Sidebar } from "../sidebar/Sidebar";
+import { CommitGraphPanel } from "../graph/CommitGraphPanel";
+import { CommitDetailsPanel } from "../details/CommitDetailsPanel";
+import { CommandLogPanel } from "../command-log/CommandLogPanel";
+import { CloneDialog } from "../dialogs/CloneDialog";
+import { SettingsDialog } from "../dialogs/SettingsDialog";
+import { ScanDialog } from "../dialogs/ScanDialog";
+import { AboutDialog } from "../dialogs/AboutDialog";
+
+const components: Record<string, React.FC<IDockviewPanelProps>> = {
+  sidebar: () => <Sidebar />,
+  graph: () => <CommitGraphPanel />,
+  details: () => <CommitDetailsPanel />,
+  commandLog: () => <CommandLogPanel />,
+};
+
+export const AppShell: React.FC = () => {
+  const { repo, loadRecentRepos, openRepoDialog, initRepo } = useRepoStore();
+  const { addEntry } = useCommandLogStore();
+  const {
+    theme,
+    cloneDialogOpen, closeCloneDialog, openCloneDialog,
+    settingsDialogOpen, closeSettingsDialog, openSettingsDialog,
+    scanDialogOpen, closeScanDialog, openScanDialog,
+    aboutDialogOpen, closeAboutDialog, openAboutDialog,
+  } = useUIStore();
+  const dockviewApiRef = useRef<DockviewReadyEvent["api"] | null>(null);
+
+  useEffect(() => {
+    loadRecentRepos();
+    const unsub = window.electronAPI.on.commandLog(addEntry);
+    const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
+      useRepoStore.getState().openRepoDialog();
+    });
+
+    // Global keyboard shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+        e.preventDefault();
+        openRepoDialog();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "n" && !repo) {
+        e.preventDefault();
+        initRepo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      unsub();
+      unsubMenu();
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [addEntry, loadRecentRepos, openRepoDialog, initRepo, repo]);
+
+  const onReady = (event: DockviewReadyEvent) => {
+    dockviewApiRef.current = event.api;
+
+    const sidebarPanel = event.api.addPanel({
+      id: "sidebar",
+      component: "sidebar",
+      title: "Explorer",
+    });
+
+    const graphPanel = event.api.addPanel({
+      id: "graph",
+      component: "graph",
+      title: "Commit Graph",
+      position: { referencePanel: sidebarPanel, direction: "right" },
+    });
+
+    event.api.addPanel({
+      id: "details",
+      component: "details",
+      title: "Details",
+      position: { referencePanel: graphPanel, direction: "below" },
+    });
+
+    event.api.addPanel({
+      id: "commandLog",
+      component: "commandLog",
+      title: "Command Log",
+      position: { referencePanel: graphPanel, direction: "below" },
+    });
+
+    sidebarPanel.api.setSize({ width: 220 });
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-surface-0 text-text-primary">
+      <MenuBar
+        onOpenClone={openCloneDialog}
+        onOpenSettings={openSettingsDialog}
+        onOpenScan={openScanDialog}
+        onOpenAbout={openAboutDialog}
+      />
+      {repo && <Toolbar />}
+      <div className="flex-1 overflow-hidden">
+        {repo ? (
+          <DockviewReact
+            className={theme === "dark" ? "dockview-theme-dark" : "dockview-theme-light"}
+            onReady={onReady}
+            components={components}
+          />
+        ) : (
+          <WelcomeScreen />
+        )}
+      </div>
+      <StatusBar />
+
+      <CloneDialog open={cloneDialogOpen} onClose={closeCloneDialog} />
+      <SettingsDialog open={settingsDialogOpen} onClose={closeSettingsDialog} />
+      <ScanDialog open={scanDialogOpen} onClose={closeScanDialog} />
+      <AboutDialog open={aboutDialogOpen} onClose={closeAboutDialog} />
+    </div>
+  );
+};

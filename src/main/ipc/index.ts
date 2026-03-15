@@ -1,0 +1,23 @@
+import { registerRepoHandlers } from "./repo.ipc";
+import { registerStatusHandlers } from "./git-status.ipc";
+import { registerCommitHandlers } from "./git-commit.ipc";
+import { registerLogHandlers } from "./git-log.ipc";
+import { registerBranchHandlers } from "./git-branch.ipc";
+import { registerRemoteHandlers } from "./git-remote.ipc";
+import { registerDiffHandlers } from "./git-diff.ipc";
+import { registerStashHandlers } from "./git-stash.ipc";
+import { registerBlameHandlers } from "./git-blame.ipc";
+import { registerShellHandlers } from "./shell.ipc";
+
+export function registerAllHandlers() {
+  registerRepoHandlers();
+  registerStatusHandlers();
+  registerCommitHandlers();
+  registerLogHandlers();
+  registerBranchHandlers();
+  registerRemoteHandlers();
+  registerDiffHandlers();
+  registerStashHandlers();
+  registerBlameHandlers();
+  registerShellHandlers();
+}
