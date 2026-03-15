@@ -1,0 +1,365 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface-0: #141420;
+  --surface-1: #1a1a2e;
+  --surface-2: #252540;
+  --surface-3: #30304e;
+  --surface-hover: #282845;
+  --accent: #93bbff;
+  --accent-hover: #7eadff;
+  --accent-dim: rgba(147, 187, 255, 0.16);
+  --border: #4e5170;
+  --border-subtle: #3a3a5c;
+  --text-primary: #f0f2ff;
+  --text-secondary: #cdd4eb;
+  --text-muted: #9298b5;
+  --green: #b0eeab;
+  --green-dim: rgba(176, 238, 171, 0.16);
+  --yellow: #ffe6b0;
+  --yellow-dim: rgba(255, 230, 176, 0.16);
+  --red: #ff96b4;
+  --red-dim: rgba(255, 150, 180, 0.16);
+  --peach: #ffbe94;
+  --mauve: #d4b0ff;
+  --mauve-dim: rgba(212, 176, 255, 0.14);
+}
+
+/* High-contrast light theme */
+:root[data-theme="light"] {
+  --surface-0: #f7f8fc;
+  --surface-1: #ebedf4;
+  --surface-2: #dfe2ec;
+  --surface-3: #ced2e0;
+  --surface-hover: #d8dce8;
+  --accent: #1450d8;
+  --accent-hover: #0f3fc0;
+  --accent-dim: rgba(20, 80, 216, 0.1);
+  --border: #a8adc0;
+  --border-subtle: #c0c4d4;
+  --text-primary: #1e2038;
+  --text-secondary: #3e4158;
+  --text-muted: #6c7090;
+  --green: #2e8a1a;
+  --green-dim: rgba(46, 138, 26, 0.1);
+  --yellow: #b87308;
+  --yellow-dim: rgba(184, 115, 8, 0.1);
+  --red: #b80a30;
+  --red-dim: rgba(184, 10, 48, 0.1);
+  --peach: #d85000;
+  --mauve: #7028d4;
+  --mauve-dim: rgba(112, 40, 212, 0.1);
+}
+
+@layer base {
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dockview theme */
+.dockview-theme-dark {
+  --dv-activegroup-visiblepanel-tab-background-color: var(--surface-1);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--surface-0);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--surface-0);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--surface-0);
+  --dv-tab-divider-color: transparent;
+  --dv-group-view-background-color: var(--surface-0);
+  --dv-tabs-and-actions-container-background-color: var(--surface-0);
+  --dv-activegroup-visiblepanel-tab-color: var(--text-primary);
+  --dv-activegroup-hiddenpanel-tab-color: var(--text-muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--text-secondary);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--text-muted);
+  --dv-separator-border: var(--border-subtle);
+  --dv-paneview-header-border-color: var(--border-subtle);
+  --dv-drag-over-background-color: var(--accent-dim);
+  --dv-drag-over-border-color: var(--accent);
+}
+
+.dockview-theme-dark .tab,
+.dockview-theme-light .tab {
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  padding: 0 14px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.dockview-theme-dark .tab.active-tab,
+.dockview-theme-light .tab.active-tab {
+  border-bottom-color: var(--accent);
+}
+
+/* Hide close button on all panel tabs */
+.dockview-theme-dark .dv-default-tab-action,
+.dockview-theme-light .dv-default-tab-action {
+  display: none !important;
+}
+
+/* Dockview light theme overrides */
+.dockview-theme-light {
+  --dv-activegroup-visiblepanel-tab-background-color: var(--surface-1);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--surface-0);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--surface-0);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--surface-0);
+  --dv-tab-divider-color: transparent;
+  --dv-group-view-background-color: var(--surface-0);
+  --dv-tabs-and-actions-container-background-color: var(--surface-0);
+  --dv-activegroup-visiblepanel-tab-color: var(--text-primary);
+  --dv-activegroup-hiddenpanel-tab-color: var(--text-muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--text-secondary);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--text-muted);
+  --dv-separator-border: var(--border-subtle);
+  --dv-paneview-header-border-color: var(--border-subtle);
+  --dv-drag-over-background-color: var(--accent-dim);
+  --dv-drag-over-border-color: var(--accent);
+}
+
+/* diff2html dark theme overrides */
+.diff2html-wrapper .d2h-wrapper {
+  background: transparent;
+}
+
+.diff2html-wrapper .d2h-file-header,
+.diff2html-wrapper .d2h-file-wrapper {
+  border-color: var(--border-subtle);
+  background: var(--surface-0);
+}
+
+.diff2html-wrapper .d2h-file-header {
+  display: none; /* We use our own file header */
+}
+
+.diff2html-wrapper .d2h-code-linenumber,
+.diff2html-wrapper .d2h-code-line-ctn {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--surface-0);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+.diff2html-wrapper .d2h-code-linenumber {
+  color: var(--text-muted);
+  background: var(--surface-1);
+  border-right: 1px solid var(--border-subtle);
+  min-width: 40px;
+}
+
+.diff2html-wrapper .d2h-ins .d2h-code-linenumber,
+.diff2html-wrapper .d2h-ins .d2h-code-line-ctn {
+  background: rgba(166,227,161,0.12);
+  color: var(--green);
+}
+
+.diff2html-wrapper .d2h-del .d2h-code-linenumber,
+.diff2html-wrapper .d2h-del .d2h-code-line-ctn {
+  background: rgba(243,139,168,0.12);
+  color: var(--red);
+}
+
+.diff2html-wrapper .d2h-ins .d2h-code-linenumber {
+  background: rgba(166,227,161,0.18);
+}
+
+.diff2html-wrapper .d2h-del .d2h-code-linenumber {
+  background: rgba(243,139,168,0.18);
+}
+
+.diff2html-wrapper .d2h-info .d2h-code-linenumber,
+.diff2html-wrapper .d2h-info .d2h-code-line-ctn {
+  background: rgba(137,180,250,0.06);
+  color: var(--accent);
+}
+
+.diff2html-wrapper .d2h-code-line-prefix {
+  color: inherit;
+}
+
+.diff2html-wrapper .d2h-ins .d2h-code-line-prefix {
+  color: var(--green);
+}
+
+.diff2html-wrapper .d2h-del .d2h-code-line-prefix {
+  color: var(--red);
+}
+
+.diff2html-wrapper .d2h-diff-tbody tr {
+  border-color: var(--border-subtle);
+}
+
+.diff2html-wrapper .d2h-emptyplaceholder {
+  background: var(--surface-1);
+  border-color: var(--border-subtle);
+}
+
+.diff2html-wrapper table.d2h-diff-table {
+  font-size: 13px;
+}
+
+/* Utility classes */
+@layer components {
+  .toolbar-btn {
+    @apply flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium
+           transition-all duration-150 ease-out select-none;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  .toolbar-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+  }
+
+  .toolbar-btn:active {
+    background: var(--surface-3);
+    transform: translateY(0.5px);
+  }
+
+  .toolbar-btn-primary {
+    @apply toolbar-btn;
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .toolbar-btn-primary:hover {
+    background: rgba(137, 180, 250, 0.2);
+    color: var(--accent-hover);
+  }
+
+  .empty-state {
+    @apply h-full flex flex-col items-center justify-center gap-3 text-sm select-none;
+    color: var(--text-muted);
+  }
+
+  .empty-state-icon {
+    @apply w-10 h-10 rounded-xl flex items-center justify-center;
+    background: var(--surface-2);
+    color: var(--text-muted);
+  }
+
+  .section-header {
+    @apply flex items-center gap-1.5 px-3 py-1.5 cursor-pointer select-none text-xs font-semibold uppercase tracking-wider;
+    color: var(--text-muted);
+    transition: color 0.15s ease;
+  }
+
+  .section-header:hover {
+    color: var(--text-secondary);
+    background: var(--surface-hover);
+  }
+
+  .list-item {
+    @apply px-3 py-1 cursor-pointer truncate text-sm;
+    color: var(--text-primary);
+    transition: background 0.1s ease;
+  }
+
+  .list-item:hover {
+    background: var(--surface-hover);
+  }
+
+  .list-item-active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .badge {
+    @apply inline-flex items-center px-1.5 py-0 rounded text-[11px] font-medium leading-[18px] shrink-0;
+  }
+
+  .badge-head {
+    background: rgba(166, 227, 161, 0.15);
+    color: var(--green);
+  }
+
+  .badge-head-current {
+    background: rgba(137, 180, 250, 0.2);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(137, 180, 250, 0.3);
+  }
+
+  .badge-remote {
+    background: var(--mauve-dim);
+    color: var(--mauve);
+  }
+
+  .badge-tag {
+    background: var(--yellow-dim);
+    color: var(--yellow);
+  }
+
+  .meta-grid {
+    @apply grid gap-x-3 gap-y-1.5 text-xs;
+    grid-template-columns: auto 1fr;
+  }
+
+  .meta-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    padding-top: 1px;
+  }
+
+  .meta-value {
+    color: var(--text-primary);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace;
+    font-size: 0.9em;
+  }
+
+  /* Show action buttons on file row hover */
+  .file-item-row:hover .file-discard-btn,
+  .file-item-row:hover .file-toggle-btn {
+    opacity: 1 !important;
+  }
+}
