@@ -3,54 +3,54 @@
 @tailwind utilities;
 
 :root {
-  --surface-0: #181825;
-  --surface-1: #1e1e2e;
-  --surface-2: #272740;
-  --surface-3: #313150;
-  --surface-hover: #2a2a45;
-  --accent: #89b4fa;
-  --accent-hover: #74a8f7;
-  --accent-dim: rgba(137, 180, 250, 0.15);
-  --border: #45475a;
-  --border-subtle: #363655;
-  --text-primary: #e0e4f7;
-  --text-secondary: #b8bfd6;
-  --text-muted: #7f849c;
-  --green: #a6e3a1;
-  --green-dim: rgba(166, 227, 161, 0.15);
-  --yellow: #f9e2af;
-  --yellow-dim: rgba(249, 226, 175, 0.15);
-  --red: #f38ba8;
-  --red-dim: rgba(243, 139, 168, 0.15);
-  --peach: #fab387;
-  --mauve: #cba6f7;
-  --mauve-dim: rgba(203, 166, 247, 0.12);
+  --surface-0: #141420;
+  --surface-1: #1a1a2e;
+  --surface-2: #252540;
+  --surface-3: #30304e;
+  --surface-hover: #282845;
+  --accent: #93bbff;
+  --accent-hover: #7eadff;
+  --accent-dim: rgba(147, 187, 255, 0.16);
+  --border: #4e5170;
+  --border-subtle: #3a3a5c;
+  --text-primary: #f0f2ff;
+  --text-secondary: #cdd4eb;
+  --text-muted: #9298b5;
+  --green: #b0eeab;
+  --green-dim: rgba(176, 238, 171, 0.16);
+  --yellow: #ffe6b0;
+  --yellow-dim: rgba(255, 230, 176, 0.16);
+  --red: #ff96b4;
+  --red-dim: rgba(255, 150, 180, 0.16);
+  --peach: #ffbe94;
+  --mauve: #d4b0ff;
+  --mauve-dim: rgba(212, 176, 255, 0.14);
 }
 
-/* Catppuccin Latte (light theme) */
+/* High-contrast light theme */
 :root[data-theme="light"] {
-  --surface-0: #eff1f5;
-  --surface-1: #e6e9ef;
-  --surface-2: #dce0e8;
-  --surface-3: #ccd0da;
-  --surface-hover: #d6dae4;
-  --accent: #1e66f5;
-  --accent-hover: #1a5ce0;
-  --accent-dim: rgba(30, 102, 245, 0.1);
-  --border: #bcc0cc;
-  --border-subtle: #ccd0da;
-  --text-primary: #4c4f69;
-  --text-secondary: #6c6f85;
-  --text-muted: #9ca0b0;
-  --green: #40a02b;
-  --green-dim: rgba(64, 160, 43, 0.12);
-  --yellow: #df8e1d;
-  --yellow-dim: rgba(223, 142, 29, 0.12);
-  --red: #d20f39;
-  --red-dim: rgba(210, 15, 57, 0.1);
-  --peach: #fe640b;
-  --mauve: #8839ef;
-  --mauve-dim: rgba(136, 57, 239, 0.1);
+  --surface-0: #f7f8fc;
+  --surface-1: #ebedf4;
+  --surface-2: #dfe2ec;
+  --surface-3: #ced2e0;
+  --surface-hover: #d8dce8;
+  --accent: #1450d8;
+  --accent-hover: #0f3fc0;
+  --accent-dim: rgba(20, 80, 216, 0.1);
+  --border: #a8adc0;
+  --border-subtle: #c0c4d4;
+  --text-primary: #1e2038;
+  --text-secondary: #3e4158;
+  --text-muted: #6c7090;
+  --green: #2e8a1a;
+  --green-dim: rgba(46, 138, 26, 0.1);
+  --yellow: #b87308;
+  --yellow-dim: rgba(184, 115, 8, 0.1);
+  --red: #b80a30;
+  --red-dim: rgba(184, 10, 48, 0.1);
+  --peach: #d85000;
+  --mauve: #7028d4;
+  --mauve-dim: rgba(112, 40, 212, 0.1);
 }
 
 @layer base {
@@ -64,7 +64,7 @@
     height: 100%;
     overflow: hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: var(--surface-0);
@@ -122,7 +122,7 @@
 
 .dockview-theme-dark .tab,
 .dockview-theme-light .tab {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.01em;
   padding: 0 14px;
   border-bottom: 2px solid transparent;
@@ -177,7 +177,7 @@
 .diff2html-wrapper .d2h-code-linenumber,
 .diff2html-wrapper .d2h-code-line-ctn {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', monospace;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
   background: var(--surface-0);
   color: var(--text-secondary);
@@ -193,22 +193,22 @@
 
 .diff2html-wrapper .d2h-ins .d2h-code-linenumber,
 .diff2html-wrapper .d2h-ins .d2h-code-line-ctn {
-  background: rgba(166,227,161,0.08);
+  background: rgba(166,227,161,0.12);
   color: var(--green);
 }
 
 .diff2html-wrapper .d2h-del .d2h-code-linenumber,
 .diff2html-wrapper .d2h-del .d2h-code-line-ctn {
-  background: rgba(243,139,168,0.08);
+  background: rgba(243,139,168,0.12);
   color: var(--red);
 }
 
 .diff2html-wrapper .d2h-ins .d2h-code-linenumber {
-  background: rgba(166,227,161,0.12);
+  background: rgba(166,227,161,0.18);
 }
 
 .diff2html-wrapper .d2h-del .d2h-code-linenumber {
-  background: rgba(243,139,168,0.12);
+  background: rgba(243,139,168,0.18);
 }
 
 .diff2html-wrapper .d2h-info .d2h-code-linenumber,
@@ -239,7 +239,7 @@
 }
 
 .diff2html-wrapper table.d2h-diff-table {
-  font-size: 11px;
+  font-size: 13px;
 }
 
 /* Utility classes */

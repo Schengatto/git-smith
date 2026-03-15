@@ -6,6 +6,7 @@ import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
+import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
 import type { GraphRow } from "../../../shared/git-types";
 
 const LANE_WIDTH = 16;
@@ -42,6 +43,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [createBranchFrom, setCreateBranchFrom] = useState<string | null>(null);
   const [resetTarget, setResetTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
+  const [commitInfoHash, setCommitInfoHash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
@@ -118,6 +120,10 @@ export const CommitGraphPanel: React.FC = () => {
         setResetTarget({ hash: row.commit.hash, subject: row.commit.subject }),
     },
     { divider: true },
+    {
+      label: "View Commit Info",
+      onClick: () => setCommitInfoHash(row.commit.hash),
+    },
     {
       label: `Copy Hash (${row.commit.abbreviatedHash})`,
       onClick: () => navigator.clipboard.writeText(row.commit.hash),
@@ -311,6 +317,21 @@ export const CommitGraphPanel: React.FC = () => {
         commitHash={tagTarget?.hash || ""}
         commitSubject={tagTarget?.subject || ""}
       />
+
+      <CommitInfoDialog
+        open={!!commitInfoHash}
+        onClose={() => setCommitInfoHash(null)}
+        commitHash={commitInfoHash || ""}
+        onNavigateToCommit={(hash) => {
+          setCommitInfoHash(null);
+          selectCommit(hash);
+          const targetRows = searchQuery.trim() ? filteredRows : rows;
+          const idx = targetRows.findIndex((r) => r.commit.hash === hash);
+          if (idx !== -1) {
+            virtuosoRef.current?.scrollToIndex({ index: idx, behavior: "smooth", align: "center" });
+          }
+        }}
+      />
     </div>
   );
 };
@@ -350,6 +371,10 @@ const GraphRowItem: React.FC<{
       if (edge.type === "straight") {
         ctx.moveTo(fromX, 0);
         ctx.lineTo(toX, ROW_HEIGHT);
+      } else if (edge.type === "end") {
+        // Incoming-only: line from top of row to commit dot
+        ctx.moveTo(fromX, 0);
+        ctx.lineTo(toX, midY);
       } else {
         ctx.moveTo(fromX, midY);
         ctx.bezierCurveTo(fromX, midY + 10, toX, midY - 10, toX, ROW_HEIGHT);
@@ -428,17 +453,32 @@ const GraphRowItem: React.FC<{
         </span>
       </div>
       <div className="ml-auto flex items-center gap-3 px-3 shrink-0">
-        <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11 }}>
-          {commit.abbreviatedHash}
-        </span>
-        <span style={{ color: "var(--text-muted)", fontSize: 11, width: 64, textAlign: "right" }}>
+        <div className="flex items-center gap-1.5" style={{ width: 120, justifyContent: "flex-end" }}>
+          {commit.gravatarHash && (
+            <img
+              src={`https://www.gravatar.com/avatar/${commit.gravatarHash}?s=40&d=retro`}
+              alt=""
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                flexShrink: 0,
+              }}
+              loading="lazy"
+            />
+          )}
+          <span
+            className="truncate"
+            style={{ color: "var(--text-secondary)", fontSize: 11 }}
+          >
+            {commit.authorName}
+          </span>
+        </div>
+        <span style={{ color: "var(--text-muted)", fontSize: 11, width: 110, textAlign: "right" }}>
           {formatDate(commit.authorDate)}
         </span>
-        <span
-          className="truncate"
-          style={{ color: "var(--text-secondary)", fontSize: 11, width: 100, textAlign: "right" }}
-        >
-          {commit.authorName}
+        <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11 }}>
+          {commit.abbreviatedHash}
         </span>
       </div>
     </div>
@@ -454,10 +494,15 @@ function formatDate(iso: string): string {
     const diffMs = now.getTime() - d.getTime();
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffDays < 0) return "Future";
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMs < 0) return "Future";
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+
+    if (diffSec < 60) return `${diffSec} seconds ago`;
+    if (diffMin < 60) return `${diffMin} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
     if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
     return `${Math.floor(diffDays / 365)}y ago`;

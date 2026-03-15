@@ -31,6 +31,7 @@ export interface AppStoreSchema {
   recentRepos: string[];
   repoCategories: RepoCategory;
   recentCommitMessages: string[];
+  lastOpenedRepo: string | null;
   windowBounds: { width: number; height: number; x?: number; y?: number };
   settings: AppSettings;
 }
@@ -54,6 +55,7 @@ const defaults: AppStoreSchema = {
   recentRepos: [],
   repoCategories: {},
   recentCommitMessages: [],
+  lastOpenedRepo: null,
   windowBounds: { width: 1280, height: 800 },
   settings: { ...defaultSettings },
 };
@@ -92,7 +94,17 @@ export function addRecentRepo(repoPath: string): void {
   const store = readStore();
   store.recentRepos = store.recentRepos.filter((r) => r !== repoPath);
   store.recentRepos.unshift(repoPath);
-  store.recentRepos = store.recentRepos.slice(0, 20);
+  store.recentRepos = store.recentRepos.slice(0, 100);
+  writeStore(store);
+}
+
+export function getLastOpenedRepo(): string | null {
+  return readStore().lastOpenedRepo;
+}
+
+export function setLastOpenedRepo(repoPath: string | null): void {
+  const store = readStore();
+  store.lastOpenedRepo = repoPath;
   writeStore(store);
 }
 

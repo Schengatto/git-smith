@@ -63,7 +63,16 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
     const parents = commit.parentHashes.filter(Boolean);
 
     if (parents.length === 0) {
-      // Root commit — free the lane
+      // Root commit — draw incoming line if this commit was expected by a lane
+      if (laneIndex >= 0 && colorIndex !== undefined) {
+        edges.push({
+          fromLane: laneIndex,
+          toLane: laneIndex,
+          type: "end",
+          color: colorIndex,
+        });
+      }
+      // Free the lane
       activeLanes[laneIndex] = null;
     } else {
       // First parent continues in same lane

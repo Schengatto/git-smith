@@ -41,6 +41,16 @@ export const AppShell: React.FC = () => {
 
   useEffect(() => {
     loadRecentRepos();
+
+    // Auto-open last used repository
+    window.electronAPI.repo.getLastOpened().then((lastRepo) => {
+      if (lastRepo && !useRepoStore.getState().repo) {
+        useRepoStore.getState().openRepo(lastRepo).catch(() => {
+          // Repo no longer exists or can't be opened — ignore
+        });
+      }
+    });
+
     const unsub = window.electronAPI.on.commandLog(addEntry);
     const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
       useRepoStore.getState().openRepoDialog();
@@ -50,11 +60,11 @@ export const AppShell: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "o") {
         e.preventDefault();
-        openRepoDialog();
+        useRepoStore.getState().openRepoDialog();
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "n" && !repo) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "n" && !useRepoStore.getState().repo) {
         e.preventDefault();
-        initRepo();
+        useRepoStore.getState().initRepo();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -64,7 +74,8 @@ export const AppShell: React.FC = () => {
       unsubMenu();
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [addEntry, loadRecentRepos, openRepoDialog, initRepo, repo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onReady = (event: DockviewReadyEvent) => {
     dockviewApiRef.current = event.api;
@@ -82,7 +93,7 @@ export const AppShell: React.FC = () => {
       position: { referencePanel: sidebarPanel, direction: "right" },
     });
 
-    event.api.addPanel({
+    const detailsPanel = event.api.addPanel({
       id: "details",
       component: "details",
       title: "Details",
@@ -93,7 +104,7 @@ export const AppShell: React.FC = () => {
       id: "commandLog",
       component: "commandLog",
       title: "Command Log",
-      position: { referencePanel: graphPanel, direction: "below" },
+      position: { referencePanel: detailsPanel, direction: "within" },
     });
 
     sidebarPanel.api.setSize({ width: 220 });

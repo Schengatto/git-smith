@@ -7,8 +7,8 @@ export function registerStashHandlers() {
     return gitService.getStashList();
   });
 
-  ipcMain.handle(IPC.STASH.CREATE, async (_event, message?: string) => {
-    await gitService.stashCreate(message);
+  ipcMain.handle(IPC.STASH.CREATE, async (_event, message?: string, options?: { keepIndex?: boolean; includeUntracked?: boolean; staged?: boolean }) => {
+    await gitService.stashCreate(message, options);
   });
 
   ipcMain.handle(IPC.STASH.POP, async (_event, index?: number) => {

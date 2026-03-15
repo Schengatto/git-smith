@@ -4,6 +4,7 @@ import type {
   RepoInfo,
   GitStatus,
   CommitInfo,
+  CommitFullInfo,
   GraphRow,
   BranchInfo,
   StashEntry,
@@ -45,6 +46,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.REPO.SCAN_FOR_REPOS, rootPath, maxDepth ?? 4),
     openExternal: (url: string): Promise<void> =>
       ipcRenderer.invoke(IPC.REPO.OPEN_EXTERNAL, url),
+    getLastOpened: (): Promise<string | null> =>
+      ipcRenderer.invoke(IPC.REPO.GET_LAST_OPENED),
   },
   status: {
     get: (): Promise<GitStatus> => ipcRenderer.invoke(IPC.STATUS.GET),
@@ -74,6 +77,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip),
     details: (hash: string): Promise<CommitInfo> =>
       ipcRenderer.invoke(IPC.LOG.DETAILS, hash),
+    fullInfo: (hash: string): Promise<CommitFullInfo> =>
+      ipcRenderer.invoke(IPC.LOG.FULL_INFO, hash),
   },
   branch: {
     list: (): Promise<BranchInfo[]> => ipcRenderer.invoke(IPC.BRANCH.LIST),
@@ -169,8 +174,8 @@ const electronAPI = {
   },
   stash: {
     list: (): Promise<StashEntry[]> => ipcRenderer.invoke(IPC.STASH.LIST),
-    create: (message?: string): Promise<void> =>
-      ipcRenderer.invoke(IPC.STASH.CREATE, message),
+    create: (message?: string, options?: { keepIndex?: boolean; includeUntracked?: boolean; staged?: boolean }): Promise<void> =>
+      ipcRenderer.invoke(IPC.STASH.CREATE, message, options),
     pop: (index?: number): Promise<void> =>
       ipcRenderer.invoke(IPC.STASH.POP, index),
     apply: (index?: number): Promise<void> =>
@@ -189,6 +194,8 @@ const electronAPI = {
   submodule: {
     list: (): Promise<{ name: string; path: string; url: string; hash: string }[]> =>
       ipcRenderer.invoke(IPC.SUBMODULE.LIST),
+    add: (url: string, path?: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.SUBMODULE.ADD, url, path),
     update: (init?: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.SUBMODULE.UPDATE, init),
   },

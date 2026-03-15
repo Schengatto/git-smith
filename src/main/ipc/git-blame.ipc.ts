@@ -15,6 +15,10 @@ export function registerBlameHandlers() {
     return gitService.getSubmodules();
   });
 
+  ipcMain.handle(IPC.SUBMODULE.ADD, async (_event, url: string, path?: string) => {
+    await gitService.addSubmodule(url, path);
+  });
+
   ipcMain.handle(IPC.SUBMODULE.UPDATE, async (_event, init?: boolean) => {
     await gitService.submoduleUpdate(init);
   });

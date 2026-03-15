@@ -6,6 +6,7 @@ import { DropdownButton, DropdownEntry } from "./DropdownButton";
 import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
+import { StashDialog } from "../dialogs/StashDialog";
 
 const IconFolder = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -91,6 +92,12 @@ const IconCommit = () => (
     <circle cx="12" cy="12" r="4" />
     <line x1="1.05" y1="12" x2="7" y2="12" />
     <line x1="17.01" y1="12" x2="22.96" y2="12" />
+  </svg>
+);
+
+const IconStash = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
   </svg>
 );
 
@@ -284,6 +291,7 @@ export const Toolbar: React.FC = () => {
   const { openSettingsDialog } = useUIStore();
   const [commitOpen, setCommitOpen] = useState(false);
   const [remotesOpen, setRemotesOpen] = useState(false);
+  const [stashOpen, setStashOpen] = useState(false);
 
   const changedCount = status
     ? (status.staged.length || 0) +
@@ -369,6 +377,54 @@ export const Toolbar: React.FC = () => {
       sublabel: "git pull --rebase",
       icon: <IconRebase />,
       onClick: () => window.electronAPI.remote.pullRebase(),
+    },
+  ];
+
+  const handleStashQuick = async (opts?: { staged?: boolean }) => {
+    try {
+      await window.electronAPI.stash.create(undefined, opts);
+      await Promise.all([refreshStatus(), loadGraph()]);
+    } catch { /* stash dialog will handle errors */ }
+  };
+
+  const handleStashPop = async () => {
+    try {
+      await window.electronAPI.stash.pop(0);
+      await Promise.all([refreshStatus(), loadGraph()]);
+    } catch { /* ignore */ }
+  };
+
+  const stashItems: DropdownEntry[] = [
+    {
+      label: "Stash",
+      sublabel: "Stash all modified files",
+      icon: <IconStash />,
+      onClick: () => handleStashQuick(),
+    },
+    {
+      label: "Stash staged",
+      sublabel: "Stash only staged files",
+      icon: <IconStash />,
+      onClick: () => handleStashQuick({ staged: true }),
+    },
+    {
+      label: "Stash pop",
+      sublabel: "Restore the most recent stash",
+      icon: <IconArrowDown />,
+      onClick: handleStashPop,
+    },
+    { divider: true },
+    {
+      label: "Manage stashes...",
+      sublabel: "View and manage all stashes",
+      icon: <IconStash />,
+      onClick: () => setStashOpen(true),
+    },
+    {
+      label: "Create a stash...",
+      sublabel: "Stash with message and options",
+      icon: <IconStash />,
+      onClick: () => setStashOpen(true),
     },
   ];
 
@@ -478,6 +534,12 @@ export const Toolbar: React.FC = () => {
             style={{ width: 1, height: 18, background: "var(--border)" }}
           />
 
+          <DropdownButton
+            icon={<IconStash />}
+            label="Stash"
+            items={stashItems}
+          />
+
           <button
             onClick={() => setRemotesOpen(true)}
             className="toolbar-btn"
@@ -502,6 +564,7 @@ export const Toolbar: React.FC = () => {
 
       <CommitDialog open={commitOpen} onClose={() => setCommitOpen(false)} />
       <RemoteDialog open={remotesOpen} onClose={() => setRemotesOpen(false)} />
+      <StashDialog open={stashOpen} onClose={() => setStashOpen(false)} />
       <SetUpstreamDialog
         open={!!setUpstreamError}
         onClose={() => setSetUpstreamError(null)}

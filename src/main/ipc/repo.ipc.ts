@@ -13,12 +13,15 @@ import {
   renameCategory,
   deleteCategory,
   scanForRepos,
+  getLastOpenedRepo,
+  setLastOpenedRepo,
 } from "../store";
 
 export function registerRepoHandlers() {
   ipcMain.handle(IPC.REPO.OPEN, async (_event, path: string) => {
     const info = await gitService.openRepo(path);
     addRecentRepo(path);
+    setLastOpenedRepo(path);
     return info;
   });
 
@@ -33,6 +36,7 @@ export function registerRepoHandlers() {
     const path = result.filePaths[0];
     const info = await gitService.openRepo(path);
     addRecentRepo(path);
+    setLastOpenedRepo(path);
     return info;
   });
 
@@ -47,11 +51,17 @@ export function registerRepoHandlers() {
     const path = result.filePaths[0];
     const info = await gitService.initRepo(path);
     addRecentRepo(path);
+    setLastOpenedRepo(path);
     return info;
   });
 
   ipcMain.handle(IPC.REPO.CLOSE, () => {
     gitService.closeRepo();
+    setLastOpenedRepo(null);
+  });
+
+  ipcMain.handle(IPC.REPO.GET_LAST_OPENED, () => {
+    return getLastOpenedRepo();
   });
 
   ipcMain.handle(IPC.REPO.GET_RECENT, () => {

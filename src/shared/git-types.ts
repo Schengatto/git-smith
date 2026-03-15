@@ -31,6 +31,7 @@ export interface CommitInfo {
   committerDate: string;
   parentHashes: string[];
   refs: RefInfo[];
+  gravatarHash?: string;
 }
 
 export interface RefInfo {
@@ -49,7 +50,7 @@ export interface GraphRow {
 export interface GraphEdge {
   fromLane: number;
   toLane: number;
-  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right";
+  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right" | "end";
   color: number; // index into palette
 }
 
@@ -121,6 +122,26 @@ export interface DiffLine {
   content: string;
   oldLineNumber?: number;
   newLineNumber?: number;
+}
+
+export interface CommitFullInfo {
+  hash: string;
+  abbreviatedHash: string;
+  subject: string;
+  body: string;
+  authorName: string;
+  authorEmail: string;
+  authorDate: string;
+  committerName: string;
+  committerEmail: string;
+  committerDate: string;
+  parentHashes: string[];
+  childHashes: string[];
+  refs: RefInfo[];
+  gravatarHash?: string;
+  containedInBranches: string[];
+  containedInTags: string[];
+  derivesFromTag: string;
 }
 
 export interface CloneOptions {

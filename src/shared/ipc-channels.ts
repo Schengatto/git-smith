@@ -18,6 +18,7 @@ export const IPC = {
     BROWSE_DIRECTORY: "git:repo:browse-directory",
     SCAN_FOR_REPOS: "git:repo:scan-for-repos",
     OPEN_EXTERNAL: "git:repo:open-external",
+    GET_LAST_OPENED: "git:repo:get-last-opened",
   },
   STATUS: {
     GET: "git:status:get",
@@ -36,6 +37,7 @@ export const IPC = {
   LOG: {
     GRAPH: "git:log:graph",
     DETAILS: "git:log:details",
+    FULL_INFO: "git:log:full-info",
   },
   BRANCH: {
     LIST: "git:branch:list",
@@ -95,6 +97,7 @@ export const IPC = {
   },
   SUBMODULE: {
     LIST: "git:submodule:list",
+    ADD: "git:submodule:add",
     UPDATE: "git:submodule:update",
   },
   SETTINGS: {

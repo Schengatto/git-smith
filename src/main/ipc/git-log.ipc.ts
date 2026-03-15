@@ -15,4 +15,8 @@ export function registerLogHandlers() {
   ipcMain.handle(IPC.LOG.DETAILS, async (_event, hash: string) => {
     return gitService.getCommitDetails(hash);
   });
+
+  ipcMain.handle(IPC.LOG.FULL_INFO, async (_event, hash: string) => {
+    return gitService.getCommitFullInfo(hash);
+  });
 }

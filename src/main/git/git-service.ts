@@ -2,6 +2,7 @@ import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git";
 import { BrowserWindow } from "electron";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { IPC } from "../../shared/ipc-channels";
 import type {
   CommandLogEntry,
@@ -9,6 +10,7 @@ import type {
   GitStatus,
   FileStatus,
   CommitInfo,
+  CommitFullInfo,
   CommitFileInfo,
   BranchInfo,
   TagInfo,
@@ -307,6 +309,7 @@ export class GitService {
             // Body (%B) is field 9 — may contain \0 if somehow present, so rejoin remainder
             const body = (parts.slice(9).join("\0") || "").trim();
             const subject = parts[2] || "";
+            const email = (parts[4] || "").trim().toLowerCase();
             return {
               hash: parts[0] || "",
               abbreviatedHash: parts[1] || "",
@@ -318,6 +321,7 @@ export class GitService {
               committerDate: parts[6] || "",
               parentHashes: parts[7] ? parts[7].split(" ") : [],
               refs: parseRefs(parts[8] || ""),
+              gravatarHash: email ? crypto.createHash("md5").update(email).digest("hex") : undefined,
             };
           });
       }
@@ -339,6 +343,7 @@ export class GitService {
       ]);
 
       const parts = result.trim().split("\0");
+      const detailEmail = (parts[5] || "").trim().toLowerCase();
       return {
         hash: parts[0],
         abbreviatedHash: parts[1],
@@ -350,6 +355,80 @@ export class GitService {
         committerDate: parts[7],
         parentHashes: parts[8] ? parts[8].split(" ") : [],
         refs: parseRefs(parts[9] || ""),
+        gravatarHash: detailEmail ? crypto.createHash("md5").update(detailEmail).digest("hex") : undefined,
+      };
+    });
+  }
+
+  async getCommitFullInfo(hash: string): Promise<CommitFullInfo> {
+    const git = this.ensureRepo();
+    return this.run("git show / branch --contains / tag --contains", [hash], async () => {
+      // Get commit details including committer info
+      const FIELD_SEP = "%x00";
+      const format = [
+        "%H", "%h", "%s", "%b", "%an", "%ae", "%aI", "%cn", "%ce", "%cI", "%P", "%D",
+      ].join(FIELD_SEP);
+
+      const result = await git.raw(["show", hash, `--format=${format}`, "--no-patch"]);
+      const parts = result.trim().split("\0");
+      const email = (parts[5] || "").trim().toLowerCase();
+
+      // Get child commits (commits whose parent is this hash)
+      let childHashes: string[] = [];
+      try {
+        const childResult = await git.raw(["rev-list", "--children", "--all"]);
+        for (const line of childResult.trim().split("\n")) {
+          const tokens = line.trim().split(" ");
+          if (tokens[0] === hash && tokens.length > 1) {
+            childHashes = tokens.slice(1);
+            break;
+          }
+        }
+      } catch { /* no children */ }
+
+      // Get branches containing this commit
+      let containedInBranches: string[] = [];
+      try {
+        const branchResult = await git.raw(["branch", "-a", "--contains", hash]);
+        containedInBranches = branchResult
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .map((b) => b.replace(/^\*?\s+/, "").trim())
+          .filter(Boolean);
+      } catch { /* empty */ }
+
+      // Get tags containing this commit
+      let containedInTags: string[] = [];
+      try {
+        const tagResult = await git.raw(["tag", "--contains", hash]);
+        containedInTags = tagResult.trim().split("\n").filter(Boolean).map((t) => t.trim());
+      } catch { /* empty */ }
+
+      // Get nearest ancestor tag
+      let derivesFromTag = "";
+      try {
+        derivesFromTag = (await git.raw(["describe", "--tags", "--abbrev=0", hash])).trim();
+      } catch { /* no tag */ }
+
+      return {
+        hash: parts[0] || "",
+        abbreviatedHash: parts[1] || "",
+        subject: parts[2] || "",
+        body: (parts[3] || "").trim(),
+        authorName: parts[4] || "",
+        authorEmail: parts[5] || "",
+        authorDate: parts[6] || "",
+        committerName: parts[7] || "",
+        committerEmail: parts[8] || "",
+        committerDate: parts[9] || "",
+        parentHashes: parts[10] ? parts[10].split(" ") : [],
+        childHashes,
+        refs: parseRefs(parts[11] || ""),
+        gravatarHash: email ? crypto.createHash("md5").update(email).digest("hex") : undefined,
+        containedInBranches,
+        containedInTags,
+        derivesFromTag,
       };
     });
   }
@@ -497,9 +576,13 @@ export class GitService {
     });
   }
 
-  async stashCreate(message?: string): Promise<void> {
+  async stashCreate(message?: string, options?: { keepIndex?: boolean; includeUntracked?: boolean; staged?: boolean }): Promise<void> {
     const git = this.ensureRepo();
-    const args = message ? ["push", "-m", message] : ["push"];
+    const args = ["push"];
+    if (options?.staged) args.push("--staged");
+    if (options?.keepIndex) args.push("--keep-index");
+    if (options?.includeUntracked) args.push("--include-untracked");
+    if (message) args.push("-m", message);
     await this.run("git stash", args, () => git.stash(args));
   }
 
@@ -689,6 +772,15 @@ export class GitService {
       }
       return config;
     });
+  }
+
+  async addSubmodule(url: string, path?: string): Promise<void> {
+    const git = this.ensureRepo();
+    const args = ["add", url];
+    if (path) args.push(path);
+    await this.run("git submodule", args, () =>
+      git.raw(["submodule", ...args])
+    );
   }
 
   async submoduleUpdate(init = false): Promise<void> {
