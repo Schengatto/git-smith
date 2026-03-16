@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import type { BranchVisibility } from "../../store/graph-store";
 import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
