@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogInput, DialogActions, DialogError, DialogCheckbox } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
+import { runGitOperation } from "../../store/git-operation-store";
 
 interface BaseProps {
   open: boolean;
@@ -38,7 +39,7 @@ export const CreateBranchDialog: React.FC<BaseProps & { startPoint?: string }> =
     try {
       await window.electronAPI.branch.create(name.trim(), startPoint);
       if (checkout) {
-        await window.electronAPI.branch.checkout(name.trim());
+        await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(name.trim()));
       }
       await refresh();
       onClose();
@@ -200,7 +201,7 @@ export const MergeBranchDialog: React.FC<BaseProps & { branchName: string }> = (
     setLoading(true);
     setError(null);
     try {
-      const res = await window.electronAPI.branch.merge(branchName);
+      const res = await runGitOperation("Merge", () => window.electronAPI.branch.merge(branchName));
       setResult(res);
       await refresh();
       if (res === "success" || !res.includes("CONFLICT")) {
@@ -253,7 +254,7 @@ export const RebaseBranchDialog: React.FC<BaseProps & { onto: string }> = ({
     setLoading(true);
     setError(null);
     try {
-      await window.electronAPI.branch.rebase(onto);
+      await runGitOperation("Rebase", () => window.electronAPI.branch.rebase(onto));
       await refresh();
       onClose();
     } catch (err: unknown) {
@@ -302,7 +303,7 @@ export const CherryPickDialog: React.FC<BaseProps & { commitHash: string; commit
     setLoading(true);
     setError(null);
     try {
-      await window.electronAPI.branch.cherryPick(commitHash);
+      await runGitOperation("Cherry Pick", () => window.electronAPI.branch.cherryPick(commitHash));
       await refresh();
       onClose();
     } catch (err: unknown) {

@@ -3,6 +3,7 @@ import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import type { StaleRemoteBranch, CommitInfo } from "../../../shared/git-types";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
+import { runGitOperation } from "../../store/git-operation-store";
 
 interface Props {
   open: boolean;
@@ -70,7 +71,7 @@ export const StaleBranchesDialog: React.FC<Props> = ({ open, onClose }) => {
     setDeleting(branch.name);
     setError(null);
     try {
-      await window.electronAPI.branch.deleteRemote(branch.remote, branch.branchName);
+      await runGitOperation("Delete Remote Branch", () => window.electronAPI.branch.deleteRemote(branch.remote, branch.branchName));
       setDeleted((prev) => new Set(prev).add(branch.name));
       setConfirmDelete(null);
       // Refresh repo state

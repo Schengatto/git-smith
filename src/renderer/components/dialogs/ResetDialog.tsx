@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
+import { runGitOperation } from "../../store/git-operation-store";
 
 type ResetMode = "soft" | "mixed" | "hard";
 
@@ -52,7 +53,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
     setLoading(true);
     setError(null);
     try {
-      await window.electronAPI.branch.reset(commitHash, mode);
+      await runGitOperation(`Reset (${mode})`, () => window.electronAPI.branch.reset(commitHash, mode));
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {

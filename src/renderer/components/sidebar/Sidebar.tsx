@@ -13,6 +13,7 @@ import { CreateStashDialog } from "../dialogs/StashDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import { AddSubmoduleDialog } from "../dialogs/AddSubmoduleDialog";
+import { runGitOperation } from "../../store/git-operation-store";
 import { InteractiveRebaseDialog } from "../dialogs/InteractiveRebaseDialog";
 import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types";
 
@@ -213,7 +214,7 @@ export const Sidebar: React.FC = () => {
       items.push({
         label: "Checkout",
         onClick: async () => {
-          await window.electronAPI.branch.checkout(branch.name);
+          await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(branch.name));
           await Promise.all([useRepoStore.getState().refreshInfo(), loadGraph()]);
           loadData();
         },
@@ -275,7 +276,7 @@ export const Sidebar: React.FC = () => {
     {
       label: "Push to Remote",
       onClick: async () => {
-        await window.electronAPI.tag.push(tag.name);
+        await runGitOperation("Push Tag", () => window.electronAPI.tag.push(tag.name));
         await loadGraph();
         loadData();
       },
@@ -292,14 +293,14 @@ export const Sidebar: React.FC = () => {
     {
       label: "Pop",
       onClick: async () => {
-        await window.electronAPI.stash.pop(stash.index);
+        await runGitOperation("Stash Pop", () => window.electronAPI.stash.pop(stash.index));
         await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
       },
     },
     {
       label: "Apply",
       onClick: async () => {
-        await window.electronAPI.stash.apply(stash.index);
+        await runGitOperation("Stash Apply", () => window.electronAPI.stash.apply(stash.index));
         await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
       },
     },
@@ -620,7 +621,7 @@ export const Sidebar: React.FC = () => {
               const slashIdx = fullName.indexOf("/");
               const remote = fullName.substring(0, slashIdx);
               const branch = fullName.substring(slashIdx + 1);
-              await window.electronAPI.branch.deleteRemote(remote, branch);
+              await runGitOperation("Delete Remote Branch", () => window.electronAPI.branch.deleteRemote(remote, branch));
               await loadGraph();
               loadData();
             } catch (err) {
@@ -718,7 +719,7 @@ const BranchItem: React.FC<{
   const handleCheckout = async () => {
     if (branch.current) return;
     try {
-      await window.electronAPI.branch.checkout(branch.name);
+      await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(branch.name));
       useRepoStore.getState().refreshInfo();
     } catch {}
   };

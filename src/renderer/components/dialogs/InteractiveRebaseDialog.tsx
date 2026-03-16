@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import type { CommitInfo } from "../../../shared/git-types";
+import { runGitOperation } from "../../store/git-operation-store";
 
 type RebaseAction = "pick" | "reword" | "squash" | "fixup" | "edit" | "drop";
 
@@ -118,7 +119,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }
         hash: e.commit.hash,
       }));
 
-      await window.electronAPI.branch.rebaseInteractive(onto, fullTodo);
+      await runGitOperation("Interactive Rebase", () => window.electronAPI.branch.rebaseInteractive(onto, fullTodo));
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {

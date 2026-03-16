@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { HunkStagingView } from "./HunkStagingView";
+import { runGitOperation } from "../../store/git-operation-store";
 import type { GitStatus } from "../../../shared/git-types";
 
 interface Props {
@@ -275,15 +276,17 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         await window.electronAPI.status.unstage(toUnstage);
       }
 
-      if (amend) {
-        await window.electronAPI.commit.amend(message.trim());
-      } else {
-        await window.electronAPI.commit.create(message.trim());
-      }
+      await runGitOperation(amend ? "Amend" : "Commit", async () => {
+        if (amend) {
+          await window.electronAPI.commit.amend(message.trim());
+        } else {
+          await window.electronAPI.commit.create(message.trim());
+        }
+      });
 
       if (andPush) {
         try {
-          await window.electronAPI.remote.push();
+          await runGitOperation("Push", () => window.electronAPI.remote.push());
         } catch (pushErr: unknown) {
           setError(`Committed but push failed: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`);
           await Promise.all([refreshStatus(), refreshInfo(), loadGraph()]);
@@ -304,7 +307,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   const handleStash = async () => {
     setCommitDropdownOpen(false);
     try {
-      await window.electronAPI.stash.create();
+      await runGitOperation("Stash", () => window.electronAPI.stash.create());
       await Promise.all([loadFiles(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
@@ -323,7 +326,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     try {
       await window.electronAPI.branch.create(newBranchName.trim());
       if (checkoutAfterCreate) {
-        await window.electronAPI.branch.checkout(newBranchName.trim());
+        await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(newBranchName.trim()));
         await refreshInfo();
       }
       setCreateBranchOpen(false);

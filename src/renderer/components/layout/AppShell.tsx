@@ -21,6 +21,8 @@ import { SettingsDialog } from "../dialogs/SettingsDialog";
 import { ScanDialog } from "../dialogs/ScanDialog";
 import { AboutDialog } from "../dialogs/AboutDialog";
 import { StaleBranchesDialog } from "../dialogs/StaleBranchesDialog";
+import { GitOperationLogDialog } from "../dialogs/GitOperationLogDialog";
+import { useGitOperationStore } from "../../store/git-operation-store";
 
 const components: Record<string, React.FC<IDockviewPanelProps>> = {
   sidebar: () => <Sidebar />,
@@ -62,7 +64,10 @@ export const AppShell: React.FC = () => {
     loadRecentRepos();
     setInitializing(false);
 
-    const unsub = window.electronAPI.on.commandLog(addEntry);
+    const unsub = window.electronAPI.on.commandLog((entry) => {
+      addEntry(entry);
+      useGitOperationStore.getState().addEntry(entry);
+    });
     const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
       useRepoStore.getState().openRepoDialog();
     });
@@ -202,6 +207,7 @@ export const AppShell: React.FC = () => {
       <ScanDialog open={scanDialogOpen} onClose={closeScanDialog} />
       <AboutDialog open={aboutDialogOpen} onClose={closeAboutDialog} />
       <StaleBranchesDialog open={staleBranchesDialogOpen} onClose={closeStaleBranchesDialog} />
+      <GitOperationLogDialog />
     </div>
   );
 };
