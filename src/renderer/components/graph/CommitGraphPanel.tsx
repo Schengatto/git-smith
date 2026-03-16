@@ -811,7 +811,7 @@ const GraphRowItem: React.FC<{
         </span>
       </div>
       <div className="ml-auto flex items-center gap-3 px-3 shrink-0">
-        <div className="flex items-center gap-1.5" style={{ width: 120, justifyContent: "flex-end" }}>
+        <div className="flex items-center gap-1.5" style={{ width: 120 }}>
           {commit.gravatarHash && (
             <img
               src={`https://www.gravatar.com/avatar/${commit.gravatarHash}?s=40&d=retro`}
