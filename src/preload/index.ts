@@ -10,6 +10,7 @@ import type {
   RemoteInfo,
   CommitFileInfo,
   CommandLogEntry,
+  StaleRemoteBranch,
 } from "../shared/git-types";
 
 const electronAPI = {
@@ -130,6 +131,10 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK, hash),
     reset: (hash: string, mode: "soft" | "mixed" | "hard"): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.RESET, hash, mode),
+    staleRemote: (olderThanDays: number): Promise<StaleRemoteBranch[]> =>
+      ipcRenderer.invoke(IPC.BRANCH.STALE_REMOTE, olderThanDays),
+    remoteCommits: (remoteBranch: string, maxCount?: number): Promise<CommitInfo[]> =>
+      ipcRenderer.invoke(IPC.BRANCH.REMOTE_COMMITS, remoteBranch, maxCount),
   },
   tag: {
     list: (): Promise<{ name: string; hash: string }[]> =>

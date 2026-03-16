@@ -16,6 +16,7 @@ import type {
   TagInfo,
   StashEntry,
   RemoteInfo,
+  StaleRemoteBranch,
 } from "../../shared/git-types";
 
 let idCounter = 0;
@@ -1065,6 +1066,77 @@ export class GitService {
             deletions,
           };
         });
+    });
+  }
+
+  async getStaleRemoteBranches(olderThanDays: number): Promise<StaleRemoteBranch[]> {
+    const git = this.ensureRepo();
+    return this.run("git branch", ["-r", "--sort=committerdate"], async () => {
+      // Get remote branches with last commit info
+      const raw = await git.raw([
+        "for-each-ref",
+        "--sort=committerdate",
+        "--format=%(refname:short)%09%(committerdate:iso8601)%09%(objectname:short)%09%(subject)%09%(authorname)",
+        "refs/remotes/",
+      ]);
+      if (!raw.trim()) return [];
+
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - olderThanDays);
+
+      const results: StaleRemoteBranch[] = [];
+      for (const line of raw.trim().split("\n")) {
+        const [fullName, dateStr, hash, subject, author] = line.split("\t");
+        if (!fullName || fullName.endsWith("/HEAD")) continue;
+
+        const commitDate = new Date(dateStr);
+        if (commitDate >= cutoff) continue;
+
+        // Split "origin/branch-name" into remote and branch
+        const slashIdx = fullName.indexOf("/");
+        const remote = fullName.substring(0, slashIdx);
+        const branchName = fullName.substring(slashIdx + 1);
+
+        results.push({
+          name: fullName,
+          remote,
+          branchName,
+          lastCommitHash: hash,
+          lastCommitDate: dateStr,
+          lastCommitSubject: subject || "",
+          lastCommitAuthor: author || "",
+        });
+      }
+      return results;
+    });
+  }
+
+  async getRemoteBranchCommits(remoteBranch: string, maxCount = 20): Promise<CommitInfo[]> {
+    const git = this.ensureRepo();
+    return this.run("git log", [remoteBranch, `-${maxCount}`], async () => {
+      const format = [
+        "%H", "%h", "%s", "%b", "%an", "%ae", "%aI", "%cI", "%P", "%D",
+      ].join("%x00");
+      const raw = await git.raw([
+        "log", remoteBranch, `--max-count=${maxCount}`,
+        `--format=${format}`,
+      ]);
+      if (!raw.trim()) return [];
+      return raw.trim().split("\n").map((line) => {
+        const parts = line.split("\x00");
+        return {
+          hash: parts[0],
+          abbreviatedHash: parts[1],
+          subject: parts[2],
+          body: parts[3],
+          authorName: parts[4],
+          authorEmail: parts[5],
+          authorDate: parts[6],
+          committerDate: parts[7],
+          parentHashes: parts[8] ? parts[8].split(" ") : [],
+          refs: parseRefs(parts[9] || ""),
+        };
+      });
     });
   }
 

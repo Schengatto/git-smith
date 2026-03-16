@@ -144,6 +144,16 @@ export interface CommitFullInfo {
   derivesFromTag: string;
 }
 
+export interface StaleRemoteBranch {
+  name: string; // e.g. "origin/feature-old"
+  remote: string; // e.g. "origin"
+  branchName: string; // e.g. "feature-old"
+  lastCommitHash: string;
+  lastCommitDate: string;
+  lastCommitSubject: string;
+  lastCommitAuthor: string;
+}
+
 export interface CloneOptions {
   url: string;
   destination: string;

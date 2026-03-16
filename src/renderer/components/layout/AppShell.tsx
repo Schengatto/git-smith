@@ -20,6 +20,7 @@ import { CloneDialog } from "../dialogs/CloneDialog";
 import { SettingsDialog } from "../dialogs/SettingsDialog";
 import { ScanDialog } from "../dialogs/ScanDialog";
 import { AboutDialog } from "../dialogs/AboutDialog";
+import { StaleBranchesDialog } from "../dialogs/StaleBranchesDialog";
 
 const components: Record<string, React.FC<IDockviewPanelProps>> = {
   sidebar: () => <Sidebar />,
@@ -37,6 +38,7 @@ export const AppShell: React.FC = () => {
     settingsDialogOpen, closeSettingsDialog, openSettingsDialog,
     scanDialogOpen, closeScanDialog, openScanDialog,
     aboutDialogOpen, closeAboutDialog, openAboutDialog,
+    staleBranchesDialogOpen, closeStaleBranchesDialog, openStaleBranchesDialog,
   } = useUIStore();
   const dockviewApiRef = useRef<DockviewApi | null>(null);
   const layoutSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -174,6 +176,7 @@ export const AppShell: React.FC = () => {
         onOpenSettings={openSettingsDialog}
         onOpenScan={openScanDialog}
         onOpenAbout={openAboutDialog}
+        onOpenStaleBranches={openStaleBranchesDialog}
       />
       {repo && <Toolbar />}
       <div className="flex-1 overflow-hidden">
@@ -198,6 +201,7 @@ export const AppShell: React.FC = () => {
       <SettingsDialog open={settingsDialogOpen} onClose={closeSettingsDialog} />
       <ScanDialog open={scanDialogOpen} onClose={closeScanDialog} />
       <AboutDialog open={aboutDialogOpen} onClose={closeAboutDialog} />
+      <StaleBranchesDialog open={staleBranchesDialogOpen} onClose={closeStaleBranchesDialog} />
     </div>
   );
 };

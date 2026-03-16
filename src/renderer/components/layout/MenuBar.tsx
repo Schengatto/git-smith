@@ -171,7 +171,8 @@ export const MenuBar: React.FC<{
   onOpenSettings: () => void;
   onOpenScan: () => void;
   onOpenAbout: () => void;
-}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout }) => {
+  onOpenStaleBranches: () => void;
+}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout, onOpenStaleBranches }) => {
   const { repo, openRepoDialog, initRepo } = useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -262,6 +263,12 @@ export const MenuBar: React.FC<{
               );
             }
           },
+        },
+        { divider: true },
+        {
+          label: "Stale remote branches...",
+          disabled: !hasRepo,
+          onClick: () => onOpenStaleBranches(),
         },
         { divider: true },
         {

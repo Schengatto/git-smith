@@ -84,6 +84,20 @@ export function registerBranchHandlers() {
     }
   );
 
+  ipcMain.handle(
+    IPC.BRANCH.STALE_REMOTE,
+    async (_event, olderThanDays: number) => {
+      return gitService.getStaleRemoteBranches(olderThanDays);
+    }
+  );
+
+  ipcMain.handle(
+    IPC.BRANCH.REMOTE_COMMITS,
+    async (_event, remoteBranch: string, maxCount?: number) => {
+      return gitService.getRemoteBranchCommits(remoteBranch, maxCount);
+    }
+  );
+
   // Tag handlers
   ipcMain.handle(IPC.TAG.LIST, async () => {
     return gitService.getTags();

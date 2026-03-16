@@ -57,6 +57,8 @@ export const IPC = {
     REBASE_IN_PROGRESS: "git:branch:rebase-in-progress",
     CHERRY_PICK: "git:branch:cherry-pick",
     RESET: "git:branch:reset",
+    STALE_REMOTE: "git:branch:stale-remote",
+    REMOTE_COMMITS: "git:branch:remote-commits",
   },
   TAG: {
     LIST: "git:tag:list",
