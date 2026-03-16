@@ -50,6 +50,13 @@ export function registerBranchHandlers() {
     return gitService.merge(branch);
   });
 
+  ipcMain.handle(
+    IPC.BRANCH.MERGE_OPTIONS,
+    async (_event, options: import("../../shared/git-types").MergeOptions) => {
+      return gitService.mergeWithOptions(options);
+    }
+  );
+
   ipcMain.handle(IPC.BRANCH.REBASE, async (_event, onto: string) => {
     await gitService.rebase(onto);
   });

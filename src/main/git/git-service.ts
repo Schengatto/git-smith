@@ -588,6 +588,25 @@ export class GitService {
     });
   }
 
+  async mergeWithOptions(options: import("../../shared/git-types").MergeOptions): Promise<string> {
+    const git = this.ensureRepo();
+    const args: string[] = [];
+
+    if (options.mergeStrategy === "no-ff") args.push("--no-ff");
+    if (options.noCommit) args.push("--no-commit");
+    if (options.squash) args.push("--squash");
+    if (options.allowUnrelatedHistories) args.push("--allow-unrelated-histories");
+    if (options.log != null && options.log > 0) args.push(`--log=${options.log}`);
+    if (options.message) args.push("-m", options.message);
+
+    args.push(options.branch);
+
+    return this.run("git merge", args, async () => {
+      const result = await git.raw(["merge", ...args]);
+      return result;
+    });
+  }
+
   async rebase(onto: string): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git rebase", [onto], () => git.rebase([onto]));

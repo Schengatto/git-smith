@@ -9,6 +9,7 @@ import { CreateTagDialog } from "../dialogs/TagDialog";
 import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
 import { CommitDetailsDialog } from "../dialogs/CommitDetailsDialog";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
+import { MergeDialog } from "../dialogs/MergeDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo } from "../../../shared/git-types";
 
@@ -70,6 +71,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
   const [commitDetailsHash, setCommitDetailsHash] = useState<string | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -248,6 +250,20 @@ export const CommitGraphPanel: React.FC = () => {
             hash: row.commit.hash,
             subject: row.commit.subject,
           }),
+      });
+    }
+
+    // Merge into current branch — show branches/tags on this commit
+    const mergeableRefs = row.commit.refs.filter(
+      (r) => (r.type === "head" || r.type === "remote" || r.type === "tag") && !r.current
+    );
+    if (mergeableRefs.length > 0) {
+      items.push({
+        label: "Merge into current branch...",
+        children: mergeableRefs.map((ref) => ({
+          label: ref.name,
+          onClick: () => setMergeTarget(ref.name),
+        })),
       });
     }
 
@@ -699,6 +715,12 @@ export const CommitGraphPanel: React.FC = () => {
         refs={checkoutTarget?.refs ?? []}
         commitHash={checkoutTarget?.hash ?? ""}
         commitSubject={checkoutTarget?.subject ?? ""}
+      />
+
+      <MergeDialog
+        open={!!mergeTarget}
+        onClose={() => setMergeTarget(null)}
+        preselectedBranch={mergeTarget || undefined}
       />
 
       <ConfirmDeleteDialog

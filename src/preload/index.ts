@@ -12,6 +12,7 @@ import type {
   CommandLogEntry,
   CommandOutputLine,
   StaleRemoteBranch,
+  MergeOptions,
 } from "../shared/git-types";
 
 const electronAPI = {
@@ -115,6 +116,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.CHECKOUT_OPTIONS, ref, options),
     merge: (branch: string): Promise<string> =>
       ipcRenderer.invoke(IPC.BRANCH.MERGE, branch),
+    mergeWithOptions: (options: MergeOptions): Promise<string> =>
+      ipcRenderer.invoke(IPC.BRANCH.MERGE_OPTIONS, options),
     rebase: (onto: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE, onto),
     rebaseInteractive: (

@@ -161,6 +161,23 @@ export interface StaleRemoteBranch {
   lastCommitAuthor: string;
 }
 
+export interface MergeOptions {
+  /** Branch/ref to merge into the current branch */
+  branch: string;
+  /** "ff" = fast-forward if possible (default), "no-ff" = always create merge commit */
+  mergeStrategy: "ff" | "no-ff";
+  /** Do not commit the merge result (leave it staged) */
+  noCommit?: boolean;
+  /** Squash commits into a single change set */
+  squash?: boolean;
+  /** Allow merging branches with unrelated histories */
+  allowUnrelatedHistories?: boolean;
+  /** Include log messages from merged commits (number = how many) */
+  log?: number;
+  /** Custom merge commit message */
+  message?: string;
+}
+
 export interface CloneOptions {
   url: string;
   destination: string;

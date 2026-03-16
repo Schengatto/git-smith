@@ -50,6 +50,7 @@ export const IPC = {
     CHECKOUT: "git:branch:checkout",
     CHECKOUT_OPTIONS: "git:branch:checkout-options",
     MERGE: "git:branch:merge",
+    MERGE_OPTIONS: "git:branch:merge-options",
     REBASE: "git:branch:rebase",
     REBASE_INTERACTIVE: "git:branch:rebase-interactive",
     REBASE_COMMITS: "git:branch:rebase-commits",
