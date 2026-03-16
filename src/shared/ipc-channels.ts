@@ -127,6 +127,7 @@ export const IPC = {
   // Events pushed from main → renderer
   EVENTS: {
     COMMAND_LOG: "git:event:command-log",
+    COMMAND_OUTPUT: "git:event:command-output",
     REPO_CHANGED: "git:event:repo-changed",
     SCAN_PROGRESS: "git:event:scan-progress",
   },

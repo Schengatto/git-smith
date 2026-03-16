@@ -1,5 +1,12 @@
 import { create } from "zustand";
-import type { CommandLogEntry } from "../../shared/git-types";
+import type { CommandLogEntry, CommandOutputLine } from "../../shared/git-types";
+
+export interface OutputLine {
+  stream: "stdout" | "stderr";
+  text: string;
+  /** Which command entry this line belongs to */
+  entryId: string;
+}
 
 interface GitOperationState {
   /** Whether the operation log dialog is visible */
@@ -8,6 +15,8 @@ interface GitOperationState {
   label: string;
   /** Command log entries collected during the current operation */
   entries: CommandLogEntry[];
+  /** Output lines (stdout/stderr) collected during the current operation */
+  outputLines: OutputLine[];
   /** Whether the operation is still running */
   running: boolean;
   /** Error message if the operation failed */
@@ -19,6 +28,8 @@ interface GitOperationState {
   start: (label: string) => void;
   /** Feed a command log entry (called from the commandLog listener) */
   addEntry: (entry: CommandLogEntry) => void;
+  /** Feed an output line (called from the commandOutput listener) */
+  addOutputLine: (line: CommandOutputLine) => void;
   /** Mark the operation as completed (success or error) */
   finish: (error?: string) => void;
   /** Close the dialog */
@@ -29,6 +40,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
   open: false,
   label: "",
   entries: [],
+  outputLines: [],
   running: false,
   error: null,
   _autoCloseTimer: null,
@@ -40,6 +52,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
       open: true,
       label,
       entries: [],
+      outputLines: [],
       running: true,
       error: null,
       _autoCloseTimer: null,
@@ -59,13 +72,20 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
     });
   },
 
+  addOutputLine: (line: CommandOutputLine) => {
+    if (!get().open) return;
+    set((s) => ({
+      outputLines: [...s.outputLines, { stream: line.stream, text: line.text, entryId: line.id }],
+    }));
+  },
+
   finish: (error?: string) => {
     if (!error) {
       // Auto-close after 1.5s on success
       const timer = setTimeout(() => {
         const state = get();
         if (state.open && !state.error) {
-          set({ open: false, entries: [], running: false });
+          set({ open: false, entries: [], outputLines: [], running: false });
         }
       }, 1500);
       set({ running: false, error: null, _autoCloseTimer: timer });
@@ -77,7 +97,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
   close: () => {
     const prev = get()._autoCloseTimer;
     if (prev) clearTimeout(prev);
-    set({ open: false, entries: [], running: false, error: null, _autoCloseTimer: null });
+    set({ open: false, entries: [], outputLines: [], running: false, error: null, _autoCloseTimer: null });
   },
 }));
 

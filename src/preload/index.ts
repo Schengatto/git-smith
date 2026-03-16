@@ -10,6 +10,7 @@ import type {
   RemoteInfo,
   CommitFileInfo,
   CommandLogEntry,
+  CommandOutputLine,
   StaleRemoteBranch,
 } from "../shared/git-types";
 
@@ -263,6 +264,12 @@ const electronAPI = {
         callback(entry);
       ipcRenderer.on(IPC.EVENTS.COMMAND_LOG, handler);
       return () => ipcRenderer.removeListener(IPC.EVENTS.COMMAND_LOG, handler);
+    },
+    commandOutput: (callback: (line: CommandOutputLine) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, line: CommandOutputLine) =>
+        callback(line);
+      ipcRenderer.on(IPC.EVENTS.COMMAND_OUTPUT, handler);
+      return () => ipcRenderer.removeListener(IPC.EVENTS.COMMAND_OUTPUT, handler);
     },
     repoChanged: (callback: () => void) => {
       const handler = () => callback();

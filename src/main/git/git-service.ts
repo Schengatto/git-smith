@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { IPC } from "../../shared/ipc-channels";
 import type {
   CommandLogEntry,
+  CommandOutputLine,
   RepoInfo,
   GitStatus,
   FileStatus,
@@ -54,12 +55,43 @@ export class GitService {
     }
   }
 
+  private emitCommandOutput(line: CommandOutputLine) {
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send(IPC.EVENTS.COMMAND_OUTPUT, line);
+    }
+  }
+
+  /** ID of the currently running command (for associating output handler lines) */
+  private _currentRunId: string | null = null;
+
+  private setupOutputHandler() {
+    if (!this.git) return;
+    this.git.outputHandler((_command, stdout, stderr) => {
+      const bindStream = (stream: NodeJS.ReadableStream, name: "stdout" | "stderr") => {
+        stream.on("data", (data: Buffer) => {
+          const id = this._currentRunId;
+          if (!id) return;
+          const text = data.toString("utf-8");
+          // Split into lines and emit each non-empty line
+          for (const line of text.split(/\r?\n/)) {
+            if (line.length > 0) {
+              this.emitCommandOutput({ id, stream: name, text: line });
+            }
+          }
+        });
+      };
+      bindStream(stdout, "stdout");
+      bindStream(stderr, "stderr");
+    });
+  }
+
   private async run<T>(
     description: string,
     args: string[],
     fn: () => Promise<T>
   ): Promise<T> {
     const entry = this.logCommand(description, args);
+    this._currentRunId = entry.id;
     this.emitCommandLog(entry);
     const start = Date.now();
     try {
@@ -74,6 +106,8 @@ export class GitService {
       entry.error = err instanceof Error ? err.message : String(err);
       this.emitCommandLog(entry);
       throw err;
+    } finally {
+      this._currentRunId = null;
     }
   }
 
@@ -89,6 +123,7 @@ export class GitService {
       this.git = null;
       throw new Error(`Not a git repository: ${path}`);
     }
+    this.setupOutputHandler();
     this.repoPath = path;
     return this.getRepoInfo();
   }
@@ -103,6 +138,7 @@ export class GitService {
     const git = simpleGit(options);
     await git.init();
     this.git = git;
+    this.setupOutputHandler();
     this.repoPath = dirPath;
     return this.getRepoInfo();
   }

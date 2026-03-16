@@ -1,16 +1,29 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useGitOperationStore } from "../../store/git-operation-store";
+import type { OutputLine } from "../../store/git-operation-store";
+import type { CommandLogEntry } from "../../../shared/git-types";
 
 export const GitOperationLogDialog: React.FC = () => {
-  const { open, label, entries, running, error, close } = useGitOperationStore();
+  const { open, label, entries, outputLines, running, error, close } = useGitOperationStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when entries change
+  // Group output lines by entry id
+  const outputByEntry = useMemo(() => {
+    const map = new Map<string, OutputLine[]>();
+    for (const line of outputLines) {
+      const list = map.get(line.entryId);
+      if (list) list.push(line);
+      else map.set(line.entryId, [line]);
+    }
+    return map;
+  }, [outputLines]);
+
+  // Auto-scroll to bottom when entries or output change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [entries]);
+  }, [entries, outputLines]);
 
   if (!open) return null;
 
@@ -35,7 +48,7 @@ export const GitOperationLogDialog: React.FC = () => {
     >
       <div
         style={{
-          width: 560,
+          width: 600,
           maxWidth: "90vw",
           maxHeight: "70vh",
           borderRadius: 12,
@@ -112,7 +125,11 @@ export const GitOperationLogDialog: React.FC = () => {
             </div>
           )}
           {entries.map((entry) => (
-            <LogEntry key={entry.id} entry={entry} />
+            <LogEntryBlock
+              key={entry.id}
+              entry={entry}
+              outputLines={outputByEntry.get(entry.id) ?? []}
+            />
           ))}
         </div>
 
@@ -183,14 +200,13 @@ export const GitOperationLogDialog: React.FC = () => {
 
 /* ---------- Sub-components ---------- */
 
-import type { CommandLogEntry } from "../../../shared/git-types";
-
-const LogEntry: React.FC<{ entry: CommandLogEntry }> = ({ entry }) => {
+const LogEntryBlock: React.FC<{ entry: CommandLogEntry; outputLines: OutputLine[] }> = ({ entry, outputLines }) => {
   const hasFinished = entry.exitCode !== undefined;
   const isError = entry.exitCode !== undefined && entry.exitCode !== 0;
 
   return (
-    <div style={{ marginBottom: 4 }}>
+    <div style={{ marginBottom: 6 }}>
+      {/* Command line */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span style={{ color: "var(--accent)", fontWeight: 600 }}>$</span>
         <span style={{ color: "var(--text-primary)" }}>
@@ -207,7 +223,27 @@ const LogEntry: React.FC<{ entry: CommandLogEntry }> = ({ entry }) => {
           </span>
         )}
       </div>
-      {isError && entry.error && (
+
+      {/* Output lines (stdout/stderr from hooks, git progress, etc.) */}
+      {outputLines.length > 0 && (
+        <div style={{ paddingLeft: 16, marginTop: 2 }}>
+          {outputLines.map((line, i) => (
+            <div
+              key={i}
+              style={{
+                color: line.stream === "stderr" ? "var(--yellow)" : "var(--text-secondary)",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {line.text}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Error from the exception (shown when no output lines already show the error) */}
+      {isError && entry.error && outputLines.length === 0 && (
         <div style={{
           color: "var(--red)",
           paddingLeft: 16,

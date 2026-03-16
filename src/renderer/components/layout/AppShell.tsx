@@ -68,6 +68,9 @@ export const AppShell: React.FC = () => {
       addEntry(entry);
       useGitOperationStore.getState().addEntry(entry);
     });
+    const unsubOutput = window.electronAPI.on.commandOutput((line) => {
+      useGitOperationStore.getState().addOutputLine(line);
+    });
     const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
       useRepoStore.getState().openRepoDialog();
     });
@@ -87,6 +90,7 @@ export const AppShell: React.FC = () => {
 
     return () => {
       unsub();
+      unsubOutput();
       unsubMenu();
       window.removeEventListener("keydown", handleKeyDown);
       if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);

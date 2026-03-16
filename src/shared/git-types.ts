@@ -94,6 +94,13 @@ export interface CommandLogEntry {
   error?: string;
 }
 
+export interface CommandOutputLine {
+  /** Matches the CommandLogEntry.id this output belongs to */
+  id: string;
+  stream: "stdout" | "stderr";
+  text: string;
+}
+
 export interface CommitFileInfo {
   path: string;
   status: "added" | "modified" | "deleted" | "renamed" | "copied";
