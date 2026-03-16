@@ -7,6 +7,7 @@ import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
+import { CommitDetailsDialog } from "../dialogs/CommitDetailsDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo } from "../../../shared/git-types";
 
@@ -49,6 +50,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [commitInfoHash, setCommitInfoHash] = useState<string | null>(null);
   const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
+  const [commitDetailsHash, setCommitDetailsHash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -547,6 +549,7 @@ export const CommitGraphPanel: React.FC = () => {
               selected={selectedCommit?.hash === filteredRows[index].commit.hash}
               isHead={filteredRows[index].commit.hash === repo.headCommit}
               onClick={() => selectCommit(filteredRows[index].commit.hash)}
+              onDoubleClick={() => setCommitDetailsHash(filteredRows[index].commit.hash)}
               onContextMenu={(e) => handleContextMenu(e, filteredRows[index])}
             />
           )}
@@ -624,6 +627,12 @@ export const CommitGraphPanel: React.FC = () => {
         onCancel={() => setDeleteBranchTarget(null)}
       />
 
+      <CommitDetailsDialog
+        open={!!commitDetailsHash}
+        onClose={() => setCommitDetailsHash(null)}
+        commitHash={commitDetailsHash || ""}
+      />
+
       <ConfirmDeleteDialog
         open={!!deleteTagTarget}
         title="Delete Tag"
@@ -649,8 +658,9 @@ const GraphRowItem: React.FC<{
   selected: boolean;
   isHead: boolean;
   onClick: () => void;
+  onDoubleClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
-}> = React.memo(({ row, selected, isHead, onClick, onContextMenu }) => {
+}> = React.memo(({ row, selected, isHead, onClick, onDoubleClick, onContextMenu }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const graphWidth = Math.max((row.activeLaneCount + 2) * LANE_WIDTH, 32);
 
@@ -732,6 +742,7 @@ const GraphRowItem: React.FC<{
         if (!selected) e.currentTarget.style.background = "transparent";
       }}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
       <canvas
