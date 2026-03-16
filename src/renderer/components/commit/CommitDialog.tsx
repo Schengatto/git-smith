@@ -101,25 +101,15 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   const loadFiles = useCallback(async () => {
     try {
       const status: GitStatus = await window.electronAPI.status.get();
-      const all: ChangedFile[] = [];
-
-      for (const f of status.staged) {
-        all.push({ path: f.path, status: f.status, staged: true });
-      }
-      for (const f of status.unstaged) {
-        all.push({ path: f.path, status: f.status, staged: false });
-      }
-      for (const p of status.untracked) {
-        all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
-      }
-
+      const all = statusToFiles(status);
       setFiles(all);
-      if (all.length > 0 && !selectedFile) {
-        setSelectedFile(all[0].path);
-      }
+      setSelectedFile((prev) => {
+        if (!prev && all.length > 0) return all[0].path;
+        return prev;
+      });
     } catch {
     }
-  }, [selectedFile]);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -179,28 +169,48 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [commitDropdownOpen, messageDropdownOpen, templateDropdownOpen]);
 
-  const stageFiles = (paths: string[]) => {
-    setFiles((prev) =>
-      prev.map((f) => (paths.includes(f.path) ? { ...f, staged: true } : f))
-    );
-    setSelectedUnstaged(new Set());
+  const statusToFiles = (status: GitStatus): ChangedFile[] => {
+    const all: ChangedFile[] = [];
+    for (const f of status.staged) all.push({ path: f.path, status: f.status, staged: true });
+    for (const f of status.unstaged) all.push({ path: f.path, status: f.status, staged: false });
+    for (const p of status.untracked) all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
+    return all;
   };
 
-  const unstageFiles = (paths: string[]) => {
-    setFiles((prev) =>
-      prev.map((f) => (paths.includes(f.path) ? { ...f, staged: false } : f))
-    );
-    setSelectedStaged(new Set());
+  const stageFiles = async (paths: string[]) => {
+    try {
+      const status = await window.electronAPI.status.stage(paths);
+      setFiles(statusToFiles(status));
+      setSelectedUnstaged(new Set());
+    } catch {}
   };
 
-  const stageAll = () => {
-    setFiles((prev) => prev.map((f) => ({ ...f, staged: true })));
-    setSelectedUnstaged(new Set());
+  const unstageFiles = async (paths: string[]) => {
+    try {
+      const status = await window.electronAPI.status.unstage(paths);
+      setFiles(statusToFiles(status));
+      setSelectedStaged(new Set());
+    } catch {}
   };
 
-  const unstageAll = () => {
-    setFiles((prev) => prev.map((f) => ({ ...f, staged: false })));
-    setSelectedStaged(new Set());
+  const stageAll = async () => {
+    const allPaths = files.filter((f) => !f.staged).map((f) => f.path);
+    if (allPaths.length === 0) return;
+    try {
+      const status = await window.electronAPI.status.stage(allPaths);
+      setFiles(statusToFiles(status));
+      setSelectedUnstaged(new Set());
+    } catch {}
+  };
+
+  const unstageAll = async () => {
+    const allPaths = files.filter((f) => f.staged).map((f) => f.path);
+    if (allPaths.length === 0) return;
+    try {
+      const status = await window.electronAPI.status.unstage(allPaths);
+      setFiles(statusToFiles(status));
+      setSelectedStaged(new Set());
+    } catch {}
   };
 
   const handleDiscard = async (paths: string[]) => {
