@@ -42,18 +42,7 @@ export const AppShell: React.FC = () => {
 
   useEffect(() => {
     loadRecentRepos();
-
-    // Auto-open last used repository
-    window.electronAPI.repo.getLastOpened().then(async (lastRepo) => {
-      if (lastRepo && !useRepoStore.getState().repo) {
-        try {
-          await useRepoStore.getState().openRepo(lastRepo);
-        } catch {
-          // Repo no longer exists or can't be opened — ignore
-        }
-      }
-      setInitializing(false);
-    }).catch(() => setInitializing(false));
+    setInitializing(false);
 
     const unsub = window.electronAPI.on.commandLog(addEntry);
     const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
