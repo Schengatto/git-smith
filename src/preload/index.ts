@@ -111,6 +111,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.RENAME, oldName, newName),
     checkout: (ref: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.CHECKOUT, ref),
+    checkoutWithOptions: (ref: string, options: { merge?: boolean }): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.CHECKOUT_OPTIONS, ref, options),
     merge: (branch: string): Promise<string> =>
       ipcRenderer.invoke(IPC.BRANCH.MERGE, branch),
     rebase: (onto: string): Promise<void> =>

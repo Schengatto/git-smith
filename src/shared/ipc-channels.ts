@@ -48,6 +48,7 @@ export const IPC = {
     DELETE_REMOTE: "git:branch:delete-remote",
     RENAME: "git:branch:rename",
     CHECKOUT: "git:branch:checkout",
+    CHECKOUT_OPTIONS: "git:branch:checkout-options",
     MERGE: "git:branch:merge",
     REBASE: "git:branch:rebase",
     REBASE_INTERACTIVE: "git:branch:rebase-interactive",

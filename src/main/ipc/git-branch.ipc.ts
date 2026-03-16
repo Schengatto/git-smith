@@ -39,6 +39,13 @@ export function registerBranchHandlers() {
     await gitService.checkout(ref);
   });
 
+  ipcMain.handle(
+    IPC.BRANCH.CHECKOUT_OPTIONS,
+    async (_event, ref: string, options: { merge?: boolean }) => {
+      await gitService.checkoutWithOptions(ref, options);
+    }
+  );
+
   ipcMain.handle(IPC.BRANCH.MERGE, async (_event, branch: string) => {
     return gitService.merge(branch);
   });

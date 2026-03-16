@@ -8,6 +8,7 @@ import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
 import { CommitDetailsDialog } from "../dialogs/CommitDetailsDialog";
+import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo } from "../../../shared/git-types";
 
@@ -67,6 +68,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [commitInfoHash, setCommitInfoHash] = useState<string | null>(null);
   const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
+  const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
   const [commitDetailsHash, setCommitDetailsHash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
@@ -217,7 +219,39 @@ export const CommitGraphPanel: React.FC = () => {
   };
 
   const commitContextItems = (row: GraphRow): ContextMenuEntry[] => {
-    const items: ContextMenuEntry[] = [
+    const checkableBranches = row.commit.refs.filter(
+      (r) => (r.type === "head" || r.type === "remote") && !r.current
+    );
+
+    const items: ContextMenuEntry[] = [];
+
+    // Checkout option — show when there are branches or allow detached HEAD
+    if (checkableBranches.length > 0) {
+      items.push({
+        label: checkableBranches.length === 1
+          ? `Checkout "${checkableBranches[0].name}"`
+          : "Checkout...",
+        onClick: () =>
+          setCheckoutTarget({
+            refs: row.commit.refs,
+            hash: row.commit.hash,
+            subject: row.commit.subject,
+          }),
+      });
+    } else if (!row.commit.refs.some((r) => r.current)) {
+      // No branches but also not the current HEAD commit — offer detached checkout
+      items.push({
+        label: "Checkout Commit (detached HEAD)",
+        onClick: () =>
+          setCheckoutTarget({
+            refs: row.commit.refs,
+            hash: row.commit.hash,
+            subject: row.commit.subject,
+          }),
+      });
+    }
+
+    items.push(
       {
         label: "Cherry Pick",
         onClick: () =>
@@ -232,7 +266,7 @@ export const CommitGraphPanel: React.FC = () => {
         onClick: () =>
           setTagTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
-    ];
+    );
 
     // Add delete options for branches on this commit
     const localBranches = row.commit.refs.filter((r) => r.type === "head" && !r.current);
@@ -657,6 +691,14 @@ export const CommitGraphPanel: React.FC = () => {
         open={!!commitDetailsHash}
         onClose={() => setCommitDetailsHash(null)}
         commitHash={commitDetailsHash || ""}
+      />
+
+      <CheckoutDialog
+        open={!!checkoutTarget}
+        onClose={() => setCheckoutTarget(null)}
+        refs={checkoutTarget?.refs ?? []}
+        commitHash={checkoutTarget?.hash ?? ""}
+        commitSubject={checkoutTarget?.subject ?? ""}
       />
 
       <ConfirmDeleteDialog

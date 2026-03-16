@@ -555,6 +555,16 @@ export class GitService {
     await this.run("git checkout", [checkoutRef], () => git.checkout(checkoutRef));
   }
 
+  async checkoutWithOptions(ref: string, options: { merge?: boolean }): Promise<void> {
+    const git = this.ensureRepo();
+    const checkoutRef = ref.startsWith("remotes/")
+      ? ref.replace(/^remotes\/[^/]+\//, "")
+      : ref;
+    const args = [checkoutRef];
+    if (options.merge) args.push("--merge");
+    await this.run("git checkout", args, () => git.raw(["checkout", ...args]));
+  }
+
   async renameBranch(oldName: string, newName: string): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git branch", ["-m", oldName, newName], () =>
