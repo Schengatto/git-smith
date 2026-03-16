@@ -285,7 +285,7 @@ export const MenuBar: React.FC<{
           label: "User manual",
           onClick: () =>
             window.electronAPI.repo.openExternal(
-              "https://github.com/nicenemo/git-expansion/wiki"
+              "https://github.com/Schengatto/git-expansion/wiki"
             ),
         },
         {
@@ -308,7 +308,7 @@ export const MenuBar: React.FC<{
           label: "Report an issue",
           onClick: () =>
             window.electronAPI.repo.openExternal(
-              "https://github.com/nicenemo/git-expansion/issues"
+              "https://github.com/Schengatto/git-expansion/issues"
             ),
         },
         {

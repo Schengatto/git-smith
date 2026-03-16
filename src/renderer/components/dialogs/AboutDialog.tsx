@@ -90,9 +90,34 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({ 
           <InfoRow label="Version" value={APP_VERSION} />
           <InfoRow label="License" value="MIT" />
           <InfoRow label="Author">
-            <ExternalLink href="https://enrico.schintu.com">Enrico Schintu</ExternalLink>
+            <ExternalLink href="https://enricoschintu.com">Enrico Schintu</ExternalLink>
           </InfoRow>
         </div>
+
+        {/* Donate button */}
+        <ExternalLink href="https://www.paypal.com/donate/?business=schintu.enrico%40gmail.com">
+          <div
+            style={{
+              marginTop: 4,
+              padding: "7px 20px",
+              borderRadius: 6,
+              border: "1px solid #0070ba",
+              background: "#0070ba",
+              color: "#fff",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.067 8.478c.492.315.844.825.983 1.39L22 13.5c0 2.485-2.015 4.5-4.5 4.5H16v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h7.5C16.538 5 18.585 6.533 20.067 8.478zM7 7v11h7v-2h2.5A2.5 2.5 0 0 0 19 13.5l-.95-3.611C17.578 9.01 16.613 8.5 15.5 8.5H13V7H7z"/>
+            </svg>
+            Donate via PayPal
+          </div>
+        </ExternalLink>
 
         {/* Close button */}
         <button

@@ -49,7 +49,7 @@ describe("AboutDialog", () => {
     render(<AboutDialog open={true} onClose={vi.fn()} />);
     const authorLink = screen.getByText("Enrico Schintu");
     fireEvent.click(authorLink);
-    expect(openExternalMock).toHaveBeenCalledWith("https://enrico.schintu.com");
+    expect(openExternalMock).toHaveBeenCalledWith("https://enricoschintu.com");
   });
 
   it("calls onClose when Close button is clicked", () => {

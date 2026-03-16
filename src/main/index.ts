@@ -34,12 +34,17 @@ function createWindow() {
     title: "Git Expansion",
     icon: path.join(__dirname, "../../assets/icon.png"),
     backgroundColor: "#1e1e2e",
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
     },
+  });
+
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.show();
   });
 
   gitService.setMainWindow(mainWindow);
