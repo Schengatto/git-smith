@@ -10,7 +10,7 @@ vi.mock("electron", () => ({
   },
 }));
 
-import { scanForRepos, addMultipleRecentRepos, getRecentRepos, clearRecentRepos, getRecentCommitMessages, addRecentCommitMessage } from "./store";
+import { scanForRepos, addMultipleRecentRepos, getRecentRepos, clearRecentRepos, getRecentCommitMessages, addRecentCommitMessage, getRepoViewSettings, setRepoViewSettings, defaultRepoViewSettings } from "./store";
 
 describe("scanForRepos", () => {
   let tmpDir: string;
@@ -163,5 +163,49 @@ describe("recentCommitMessages", () => {
     const messages = getRecentCommitMessages();
     expect(messages).toHaveLength(10);
     expect(messages[0]).toBe("commit 14");
+  });
+});
+
+describe("repoViewSettings", () => {
+  it("returns defaults for unknown repo", () => {
+    const settings = getRepoViewSettings("/unknown/repo");
+    expect(settings).toEqual(defaultRepoViewSettings);
+  });
+
+  it("saves and retrieves branchFilter", () => {
+    setRepoViewSettings("/test/repo", { branchFilter: "main" });
+    const settings = getRepoViewSettings("/test/repo");
+    expect(settings.branchFilter).toBe("main");
+    expect(settings.branchVisibility).toBeNull();
+    expect(settings.dockviewLayout).toBeNull();
+  });
+
+  it("saves and retrieves branchVisibility", () => {
+    const visibility = { mode: "include" as const, branches: ["main", "develop"] };
+    setRepoViewSettings("/test/repo2", { branchVisibility: visibility });
+    const settings = getRepoViewSettings("/test/repo2");
+    expect(settings.branchVisibility).toEqual(visibility);
+  });
+
+  it("merges partial updates without overwriting existing fields", () => {
+    setRepoViewSettings("/test/repo3", { branchFilter: "feature" });
+    setRepoViewSettings("/test/repo3", { branchVisibility: { mode: "exclude", branches: ["wip"] } });
+    const settings = getRepoViewSettings("/test/repo3");
+    expect(settings.branchFilter).toBe("feature");
+    expect(settings.branchVisibility).toEqual({ mode: "exclude", branches: ["wip"] });
+  });
+
+  it("saves and retrieves dockview layout", () => {
+    const layout = { grid: { root: {}, width: 1000, height: 800 }, panels: {} };
+    setRepoViewSettings("/test/repo4", { dockviewLayout: layout });
+    const settings = getRepoViewSettings("/test/repo4");
+    expect(settings.dockviewLayout).toEqual(layout);
+  });
+
+  it("keeps settings isolated per repo", () => {
+    setRepoViewSettings("/repo/a", { branchFilter: "alpha" });
+    setRepoViewSettings("/repo/b", { branchFilter: "beta" });
+    expect(getRepoViewSettings("/repo/a").branchFilter).toBe("alpha");
+    expect(getRepoViewSettings("/repo/b").branchFilter).toBe("beta");
   });
 });

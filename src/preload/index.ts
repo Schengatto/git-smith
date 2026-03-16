@@ -47,6 +47,19 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.REPO.OPEN_EXTERNAL, url),
     getLastOpened: (): Promise<string | null> =>
       ipcRenderer.invoke(IPC.REPO.GET_LAST_OPENED),
+    getViewSettings: (repoPath: string): Promise<{
+      branchFilter: string;
+      branchVisibility: { mode: "include" | "exclude"; branches: string[] } | null;
+      dockviewLayout: unknown | null;
+    }> => ipcRenderer.invoke(IPC.REPO.GET_VIEW_SETTINGS, repoPath),
+    setViewSettings: (
+      repoPath: string,
+      partial: Partial<{
+        branchFilter: string;
+        branchVisibility: { mode: "include" | "exclude"; branches: string[] } | null;
+        dockviewLayout: unknown | null;
+      }>
+    ): Promise<void> => ipcRenderer.invoke(IPC.REPO.SET_VIEW_SETTINGS, repoPath, partial),
   },
   status: {
     get: (): Promise<GitStatus> => ipcRenderer.invoke(IPC.STATUS.GET),

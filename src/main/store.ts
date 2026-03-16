@@ -27,6 +27,18 @@ export interface RepoCategory {
   [repoPath: string]: string; // repoPath → category name
 }
 
+export interface RepoViewSettings {
+  branchFilter: string;
+  branchVisibility: { mode: "include" | "exclude"; branches: string[] } | null;
+  dockviewLayout: unknown | null;
+}
+
+export const defaultRepoViewSettings: RepoViewSettings = {
+  branchFilter: "",
+  branchVisibility: null,
+  dockviewLayout: null,
+};
+
 export interface AppStoreSchema {
   recentRepos: string[];
   repoCategories: RepoCategory;
@@ -34,6 +46,7 @@ export interface AppStoreSchema {
   lastOpenedRepo: string | null;
   windowBounds: { width: number; height: number; x?: number; y?: number };
   settings: AppSettings;
+  repoViewSettings: { [repoPath: string]: RepoViewSettings };
 }
 
 export const defaultSettings: AppSettings = {
@@ -58,6 +71,7 @@ const defaults: AppStoreSchema = {
   lastOpenedRepo: null,
   windowBounds: { width: 1280, height: 800 },
   settings: { ...defaultSettings },
+  repoViewSettings: {},
 };
 
 function getStorePath(): string {
@@ -282,6 +296,21 @@ export function addRecentCommitMessage(message: string): void {
   store.recentCommitMessages = store.recentCommitMessages.filter((m) => m !== message);
   store.recentCommitMessages.unshift(message);
   store.recentCommitMessages = store.recentCommitMessages.slice(0, 10);
+  writeStore(store);
+}
+
+export function getRepoViewSettings(repoPath: string): RepoViewSettings {
+  const store = readStore();
+  return { ...defaultRepoViewSettings, ...store.repoViewSettings[repoPath] };
+}
+
+export function setRepoViewSettings(repoPath: string, partial: Partial<RepoViewSettings>): void {
+  const store = readStore();
+  store.repoViewSettings[repoPath] = {
+    ...defaultRepoViewSettings,
+    ...store.repoViewSettings[repoPath],
+    ...partial,
+  };
   writeStore(store);
 }
 

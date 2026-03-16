@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useUIStore } from "../../store/ui-store";
 import {
   DockviewReact,
   DockviewReadyEvent,
   IDockviewPanelProps,
+  DockviewApi,
 } from "dockview";
 import { MenuBar } from "./MenuBar";
 import { Toolbar } from "./Toolbar";
@@ -37,8 +38,23 @@ export const AppShell: React.FC = () => {
     scanDialogOpen, closeScanDialog, openScanDialog,
     aboutDialogOpen, closeAboutDialog, openAboutDialog,
   } = useUIStore();
-  const dockviewApiRef = useRef<DockviewReadyEvent["api"] | null>(null);
+  const dockviewApiRef = useRef<DockviewApi | null>(null);
+  const layoutSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [initializing, setInitializing] = useState(true);
+
+  const saveLayout = useCallback(() => {
+    const api = dockviewApiRef.current;
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (!api || !repoPath) return;
+    // Debounce layout saves to avoid excessive writes
+    if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);
+    layoutSaveTimerRef.current = setTimeout(() => {
+      try {
+        const layout = api.toJSON();
+        window.electronAPI.repo.setViewSettings(repoPath, { dockviewLayout: layout });
+      } catch {}
+    }, 500);
+  }, []);
 
   useEffect(() => {
     loadRecentRepos();
@@ -66,13 +82,46 @@ export const AppShell: React.FC = () => {
       unsub();
       unsubMenu();
       window.removeEventListener("keydown", handleKeyDown);
+      if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onReady = (event: DockviewReadyEvent) => {
+  const savedLayoutRef = useRef<unknown | null>(null);
+  const [layoutLoaded, setLayoutLoaded] = useState(false);
+
+  // Load saved layout when repo changes
+  useEffect(() => {
+    if (!repo) {
+      savedLayoutRef.current = null;
+      setLayoutLoaded(false);
+      return;
+    }
+    window.electronAPI.repo.getViewSettings(repo.path).then((settings) => {
+      savedLayoutRef.current = settings.dockviewLayout;
+      setLayoutLoaded(true);
+    }).catch(() => {
+      savedLayoutRef.current = null;
+      setLayoutLoaded(true);
+    });
+  }, [repo?.path]);
+
+  const onReady = useCallback((event: DockviewReadyEvent) => {
     dockviewApiRef.current = event.api;
 
+    const savedLayout = savedLayoutRef.current;
+    if (savedLayout && typeof savedLayout === "object") {
+      try {
+        event.api.fromJSON(savedLayout as Parameters<DockviewApi["fromJSON"]>[0]);
+        // Subscribe to layout changes for persistence
+        event.api.onDidLayoutChange(() => saveLayout());
+        return;
+      } catch {
+        // Fallback to default layout if restore fails
+      }
+    }
+
+    // Default layout
     const sidebarPanel = event.api.addPanel({
       id: "sidebar",
       component: "sidebar",
@@ -101,7 +150,10 @@ export const AppShell: React.FC = () => {
     });
 
     sidebarPanel.api.setSize({ width: 220 });
-  };
+
+    // Subscribe to layout changes for persistence
+    event.api.onDidLayoutChange(() => saveLayout());
+  }, [saveLayout]);
 
   if (initializing) {
     return (
@@ -125,12 +177,17 @@ export const AppShell: React.FC = () => {
       />
       {repo && <Toolbar />}
       <div className="flex-1 overflow-hidden">
-        {repo ? (
+        {repo && layoutLoaded ? (
           <DockviewReact
+            key={repo.path}
             className={theme === "dark" ? "dockview-theme-dark" : "dockview-theme-light"}
             onReady={onReady}
             components={components}
           />
+        ) : repo && !layoutLoaded ? (
+          <div className="flex items-center justify-center h-full bg-surface-0 text-text-secondary">
+            <p style={{ fontSize: 14, opacity: 0.7 }}>Loading layout…</p>
+          </div>
         ) : (
           <WelcomeScreen />
         )}

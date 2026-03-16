@@ -19,6 +19,8 @@ export const IPC = {
     SCAN_FOR_REPOS: "git:repo:scan-for-repos",
     OPEN_EXTERNAL: "git:repo:open-external",
     GET_LAST_OPENED: "git:repo:get-last-opened",
+    GET_VIEW_SETTINGS: "git:repo:get-view-settings",
+    SET_VIEW_SETTINGS: "git:repo:set-view-settings",
   },
   STATUS: {
     GET: "git:status:get",

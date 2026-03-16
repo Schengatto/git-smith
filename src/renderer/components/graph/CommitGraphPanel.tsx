@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -35,12 +35,29 @@ export const CommitGraphPanel: React.FC = () => {
   const {
     rows, loading, hasMore, loadGraph, loadMore, selectCommit, selectedCommit,
     branchFilter, setBranchFilter, branchVisibility, setBranchVisibility,
+    restoreViewSettings, viewSettingsRestored,
   } = useGraphStore();
 
   useEffect(() => {
-    if (repo) loadGraph();
+    if (!repo) return;
+    const init = async () => {
+      await restoreViewSettings();
+      await loadGraph();
+    };
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [repo?.path, repo?.headCommit, loadGraph]);
+  }, [repo?.path]);
+
+  // Reload graph when HEAD changes (but not on initial mount which is handled above)
+  const prevHeadRef = useRef(repo?.headCommit);
+  useEffect(() => {
+    if (!repo || !viewSettingsRestored) return;
+    if (prevHeadRef.current !== undefined && prevHeadRef.current !== repo.headCommit) {
+      loadGraph();
+    }
+    prevHeadRef.current = repo.headCommit;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repo?.headCommit]);
 
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; row: GraphRow } | null>(null);
   const [cherryPickTarget, setCherryPickTarget] = useState<{ hash: string; subject: string } | null>(null);
@@ -157,6 +174,14 @@ export const CommitGraphPanel: React.FC = () => {
         );
       })
     : rows;
+
+  const maxGraphWidth = useMemo(() => {
+    let maxLanes = 0;
+    for (const r of filteredRows) {
+      if (r.activeLaneCount > maxLanes) maxLanes = r.activeLaneCount;
+    }
+    return Math.max((maxLanes + 2) * LANE_WIDTH, 32);
+  }, [filteredRows]);
 
   const scrollToHead = useCallback(() => {
     const targetRows = searchQuery.trim() ? filteredRows : rows;
@@ -546,6 +571,7 @@ export const CommitGraphPanel: React.FC = () => {
           itemContent={(index) => (
             <GraphRowItem
               row={filteredRows[index]}
+              graphWidth={maxGraphWidth}
               selected={selectedCommit?.hash === filteredRows[index].commit.hash}
               isHead={filteredRows[index].commit.hash === repo.headCommit}
               onClick={() => selectCommit(filteredRows[index].commit.hash)}
@@ -655,14 +681,14 @@ export const CommitGraphPanel: React.FC = () => {
 
 const GraphRowItem: React.FC<{
   row: GraphRow;
+  graphWidth: number;
   selected: boolean;
   isHead: boolean;
   onClick: () => void;
   onDoubleClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
-}> = React.memo(({ row, selected, isHead, onClick, onDoubleClick, onContextMenu }) => {
+}> = React.memo(({ row, graphWidth, selected, isHead, onClick, onDoubleClick, onContextMenu }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const graphWidth = Math.max((row.activeLaneCount + 2) * LANE_WIDTH, 32);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -700,7 +726,12 @@ const GraphRowItem: React.FC<{
         // Root commit: line from top of row to commit dot
         ctx.moveTo(fromX, TOP);
         ctx.lineTo(toX, midY);
+      } else if (edge.type === "converge-left" || edge.type === "converge-right") {
+        // Lane converging into commit from above: line from top curves to commit dot
+        ctx.moveTo(fromX, TOP);
+        ctx.bezierCurveTo(fromX, midY - 10, toX, midY + 10, toX, midY);
       } else {
+        // fork-left, fork-right, merge-left, merge-right: line from commit dot curves downward
         ctx.moveTo(fromX, midY);
         ctx.bezierCurveTo(fromX, midY + 10, toX, midY - 10, toX, BOTTOM);
       }

@@ -54,11 +54,11 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
     // converge into the primary lane (prevents ghost lanes)
     for (let i = 0; i < activeLanes.length; i++) {
       if (i !== laneIndex && activeLanes[i] && activeLanes[i]!.commitHash === commit.hash) {
-        const mergeType = i < laneIndex ? "merge-left" : "merge-right";
+        const convergeType = i < laneIndex ? "converge-left" : "converge-right";
         edges.push({
           fromLane: i,
           toLane: laneIndex,
-          type: mergeType,
+          type: convergeType,
           color: activeLanes[i]!.colorIndex,
         });
         activeLanes[i] = null;

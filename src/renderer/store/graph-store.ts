@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { GraphRow, CommitInfo } from "../../shared/git-types";
 import { buildGraph } from "../../shared/graph-builder";
+import { useRepoStore } from "./repo-store";
 
 export interface BranchVisibility {
   mode: "include" | "exclude";
@@ -18,6 +19,8 @@ interface GraphState {
   branchVisibility: BranchVisibility | null;
   /** Raw commits accumulated across all loaded pages */
   allCommits: CommitInfo[];
+  /** Whether saved view settings have been restored for the current repo */
+  viewSettingsRestored: boolean;
 
   loadGraph: (maxCount?: number) => Promise<void>;
   loadMore: () => Promise<void>;
@@ -25,6 +28,7 @@ interface GraphState {
   clearSelection: () => void;
   setBranchFilter: (filter: string) => void;
   setBranchVisibility: (visibility: BranchVisibility | null) => void;
+  restoreViewSettings: () => Promise<void>;
 }
 
 const CHUNK_SIZE = 500;
@@ -39,6 +43,22 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   branchFilter: "",
   branchVisibility: null,
   allCommits: [],
+  viewSettingsRestored: false,
+
+  restoreViewSettings: async () => {
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (!repoPath) return;
+    try {
+      const saved = await window.electronAPI.repo.getViewSettings(repoPath);
+      set({
+        branchFilter: saved.branchFilter || "",
+        branchVisibility: saved.branchVisibility || null,
+        viewSettingsRestored: true,
+      });
+    } catch {
+      set({ viewSettingsRestored: true });
+    }
+  },
 
   loadGraph: async (maxCount = CHUNK_SIZE) => {
     set({ loading: true });
@@ -98,9 +118,17 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   setBranchFilter: (filter: string) => {
     set({ branchFilter: filter });
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (repoPath) {
+      window.electronAPI.repo.setViewSettings(repoPath, { branchFilter: filter });
+    }
   },
 
   setBranchVisibility: (visibility: BranchVisibility | null) => {
     set({ branchVisibility: visibility });
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (repoPath) {
+      window.electronAPI.repo.setViewSettings(repoPath, { branchVisibility: visibility });
+    }
   },
 }));

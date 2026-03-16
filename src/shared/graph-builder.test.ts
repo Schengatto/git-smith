@@ -141,11 +141,11 @@ describe("graph-builder", () => {
     // After D (root), there should be 0 active lanes — no ghost lanes.
     expect(rows[3].activeLaneCount).toBe(0);
 
-    // D should have a merge edge from the duplicate lane
-    const mergeEdge = rows[3].edges.find(
-      (e) => e.type === "merge-left" || e.type === "merge-right"
+    // D should have a converge edge from the duplicate lane
+    const convergeEdge = rows[3].edges.find(
+      (e) => e.type === "converge-left" || e.type === "converge-right"
     );
-    expect(mergeEdge).toBeDefined();
+    expect(convergeEdge).toBeDefined();
   });
 
   it("uses start edge type for branch tips", () => {
