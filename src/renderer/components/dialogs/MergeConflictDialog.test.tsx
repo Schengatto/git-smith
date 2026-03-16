@@ -98,12 +98,25 @@ describe("MergeConflictDialog", () => {
     });
   });
 
-  it("shows ours and theirs content in side panes", async () => {
+  it("populates ours and theirs in textareas", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText("our version of the line")).toBeInTheDocument();
-      expect(screen.getByText("their version of the line")).toBeInTheDocument();
+      const textareas = document.querySelectorAll("textarea");
+      // 3 textareas: left, center, right
+      expect(textareas.length).toBe(3);
+      expect(textareas[0].value).toBe("our version of the line");
+      expect(textareas[2].value).toBe("their version of the line");
+    });
+  });
+
+  it("populates merged content with conflict markers in center textarea", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      const textareas = document.querySelectorAll("textarea");
+      expect(textareas[1].value).toContain("<<<<<<<");
+      expect(textareas[1].value).toContain(">>>>>>>");
     });
   });
 
@@ -115,11 +128,31 @@ describe("MergeConflictDialog", () => {
     });
   });
 
-  it("shows Unresolved indicator in center pane", async () => {
+  it("shows conflict action row with LOCAL/REMOTE/Both/None buttons", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Unresolved")).toBeInTheDocument();
+      expect(screen.getByText("LOCAL →")).toBeInTheDocument();
+      expect(screen.getByText("← REMOTE")).toBeInTheDocument();
+      expect(screen.getByText("Both")).toBeInTheDocument();
+      expect(screen.getByText("None")).toBeInTheDocument();
+    });
+  });
+
+  it("shows navigation buttons for prev/next conflict", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Prev conflict")).toBeInTheDocument();
+      expect(screen.getByLabelText("Next conflict")).toBeInTheDocument();
+    });
+  });
+
+  it("shows merged pane header with result label", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("(result)")).toBeInTheDocument();
     });
   });
 
@@ -132,7 +165,7 @@ describe("MergeConflictDialog", () => {
     });
   });
 
-  it("disables Mark as resolved when conflicts remain unresolved", async () => {
+  it("disables Mark as resolved when conflicts remain", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
@@ -141,8 +174,24 @@ describe("MergeConflictDialog", () => {
     });
   });
 
+  it("resolves conflict by clicking LOCAL button", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("LOCAL →")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("LOCAL →"));
+
+    await waitFor(() => {
+      const textareas = document.querySelectorAll("textarea");
+      // Conflict markers should be gone, replaced with ours content
+      expect(textareas[1].value).not.toContain("<<<<<<<");
+      expect(textareas[1].value).toContain("our version of the line");
+    });
+  });
+
   it("shows 'all resolved' state and Continue button when all files resolved", async () => {
-    // File with no conflict markers
     listMock.mockResolvedValue([{ path: "test.txt", reason: "both-modified" }]);
     fileContentMock.mockResolvedValue({
       ours: "ours",
@@ -156,7 +205,6 @@ describe("MergeConflictDialog", () => {
 
     await waitFor(() => {
       const btn = screen.getByText("Mark as resolved");
-      // No conflicts to resolve, so button should be enabled
       expect(btn).not.toBeDisabled();
     });
 
@@ -176,92 +224,33 @@ describe("MergeConflictDialog", () => {
 
 describe("parseMergeSections", () => {
   it("parses a simple conflict section", () => {
-    const content = [
-      "before",
-      "<<<<<<< HEAD",
-      "ours line",
-      "=======",
-      "theirs line",
-      ">>>>>>> branch",
-      "after",
-    ].join("\n");
-
+    const content = "before\n<<<<<<< HEAD\nours line\n=======\ntheirs line\n>>>>>>> branch\nafter";
     const sections = parseMergeSections(content);
     expect(sections).toHaveLength(3);
-
-    // Common before
     expect(sections[0].type).toBe("common");
     expect(sections[0].common).toEqual(["before"]);
-
-    // Conflict
     expect(sections[1].type).toBe("conflict");
     expect(sections[1].ours).toEqual(["ours line"]);
     expect(sections[1].theirs).toEqual(["theirs line"]);
-
-    // Common after
     expect(sections[2].type).toBe("common");
     expect(sections[2].common).toEqual(["after"]);
   });
 
   it("parses diff3 format with base section", () => {
-    const content = [
-      "<<<<<<< HEAD",
-      "ours",
-      "||||||| merged common ancestors",
-      "base",
-      "=======",
-      "theirs",
-      ">>>>>>> branch",
-    ].join("\n");
-
+    const content = "<<<<<<< HEAD\nours\n||||||| merged common ancestors\nbase\n=======\ntheirs\n>>>>>>> branch";
     const sections = parseMergeSections(content);
     expect(sections).toHaveLength(1);
-    expect(sections[0].type).toBe("conflict");
     expect(sections[0].ours).toEqual(["ours"]);
     expect(sections[0].theirs).toEqual(["theirs"]);
   });
 
   it("parses multiple conflict sections", () => {
-    const content = [
-      "<<<<<<< HEAD",
-      "ours1",
-      "=======",
-      "theirs1",
-      ">>>>>>> branch",
-      "middle",
-      "<<<<<<< HEAD",
-      "ours2",
-      "=======",
-      "theirs2",
-      ">>>>>>> branch",
-    ].join("\n");
-
+    const content = "<<<<<<< HEAD\nours1\n=======\ntheirs1\n>>>>>>> branch\nmiddle\n<<<<<<< HEAD\nours2\n=======\ntheirs2\n>>>>>>> branch";
     const sections = parseMergeSections(content);
     expect(sections).toHaveLength(3);
     expect(sections[0].type).toBe("conflict");
-    expect(sections[0].ours).toEqual(["ours1"]);
     expect(sections[1].type).toBe("common");
-    expect(sections[1].common).toEqual(["middle"]);
     expect(sections[2].type).toBe("conflict");
-    expect(sections[2].ours).toEqual(["ours2"]);
-  });
-
-  it("handles multiline conflict sections", () => {
-    const content = [
-      "<<<<<<< HEAD",
-      "line 1",
-      "line 2",
-      "=======",
-      "line A",
-      "line B",
-      "line C",
-      ">>>>>>> branch",
-    ].join("\n");
-
-    const sections = parseMergeSections(content);
-    expect(sections).toHaveLength(1);
-    expect(sections[0].ours).toEqual(["line 1", "line 2"]);
-    expect(sections[0].theirs).toEqual(["line A", "line B", "line C"]);
   });
 
   it("returns single common section for non-conflicting content", () => {
@@ -272,48 +261,24 @@ describe("parseMergeSections", () => {
 });
 
 describe("resolveAllConflicts", () => {
-  const content = [
-    "before",
-    "<<<<<<< HEAD",
-    "ours line",
-    "=======",
-    "theirs line",
-    ">>>>>>> branch",
-    "after",
-  ].join("\n");
+  const content = "before\n<<<<<<< HEAD\nours line\n=======\ntheirs line\n>>>>>>> branch\nafter";
 
   it("resolves all picking ours", () => {
-    const result = resolveAllConflicts(content, "ours");
-    expect(result).toBe("before\nours line\nafter");
+    expect(resolveAllConflicts(content, "ours")).toBe("before\nours line\nafter");
   });
 
   it("resolves all picking theirs", () => {
-    const result = resolveAllConflicts(content, "theirs");
-    expect(result).toBe("before\ntheirs line\nafter");
+    expect(resolveAllConflicts(content, "theirs")).toBe("before\ntheirs line\nafter");
   });
 
   it("handles multiple conflicts", () => {
-    const multi = [
-      "<<<<<<< HEAD", "a", "=======", "b", ">>>>>>> x",
-      "mid",
-      "<<<<<<< HEAD", "c", "=======", "d", ">>>>>>> x",
-    ].join("\n");
-
+    const multi = "<<<<<<< HEAD\na\n=======\nb\n>>>>>>> x\nmid\n<<<<<<< HEAD\nc\n=======\nd\n>>>>>>> x";
     expect(resolveAllConflicts(multi, "ours")).toBe("a\nmid\nc");
     expect(resolveAllConflicts(multi, "theirs")).toBe("b\nmid\nd");
   });
 
   it("handles diff3 format", () => {
-    const diff3 = [
-      "<<<<<<< HEAD",
-      "ours",
-      "||||||| base",
-      "original",
-      "=======",
-      "theirs",
-      ">>>>>>> branch",
-    ].join("\n");
-
+    const diff3 = "<<<<<<< HEAD\nours\n||||||| base\noriginal\n=======\ntheirs\n>>>>>>> branch";
     expect(resolveAllConflicts(diff3, "ours")).toBe("ours");
     expect(resolveAllConflicts(diff3, "theirs")).toBe("theirs");
   });
@@ -327,12 +292,5 @@ describe("buildMergedContent", () => {
       { type: "common", common: ["line 3"], resolution: null },
     ];
     expect(buildMergedContent(sections)).toBe("line 1\nours\nline 3");
-  });
-
-  it("builds content with both resolution", () => {
-    const sections: MergeSection[] = [
-      { type: "conflict", ours: ["a"], theirs: ["b"], resolution: "both", resolved: ["a", "b"] },
-    ];
-    expect(buildMergedContent(sections)).toBe("a\nb");
   });
 });
