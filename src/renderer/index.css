@@ -345,6 +345,10 @@
 
   .badge {
     @apply inline-flex items-center px-1.5 py-0 rounded text-[11px] font-medium leading-[18px] shrink-0;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .badge-head {

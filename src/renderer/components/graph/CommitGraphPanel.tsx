@@ -743,6 +743,7 @@ const GraphRowItem: React.FC<{
         {commit.refs.map((ref) => (
           <span
             key={ref.name}
+            title={ref.name}
             className={`badge ${
               ref.type === "head"
                 ? ref.current
