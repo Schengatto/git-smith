@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { GraphRow, CommitInfo } from "../../shared/git-types";
+import { buildGraph } from "../../shared/graph-builder";
 
 export interface BranchVisibility {
   mode: "include" | "exclude";
@@ -15,6 +16,8 @@ interface GraphState {
   totalLoaded: number;
   branchFilter: string;
   branchVisibility: BranchVisibility | null;
+  /** Raw commits accumulated across all loaded pages */
+  allCommits: CommitInfo[];
 
   loadGraph: (maxCount?: number) => Promise<void>;
   loadMore: () => Promise<void>;
@@ -35,21 +38,24 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   totalLoaded: 0,
   branchFilter: "",
   branchVisibility: null,
+  allCommits: [],
 
   loadGraph: async (maxCount = CHUNK_SIZE) => {
     set({ loading: true });
     try {
       const { branchFilter, branchVisibility } = get();
       const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
-      const rows = await window.electronAPI.log.graph(maxCount, 0, branchFilter || undefined, vis);
+      const commits = await window.electronAPI.log.getCommits(maxCount, 0, branchFilter || undefined, vis);
+      const rows = buildGraph(commits);
       const rowMap = new Map<string, number>();
       rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
       set({
         rows,
         rowMap,
+        allCommits: commits,
         loading: false,
-        hasMore: rows.length >= maxCount,
-        totalLoaded: rows.length,
+        hasMore: commits.length >= maxCount,
+        totalLoaded: commits.length,
       });
     } catch {
       set({ loading: false });
@@ -57,21 +63,24 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { rows, rowMap, loading, hasMore, totalLoaded, branchFilter, branchVisibility } = get();
+    const { allCommits, loading, hasMore, totalLoaded, branchFilter, branchVisibility } = get();
     if (loading || !hasMore) return;
     set({ loading: true });
     try {
       const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
-      const more = await window.electronAPI.log.graph(CHUNK_SIZE, totalLoaded, branchFilter || undefined, vis);
-      const newRows = [...rows, ...more];
-      const newMap = new Map(rowMap);
-      more.forEach((r, i) => newMap.set(r.commit.hash, rows.length + i));
+      const moreCommits = await window.electronAPI.log.getCommits(CHUNK_SIZE, totalLoaded, branchFilter || undefined, vis);
+      // Accumulate all commits and rebuild graph from scratch
+      const newAllCommits = [...allCommits, ...moreCommits];
+      const rows = buildGraph(newAllCommits);
+      const rowMap = new Map<string, number>();
+      rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
       set({
-        rows: newRows,
-        rowMap: newMap,
+        rows,
+        rowMap,
+        allCommits: newAllCommits,
         loading: false,
-        hasMore: more.length >= CHUNK_SIZE,
-        totalLoaded: totalLoaded + more.length,
+        hasMore: moreCommits.length >= CHUNK_SIZE,
+        totalLoaded: totalLoaded + moreCommits.length,
       });
     } catch {
       set({ loading: false });

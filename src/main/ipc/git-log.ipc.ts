@@ -1,7 +1,6 @@
 import { ipcMain } from "electron";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
-import { buildGraph } from "../git/graph-builder";
 
 export function registerLogHandlers() {
   ipcMain.handle(
@@ -13,13 +12,12 @@ export function registerLogHandlers() {
       branchFilter?: string,
       branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
     ) => {
-      const commits = await gitService.getLog(
+      return gitService.getLog(
         maxCount ?? 500,
         skip ?? 0,
         branchFilter || undefined,
         branchVisibility
       );
-      return buildGraph(commits);
     }
   );
 

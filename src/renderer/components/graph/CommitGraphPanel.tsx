@@ -678,7 +678,10 @@ const GraphRowItem: React.FC<{
 
     const midY = ROW_HEIGHT / 2;
 
-    // Draw edges
+    // Draw edges (extend 1px beyond canvas bounds to avoid anti-aliasing gaps between rows)
+    const TOP = -1;
+    const BOTTOM = ROW_HEIGHT + 1;
+
     for (const edge of row.edges) {
       const fromX = edge.fromLane * LANE_WIDTH + LANE_WIDTH / 2;
       const toX = edge.toLane * LANE_WIDTH + LANE_WIDTH / 2;
@@ -687,15 +690,19 @@ const GraphRowItem: React.FC<{
       ctx.beginPath();
 
       if (edge.type === "straight") {
-        ctx.moveTo(fromX, 0);
-        ctx.lineTo(toX, ROW_HEIGHT);
+        ctx.moveTo(fromX, TOP);
+        ctx.lineTo(toX, BOTTOM);
+      } else if (edge.type === "start") {
+        // Branch tip: line from commit dot downward
+        ctx.moveTo(fromX, midY);
+        ctx.lineTo(toX, BOTTOM);
       } else if (edge.type === "end") {
-        // Incoming-only: line from top of row to commit dot
-        ctx.moveTo(fromX, 0);
+        // Root commit: line from top of row to commit dot
+        ctx.moveTo(fromX, TOP);
         ctx.lineTo(toX, midY);
       } else {
         ctx.moveTo(fromX, midY);
-        ctx.bezierCurveTo(fromX, midY + 10, toX, midY - 10, toX, ROW_HEIGHT);
+        ctx.bezierCurveTo(fromX, midY + 10, toX, midY - 10, toX, BOTTOM);
       }
       ctx.stroke();
     }

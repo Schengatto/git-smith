@@ -1,4 +1,4 @@
-import type { CommitInfo, GraphRow, GraphEdge } from "../../shared/git-types";
+import type { CommitInfo, GraphRow, GraphEdge } from "./git-types";
 
 const LANE_COLORS = 16;
 
@@ -34,9 +34,11 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
     const edges: GraphEdge[] = [];
     let laneIndex = findLane(commit.hash);
     let colorIndex: number;
+    let isBranchTip = false;
 
     if (laneIndex < 0) {
       // New branch head — allocate a lane
+      isBranchTip = true;
       laneIndex = findFreeLane();
       colorIndex = allocColor();
       if (laneIndex >= activeLanes.length) {
@@ -46,6 +48,21 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
       }
     } else {
       colorIndex = activeLanes[laneIndex]!.colorIndex;
+    }
+
+    // Merge duplicate lanes: other lanes also expecting this commit hash
+    // converge into the primary lane (prevents ghost lanes)
+    for (let i = 0; i < activeLanes.length; i++) {
+      if (i !== laneIndex && activeLanes[i] && activeLanes[i]!.commitHash === commit.hash) {
+        const mergeType = i < laneIndex ? "merge-left" : "merge-right";
+        edges.push({
+          fromLane: i,
+          toLane: laneIndex,
+          type: mergeType,
+          color: activeLanes[i]!.colorIndex,
+        });
+        activeLanes[i] = null;
+      }
     }
 
     // Generate continuation edges for all other active lanes
@@ -80,10 +97,11 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
         commitHash: parents[0],
         colorIndex,
       };
+      // Branch tips use "start" (line from dot downward); others use "straight" (full top-to-bottom)
       edges.push({
         fromLane: laneIndex,
         toLane: laneIndex,
-        type: "straight",
+        type: isBranchTip ? "start" : "straight",
         color: colorIndex,
       });
 

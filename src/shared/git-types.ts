@@ -50,7 +50,7 @@ export interface GraphRow {
 export interface GraphEdge {
   fromLane: number;
   toLane: number;
-  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right" | "end";
+  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right" | "start" | "end";
   color: number; // index into palette
 }
 

@@ -5,7 +5,6 @@ import type {
   GitStatus,
   CommitInfo,
   CommitFullInfo,
-  GraphRow,
   BranchInfo,
   StashEntry,
   RemoteInfo,
@@ -73,12 +72,12 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.COMMIT.GET_RECENT_MESSAGES),
   },
   log: {
-    graph: (
+    getCommits: (
       maxCount?: number,
       skip?: number,
       branchFilter?: string,
       branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
-    ): Promise<GraphRow[]> =>
+    ): Promise<CommitInfo[]> =>
       ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip, branchFilter, branchVisibility),
     details: (hash: string): Promise<CommitInfo> =>
       ipcRenderer.invoke(IPC.LOG.DETAILS, hash),
