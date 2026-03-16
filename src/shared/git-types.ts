@@ -178,6 +178,48 @@ export interface MergeOptions {
   message?: string;
 }
 
+export interface RebaseOptions {
+  /** Commit or branch to rebase onto */
+  onto: string;
+  /** Run an interactive rebase (with pre-built todo list) */
+  interactive?: boolean;
+  /** Preserve merge commits during rebase */
+  preserveMerges?: boolean;
+  /** Automatically apply fixup!/squash! commits */
+  autosquash?: boolean;
+  /** Automatically stash/unstash before/after rebase */
+  autoStash?: boolean;
+  /** Ignore date (reset author date to committer date) */
+  ignoreDate?: boolean;
+  /** Set committer date equal to author date */
+  committerDateIsAuthorDate?: boolean;
+  /** Update branches that point to rebased commits */
+  updateRefs?: boolean;
+  /** Specific range: rebase only commits after this (exclusive) */
+  rangeFrom?: string;
+  /** Specific range: rebase onto this branch/ref */
+  rangeTo?: string;
+  /** Pre-built todo entries for interactive mode */
+  todoEntries?: { action: string; hash: string }[];
+}
+
+export interface ConflictFile {
+  path: string;
+  /** "both-modified" | "added-by-us" | "added-by-them" | "deleted-by-us" | "deleted-by-them" | "both-added" | "both-deleted" */
+  reason: string;
+}
+
+export interface ConflictFileContent {
+  /** Current (ours) version — null if deleted */
+  ours: string | null;
+  /** Incoming (theirs) version — null if deleted */
+  theirs: string | null;
+  /** Common ancestor (base) version — null if not available */
+  base: string | null;
+  /** Current working tree content with conflict markers */
+  merged: string;
+}
+
 export interface CloneOptions {
   url: string;
   destination: string;

@@ -62,6 +62,13 @@ export function registerBranchHandlers() {
   });
 
   ipcMain.handle(
+    IPC.BRANCH.REBASE_OPTIONS,
+    async (_event, options: import("../../shared/git-types").RebaseOptions) => {
+      await gitService.rebaseWithOptions(options);
+    }
+  );
+
+  ipcMain.handle(
     IPC.BRANCH.REBASE_COMMITS,
     async (_event, onto: string) => {
       return gitService.getRebaseCommits(onto);
@@ -77,6 +84,10 @@ export function registerBranchHandlers() {
 
   ipcMain.handle(IPC.BRANCH.REBASE_CONTINUE, async () => {
     await gitService.rebaseContinue();
+  });
+
+  ipcMain.handle(IPC.BRANCH.REBASE_SKIP, async () => {
+    await gitService.rebaseSkip();
   });
 
   ipcMain.handle(IPC.BRANCH.REBASE_ABORT, async () => {

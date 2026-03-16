@@ -18,6 +18,7 @@ import type {
   StashEntry,
   RemoteInfo,
   StaleRemoteBranch,
+  RebaseOptions,
 } from "../../shared/git-types";
 
 let idCounter = 0;
@@ -612,6 +613,55 @@ export class GitService {
     await this.run("git rebase", [onto], () => git.rebase([onto]));
   }
 
+  async rebaseWithOptions(options: RebaseOptions): Promise<void> {
+    const git = this.ensureRepo();
+    const args: string[] = [];
+
+    if (options.interactive) args.push("-i");
+    if (options.preserveMerges) args.push("--rebase-merges");
+    if (options.autosquash) args.push("--autosquash");
+    if (options.autoStash) args.push("--autostash");
+    if (options.ignoreDate) args.push("--ignore-date");
+    if (options.committerDateIsAuthorDate) args.push("--committer-date-is-author-date");
+    if (options.updateRefs) args.push("--update-refs");
+
+    if (options.rangeFrom) {
+      // Specific range: rebase --onto <onto> <from> <to>
+      args.push("--onto", options.onto, options.rangeFrom);
+      if (options.rangeTo) args.push(options.rangeTo);
+    } else {
+      args.push(options.onto);
+    }
+
+    if (options.interactive && options.todoEntries && options.todoEntries.length > 0) {
+      // Build the todo file for interactive rebase
+      const todoContent = options.todoEntries
+        .map((e) => `${e.action} ${e.hash}`)
+        .join("\n") + "\n";
+
+      const todoPath = path.join(this.repoPath!, ".git", "rebase-todo-custom.txt");
+      fs.writeFileSync(todoPath, todoContent);
+
+      const editorScript = path.join(this.repoPath!, ".git", "rebase-editor.sh");
+      fs.writeFileSync(
+        editorScript,
+        `#!/bin/sh\ncp "${todoPath}" "$1"\n`,
+        { mode: 0o755 }
+      );
+
+      await this.run("git rebase", args, async () => {
+        try {
+          await git.env("GIT_SEQUENCE_EDITOR", editorScript).rebase(args);
+        } finally {
+          try { fs.unlinkSync(todoPath); } catch {}
+          try { fs.unlinkSync(editorScript); } catch {}
+        }
+      });
+    } else {
+      await this.run("git rebase", args, () => git.rebase(args));
+    }
+  }
+
   async rebaseAbort(): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git rebase", ["--abort"], () => git.rebase(["--abort"]));
@@ -836,12 +886,87 @@ export class GitService {
     );
   }
 
+  async rebaseSkip(): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git rebase", ["--skip"], () =>
+      git.rebase(["--skip"])
+    );
+  }
+
   async isRebaseInProgress(): Promise<boolean> {
     if (!this.repoPath) return false;
     return (
       fs.existsSync(path.join(this.repoPath, ".git", "rebase-merge")) ||
       fs.existsSync(path.join(this.repoPath, ".git", "rebase-apply"))
     );
+  }
+
+  // ─── Conflict resolution ───────────────────────────
+
+  async getConflictedFiles(): Promise<import("../../shared/git-types").ConflictFile[]> {
+    const git = this.ensureRepo();
+    // git diff --name-only --diff-filter=U lists unmerged files
+    const raw = await git.raw(["diff", "--name-only", "--diff-filter=U"]);
+    if (!raw.trim()) return [];
+
+    const files: import("../../shared/git-types").ConflictFile[] = [];
+    // Also get detailed status to determine conflict reason
+    const statusRaw = await git.raw(["status", "--porcelain"]);
+    const statusMap = new Map<string, string>();
+    for (const line of statusRaw.split("\n")) {
+      if (!line.trim()) continue;
+      const xy = line.substring(0, 2);
+      const filePath = line.substring(3).trim();
+      statusMap.set(filePath, xy);
+    }
+
+    for (const filePath of raw.split("\n").filter((l) => l.trim())) {
+      const xy = statusMap.get(filePath) || "UU";
+      let reason = "both-modified";
+      if (xy === "AA") reason = "both-added";
+      else if (xy === "DD") reason = "both-deleted";
+      else if (xy === "DU") reason = "deleted-by-us";
+      else if (xy === "UD") reason = "deleted-by-them";
+      else if (xy === "AU") reason = "added-by-us";
+      else if (xy === "UA") reason = "added-by-them";
+      files.push({ path: filePath, reason });
+    }
+    return files;
+  }
+
+  async getConflictFileContent(
+    filePath: string
+  ): Promise<import("../../shared/git-types").ConflictFileContent> {
+    const git = this.ensureRepo();
+
+    // Read the three versions using git show :<stage>:<path>
+    // Stage 1 = base, Stage 2 = ours, Stage 3 = theirs
+    let base: string | null = null;
+    let ours: string | null = null;
+    let theirs: string | null = null;
+
+    try { base = await git.raw(["show", `:1:${filePath}`]); } catch { base = null; }
+    try { ours = await git.raw(["show", `:2:${filePath}`]); } catch { ours = null; }
+    try { theirs = await git.raw(["show", `:3:${filePath}`]); } catch { theirs = null; }
+
+    // Read the current working tree file with conflict markers
+    let merged = "";
+    try {
+      const fullPath = path.join(this.repoPath!, filePath);
+      merged = fs.readFileSync(fullPath, "utf-8");
+    } catch { merged = ""; }
+
+    return { ours, theirs, base, merged };
+  }
+
+  async resolveConflict(filePath: string): Promise<void> {
+    const git = this.ensureRepo();
+    await git.add(filePath);
+  }
+
+  async saveMergedFile(filePath: string, content: string): Promise<void> {
+    const fullPath = path.join(this.repoPath!, filePath);
+    fs.writeFileSync(fullPath, content, "utf-8");
   }
 
   async getConfig(key: string, global = false): Promise<string> {

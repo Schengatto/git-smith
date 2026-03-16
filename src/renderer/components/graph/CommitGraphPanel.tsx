@@ -10,6 +10,7 @@ import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
 import { CommitDetailsDialog } from "../dialogs/CommitDetailsDialog";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { MergeDialog } from "../dialogs/MergeDialog";
+import { RebaseDialog } from "../dialogs/RebaseDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo } from "../../../shared/git-types";
 
@@ -72,6 +73,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
   const [commitDetailsHash, setCommitDetailsHash] = useState<string | null>(null);
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
+  const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -264,6 +266,43 @@ export const CommitGraphPanel: React.FC = () => {
           label: ref.name,
           onClick: () => setMergeTarget(ref.name),
         })),
+      });
+    }
+
+    // Rebase current branch on — submenu with selected commit + interactive option
+    {
+      const rebaseChildren: ContextMenuEntry[] = [
+        {
+          label: "Selected commit",
+          onClick: () => setRebaseTarget({ onto: row.commit.hash }),
+        },
+        {
+          label: "Selected commit interactively...",
+          onClick: () => setRebaseTarget({ onto: row.commit.hash, interactive: true }),
+        },
+        {
+          label: "Selected commit with advanced options...",
+          onClick: () => setRebaseTarget({ onto: row.commit.hash }),
+        },
+      ];
+
+      // Add branch/tag refs as additional rebase targets
+      const rebaseRefs = row.commit.refs.filter(
+        (r) => (r.type === "head" || r.type === "remote" || r.type === "tag") && !r.current
+      );
+      if (rebaseRefs.length > 0) {
+        rebaseChildren.push({ divider: true });
+        for (const ref of rebaseRefs) {
+          rebaseChildren.push({
+            label: ref.name,
+            onClick: () => setRebaseTarget({ onto: ref.name }),
+          });
+        }
+      }
+
+      items.push({
+        label: "Rebase current branch on",
+        children: rebaseChildren,
       });
     }
 
@@ -721,6 +760,13 @@ export const CommitGraphPanel: React.FC = () => {
         open={!!mergeTarget}
         onClose={() => setMergeTarget(null)}
         preselectedBranch={mergeTarget || undefined}
+      />
+
+      <RebaseDialog
+        open={!!rebaseTarget}
+        onClose={() => setRebaseTarget(null)}
+        preselectedOnto={rebaseTarget?.onto}
+        startInteractive={rebaseTarget?.interactive}
       />
 
       <ConfirmDeleteDialog

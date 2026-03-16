@@ -13,6 +13,9 @@ import type {
   CommandOutputLine,
   StaleRemoteBranch,
   MergeOptions,
+  RebaseOptions,
+  ConflictFile,
+  ConflictFileContent,
 } from "../shared/git-types";
 
 const electronAPI = {
@@ -120,6 +123,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.MERGE_OPTIONS, options),
     rebase: (onto: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE, onto),
+    rebaseWithOptions: (options: RebaseOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.REBASE_OPTIONS, options),
     rebaseInteractive: (
       onto: string,
       todoEntries: { action: string; hash: string }[]
@@ -129,6 +134,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.REBASE_COMMITS, onto),
     rebaseContinue: (): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE_CONTINUE),
+    rebaseSkip: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.REBASE_SKIP),
     rebaseAbort: (): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE_ABORT),
     isRebaseInProgress: (): Promise<boolean> =>
@@ -201,6 +208,16 @@ const electronAPI = {
     commitFiles: (hash: string): Promise<CommitFileInfo[]> =>
       ipcRenderer.invoke(IPC.DIFF.COMMIT_FILES, hash),
     staged: (): Promise<string> => ipcRenderer.invoke(IPC.DIFF.STAGED),
+  },
+  conflict: {
+    list: (): Promise<ConflictFile[]> =>
+      ipcRenderer.invoke(IPC.CONFLICT.LIST),
+    fileContent: (filePath: string): Promise<ConflictFileContent> =>
+      ipcRenderer.invoke(IPC.CONFLICT.FILE_CONTENT, filePath),
+    resolve: (filePath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.CONFLICT.RESOLVE, filePath),
+    saveMerged: (filePath: string, content: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.CONFLICT.SAVE_MERGED, filePath, content),
   },
   stash: {
     list: (): Promise<StashEntry[]> => ipcRenderer.invoke(IPC.STASH.LIST),
