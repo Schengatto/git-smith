@@ -272,14 +272,6 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
-          label: "Git command log",
-          shortcut: "F12",
-          onClick: () => {
-            /* Command log panel is already in DockView */
-          },
-        },
-        { divider: true },
-        {
           label: "Settings...",
           shortcut: "Ctrl+,",
           onClick: () => onOpenSettings(),

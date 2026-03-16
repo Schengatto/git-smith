@@ -1,18 +1,35 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+
+const mockStorage: Record<string, string> = {};
+vi.stubGlobal("localStorage", {
+  getItem: (key: string) => mockStorage[key] ?? null,
+  setItem: (key: string, value: string) => { mockStorage[key] = value; },
+  removeItem: (key: string) => { delete mockStorage[key]; },
+  clear: () => Object.keys(mockStorage).forEach((k) => delete mockStorage[k]),
+  length: 0,
+  key: () => null,
+});
+
 import { useGitOperationStore, runGitOperation } from "./git-operation-store";
 import type { CommandLogEntry } from "../../shared/git-types";
+
+const resetStore = () => {
+  useGitOperationStore.setState({
+    open: false,
+    label: "",
+    entries: [],
+    outputLines: [],
+    running: false,
+    error: null,
+    _autoCloseTimer: null,
+    autoClose: true,
+  });
+};
 
 describe("Git Operation Store", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    useGitOperationStore.setState({
-      open: false,
-      label: "",
-      entries: [],
-      running: false,
-      error: null,
-      _autoCloseTimer: null,
-    });
+    resetStore();
   });
 
   afterEach(() => {
@@ -64,20 +81,31 @@ describe("Git Operation Store", () => {
     expect(useGitOperationStore.getState().entries).toHaveLength(0);
   });
 
-  it("finish() with no error sets running=false and auto-closes after 1.5s", () => {
+  it("finish() with autoClose=true auto-closes after 1.5s", () => {
     useGitOperationStore.getState().start("Push");
     useGitOperationStore.getState().finish();
 
-    const state = useGitOperationStore.getState();
-    expect(state.running).toBe(false);
-    expect(state.error).toBeNull();
-    expect(state.open).toBe(true); // still open
+    expect(useGitOperationStore.getState().running).toBe(false);
+    expect(useGitOperationStore.getState().open).toBe(true);
 
     vi.advanceTimersByTime(1500);
     expect(useGitOperationStore.getState().open).toBe(false);
   });
 
-  it("finish() with error keeps dialog open", () => {
+  it("finish() with autoClose=false keeps dialog open on success", () => {
+    useGitOperationStore.getState().setAutoClose(false);
+    useGitOperationStore.getState().start("Push");
+    useGitOperationStore.getState().finish();
+
+    expect(useGitOperationStore.getState().running).toBe(false);
+    expect(useGitOperationStore.getState().error).toBeNull();
+    expect(useGitOperationStore.getState().open).toBe(true);
+
+    vi.advanceTimersByTime(5000);
+    expect(useGitOperationStore.getState().open).toBe(true); // stays open
+  });
+
+  it("finish() with error keeps dialog open regardless of autoClose", () => {
     useGitOperationStore.getState().start("Push");
     useGitOperationStore.getState().finish("pre-push hook failed");
 
@@ -87,7 +115,7 @@ describe("Git Operation Store", () => {
     expect(state.open).toBe(true);
 
     vi.advanceTimersByTime(5000);
-    expect(useGitOperationStore.getState().open).toBe(true); // stays open
+    expect(useGitOperationStore.getState().open).toBe(true);
   });
 
   it("close() immediately closes dialog and clears state", () => {
@@ -104,27 +132,53 @@ describe("Git Operation Store", () => {
 
   it("close() cancels auto-close timer", () => {
     useGitOperationStore.getState().start("Push");
-    useGitOperationStore.getState().finish(); // starts auto-close timer
-    useGitOperationStore.getState().close(); // manual close
+    useGitOperationStore.getState().finish();
+    useGitOperationStore.getState().close();
 
-    // Re-open and verify the old timer doesn't interfere
     useGitOperationStore.getState().start("Pull");
     vi.advanceTimersByTime(1500);
-    expect(useGitOperationStore.getState().open).toBe(true); // still open (running)
+    expect(useGitOperationStore.getState().open).toBe(true);
+  });
+
+  it("setAutoClose() persists to localStorage", () => {
+    useGitOperationStore.getState().setAutoClose(false);
+    expect(mockStorage["git-expansion-operation-autoclose"]).toBe("false");
+    expect(useGitOperationStore.getState().autoClose).toBe(false);
+
+    useGitOperationStore.getState().setAutoClose(true);
+    expect(mockStorage["git-expansion-operation-autoclose"]).toBe("true");
+    expect(useGitOperationStore.getState().autoClose).toBe(true);
+  });
+
+  it("toggling autoClose on while showing success starts auto-close timer", () => {
+    useGitOperationStore.getState().setAutoClose(false);
+    useGitOperationStore.getState().start("Push");
+    useGitOperationStore.getState().finish();
+    expect(useGitOperationStore.getState().open).toBe(true);
+
+    // Toggle auto-close on — should start auto-close
+    useGitOperationStore.getState().setAutoClose(true);
+    vi.advanceTimersByTime(1500);
+    expect(useGitOperationStore.getState().open).toBe(false);
+  });
+
+  it("addOutputLine() collects output while open", () => {
+    useGitOperationStore.getState().start("Commit");
+    useGitOperationStore.getState().addOutputLine({ id: "cmd-1", stream: "stderr", text: "Running pre-commit hook..." });
+    expect(useGitOperationStore.getState().outputLines).toHaveLength(1);
+    expect(useGitOperationStore.getState().outputLines[0].text).toBe("Running pre-commit hook...");
+  });
+
+  it("addOutputLine() ignores lines when dialog is closed", () => {
+    useGitOperationStore.getState().addOutputLine({ id: "cmd-1", stream: "stderr", text: "ignored" });
+    expect(useGitOperationStore.getState().outputLines).toHaveLength(0);
   });
 });
 
 describe("runGitOperation()", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    useGitOperationStore.setState({
-      open: false,
-      label: "",
-      entries: [],
-      running: false,
-      error: null,
-      _autoCloseTimer: null,
-    });
+    resetStore();
   });
 
   afterEach(() => {

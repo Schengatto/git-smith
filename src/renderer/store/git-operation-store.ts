@@ -8,6 +8,16 @@ export interface OutputLine {
   entryId: string;
 }
 
+const AUTOCLOSE_KEY = "git-expansion-operation-autoclose";
+
+function getPersistedAutoClose(): boolean {
+  try {
+    return localStorage.getItem(AUTOCLOSE_KEY) !== "false";
+  } catch {
+    return true;
+  }
+}
+
 interface GitOperationState {
   /** Whether the operation log dialog is visible */
   open: boolean;
@@ -23,6 +33,8 @@ interface GitOperationState {
   error: string | null;
   /** Auto-close timer id */
   _autoCloseTimer: ReturnType<typeof setTimeout> | null;
+  /** Whether to auto-close the dialog on success */
+  autoClose: boolean;
 
   /** Start tracking a new operation */
   start: (label: string) => void;
@@ -34,6 +46,8 @@ interface GitOperationState {
   finish: (error?: string) => void;
   /** Close the dialog */
   close: () => void;
+  /** Toggle auto-close preference */
+  setAutoClose: (value: boolean) => void;
 }
 
 export const useGitOperationStore = create<GitOperationState>((set, get) => ({
@@ -44,6 +58,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
   running: false,
   error: null,
   _autoCloseTimer: null,
+  autoClose: getPersistedAutoClose(),
 
   start: (label: string) => {
     const prev = get()._autoCloseTimer;
@@ -81,14 +96,18 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
 
   finish: (error?: string) => {
     if (!error) {
-      // Auto-close after 1.5s on success
-      const timer = setTimeout(() => {
-        const state = get();
-        if (state.open && !state.error) {
-          set({ open: false, entries: [], outputLines: [], running: false });
-        }
-      }, 1500);
-      set({ running: false, error: null, _autoCloseTimer: timer });
+      if (get().autoClose) {
+        // Auto-close after 1.5s on success
+        const timer = setTimeout(() => {
+          const state = get();
+          if (state.open && !state.error) {
+            set({ open: false, entries: [], outputLines: [], running: false });
+          }
+        }, 1500);
+        set({ running: false, error: null, _autoCloseTimer: timer });
+      } else {
+        set({ running: false, error: null });
+      }
     } else {
       set({ running: false, error });
     }
@@ -98,6 +117,25 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
     const prev = get()._autoCloseTimer;
     if (prev) clearTimeout(prev);
     set({ open: false, entries: [], outputLines: [], running: false, error: null, _autoCloseTimer: null });
+  },
+
+  setAutoClose: (value: boolean) => {
+    try { localStorage.setItem(AUTOCLOSE_KEY, String(value)); } catch {}
+    // If toggling to auto-close while showing a successful result, start the timer
+    if (value && get().open && !get().running && !get().error) {
+      const timer = setTimeout(() => {
+        const state = get();
+        if (state.open && !state.error) {
+          set({ open: false, entries: [], outputLines: [], running: false });
+        }
+      }, 1500);
+      set({ autoClose: value, _autoCloseTimer: timer });
+    } else {
+      // If toggling off auto-close, cancel any pending timer
+      const prev = get()._autoCloseTimer;
+      if (prev && !value) clearTimeout(prev);
+      set({ autoClose: value, _autoCloseTimer: !value ? null : get()._autoCloseTimer });
+    }
   },
 }));
 

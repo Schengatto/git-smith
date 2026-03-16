@@ -4,7 +4,7 @@ import type { OutputLine } from "../../store/git-operation-store";
 import type { CommandLogEntry } from "../../../shared/git-types";
 
 export const GitOperationLogDialog: React.FC = () => {
-  const { open, label, entries, outputLines, running, error, close } = useGitOperationStore();
+  const { open, label, entries, outputLines, running, error, close, autoClose, setAutoClose } = useGitOperationStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Group output lines by entry id
@@ -160,17 +160,37 @@ export const GitOperationLogDialog: React.FC = () => {
           </div>
         )}
 
-        {/* Footer with close button (only shown when not running) */}
-        {!running && (
-          <div
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 16px 12px",
+            borderTop: "1px solid var(--border-subtle)",
+            flexShrink: 0,
+          }}
+        >
+          <label
             style={{
               display: "flex",
-              justifyContent: "flex-end",
-              padding: "8px 16px 12px",
-              borderTop: error ? "none" : "1px solid var(--border-subtle)",
-              flexShrink: 0,
+              alignItems: "center",
+              gap: 6,
+              cursor: "pointer",
+              fontSize: 11,
+              color: "var(--text-muted)",
+              userSelect: "none",
             }}
           >
+            <input
+              type="checkbox"
+              checked={autoClose}
+              onChange={(e) => setAutoClose(e.target.checked)}
+              style={{ margin: 0, accentColor: "var(--accent)" }}
+            />
+            Close on success
+          </label>
+          {!running && (
             <button
               onClick={close}
               style={{
@@ -186,8 +206,8 @@ export const GitOperationLogDialog: React.FC = () => {
             >
               Close
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <style>{`
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
