@@ -22,6 +22,13 @@ export function registerBranchHandlers() {
   );
 
   ipcMain.handle(
+    IPC.BRANCH.DELETE_REMOTE,
+    async (_event, remote: string, branch: string) => {
+      await gitService.deleteRemoteBranch(remote, branch);
+    }
+  );
+
+  ipcMain.handle(
     IPC.BRANCH.RENAME,
     async (_event, oldName: string, newName: string) => {
       await gitService.renameBranch(oldName, newName);
@@ -32,13 +39,34 @@ export function registerBranchHandlers() {
     await gitService.checkout(ref);
   });
 
+  ipcMain.handle(
+    IPC.BRANCH.CHECKOUT_OPTIONS,
+    async (_event, ref: string, options: { merge?: boolean }) => {
+      await gitService.checkoutWithOptions(ref, options);
+    }
+  );
+
   ipcMain.handle(IPC.BRANCH.MERGE, async (_event, branch: string) => {
     return gitService.merge(branch);
   });
 
+  ipcMain.handle(
+    IPC.BRANCH.MERGE_OPTIONS,
+    async (_event, options: import("../../shared/git-types").MergeOptions) => {
+      return gitService.mergeWithOptions(options);
+    }
+  );
+
   ipcMain.handle(IPC.BRANCH.REBASE, async (_event, onto: string) => {
     await gitService.rebase(onto);
   });
+
+  ipcMain.handle(
+    IPC.BRANCH.REBASE_OPTIONS,
+    async (_event, options: import("../../shared/git-types").RebaseOptions) => {
+      await gitService.rebaseWithOptions(options);
+    }
+  );
 
   ipcMain.handle(
     IPC.BRANCH.REBASE_COMMITS,
@@ -58,6 +86,10 @@ export function registerBranchHandlers() {
     await gitService.rebaseContinue();
   });
 
+  ipcMain.handle(IPC.BRANCH.REBASE_SKIP, async () => {
+    await gitService.rebaseSkip();
+  });
+
   ipcMain.handle(IPC.BRANCH.REBASE_ABORT, async () => {
     await gitService.rebaseAbort();
   });
@@ -74,6 +106,20 @@ export function registerBranchHandlers() {
     IPC.BRANCH.RESET,
     async (_event, hash: string, mode: "soft" | "mixed" | "hard") => {
       await gitService.resetToCommit(hash, mode);
+    }
+  );
+
+  ipcMain.handle(
+    IPC.BRANCH.STALE_REMOTE,
+    async (_event, olderThanDays: number) => {
+      return gitService.getStaleRemoteBranches(olderThanDays);
+    }
+  );
+
+  ipcMain.handle(
+    IPC.BRANCH.REMOTE_COMMITS,
+    async (_event, remoteBranch: string, maxCount?: number) => {
+      return gitService.getRemoteBranchCommits(remoteBranch, maxCount);
     }
   );
 

@@ -1,5 +1,12 @@
 import { create } from "zustand";
 import type { GraphRow, CommitInfo } from "../../shared/git-types";
+import { buildGraph } from "../../shared/graph-builder";
+import { useRepoStore } from "./repo-store";
+
+export interface BranchVisibility {
+  mode: "include" | "exclude";
+  branches: string[];
+}
 
 interface GraphState {
   rows: GraphRow[];
@@ -8,11 +15,20 @@ interface GraphState {
   loading: boolean;
   hasMore: boolean;
   totalLoaded: number;
+  branchFilter: string;
+  branchVisibility: BranchVisibility | null;
+  /** Raw commits accumulated across all loaded pages */
+  allCommits: CommitInfo[];
+  /** Whether saved view settings have been restored for the current repo */
+  viewSettingsRestored: boolean;
 
   loadGraph: (maxCount?: number) => Promise<void>;
   loadMore: () => Promise<void>;
   selectCommit: (hash: string) => Promise<void>;
   clearSelection: () => void;
+  setBranchFilter: (filter: string) => void;
+  setBranchVisibility: (visibility: BranchVisibility | null) => void;
+  restoreViewSettings: () => Promise<void>;
 }
 
 const CHUNK_SIZE = 500;
@@ -24,19 +40,42 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   loading: false,
   hasMore: true,
   totalLoaded: 0,
+  branchFilter: "",
+  branchVisibility: null,
+  allCommits: [],
+  viewSettingsRestored: false,
+
+  restoreViewSettings: async () => {
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (!repoPath) return;
+    try {
+      const saved = await window.electronAPI.repo.getViewSettings(repoPath);
+      set({
+        branchFilter: saved.branchFilter || "",
+        branchVisibility: saved.branchVisibility || null,
+        viewSettingsRestored: true,
+      });
+    } catch {
+      set({ viewSettingsRestored: true });
+    }
+  },
 
   loadGraph: async (maxCount = CHUNK_SIZE) => {
     set({ loading: true });
     try {
-      const rows = await window.electronAPI.log.graph(maxCount, 0);
+      const { branchFilter, branchVisibility } = get();
+      const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
+      const commits = await window.electronAPI.log.getCommits(maxCount, 0, branchFilter || undefined, vis);
+      const rows = buildGraph(commits);
       const rowMap = new Map<string, number>();
       rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
       set({
         rows,
         rowMap,
+        allCommits: commits,
         loading: false,
-        hasMore: rows.length >= maxCount,
-        totalLoaded: rows.length,
+        hasMore: commits.length >= maxCount,
+        totalLoaded: commits.length,
       });
     } catch {
       set({ loading: false });
@@ -44,20 +83,24 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { rows, rowMap, loading, hasMore, totalLoaded } = get();
+    const { allCommits, loading, hasMore, totalLoaded, branchFilter, branchVisibility } = get();
     if (loading || !hasMore) return;
     set({ loading: true });
     try {
-      const more = await window.electronAPI.log.graph(CHUNK_SIZE, totalLoaded);
-      const newRows = [...rows, ...more];
-      const newMap = new Map(rowMap);
-      more.forEach((r, i) => newMap.set(r.commit.hash, rows.length + i));
+      const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
+      const moreCommits = await window.electronAPI.log.getCommits(CHUNK_SIZE, totalLoaded, branchFilter || undefined, vis);
+      // Accumulate all commits and rebuild graph from scratch
+      const newAllCommits = [...allCommits, ...moreCommits];
+      const rows = buildGraph(newAllCommits);
+      const rowMap = new Map<string, number>();
+      rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
       set({
-        rows: newRows,
-        rowMap: newMap,
+        rows,
+        rowMap,
+        allCommits: newAllCommits,
         loading: false,
-        hasMore: more.length >= CHUNK_SIZE,
-        totalLoaded: totalLoaded + more.length,
+        hasMore: moreCommits.length >= CHUNK_SIZE,
+        totalLoaded: totalLoaded + moreCommits.length,
       });
     } catch {
       set({ loading: false });
@@ -72,4 +115,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   clearSelection: () => set({ selectedCommit: null }),
+
+  setBranchFilter: (filter: string) => {
+    set({ branchFilter: filter });
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (repoPath) {
+      window.electronAPI.repo.setViewSettings(repoPath, { branchFilter: filter });
+    }
+  },
+
+  setBranchVisibility: (visibility: BranchVisibility | null) => {
+    set({ branchVisibility: visibility });
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (repoPath) {
+      window.electronAPI.repo.setViewSettings(repoPath, { branchVisibility: visibility });
+    }
+  },
 }));

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
+import { runGitOperation } from "../../store/git-operation-store";
 
 interface Props {
   open: boolean;
@@ -52,7 +53,7 @@ export const SetUpstreamDialog: React.FC<Props> = ({
     setLoading(true);
     setPushError(null);
     try {
-      await window.electronAPI.remote.push(selectedRemote, suggestedBranch, force, true);
+      await runGitOperation("Push (Set Upstream)", () => window.electronAPI.remote.push(selectedRemote, suggestedBranch, force, true));
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {

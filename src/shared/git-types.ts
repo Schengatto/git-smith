@@ -50,7 +50,7 @@ export interface GraphRow {
 export interface GraphEdge {
   fromLane: number;
   toLane: number;
-  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right" | "end";
+  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right" | "converge-left" | "converge-right" | "start" | "end";
   color: number; // index into palette
 }
 
@@ -92,6 +92,13 @@ export interface CommandLogEntry {
   duration?: number;
   exitCode?: number;
   error?: string;
+}
+
+export interface CommandOutputLine {
+  /** Matches the CommandLogEntry.id this output belongs to */
+  id: string;
+  stream: "stdout" | "stderr";
+  text: string;
 }
 
 export interface CommitFileInfo {
@@ -142,6 +149,75 @@ export interface CommitFullInfo {
   containedInBranches: string[];
   containedInTags: string[];
   derivesFromTag: string;
+}
+
+export interface StaleRemoteBranch {
+  name: string; // e.g. "origin/feature-old"
+  remote: string; // e.g. "origin"
+  branchName: string; // e.g. "feature-old"
+  lastCommitHash: string;
+  lastCommitDate: string;
+  lastCommitSubject: string;
+  lastCommitAuthor: string;
+}
+
+export interface MergeOptions {
+  /** Branch/ref to merge into the current branch */
+  branch: string;
+  /** "ff" = fast-forward if possible (default), "no-ff" = always create merge commit */
+  mergeStrategy: "ff" | "no-ff";
+  /** Do not commit the merge result (leave it staged) */
+  noCommit?: boolean;
+  /** Squash commits into a single change set */
+  squash?: boolean;
+  /** Allow merging branches with unrelated histories */
+  allowUnrelatedHistories?: boolean;
+  /** Include log messages from merged commits (number = how many) */
+  log?: number;
+  /** Custom merge commit message */
+  message?: string;
+}
+
+export interface RebaseOptions {
+  /** Commit or branch to rebase onto */
+  onto: string;
+  /** Run an interactive rebase (with pre-built todo list) */
+  interactive?: boolean;
+  /** Preserve merge commits during rebase */
+  preserveMerges?: boolean;
+  /** Automatically apply fixup!/squash! commits */
+  autosquash?: boolean;
+  /** Automatically stash/unstash before/after rebase */
+  autoStash?: boolean;
+  /** Ignore date (reset author date to committer date) */
+  ignoreDate?: boolean;
+  /** Set committer date equal to author date */
+  committerDateIsAuthorDate?: boolean;
+  /** Update branches that point to rebased commits */
+  updateRefs?: boolean;
+  /** Specific range: rebase only commits after this (exclusive) */
+  rangeFrom?: string;
+  /** Specific range: rebase onto this branch/ref */
+  rangeTo?: string;
+  /** Pre-built todo entries for interactive mode */
+  todoEntries?: { action: string; hash: string }[];
+}
+
+export interface ConflictFile {
+  path: string;
+  /** "both-modified" | "added-by-us" | "added-by-them" | "deleted-by-us" | "deleted-by-them" | "both-added" | "both-deleted" */
+  reason: string;
+}
+
+export interface ConflictFileContent {
+  /** Current (ours) version — null if deleted */
+  ours: string | null;
+  /** Incoming (theirs) version — null if deleted */
+  theirs: string | null;
+  /** Common ancestor (base) version — null if not available */
+  base: string | null;
+  /** Current working tree content with conflict markers */
+  merged: string;
 }
 
 export interface CloneOptions {

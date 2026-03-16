@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { IPC } from "../../shared/ipc-channels";
 import type {
   CommandLogEntry,
+  CommandOutputLine,
   RepoInfo,
   GitStatus,
   FileStatus,
@@ -16,6 +17,8 @@ import type {
   TagInfo,
   StashEntry,
   RemoteInfo,
+  StaleRemoteBranch,
+  RebaseOptions,
 } from "../../shared/git-types";
 
 let idCounter = 0;
@@ -53,12 +56,43 @@ export class GitService {
     }
   }
 
+  private emitCommandOutput(line: CommandOutputLine) {
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send(IPC.EVENTS.COMMAND_OUTPUT, line);
+    }
+  }
+
+  /** ID of the currently running command (for associating output handler lines) */
+  private _currentRunId: string | null = null;
+
+  private setupOutputHandler() {
+    if (!this.git) return;
+    this.git.outputHandler((_command, stdout, stderr) => {
+      const bindStream = (stream: NodeJS.ReadableStream, name: "stdout" | "stderr") => {
+        stream.on("data", (data: Buffer) => {
+          const id = this._currentRunId;
+          if (!id) return;
+          const text = data.toString("utf-8");
+          // Split into lines and emit each non-empty line
+          for (const line of text.split(/\r?\n/)) {
+            if (line.length > 0) {
+              this.emitCommandOutput({ id, stream: name, text: line });
+            }
+          }
+        });
+      };
+      bindStream(stdout, "stdout");
+      bindStream(stderr, "stderr");
+    });
+  }
+
   private async run<T>(
     description: string,
     args: string[],
     fn: () => Promise<T>
   ): Promise<T> {
     const entry = this.logCommand(description, args);
+    this._currentRunId = entry.id;
     this.emitCommandLog(entry);
     const start = Date.now();
     try {
@@ -73,6 +107,8 @@ export class GitService {
       entry.error = err instanceof Error ? err.message : String(err);
       this.emitCommandLog(entry);
       throw err;
+    } finally {
+      this._currentRunId = null;
     }
   }
 
@@ -88,6 +124,7 @@ export class GitService {
       this.git = null;
       throw new Error(`Not a git repository: ${path}`);
     }
+    this.setupOutputHandler();
     this.repoPath = path;
     return this.getRepoInfo();
   }
@@ -102,6 +139,7 @@ export class GitService {
     const git = simpleGit(options);
     await git.init();
     this.git = git;
+    this.setupOutputHandler();
     this.repoPath = dirPath;
     return this.getRepoInfo();
   }
@@ -148,23 +186,31 @@ export class GitService {
       const staged: FileStatus[] = [];
       const unstaged: FileStatus[] = [];
 
-      for (const f of status.created) {
-        if (status.staged.includes(f)) staged.push({ path: f, status: "added" });
-        else unstaged.push({ path: f, status: "added" });
+      for (const f of status.files) {
+        const idx = f.index;
+        const wt = f.working_dir;
+
+        // Untracked files are handled separately via status.not_added
+        if (idx === "?" || idx === "!") continue;
+
+        // Index (staged) changes
+        if (idx === "A") staged.push({ path: f.path, status: "added" });
+        else if (idx === "M") staged.push({ path: f.path, status: "modified" });
+        else if (idx === "D") staged.push({ path: f.path, status: "deleted" });
+        else if (idx === "R") staged.push({ path: f.path, status: "renamed" });
+        else if (idx === "C") staged.push({ path: f.path, status: "copied" });
+
+        // Working tree (unstaged) changes
+        if (wt === "M") unstaged.push({ path: f.path, status: "modified" });
+        else if (wt === "D") unstaged.push({ path: f.path, status: "deleted" });
+        else if (wt === "A") unstaged.push({ path: f.path, status: "added" });
       }
-      for (const f of status.modified) {
-        unstaged.push({ path: f, status: "modified" });
-      }
-      for (const f of status.staged) {
-        if (!status.created.includes(f)) {
-          staged.push({ path: f, status: "modified" });
-        }
-      }
-      for (const f of status.deleted) {
-        unstaged.push({ path: f, status: "deleted" });
-      }
-      for (const f of status.renamed) {
-        staged.push({ path: f.to, status: "renamed", oldPath: f.from });
+
+      // Renamed files: use status.renamed for oldPath info
+      for (const r of status.renamed) {
+        const existing = staged.find((s) => s.path === r.to);
+        if (existing) existing.oldPath = r.from;
+        else staged.push({ path: r.to, status: "renamed", oldPath: r.from });
       }
 
       return {
@@ -266,12 +312,37 @@ export class GitService {
 
   async getLog(
     maxCount = 500,
-    skip = 0
+    skip = 0,
+    branchFilter?: string,
+    branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
   ): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
+    let refArgs: string[];
+    if (branchVisibility && branchVisibility.branches.length > 0) {
+      if (branchVisibility.mode === "include") {
+        // Show only commits reachable from selected branches
+        refArgs = branchVisibility.branches.map((b) =>
+          b.startsWith("remotes/") ? b : `refs/heads/${b}`
+        );
+      } else {
+        // Exclude: show all except selected branches
+        refArgs = [
+          ...branchVisibility.branches.map((b) =>
+            b.startsWith("remotes/")
+              ? `--exclude=refs/${b}`
+              : `--exclude=refs/heads/${b}`
+          ),
+          "--all",
+        ];
+      }
+    } else if (branchFilter) {
+      refArgs = [`--branches=*${branchFilter}*`, `--remotes=*${branchFilter}*`];
+    } else {
+      refArgs = ["--all"];
+    }
     return this.run(
       "git log",
-      [`--max-count=${maxCount}`, `--skip=${skip}`, "--all", "--topo-order"],
+      [`--max-count=${maxCount}`, `--skip=${skip}`, ...refArgs, "--topo-order"],
       async () => {
         // Use %x1e (record separator) between commits and %x00 between fields.
         // Use %B (raw body) at the END so embedded newlines don't break parsing.
@@ -292,7 +363,7 @@ export class GitService {
 
         const result = await git.raw([
           "log",
-          "--all",
+          ...refArgs,
           "--topo-order",
           `--format=${RECORD_SEP}${format}`,
           `--max-count=${maxCount}`,
@@ -476,6 +547,13 @@ export class GitService {
     );
   }
 
+  async deleteRemoteBranch(remote: string, branch: string): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git push", [remote, "--delete", branch], () =>
+      git.raw(["push", remote, "--delete", branch])
+    );
+  }
+
   async checkout(ref: string): Promise<void> {
     const git = this.ensureRepo();
     // Remote tracking refs (remotes/origin/feature) cause detached HEAD.
@@ -484,6 +562,16 @@ export class GitService {
       ? ref.replace(/^remotes\/[^/]+\//, "")
       : ref;
     await this.run("git checkout", [checkoutRef], () => git.checkout(checkoutRef));
+  }
+
+  async checkoutWithOptions(ref: string, options: { merge?: boolean }): Promise<void> {
+    const git = this.ensureRepo();
+    const checkoutRef = ref.startsWith("remotes/")
+      ? ref.replace(/^remotes\/[^/]+\//, "")
+      : ref;
+    const args = [checkoutRef];
+    if (options.merge) args.push("--merge");
+    await this.run("git checkout", args, () => git.raw(["checkout", ...args]));
   }
 
   async renameBranch(oldName: string, newName: string): Promise<void> {
@@ -501,9 +589,77 @@ export class GitService {
     });
   }
 
+  async mergeWithOptions(options: import("../../shared/git-types").MergeOptions): Promise<string> {
+    const git = this.ensureRepo();
+    const args: string[] = [];
+
+    if (options.mergeStrategy === "no-ff") args.push("--no-ff");
+    if (options.noCommit) args.push("--no-commit");
+    if (options.squash) args.push("--squash");
+    if (options.allowUnrelatedHistories) args.push("--allow-unrelated-histories");
+    if (options.log != null && options.log > 0) args.push(`--log=${options.log}`);
+    if (options.message) args.push("-m", options.message);
+
+    args.push(options.branch);
+
+    return this.run("git merge", args, async () => {
+      const result = await git.raw(["merge", ...args]);
+      return result;
+    });
+  }
+
   async rebase(onto: string): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git rebase", [onto], () => git.rebase([onto]));
+  }
+
+  async rebaseWithOptions(options: RebaseOptions): Promise<void> {
+    const git = this.ensureRepo();
+    const args: string[] = [];
+
+    if (options.interactive) args.push("-i");
+    if (options.preserveMerges) args.push("--rebase-merges");
+    if (options.autosquash) args.push("--autosquash");
+    if (options.autoStash) args.push("--autostash");
+    if (options.ignoreDate) args.push("--ignore-date");
+    if (options.committerDateIsAuthorDate) args.push("--committer-date-is-author-date");
+    if (options.updateRefs) args.push("--update-refs");
+
+    if (options.rangeFrom) {
+      // Specific range: rebase --onto <onto> <from> <to>
+      args.push("--onto", options.onto, options.rangeFrom);
+      if (options.rangeTo) args.push(options.rangeTo);
+    } else {
+      args.push(options.onto);
+    }
+
+    if (options.interactive && options.todoEntries && options.todoEntries.length > 0) {
+      // Build the todo file for interactive rebase
+      const todoContent = options.todoEntries
+        .map((e) => `${e.action} ${e.hash}`)
+        .join("\n") + "\n";
+
+      const todoPath = path.join(this.repoPath!, ".git", "rebase-todo-custom.txt");
+      fs.writeFileSync(todoPath, todoContent);
+
+      const editorScript = path.join(this.repoPath!, ".git", "rebase-editor.sh");
+      fs.writeFileSync(
+        editorScript,
+        `#!/bin/sh\ncp "${todoPath}" "$1"\n`,
+        { mode: 0o755 }
+      );
+
+      await this.run("git rebase", args, async () => {
+        try {
+          await git.env("GIT_SEQUENCE_EDITOR", editorScript).rebase(args);
+        } finally {
+          try { fs.unlinkSync(todoPath); } catch {}
+          try { fs.unlinkSync(editorScript); } catch {}
+        }
+      });
+    } else {
+      await this.run("git rebase", args, () => git.rebase(args));
+    }
   }
 
   async rebaseAbort(): Promise<void> {
@@ -730,12 +886,87 @@ export class GitService {
     );
   }
 
+  async rebaseSkip(): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git rebase", ["--skip"], () =>
+      git.rebase(["--skip"])
+    );
+  }
+
   async isRebaseInProgress(): Promise<boolean> {
     if (!this.repoPath) return false;
     return (
       fs.existsSync(path.join(this.repoPath, ".git", "rebase-merge")) ||
       fs.existsSync(path.join(this.repoPath, ".git", "rebase-apply"))
     );
+  }
+
+  // ─── Conflict resolution ───────────────────────────
+
+  async getConflictedFiles(): Promise<import("../../shared/git-types").ConflictFile[]> {
+    const git = this.ensureRepo();
+    // git diff --name-only --diff-filter=U lists unmerged files
+    const raw = await git.raw(["diff", "--name-only", "--diff-filter=U"]);
+    if (!raw.trim()) return [];
+
+    const files: import("../../shared/git-types").ConflictFile[] = [];
+    // Also get detailed status to determine conflict reason
+    const statusRaw = await git.raw(["status", "--porcelain"]);
+    const statusMap = new Map<string, string>();
+    for (const line of statusRaw.split("\n")) {
+      if (!line.trim()) continue;
+      const xy = line.substring(0, 2);
+      const filePath = line.substring(3).trim();
+      statusMap.set(filePath, xy);
+    }
+
+    for (const filePath of raw.split("\n").filter((l) => l.trim())) {
+      const xy = statusMap.get(filePath) || "UU";
+      let reason = "both-modified";
+      if (xy === "AA") reason = "both-added";
+      else if (xy === "DD") reason = "both-deleted";
+      else if (xy === "DU") reason = "deleted-by-us";
+      else if (xy === "UD") reason = "deleted-by-them";
+      else if (xy === "AU") reason = "added-by-us";
+      else if (xy === "UA") reason = "added-by-them";
+      files.push({ path: filePath, reason });
+    }
+    return files;
+  }
+
+  async getConflictFileContent(
+    filePath: string
+  ): Promise<import("../../shared/git-types").ConflictFileContent> {
+    const git = this.ensureRepo();
+
+    // Read the three versions using git show :<stage>:<path>
+    // Stage 1 = base, Stage 2 = ours, Stage 3 = theirs
+    let base: string | null = null;
+    let ours: string | null = null;
+    let theirs: string | null = null;
+
+    try { base = await git.raw(["show", `:1:${filePath}`]); } catch { base = null; }
+    try { ours = await git.raw(["show", `:2:${filePath}`]); } catch { ours = null; }
+    try { theirs = await git.raw(["show", `:3:${filePath}`]); } catch { theirs = null; }
+
+    // Read the current working tree file with conflict markers
+    let merged = "";
+    try {
+      const fullPath = path.join(this.repoPath!, filePath);
+      merged = fs.readFileSync(fullPath, "utf-8");
+    } catch { merged = ""; }
+
+    return { ours, theirs, base, merged };
+  }
+
+  async resolveConflict(filePath: string): Promise<void> {
+    const git = this.ensureRepo();
+    await git.add(filePath);
+  }
+
+  async saveMergedFile(filePath: string, content: string): Promise<void> {
+    const fullPath = path.join(this.repoPath!, filePath);
+    fs.writeFileSync(fullPath, content, "utf-8");
   }
 
   async getConfig(key: string, global = false): Promise<string> {
@@ -1033,6 +1264,77 @@ export class GitService {
             deletions,
           };
         });
+    });
+  }
+
+  async getStaleRemoteBranches(olderThanDays: number): Promise<StaleRemoteBranch[]> {
+    const git = this.ensureRepo();
+    return this.run("git branch", ["-r", "--sort=committerdate"], async () => {
+      // Get remote branches with last commit info
+      const raw = await git.raw([
+        "for-each-ref",
+        "--sort=committerdate",
+        "--format=%(refname:short)%09%(committerdate:iso8601)%09%(objectname:short)%09%(subject)%09%(authorname)",
+        "refs/remotes/",
+      ]);
+      if (!raw.trim()) return [];
+
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - olderThanDays);
+
+      const results: StaleRemoteBranch[] = [];
+      for (const line of raw.trim().split("\n")) {
+        const [fullName, dateStr, hash, subject, author] = line.split("\t");
+        if (!fullName || fullName.endsWith("/HEAD")) continue;
+
+        const commitDate = new Date(dateStr);
+        if (commitDate >= cutoff) continue;
+
+        // Split "origin/branch-name" into remote and branch
+        const slashIdx = fullName.indexOf("/");
+        const remote = fullName.substring(0, slashIdx);
+        const branchName = fullName.substring(slashIdx + 1);
+
+        results.push({
+          name: fullName,
+          remote,
+          branchName,
+          lastCommitHash: hash,
+          lastCommitDate: dateStr,
+          lastCommitSubject: subject || "",
+          lastCommitAuthor: author || "",
+        });
+      }
+      return results;
+    });
+  }
+
+  async getRemoteBranchCommits(remoteBranch: string, maxCount = 20): Promise<CommitInfo[]> {
+    const git = this.ensureRepo();
+    return this.run("git log", [remoteBranch, `-${maxCount}`], async () => {
+      const format = [
+        "%H", "%h", "%s", "%b", "%an", "%ae", "%aI", "%cI", "%P", "%D",
+      ].join("%x00");
+      const raw = await git.raw([
+        "log", remoteBranch, `--max-count=${maxCount}`,
+        `--format=${format}`,
+      ]);
+      if (!raw.trim()) return [];
+      return raw.trim().split("\n").map((line) => {
+        const parts = line.split("\x00");
+        return {
+          hash: parts[0],
+          abbreviatedHash: parts[1],
+          subject: parts[2],
+          body: parts[3],
+          authorName: parts[4],
+          authorEmail: parts[5],
+          authorDate: parts[6],
+          committerDate: parts[7],
+          parentHashes: parts[8] ? parts[8].split(" ") : [],
+          refs: parseRefs(parts[9] || ""),
+        };
+      });
     });
   }
 

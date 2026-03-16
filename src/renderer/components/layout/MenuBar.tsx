@@ -171,7 +171,8 @@ export const MenuBar: React.FC<{
   onOpenSettings: () => void;
   onOpenScan: () => void;
   onOpenAbout: () => void;
-}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout }) => {
+  onOpenStaleBranches: () => void;
+}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout, onOpenStaleBranches }) => {
   const { repo, openRepoDialog, initRepo } = useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -249,38 +250,6 @@ export const MenuBar: React.FC<{
       ],
     },
     {
-      label: "GitHub",
-      items: [
-        {
-          label: "Fork/Clone repository...",
-          onClick: () => onOpenClone(),
-        },
-        { divider: true },
-        {
-          label: "View pull requests...",
-          disabled: !hasRepo,
-          onClick: () => {
-            /* TODO: open PR browser */
-          },
-        },
-        {
-          label: "Create pull request...",
-          disabled: !hasRepo,
-          onClick: () => {
-            /* TODO: open create PR */
-          },
-        },
-        { divider: true },
-        {
-          label: "Add upstream remote...",
-          disabled: !hasRepo,
-          onClick: () => {
-            /* TODO: add upstream */
-          },
-        },
-      ],
-    },
-    {
       label: "Tools",
       items: [
         {
@@ -297,11 +266,9 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
-          label: "Git command log",
-          shortcut: "F12",
-          onClick: () => {
-            /* Command log panel is already in DockView */
-          },
+          label: "Stale remote branches...",
+          disabled: !hasRepo,
+          onClick: () => onOpenStaleBranches(),
         },
         { divider: true },
         {

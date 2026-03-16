@@ -5,12 +5,17 @@ import type {
   GitStatus,
   CommitInfo,
   CommitFullInfo,
-  GraphRow,
   BranchInfo,
   StashEntry,
   RemoteInfo,
   CommitFileInfo,
   CommandLogEntry,
+  CommandOutputLine,
+  StaleRemoteBranch,
+  MergeOptions,
+  RebaseOptions,
+  ConflictFile,
+  ConflictFileContent,
 } from "../shared/git-types";
 
 const electronAPI = {
@@ -48,6 +53,19 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.REPO.OPEN_EXTERNAL, url),
     getLastOpened: (): Promise<string | null> =>
       ipcRenderer.invoke(IPC.REPO.GET_LAST_OPENED),
+    getViewSettings: (repoPath: string): Promise<{
+      branchFilter: string;
+      branchVisibility: { mode: "include" | "exclude"; branches: string[] } | null;
+      dockviewLayout: unknown | null;
+    }> => ipcRenderer.invoke(IPC.REPO.GET_VIEW_SETTINGS, repoPath),
+    setViewSettings: (
+      repoPath: string,
+      partial: Partial<{
+        branchFilter: string;
+        branchVisibility: { mode: "include" | "exclude"; branches: string[] } | null;
+        dockviewLayout: unknown | null;
+      }>
+    ): Promise<void> => ipcRenderer.invoke(IPC.REPO.SET_VIEW_SETTINGS, repoPath, partial),
   },
   status: {
     get: (): Promise<GitStatus> => ipcRenderer.invoke(IPC.STATUS.GET),
@@ -73,8 +91,13 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.COMMIT.GET_RECENT_MESSAGES),
   },
   log: {
-    graph: (maxCount?: number, skip?: number): Promise<GraphRow[]> =>
-      ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip),
+    getCommits: (
+      maxCount?: number,
+      skip?: number,
+      branchFilter?: string,
+      branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
+    ): Promise<CommitInfo[]> =>
+      ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip, branchFilter, branchVisibility),
     details: (hash: string): Promise<CommitInfo> =>
       ipcRenderer.invoke(IPC.LOG.DETAILS, hash),
     fullInfo: (hash: string): Promise<CommitFullInfo> =>
@@ -86,14 +109,22 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.CREATE, name, startPoint),
     delete: (name: string, force?: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.DELETE, name, force),
+    deleteRemote: (remote: string, branch: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.DELETE_REMOTE, remote, branch),
     rename: (oldName: string, newName: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.RENAME, oldName, newName),
     checkout: (ref: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.CHECKOUT, ref),
+    checkoutWithOptions: (ref: string, options: { merge?: boolean }): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.CHECKOUT_OPTIONS, ref, options),
     merge: (branch: string): Promise<string> =>
       ipcRenderer.invoke(IPC.BRANCH.MERGE, branch),
+    mergeWithOptions: (options: MergeOptions): Promise<string> =>
+      ipcRenderer.invoke(IPC.BRANCH.MERGE_OPTIONS, options),
     rebase: (onto: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE, onto),
+    rebaseWithOptions: (options: RebaseOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.REBASE_OPTIONS, options),
     rebaseInteractive: (
       onto: string,
       todoEntries: { action: string; hash: string }[]
@@ -103,6 +134,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.REBASE_COMMITS, onto),
     rebaseContinue: (): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE_CONTINUE),
+    rebaseSkip: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.REBASE_SKIP),
     rebaseAbort: (): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.REBASE_ABORT),
     isRebaseInProgress: (): Promise<boolean> =>
@@ -111,6 +144,10 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK, hash),
     reset: (hash: string, mode: "soft" | "mixed" | "hard"): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.RESET, hash, mode),
+    staleRemote: (olderThanDays: number): Promise<StaleRemoteBranch[]> =>
+      ipcRenderer.invoke(IPC.BRANCH.STALE_REMOTE, olderThanDays),
+    remoteCommits: (remoteBranch: string, maxCount?: number): Promise<CommitInfo[]> =>
+      ipcRenderer.invoke(IPC.BRANCH.REMOTE_COMMITS, remoteBranch, maxCount),
   },
   tag: {
     list: (): Promise<{ name: string; hash: string }[]> =>
@@ -171,6 +208,16 @@ const electronAPI = {
     commitFiles: (hash: string): Promise<CommitFileInfo[]> =>
       ipcRenderer.invoke(IPC.DIFF.COMMIT_FILES, hash),
     staged: (): Promise<string> => ipcRenderer.invoke(IPC.DIFF.STAGED),
+  },
+  conflict: {
+    list: (): Promise<ConflictFile[]> =>
+      ipcRenderer.invoke(IPC.CONFLICT.LIST),
+    fileContent: (filePath: string): Promise<ConflictFileContent> =>
+      ipcRenderer.invoke(IPC.CONFLICT.FILE_CONTENT, filePath),
+    resolve: (filePath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.CONFLICT.RESOLVE, filePath),
+    saveMerged: (filePath: string, content: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.CONFLICT.SAVE_MERGED, filePath, content),
   },
   stash: {
     list: (): Promise<StashEntry[]> => ipcRenderer.invoke(IPC.STASH.LIST),
@@ -239,6 +286,12 @@ const electronAPI = {
         callback(entry);
       ipcRenderer.on(IPC.EVENTS.COMMAND_LOG, handler);
       return () => ipcRenderer.removeListener(IPC.EVENTS.COMMAND_LOG, handler);
+    },
+    commandOutput: (callback: (line: CommandOutputLine) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, line: CommandOutputLine) =>
+        callback(line);
+      ipcRenderer.on(IPC.EVENTS.COMMAND_OUTPUT, handler);
+      return () => ipcRenderer.removeListener(IPC.EVENTS.COMMAND_OUTPUT, handler);
     },
     repoChanged: (callback: () => void) => {
       const handler = () => callback();

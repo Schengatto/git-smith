@@ -169,6 +169,7 @@ const InfoTab: React.FC<{
               {c.refs.map((r) => (
                 <span
                   key={r.name}
+                  title={r.name}
                   className={`badge ${
                     r.type === "head"
                       ? r.current ? "badge-head-current" : "badge-head"

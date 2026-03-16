@@ -15,7 +15,10 @@ import {
   scanForRepos,
   getLastOpenedRepo,
   setLastOpenedRepo,
+  getRepoViewSettings,
+  setRepoViewSettings,
 } from "../store";
+import type { RepoViewSettings } from "../store";
 
 export function registerRepoHandlers() {
   ipcMain.handle(IPC.REPO.OPEN, async (_event, path: string) => {
@@ -137,4 +140,15 @@ export function registerRepoHandlers() {
     if (result.canceled || result.filePaths.length === 0) return null;
     return result.filePaths[0];
   });
+
+  ipcMain.handle(IPC.REPO.GET_VIEW_SETTINGS, (_event, repoPath: string) => {
+    return getRepoViewSettings(repoPath);
+  });
+
+  ipcMain.handle(
+    IPC.REPO.SET_VIEW_SETTINGS,
+    (_event, repoPath: string, partial: Partial<RepoViewSettings>) => {
+      setRepoViewSettings(repoPath, partial);
+    }
+  );
 }

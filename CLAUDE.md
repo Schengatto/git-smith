@@ -79,6 +79,6 @@ This MUST happen BEFORE asking about commit/push/deploy.
 This is the most frequently skipped rule — pay extra attention.
 
 ### 5. End of Task
-
+- Always suggest a good commit message
 - Always ask the user if they want to commit and push
 - Never auto-commit or auto-push without explicit confirmation

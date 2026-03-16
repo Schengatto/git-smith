@@ -16,6 +16,7 @@ interface UIState {
   settingsDialogOpen: boolean;
   scanDialogOpen: boolean;
   aboutDialogOpen: boolean;
+  staleBranchesDialogOpen: boolean;
   openCloneDialog: () => void;
   closeCloneDialog: () => void;
   openSettingsDialog: () => void;
@@ -24,6 +25,8 @@ interface UIState {
   closeScanDialog: () => void;
   openAboutDialog: () => void;
   closeAboutDialog: () => void;
+  openStaleBranchesDialog: () => void;
+  closeStaleBranchesDialog: () => void;
 }
 
 // Read persisted theme
@@ -82,6 +85,9 @@ export const useUIStore = create<UIState>((set, get) => ({
   closeSettingsDialog: () => set({ settingsDialogOpen: false }),
   openScanDialog: () => set({ scanDialogOpen: true }),
   closeScanDialog: () => set({ scanDialogOpen: false }),
+  staleBranchesDialogOpen: false,
   openAboutDialog: () => set({ aboutDialogOpen: true }),
   closeAboutDialog: () => set({ aboutDialogOpen: false }),
+  openStaleBranchesDialog: () => set({ staleBranchesDialogOpen: true }),
+  closeStaleBranchesDialog: () => set({ staleBranchesDialogOpen: false }),
 }));

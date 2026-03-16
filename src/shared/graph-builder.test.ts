@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildGraph } from "./graph-builder";
-import type { CommitInfo } from "../../shared/git-types";
+import type { CommitInfo } from "./git-types";
 
 function makeCommit(
   hash: string,
@@ -120,5 +120,78 @@ describe("graph-builder", () => {
     const rows = buildGraph(commits);
     // After processing B (root), active lane count should be 0
     expect(rows[1].activeLaneCount).toBe(0);
+  });
+
+  it("merges duplicate lanes when two branches converge to same parent", () => {
+    // A (merge, parents: [B, C])
+    // B (parents: [D])
+    // C (parents: [D])  — both B and C point to D
+    // D (parents: [])
+    const commits = [
+      makeCommit("A", ["B", "C"], "Merge branch"),
+      makeCommit("B", ["D"]),
+      makeCommit("C", ["D"]),
+      makeCommit("D", []),
+    ];
+
+    const rows = buildGraph(commits);
+
+    // When D is reached, both lane 0 (from B) and lane 1 (from C) expect D.
+    // D should resolve in one lane, and the other lane should be freed.
+    // After D (root), there should be 0 active lanes — no ghost lanes.
+    expect(rows[3].activeLaneCount).toBe(0);
+
+    // D should have a converge edge from the duplicate lane
+    const convergeEdge = rows[3].edges.find(
+      (e) => e.type === "converge-left" || e.type === "converge-right"
+    );
+    expect(convergeEdge).toBeDefined();
+  });
+
+  it("uses start edge type for branch tips", () => {
+    const commits = [
+      makeCommit("A", ["B"]),
+      makeCommit("B", []),
+    ];
+
+    const rows = buildGraph(commits);
+    // A is a branch tip — should have a "start" edge, not "straight"
+    const startEdge = rows[0].edges.find((e) => e.type === "start");
+    expect(startEdge).toBeDefined();
+    expect(startEdge!.fromLane).toBe(0);
+    expect(startEdge!.toLane).toBe(0);
+
+    // B is NOT a branch tip (expected by A) — should have "straight" or "end"
+    const straightOrEnd = rows[1].edges.find(
+      (e) => e.type === "straight" || e.type === "end"
+    );
+    expect(straightOrEnd).toBeDefined();
+    const noStart = rows[1].edges.find((e) => e.type === "start");
+    expect(noStart).toBeUndefined();
+  });
+
+  it("does not create ghost lanes with complex merge history", () => {
+    // Simulates a common pattern: feature branches merged into main
+    // main: M3 -> M2 -> M1 -> Base
+    // feat1:       F1 ---^
+    // feat2: F2 --------^
+    // Both F1 and M2 have parent M1, and F2 and M3 have parent M2
+    const commits = [
+      makeCommit("M3", ["M2", "F2"], "Merge feat2"),
+      makeCommit("F2", ["M2"]),
+      makeCommit("M2", ["M1", "F1"], "Merge feat1"),
+      makeCommit("F1", ["M1"]),
+      makeCommit("M1", ["Base"]),
+      makeCommit("Base", []),
+    ];
+
+    const rows = buildGraph(commits);
+
+    // After processing Base (root), all lanes should be resolved
+    expect(rows[5].activeLaneCount).toBe(0);
+
+    // At M1, both M2 and F1 pointed to it, so duplicate lanes should be merged
+    // M1 should have at most 1 active lane
+    expect(rows[4].activeLaneCount).toBeLessThanOrEqual(1);
   });
 });

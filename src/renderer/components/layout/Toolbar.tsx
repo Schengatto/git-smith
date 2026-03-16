@@ -7,6 +7,7 @@ import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import { StashDialog } from "../dialogs/StashDialog";
+import { runGitOperation } from "../../store/git-operation-store";
 
 const IconFolder = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -343,7 +344,7 @@ export const Toolbar: React.FC = () => {
       icon: <IconArrowUp />,
       onClick: async () => {
         try {
-          await window.electronAPI.remote.push();
+          await runGitOperation("Push", () => window.electronAPI.remote.push());
           await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
         } catch (err) {
           handlePushError(err, false);
@@ -364,32 +365,41 @@ export const Toolbar: React.FC = () => {
       label: "Pull",
       sublabel: "Default strategy from git config",
       icon: <IconArrowDown />,
-      onClick: () => window.electronAPI.remote.pull(),
+      onClick: async () => {
+        await runGitOperation("Pull", () => window.electronAPI.remote.pull());
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      },
     },
     {
       label: "Pull (Merge)",
       sublabel: "git pull --no-rebase",
       icon: <IconMerge />,
-      onClick: () => window.electronAPI.remote.pullMerge(),
+      onClick: async () => {
+        await runGitOperation("Pull (Merge)", () => window.electronAPI.remote.pullMerge());
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      },
     },
     {
       label: "Pull (Rebase)",
       sublabel: "git pull --rebase",
       icon: <IconRebase />,
-      onClick: () => window.electronAPI.remote.pullRebase(),
+      onClick: async () => {
+        await runGitOperation("Pull (Rebase)", () => window.electronAPI.remote.pullRebase());
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      },
     },
   ];
 
   const handleStashQuick = async (opts?: { staged?: boolean }) => {
     try {
-      await window.electronAPI.stash.create(undefined, opts);
+      await runGitOperation("Stash", () => window.electronAPI.stash.create(undefined, opts));
       await Promise.all([refreshStatus(), loadGraph()]);
     } catch { /* stash dialog will handle errors */ }
   };
 
   const handleStashPop = async () => {
     try {
-      await window.electronAPI.stash.pop(0);
+      await runGitOperation("Stash Pop", () => window.electronAPI.stash.pop(0));
       await Promise.all([refreshStatus(), loadGraph()]);
     } catch { /* ignore */ }
   };
@@ -433,20 +443,29 @@ export const Toolbar: React.FC = () => {
       label: "Fetch",
       sublabel: "Fetch from default remote",
       icon: <IconDownload />,
-      onClick: () => window.electronAPI.remote.fetch(),
+      onClick: async () => {
+        await runGitOperation("Fetch", () => window.electronAPI.remote.fetch());
+        await Promise.all([refreshInfo(), loadGraph()]);
+      },
     },
     {
       label: "Fetch All",
       sublabel: "git fetch --all",
       icon: <IconGlobe />,
-      onClick: () => window.electronAPI.remote.fetchAll(),
+      onClick: async () => {
+        await runGitOperation("Fetch All", () => window.electronAPI.remote.fetchAll());
+        await Promise.all([refreshInfo(), loadGraph()]);
+      },
     },
     { divider: true },
     {
       label: "Fetch & Prune",
       sublabel: "git fetch --all --prune",
       icon: <IconPrune />,
-      onClick: () => window.electronAPI.remote.fetchPrune(),
+      onClick: async () => {
+        await runGitOperation("Fetch & Prune", () => window.electronAPI.remote.fetchPrune());
+        await Promise.all([refreshInfo(), loadGraph()]);
+      },
     },
   ];
 
@@ -577,7 +596,7 @@ export const Toolbar: React.FC = () => {
         onClose={() => setForcePushConfirm(false)}
         onConfirm={async () => {
           try {
-            await window.electronAPI.remote.push(undefined, undefined, true);
+            await runGitOperation("Force Push", () => window.electronAPI.remote.push(undefined, undefined, true));
             await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
           } catch (err) {
             handlePushError(err, true);

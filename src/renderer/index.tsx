@@ -10,3 +10,11 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// Remove splash screen once React has mounted
+const splash = document.getElementById("splash");
+if (splash) {
+  splash.style.transition = "opacity 0.3s ease";
+  splash.style.opacity = "0";
+  setTimeout(() => splash.remove(), 300);
+}

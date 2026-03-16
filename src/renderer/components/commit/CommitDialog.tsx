@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { HunkStagingView } from "./HunkStagingView";
+import { runGitOperation } from "../../store/git-operation-store";
 import type { GitStatus } from "../../../shared/git-types";
 
 interface Props {
@@ -100,25 +101,15 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   const loadFiles = useCallback(async () => {
     try {
       const status: GitStatus = await window.electronAPI.status.get();
-      const all: ChangedFile[] = [];
-
-      for (const f of status.staged) {
-        all.push({ path: f.path, status: f.status, staged: true });
-      }
-      for (const f of status.unstaged) {
-        all.push({ path: f.path, status: f.status, staged: false });
-      }
-      for (const p of status.untracked) {
-        all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
-      }
-
+      const all = statusToFiles(status);
       setFiles(all);
-      if (all.length > 0 && !selectedFile) {
-        setSelectedFile(all[0].path);
-      }
+      setSelectedFile((prev) => {
+        if (!prev && all.length > 0) return all[0].path;
+        return prev;
+      });
     } catch {
     }
-  }, [selectedFile]);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -178,28 +169,48 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [commitDropdownOpen, messageDropdownOpen, templateDropdownOpen]);
 
-  const stageFiles = (paths: string[]) => {
-    setFiles((prev) =>
-      prev.map((f) => (paths.includes(f.path) ? { ...f, staged: true } : f))
-    );
-    setSelectedUnstaged(new Set());
+  const statusToFiles = (status: GitStatus): ChangedFile[] => {
+    const all: ChangedFile[] = [];
+    for (const f of status.staged) all.push({ path: f.path, status: f.status, staged: true });
+    for (const f of status.unstaged) all.push({ path: f.path, status: f.status, staged: false });
+    for (const p of status.untracked) all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
+    return all;
   };
 
-  const unstageFiles = (paths: string[]) => {
-    setFiles((prev) =>
-      prev.map((f) => (paths.includes(f.path) ? { ...f, staged: false } : f))
-    );
-    setSelectedStaged(new Set());
+  const stageFiles = async (paths: string[]) => {
+    try {
+      const status = await window.electronAPI.status.stage(paths);
+      setFiles(statusToFiles(status));
+      setSelectedUnstaged(new Set());
+    } catch {}
   };
 
-  const stageAll = () => {
-    setFiles((prev) => prev.map((f) => ({ ...f, staged: true })));
-    setSelectedUnstaged(new Set());
+  const unstageFiles = async (paths: string[]) => {
+    try {
+      const status = await window.electronAPI.status.unstage(paths);
+      setFiles(statusToFiles(status));
+      setSelectedStaged(new Set());
+    } catch {}
   };
 
-  const unstageAll = () => {
-    setFiles((prev) => prev.map((f) => ({ ...f, staged: false })));
-    setSelectedStaged(new Set());
+  const stageAll = async () => {
+    const allPaths = files.filter((f) => !f.staged).map((f) => f.path);
+    if (allPaths.length === 0) return;
+    try {
+      const status = await window.electronAPI.status.stage(allPaths);
+      setFiles(statusToFiles(status));
+      setSelectedUnstaged(new Set());
+    } catch {}
+  };
+
+  const unstageAll = async () => {
+    const allPaths = files.filter((f) => f.staged).map((f) => f.path);
+    if (allPaths.length === 0) return;
+    try {
+      const status = await window.electronAPI.status.unstage(allPaths);
+      setFiles(statusToFiles(status));
+      setSelectedStaged(new Set());
+    } catch {}
   };
 
   const handleDiscard = async (paths: string[]) => {
@@ -275,15 +286,17 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         await window.electronAPI.status.unstage(toUnstage);
       }
 
-      if (amend) {
-        await window.electronAPI.commit.amend(message.trim());
-      } else {
-        await window.electronAPI.commit.create(message.trim());
-      }
+      await runGitOperation(amend ? "Amend" : "Commit", async () => {
+        if (amend) {
+          await window.electronAPI.commit.amend(message.trim());
+        } else {
+          await window.electronAPI.commit.create(message.trim());
+        }
+      });
 
       if (andPush) {
         try {
-          await window.electronAPI.remote.push();
+          await runGitOperation("Push", () => window.electronAPI.remote.push());
         } catch (pushErr: unknown) {
           setError(`Committed but push failed: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`);
           await Promise.all([refreshStatus(), refreshInfo(), loadGraph()]);
@@ -304,9 +317,8 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   const handleStash = async () => {
     setCommitDropdownOpen(false);
     try {
-      await window.electronAPI.stash.create();
-      await loadFiles();
-      await refreshStatus();
+      await runGitOperation("Stash", () => window.electronAPI.stash.create());
+      await Promise.all([loadFiles(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -324,7 +336,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     try {
       await window.electronAPI.branch.create(newBranchName.trim());
       if (checkoutAfterCreate) {
-        await window.electronAPI.branch.checkout(newBranchName.trim());
+        await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(newBranchName.trim()));
         await refreshInfo();
       }
       setCreateBranchOpen(false);

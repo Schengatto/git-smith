@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import type { StashEntry, GitStatus } from "../../../shared/git-types";
+import { runGitOperation } from "../../store/git-operation-store";
 
 interface Props {
   open: boolean;
@@ -171,7 +172,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
     setLoading(true);
     setError(null);
     try {
-      await window.electronAPI.stash.create(message || undefined, { keepIndex, includeUntracked });
+      await runGitOperation("Stash", () => window.electronAPI.stash.create(message || undefined, { keepIndex, includeUntracked }));
       await afterStashAction();
       setMessage("");
       setDiff("");
@@ -189,7 +190,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     try {
       await window.electronAPI.stash.drop(selectedStash);
-      await loadStashes();
+      await Promise.all([loadStashes(), loadGraph()]);
       setSelectedStash(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -203,7 +204,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
     setLoading(true);
     setError(null);
     try {
-      await window.electronAPI.stash.apply(selectedStash);
+      await runGitOperation("Stash Apply", () => window.electronAPI.stash.apply(selectedStash));
       await afterStashAction();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
