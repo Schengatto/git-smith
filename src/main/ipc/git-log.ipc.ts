@@ -6,8 +6,19 @@ import { buildGraph } from "../git/graph-builder";
 export function registerLogHandlers() {
   ipcMain.handle(
     IPC.LOG.GRAPH,
-    async (_event, maxCount?: number, skip?: number, branchFilter?: string) => {
-      const commits = await gitService.getLog(maxCount ?? 500, skip ?? 0, branchFilter || undefined);
+    async (
+      _event,
+      maxCount?: number,
+      skip?: number,
+      branchFilter?: string,
+      branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
+    ) => {
+      const commits = await gitService.getLog(
+        maxCount ?? 500,
+        skip ?? 0,
+        branchFilter || undefined,
+        branchVisibility
+      );
       return buildGraph(commits);
     }
   );

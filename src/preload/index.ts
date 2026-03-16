@@ -73,8 +73,13 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.COMMIT.GET_RECENT_MESSAGES),
   },
   log: {
-    graph: (maxCount?: number, skip?: number, branchFilter?: string): Promise<GraphRow[]> =>
-      ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip, branchFilter),
+    graph: (
+      maxCount?: number,
+      skip?: number,
+      branchFilter?: string,
+      branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
+    ): Promise<GraphRow[]> =>
+      ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip, branchFilter, branchVisibility),
     details: (hash: string): Promise<CommitInfo> =>
       ipcRenderer.invoke(IPC.LOG.DETAILS, hash),
     fullInfo: (hash: string): Promise<CommitFullInfo> =>

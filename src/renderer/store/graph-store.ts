@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import type { GraphRow, CommitInfo } from "../../shared/git-types";
 
+export interface BranchVisibility {
+  mode: "include" | "exclude";
+  branches: string[];
+}
+
 interface GraphState {
   rows: GraphRow[];
   rowMap: Map<string, number>; // hash → index for O(1) lookup
@@ -9,12 +14,14 @@ interface GraphState {
   hasMore: boolean;
   totalLoaded: number;
   branchFilter: string;
+  branchVisibility: BranchVisibility | null;
 
   loadGraph: (maxCount?: number) => Promise<void>;
   loadMore: () => Promise<void>;
   selectCommit: (hash: string) => Promise<void>;
   clearSelection: () => void;
   setBranchFilter: (filter: string) => void;
+  setBranchVisibility: (visibility: BranchVisibility | null) => void;
 }
 
 const CHUNK_SIZE = 500;
@@ -27,12 +34,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   hasMore: true,
   totalLoaded: 0,
   branchFilter: "",
+  branchVisibility: null,
 
   loadGraph: async (maxCount = CHUNK_SIZE) => {
     set({ loading: true });
     try {
-      const { branchFilter } = get();
-      const rows = await window.electronAPI.log.graph(maxCount, 0, branchFilter || undefined);
+      const { branchFilter, branchVisibility } = get();
+      const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
+      const rows = await window.electronAPI.log.graph(maxCount, 0, branchFilter || undefined, vis);
       const rowMap = new Map<string, number>();
       rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
       set({
@@ -48,11 +57,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { rows, rowMap, loading, hasMore, totalLoaded, branchFilter } = get();
+    const { rows, rowMap, loading, hasMore, totalLoaded, branchFilter, branchVisibility } = get();
     if (loading || !hasMore) return;
     set({ loading: true });
     try {
-      const more = await window.electronAPI.log.graph(CHUNK_SIZE, totalLoaded, branchFilter || undefined);
+      const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
+      const more = await window.electronAPI.log.graph(CHUNK_SIZE, totalLoaded, branchFilter || undefined, vis);
       const newRows = [...rows, ...more];
       const newMap = new Map(rowMap);
       more.forEach((r, i) => newMap.set(r.commit.hash, rows.length + i));
@@ -79,5 +89,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   setBranchFilter: (filter: string) => {
     set({ branchFilter: filter });
+  },
+
+  setBranchVisibility: (visibility: BranchVisibility | null) => {
+    set({ branchVisibility: visibility });
   },
 }));

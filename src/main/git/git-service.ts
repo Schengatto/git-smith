@@ -267,12 +267,33 @@ export class GitService {
   async getLog(
     maxCount = 500,
     skip = 0,
-    branchFilter?: string
+    branchFilter?: string,
+    branchVisibility?: { mode: "include" | "exclude"; branches: string[] }
   ): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
-    const refArgs = branchFilter
-      ? [`--branches=*${branchFilter}*`, `--remotes=*${branchFilter}*`]
-      : ["--all"];
+    let refArgs: string[];
+    if (branchVisibility && branchVisibility.branches.length > 0) {
+      if (branchVisibility.mode === "include") {
+        // Show only commits reachable from selected branches
+        refArgs = branchVisibility.branches.map((b) =>
+          b.startsWith("remotes/") ? b : `refs/heads/${b}`
+        );
+      } else {
+        // Exclude: show all except selected branches
+        refArgs = [
+          ...branchVisibility.branches.map((b) =>
+            b.startsWith("remotes/")
+              ? `--exclude=refs/${b}`
+              : `--exclude=refs/heads/${b}`
+          ),
+          "--all",
+        ];
+      }
+    } else if (branchFilter) {
+      refArgs = [`--branches=*${branchFilter}*`, `--remotes=*${branchFilter}*`];
+    } else {
+      refArgs = ["--all"];
+    }
     return this.run(
       "git log",
       [`--max-count=${maxCount}`, `--skip=${skip}`, ...refArgs, "--topo-order"],
