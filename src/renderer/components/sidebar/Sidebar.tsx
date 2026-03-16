@@ -15,6 +15,7 @@ import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import { AddSubmoduleDialog } from "../dialogs/AddSubmoduleDialog";
 import { runGitOperation } from "../../store/git-operation-store";
 import { InteractiveRebaseDialog } from "../dialogs/InteractiveRebaseDialog";
+import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types";
 
 /* ---------- Icons ---------- */
@@ -84,7 +85,8 @@ type DialogState =
   | { type: "create-tag" }
   | { type: "delete-tag"; tag: string }
   | { type: "add-submodule" }
-  | { type: "create-stash" };
+  | { type: "create-stash" }
+  | { type: "checkout"; branch: string };
 
 type CtxMenu =
   | { x: number; y: number; kind: "branch"; branch: BranchInfo }
@@ -213,11 +215,7 @@ export const Sidebar: React.FC = () => {
     if (!branch.current) {
       items.push({
         label: "Checkout",
-        onClick: async () => {
-          await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(branch.name));
-          await Promise.all([useRepoStore.getState().refreshInfo(), loadGraph()]);
-          loadData();
-        },
+        onClick: () => setDialog({ type: "checkout", branch: branch.name }),
       });
     }
 
@@ -401,6 +399,7 @@ export const Sidebar: React.FC = () => {
                   e.preventDefault();
                   setCtxMenu({ x: e.clientX, y: e.clientY, kind: "branch", branch: b });
                 }}
+                onCheckout={(name) => setDialog({ type: "checkout", branch: name })}
               />
             ))}
             {localBranches.length === 0 && (
@@ -427,6 +426,7 @@ export const Sidebar: React.FC = () => {
                   e.preventDefault();
                   setCtxMenu({ x: e.clientX, y: e.clientY, kind: "branch", branch: b });
                 }}
+                onCheckout={(name) => setDialog({ type: "checkout", branch: name })}
               />
             ))}
             {remoteBranches.length === 0 && (
@@ -599,6 +599,11 @@ export const Sidebar: React.FC = () => {
         open={dialog.type === "create-stash"}
         onClose={closeDialog}
       />
+      <CheckoutDialog
+        open={dialog.type === "checkout"}
+        onClose={closeDialog}
+        branchName={dialog.type === "checkout" ? dialog.branch : undefined}
+      />
 
       {/* Delete remote branch confirmation */}
       <ModalDialog
@@ -715,13 +720,11 @@ const SectionHeader: React.FC<{
 const BranchItem: React.FC<{
   branch: BranchInfo;
   onContextMenu: (e: React.MouseEvent) => void;
-}> = ({ branch, onContextMenu }) => {
-  const handleCheckout = async () => {
+  onCheckout: (branchName: string) => void;
+}> = ({ branch, onContextMenu, onCheckout }) => {
+  const handleCheckout = () => {
     if (branch.current) return;
-    try {
-      await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(branch.name));
-      useRepoStore.getState().refreshInfo();
-    } catch {}
+    onCheckout(branch.name);
   };
 
   return (

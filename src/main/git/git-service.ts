@@ -185,23 +185,31 @@ export class GitService {
       const staged: FileStatus[] = [];
       const unstaged: FileStatus[] = [];
 
-      for (const f of status.created) {
-        if (status.staged.includes(f)) staged.push({ path: f, status: "added" });
-        else unstaged.push({ path: f, status: "added" });
+      for (const f of status.files) {
+        const idx = f.index;
+        const wt = f.working_dir;
+
+        // Untracked files are handled separately via status.not_added
+        if (idx === "?" || idx === "!") continue;
+
+        // Index (staged) changes
+        if (idx === "A") staged.push({ path: f.path, status: "added" });
+        else if (idx === "M") staged.push({ path: f.path, status: "modified" });
+        else if (idx === "D") staged.push({ path: f.path, status: "deleted" });
+        else if (idx === "R") staged.push({ path: f.path, status: "renamed" });
+        else if (idx === "C") staged.push({ path: f.path, status: "copied" });
+
+        // Working tree (unstaged) changes
+        if (wt === "M") unstaged.push({ path: f.path, status: "modified" });
+        else if (wt === "D") unstaged.push({ path: f.path, status: "deleted" });
+        else if (wt === "A") unstaged.push({ path: f.path, status: "added" });
       }
-      for (const f of status.modified) {
-        unstaged.push({ path: f, status: "modified" });
-      }
-      for (const f of status.staged) {
-        if (!status.created.includes(f)) {
-          staged.push({ path: f, status: "modified" });
-        }
-      }
-      for (const f of status.deleted) {
-        unstaged.push({ path: f, status: "deleted" });
-      }
-      for (const f of status.renamed) {
-        staged.push({ path: f.to, status: "renamed", oldPath: f.from });
+
+      // Renamed files: use status.renamed for oldPath info
+      for (const r of status.renamed) {
+        const existing = staged.find((s) => s.path === r.to);
+        if (existing) existing.oldPath = r.from;
+        else staged.push({ path: r.to, status: "renamed", oldPath: r.from });
       }
 
       return {

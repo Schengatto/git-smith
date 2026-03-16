@@ -11,21 +11,27 @@ interface Props {
   open: boolean;
   onClose: () => void;
   /** The refs (branches) on the commit being right-clicked */
-  refs: RefInfo[];
+  refs?: RefInfo[];
   /** The commit hash (for detached HEAD checkout) */
-  commitHash: string;
-  commitSubject: string;
+  commitHash?: string;
+  commitSubject?: string;
+  /** Direct branch name — when set, skips branch picker and checks out this branch */
+  branchName?: string;
 }
 
 export const CheckoutDialog: React.FC<Props> = ({
   open,
   onClose,
-  refs,
-  commitHash,
-  commitSubject,
+  refs = [],
+  commitHash = "",
+  commitSubject = "",
+  branchName,
 }) => {
   const { refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
+
+  // Direct branch mode — skip branch picker
+  const directMode = !!branchName;
 
   // Filter checkable branches (non-current local + remote)
   const localBranches = refs.filter((r) => r.type === "head" && !r.current);
@@ -47,8 +53,9 @@ export const CheckoutDialog: React.FC<Props> = ({
       setCheckoutDetached(false);
       setLocalChanges("none");
 
-      // Default selection: first local branch, or first remote, or detached
-      if (localBranches.length > 0) {
+      if (directMode) {
+        setSelectedBranch(branchName!);
+      } else if (localBranches.length > 0) {
         setBranchType("local");
         setSelectedBranch(localBranches[0].name);
       } else if (remoteBranches.length > 0) {
@@ -122,8 +129,26 @@ export const CheckoutDialog: React.FC<Props> = ({
 
   return (
     <ModalDialog open={open} title="Checkout" onClose={onClose} width={480}>
+      {/* Direct branch mode — show branch name */}
+      {directMode && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={fieldLabelStyle}>Branch</label>
+          <div style={{
+            fontSize: 13,
+            color: "var(--text-primary)",
+            padding: "7px 10px",
+            borderRadius: 6,
+            background: "var(--surface-0)",
+            border: "1px solid var(--border)",
+            fontFamily: "var(--font-mono, monospace)",
+          }}>
+            {branchName}
+          </div>
+        </div>
+      )}
+
       {/* Branch type tabs */}
-      {!hasNoBranches && (
+      {!directMode && !hasNoBranches && (
         <>
           <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
             <label style={radioLabelStyle}>
@@ -198,7 +223,7 @@ export const CheckoutDialog: React.FC<Props> = ({
       )}
 
       {/* No branches — only detached HEAD */}
-      {hasNoBranches && (
+      {!directMode && hasNoBranches && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 8 }}>
             Checkout commit (detached HEAD)
