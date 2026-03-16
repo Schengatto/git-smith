@@ -21,22 +21,33 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const [files, setFiles] = useState<ConflictFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [content, setContent] = useState<ConflictFileContent | null>(null);
-  // The 3 editor texts — center is editable
   const [oursText, setOursText] = useState("");
   const [theirsText, setTheirsText] = useState("");
-  const [mergedText, setMergedText] = useState("");
-
   const [resolvedFiles, setResolvedFiles] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Only track conflict count for UI badges — not the full parsed conflicts
+  const [conflictCount, setConflictCount] = useState(0);
 
   const leftRef = useRef<HTMLTextAreaElement>(null);
   const centerRef = useRef<HTMLTextAreaElement>(null);
   const rightRef = useRef<HTMLTextAreaElement>(null);
   const scrollingRef = useRef(false);
+  // Shadow copy for environments where ref.value may not persist (e.g. jsdom)
+  const centerTextRef = useRef("");
 
-  // Sync scroll across 3 textareas
+  /** Read center textarea value directly from DOM — no React state */
+  const getCenterText = useCallback(() => centerRef.current?.value || centerTextRef.current, []);
+
+  /** Write to center textarea directly — no React re-render */
+  const setCenterText = useCallback((text: string) => {
+    centerTextRef.current = text;
+    if (centerRef.current) centerRef.current.value = text;
+    setConflictCount(countConflictMarkers(text));
+  }, []);
+
+  // Sync scroll across 3 textareas (proportional)
   const handleScroll = useCallback((source: "left" | "center" | "right") => {
     if (scrollingRef.current) return;
     scrollingRef.current = true;
@@ -56,8 +67,8 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   useEffect(() => {
     if (!open) return;
     setFiles([]); setSelectedFile(null); setContent(null);
-    setOursText(""); setTheirsText(""); setMergedText("");
-    setResolvedFiles(new Set()); setError(null);
+    setOursText(""); setTheirsText("");
+    setResolvedFiles(new Set()); setError(null); setConflictCount(0);
     setLoading(true);
     window.electronAPI.conflict.list()
       .then((cf) => { setFiles(cf); if (cf.length > 0) setSelectedFile(cf[0].path); })
@@ -65,7 +76,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       .finally(() => setLoading(false));
   }, [open]);
 
-  // Load file content
+  // Load file content — set textarea values directly via refs
   useEffect(() => {
     if (!selectedFile) { setContent(null); return; }
     setLoading(true);
@@ -74,38 +85,30 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
         setContent(fc);
         setOursText(fc.ours || "");
         setTheirsText(fc.theirs || "");
-        setMergedText(fc.merged || "");
+        setCenterText(fc.merged || "");
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   }, [selectedFile]);
 
-  // Parse conflict positions from the center text for gutter buttons
-  const conflicts = useMemo(() => parseConflictPositions(mergedText), [mergedText]);
-  const hasConflictMarkers = conflicts.length > 0;
-
-  // Resolve one conflict: replace the marker block in center text with chosen version
+  // Resolve one conflict by index — operates directly on textarea DOM value
   const resolveConflict = useCallback((idx: number, pick: "ours" | "theirs" | "both" | "none") => {
-    setMergedText((prev) => {
-      const c = parseConflictPositions(prev);
-      if (idx >= c.length) return prev;
-      const target = c[idx];
-      let replacement: string;
-      if (pick === "ours") replacement = target.oursContent;
-      else if (pick === "theirs") replacement = target.theirsContent;
-      else if (pick === "both") replacement = target.oursContent + (target.oursContent && target.theirsContent ? "\n" : "") + target.theirsContent;
-      else replacement = "";
-      // Preserve trailing newline since endOffset includes \n after >>>>>>>
-      if (replacement && target.endOffset < prev.length) replacement += "\n";
-      const before = prev.substring(0, target.startOffset);
-      const after = prev.substring(target.endOffset);
-      return before + replacement + after;
-    });
-  }, []);
+    const prev = getCenterText();
+    const c = parseConflictPositions(prev);
+    if (idx >= c.length) return;
+    const target = c[idx];
+    let replacement: string;
+    if (pick === "ours") replacement = target.oursContent;
+    else if (pick === "theirs") replacement = target.theirsContent;
+    else if (pick === "both") replacement = target.oursContent + (target.oursContent && target.theirsContent ? "\n" : "") + target.theirsContent;
+    else replacement = "";
+    if (replacement && target.endOffset < prev.length) replacement += "\n";
+    setCenterText(prev.substring(0, target.startOffset) + replacement + prev.substring(target.endOffset));
+  }, [getCenterText, setCenterText]);
 
   const resolveAllAs = useCallback((pick: "ours" | "theirs") => {
-    setMergedText((prev) => resolveAllConflicts(prev, pick));
-  }, []);
+    setCenterText(resolveAllConflicts(getCenterText(), pick));
+  }, [getCenterText, setCenterText]);
 
   // Navigate to next/prev conflict in center textarea
   const scrollToConflict = useCallback((direction: "next" | "prev") => {
@@ -114,7 +117,6 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     const cursorPos = ta.selectionStart;
     const cs = parseConflictPositions(ta.value);
     if (cs.length === 0) return;
-
     let target: ConflictPosition | undefined;
     if (direction === "next") {
       target = cs.find((c) => c.startOffset > cursorPos) || cs[0];
@@ -127,11 +129,9 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     if (target) {
       ta.focus();
       ta.setSelectionRange(target.startOffset, target.startOffset);
-      // Scroll to show the conflict
       const linesBefore = ta.value.substring(0, target.startOffset).split("\n").length;
       const lineH = ta.scrollHeight / (ta.value.split("\n").length || 1);
       ta.scrollTop = Math.max(0, (linesBefore - 3) * lineH);
-      // Sync scroll
       handleScroll("center");
     }
   }, [handleScroll]);
@@ -140,7 +140,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     if (!selectedFile) return;
     setSaving(true); setError(null);
     try {
-      await window.electronAPI.conflict.saveMerged(selectedFile, mergedText);
+      await window.electronAPI.conflict.saveMerged(selectedFile, getCenterText());
       await window.electronAPI.conflict.resolve(selectedFile);
       setResolvedFiles((prev) => new Set([...prev, selectedFile]));
       const remaining = files.filter((f) => f.path !== selectedFile && !resolvedFiles.has(f.path));
@@ -148,10 +148,11 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       else { setSelectedFile(null); setContent(null); }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setSaving(false); }
-  }, [selectedFile, mergedText, files, resolvedFiles]);
+  }, [selectedFile, getCenterText, files, resolvedFiles]);
 
   const allFilesResolved = files.length > 0 && files.every((f) => resolvedFiles.has(f.path));
   const unresolvedFileCount = files.filter((f) => !resolvedFiles.has(f.path)).length;
+  const hasConflictMarkers = conflictCount > 0;
 
   if (!open) return null;
 
@@ -184,12 +185,11 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                 <div style={toolbarStyle}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span className="mono" style={{ fontSize: 11, color: "var(--text-secondary)" }}>{selectedFile}</span>
-                    {hasConflictMarkers && (
+                    {hasConflictMarkers ? (
                       <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "var(--yellow)20", color: "var(--yellow)", fontWeight: 500 }}>
-                        {conflicts.length} {conflicts.length === 1 ? "conflict" : "conflicts"}
+                        {conflictCount} {conflictCount === 1 ? "conflict" : "conflicts"}
                       </span>
-                    )}
-                    {!hasConflictMarkers && (
+                    ) : (
                       <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "var(--green)20", color: "var(--green)", fontWeight: 500 }}>
                         No conflicts remaining
                       </span>
@@ -220,7 +220,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                   </div>
                 </div>
 
-                {/* 3 textareas */}
+                {/* 3 textareas — center is uncontrolled for performance */}
                 <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
                   <textarea
                     ref={leftRef}
@@ -232,8 +232,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                   />
                   <textarea
                     ref={centerRef}
-                    value={mergedText}
-                    onChange={(e) => setMergedText(e.target.value)}
+                    defaultValue=""
                     spellCheck={false}
                     onScroll={() => handleScroll("center")}
                     style={editorStyle}
@@ -248,27 +247,29 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                   />
                 </div>
 
-                {/* Conflict action bar — one row per conflict */}
+                {/* Conflict action bar — resolve first remaining conflict */}
                 {hasConflictMarkers && (
-                  <div style={{ borderTop: "1px solid var(--border-subtle)", maxHeight: 120, overflowY: "auto", flexShrink: 0 }}>
-                    {conflicts.map((c, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 12px", borderBottom: "1px solid var(--border-subtle)", fontSize: 11 }}>
-                        <span style={{ color: "var(--yellow)", fontWeight: 600, width: 70, flexShrink: 0 }}>Conflict {i + 1}</span>
-                        <span className="truncate" style={{ color: "var(--text-muted)", flex: 1, minWidth: 0 }}>{c.oursContent.split("\n")[0] || "(empty)"}</span>
-                        <PickBtn label="LOCAL →" color="var(--accent)" onClick={() => resolveConflict(i, "ours")} />
-                        <PickBtn label="← REMOTE" color="var(--mauve)" onClick={() => resolveConflict(i, "theirs")} />
-                        <PickBtn label="Both" color="var(--green)" onClick={() => resolveConflict(i, "both")} />
-                        <PickBtn label="None" color="var(--red)" onClick={() => resolveConflict(i, "none")} />
-                      </div>
-                    ))}
+                  <div style={{ borderTop: "1px solid var(--border-subtle)", padding: "6px 12px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, fontSize: 11 }}>
+                    <span style={{ color: "var(--yellow)", fontWeight: 600 }}>Resolve next:</span>
+                    <PickBtn label="Use LOCAL →" color="var(--accent)" onClick={() => resolveConflict(0, "ours")} />
+                    <PickBtn label="← Use REMOTE" color="var(--mauve)" onClick={() => resolveConflict(0, "theirs")} />
+                    <PickBtn label="Both" color="var(--green)" onClick={() => resolveConflict(0, "both")} />
+                    <PickBtn label="None" color="var(--red)" onClick={() => resolveConflict(0, "none")} />
+                    <span style={{ color: "var(--text-muted)", marginLeft: "auto" }}>
+                      {conflictCount} remaining — or edit the MERGED text directly
+                    </span>
                   </div>
                 )}
 
                 {/* File action bar */}
                 <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border-subtle)", display: "flex", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
-                  {hasConflictMarkers && <span style={{ fontSize: 11, color: "var(--yellow)", alignSelf: "center", marginRight: "auto" }}>Resolve all conflicts before marking as resolved</span>}
-                  <button onClick={handleSaveAndResolve} disabled={saving || hasConflictMarkers}
-                    style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: saving || hasConflictMarkers ? "var(--surface-3)" : "var(--green)", color: saving || hasConflictMarkers ? "var(--text-muted)" : "var(--surface-0)", fontSize: 12, fontWeight: 600, cursor: saving || hasConflictMarkers ? "not-allowed" : "pointer" }}>
+                  {hasConflictMarkers && <span style={{ fontSize: 11, color: "var(--yellow)", alignSelf: "center", marginRight: "auto" }}>Resolve all conflicts or edit markers manually, then mark as resolved</span>}
+                  <button onClick={() => setConflictCount(countConflictMarkers(getCenterText()))}
+                    style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                    Recheck conflicts
+                  </button>
+                  <button onClick={handleSaveAndResolve} disabled={saving}
+                    style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: saving ? "var(--surface-3)" : "var(--green)", color: saving ? "var(--text-muted)" : "var(--surface-0)", fontSize: 12, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>
                     {saving ? "Saving..." : "Mark as resolved"}
                   </button>
                 </div>
@@ -373,6 +374,14 @@ interface ConflictPosition {
 }
 
 /** Find all conflict marker positions in a string */
+/** Fast count of <<<<<<< markers — no parsing, just count */
+function countConflictMarkers(text: string): number {
+  let count = 0;
+  let idx = 0;
+  while ((idx = text.indexOf("<<<<<<<", idx)) !== -1) { count++; idx += 7; }
+  return count;
+}
+
 function parseConflictPositions(text: string): ConflictPosition[] {
   const results: ConflictPosition[] = [];
   let searchFrom = 0;
