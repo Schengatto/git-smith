@@ -7,6 +7,7 @@ import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
+import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow } from "../../../shared/git-types";
 
 const LANE_WIDTH = 16;
@@ -30,7 +31,7 @@ const IconGitCommit = () => (
 
 export const CommitGraphPanel: React.FC = () => {
   const { repo } = useRepoStore();
-  const { rows, loading, hasMore, loadGraph, loadMore, selectCommit, selectedCommit } =
+  const { rows, loading, hasMore, loadGraph, loadMore, selectCommit, selectedCommit, branchFilter, setBranchFilter } =
     useGraphStore();
 
   useEffect(() => {
@@ -44,9 +45,30 @@ export const CommitGraphPanel: React.FC = () => {
   const [resetTarget, setResetTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [commitInfoHash, setCommitInfoHash] = useState<string | null>(null);
+  const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
+  const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
+  const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
+  const branchFilterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+
+  const applyBranchFilter = useCallback((value: string) => {
+    setBranchFilter(value);
+    loadGraph();
+  }, [setBranchFilter, loadGraph]);
+
+  const handleBranchFilterChange = useCallback((value: string) => {
+    setBranchFilterInput(value);
+    if (branchFilterTimerRef.current) clearTimeout(branchFilterTimerRef.current);
+    branchFilterTimerRef.current = setTimeout(() => applyBranchFilter(value), 400);
+  }, [applyBranchFilter]);
+
+  const handleBranchFilterClear = useCallback(() => {
+    setBranchFilterInput("");
+    if (branchFilterTimerRef.current) clearTimeout(branchFilterTimerRef.current);
+    applyBranchFilter("");
+  }, [applyBranchFilter]);
 
   // Filter rows by search
   const filteredRows = searchQuery.trim()
@@ -97,38 +119,67 @@ export const CommitGraphPanel: React.FC = () => {
     setCtxMenu({ x: e.clientX, y: e.clientY, row });
   };
 
-  const commitContextItems = (row: GraphRow): ContextMenuEntry[] => [
-    {
-      label: "Cherry Pick",
-      onClick: () =>
-        setCherryPickTarget({ hash: row.commit.hash, subject: row.commit.subject }),
-    },
-    {
-      label: "Create Branch Here",
-      onClick: () => setCreateBranchFrom(row.commit.hash),
-    },
-    {
-      label: "Create Tag Here",
-      onClick: () =>
-        setTagTarget({ hash: row.commit.hash, subject: row.commit.subject }),
-    },
-    { divider: true },
-    {
-      label: "Reset Current Branch to Here",
-      color: "var(--peach)",
-      onClick: () =>
-        setResetTarget({ hash: row.commit.hash, subject: row.commit.subject }),
-    },
-    { divider: true },
-    {
-      label: "View Commit Info",
-      onClick: () => setCommitInfoHash(row.commit.hash),
-    },
-    {
-      label: `Copy Hash (${row.commit.abbreviatedHash})`,
-      onClick: () => navigator.clipboard.writeText(row.commit.hash),
-    },
-  ];
+  const commitContextItems = (row: GraphRow): ContextMenuEntry[] => {
+    const items: ContextMenuEntry[] = [
+      {
+        label: "Cherry Pick",
+        onClick: () =>
+          setCherryPickTarget({ hash: row.commit.hash, subject: row.commit.subject }),
+      },
+      {
+        label: "Create Branch Here",
+        onClick: () => setCreateBranchFrom(row.commit.hash),
+      },
+      {
+        label: "Create Tag Here",
+        onClick: () =>
+          setTagTarget({ hash: row.commit.hash, subject: row.commit.subject }),
+      },
+    ];
+
+    // Add delete options for branches on this commit
+    const localBranches = row.commit.refs.filter((r) => r.type === "head" && !r.current);
+    const tags = row.commit.refs.filter((r) => r.type === "tag");
+
+    if (localBranches.length > 0 || tags.length > 0) {
+      items.push({ divider: true });
+      for (const branch of localBranches) {
+        items.push({
+          label: `Delete Branch "${branch.name}"`,
+          color: "var(--red)",
+          onClick: () => setDeleteBranchTarget(branch.name),
+        });
+      }
+      for (const tag of tags) {
+        items.push({
+          label: `Delete Tag "${tag.name}"`,
+          color: "var(--red)",
+          onClick: () => setDeleteTagTarget(tag.name),
+        });
+      }
+    }
+
+    items.push(
+      { divider: true },
+      {
+        label: "Reset Current Branch to Here",
+        color: "var(--peach)",
+        onClick: () =>
+          setResetTarget({ hash: row.commit.hash, subject: row.commit.subject }),
+      },
+      { divider: true },
+      {
+        label: "View Commit Info",
+        onClick: () => setCommitInfoHash(row.commit.hash),
+      },
+      {
+        label: `Copy Hash (${row.commit.abbreviatedHash})`,
+        onClick: () => navigator.clipboard.writeText(row.commit.hash),
+      },
+    );
+
+    return items;
+  };
 
   if (!repo) {
     return (
@@ -167,13 +218,79 @@ export const CommitGraphPanel: React.FC = () => {
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 4,
+          gap: 6,
           padding: "2px 6px",
           borderBottom: "1px solid var(--border-subtle)",
           flexShrink: 0,
         }}
       >
+        {/* Branch filter */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={branchFilter ? "var(--accent)" : "var(--text-muted)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="6" y1="3" x2="6" y2="15" />
+            <circle cx="18" cy="6" r="3" />
+            <circle cx="6" cy="18" r="3" />
+            <path d="M18 9a9 9 0 0 1-9 9" />
+          </svg>
+          <span style={{ fontSize: 11, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>Branches:</span>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <input
+              value={branchFilterInput}
+              onChange={(e) => handleBranchFilterChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (branchFilterTimerRef.current) clearTimeout(branchFilterTimerRef.current);
+                  applyBranchFilter(branchFilterInput);
+                }
+                if (e.key === "Escape") handleBranchFilterClear();
+              }}
+              placeholder="Filter branches..."
+              style={{
+                width: 160,
+                padding: "2px 22px 2px 6px",
+                borderRadius: 4,
+                border: `1px solid ${branchFilter ? "var(--accent)" : "var(--border)"}`,
+                background: "var(--surface-0)",
+                color: "var(--text-primary)",
+                fontSize: 11,
+                outline: "none",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = branchFilter ? "var(--accent)" : "var(--border)")}
+            />
+            {branchFilterInput && (
+              <button
+                onClick={handleBranchFilterClear}
+                style={{
+                  position: "absolute",
+                  right: 2,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  padding: 2,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                title="Clear branch filter"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {branchFilter && (
+            <span style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+              {rows.length} commits
+            </span>
+          )}
+        </div>
+
+        <div style={{ flex: 1 }} />
+
         <button
           onClick={scrollToHead}
           title="Scroll to HEAD (local commit)"
@@ -332,6 +449,40 @@ export const CommitGraphPanel: React.FC = () => {
           }
         }}
       />
+
+      <ConfirmDeleteDialog
+        open={!!deleteBranchTarget}
+        title="Delete Branch"
+        message={`Are you sure you want to delete branch "${deleteBranchTarget}"?`}
+        onConfirm={async () => {
+          if (!deleteBranchTarget) return;
+          try {
+            await window.electronAPI.branch.delete(deleteBranchTarget);
+            loadGraph();
+          } catch (err) {
+            alert(`Failed to delete branch: ${err instanceof Error ? err.message : err}`);
+          }
+          setDeleteBranchTarget(null);
+        }}
+        onCancel={() => setDeleteBranchTarget(null)}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!deleteTagTarget}
+        title="Delete Tag"
+        message={`Are you sure you want to delete tag "${deleteTagTarget}"?`}
+        onConfirm={async () => {
+          if (!deleteTagTarget) return;
+          try {
+            await window.electronAPI.tag.delete(deleteTagTarget);
+            loadGraph();
+          } catch (err) {
+            alert(`Failed to delete tag: ${err instanceof Error ? err.message : err}`);
+          }
+          setDeleteTagTarget(null);
+        }}
+        onCancel={() => setDeleteTagTarget(null)}
+      />
     </div>
   );
 };
@@ -484,6 +635,24 @@ const GraphRowItem: React.FC<{
     </div>
   );
 });
+
+const ConfirmDeleteDialog: React.FC<{
+  open: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({ open, title, message, onConfirm, onCancel }) => (
+  <ModalDialog open={open} title={title} onClose={onCancel} width={380}>
+    <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>{message}</p>
+    <DialogActions
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+      confirmLabel="Delete"
+      confirmColor="var(--red)"
+    />
+  </ModalDialog>
+);
 
 function formatDate(iso: string): string {
   if (!iso) return "";

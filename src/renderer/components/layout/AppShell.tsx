@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../../store/ui-store";
 import {
   DockviewReact,
@@ -38,18 +38,22 @@ export const AppShell: React.FC = () => {
     aboutDialogOpen, closeAboutDialog, openAboutDialog,
   } = useUIStore();
   const dockviewApiRef = useRef<DockviewReadyEvent["api"] | null>(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     loadRecentRepos();
 
     // Auto-open last used repository
-    window.electronAPI.repo.getLastOpened().then((lastRepo) => {
+    window.electronAPI.repo.getLastOpened().then(async (lastRepo) => {
       if (lastRepo && !useRepoStore.getState().repo) {
-        useRepoStore.getState().openRepo(lastRepo).catch(() => {
+        try {
+          await useRepoStore.getState().openRepo(lastRepo);
+        } catch {
           // Repo no longer exists or can't be opened — ignore
-        });
+        }
       }
-    });
+      setInitializing(false);
+    }).catch(() => setInitializing(false));
 
     const unsub = window.electronAPI.on.commandLog(addEntry);
     const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
@@ -109,6 +113,18 @@ export const AppShell: React.FC = () => {
 
     sidebarPanel.api.setSize({ width: 220 });
   };
+
+  if (initializing) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-surface-0 text-text-secondary">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+        <p style={{ marginTop: 16, fontSize: 14, opacity: 0.7 }}>Loading Git Expansion…</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-surface-0 text-text-primary">

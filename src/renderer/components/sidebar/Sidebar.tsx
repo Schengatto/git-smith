@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRepoStore } from "../../store/repo-store";
+import { useGraphStore } from "../../store/graph-store";
 import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import {
   CreateBranchDialog,
@@ -10,6 +11,7 @@ import {
 } from "../dialogs/BranchDialogs";
 import { CreateStashDialog } from "../dialogs/StashDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
+import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import { AddSubmoduleDialog } from "../dialogs/AddSubmoduleDialog";
 import { InteractiveRebaseDialog } from "../dialogs/InteractiveRebaseDialog";
 import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types";
@@ -73,11 +75,13 @@ type DialogState =
   | { type: "none" }
   | { type: "create-branch"; startPoint?: string }
   | { type: "delete-branch"; branch: string }
+  | { type: "delete-remote-branch"; branch: string }
   | { type: "rename-branch"; branch: string }
   | { type: "merge-branch"; branch: string }
   | { type: "rebase"; onto: string }
   | { type: "interactive-rebase"; onto: string }
   | { type: "create-tag" }
+  | { type: "delete-tag"; tag: string }
   | { type: "add-submodule" }
   | { type: "create-stash" };
 
@@ -92,6 +96,7 @@ type CtxMenu =
 
 export const Sidebar: React.FC = () => {
   const { repo } = useRepoStore();
+  const { loadGraph } = useGraphStore();
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [tags, setTags] = useState<TagInfo[]>([]);
   const [submodules, setSubmodules] = useState<SubmoduleInfo[]>([]);
@@ -209,7 +214,7 @@ export const Sidebar: React.FC = () => {
         label: "Checkout",
         onClick: async () => {
           await window.electronAPI.branch.checkout(branch.name);
-          useRepoStore.getState().refreshInfo();
+          await Promise.all([useRepoStore.getState().refreshInfo(), loadGraph()]);
           loadData();
         },
       });
@@ -255,6 +260,12 @@ export const Sidebar: React.FC = () => {
         label: "Create Local Branch",
         onClick: () => setDialog({ type: "create-branch", startPoint: branch.name }),
       });
+      items.push({ divider: true });
+      items.push({
+        label: "Delete Remote Branch",
+        color: "var(--red)",
+        onClick: () => setDialog({ type: "delete-remote-branch", branch: branch.name }),
+      });
     }
 
     return items;
@@ -265,6 +276,7 @@ export const Sidebar: React.FC = () => {
       label: "Push to Remote",
       onClick: async () => {
         await window.electronAPI.tag.push(tag.name);
+        await loadGraph();
         loadData();
       },
     },
@@ -272,10 +284,7 @@ export const Sidebar: React.FC = () => {
     {
       label: "Delete",
       color: "var(--red)",
-      onClick: async () => {
-        await window.electronAPI.tag.delete(tag.name);
-        loadData();
-      },
+      onClick: () => setDialog({ type: "delete-tag", tag: tag.name }),
     },
   ];
 
@@ -284,16 +293,14 @@ export const Sidebar: React.FC = () => {
       label: "Pop",
       onClick: async () => {
         await window.electronAPI.stash.pop(stash.index);
-        await loadData();
-        useRepoStore.getState().refreshStatus();
+        await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
       },
     },
     {
       label: "Apply",
       onClick: async () => {
         await window.electronAPI.stash.apply(stash.index);
-        await loadData();
-        useRepoStore.getState().refreshStatus();
+        await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
       },
     },
     { divider: true },
@@ -302,7 +309,7 @@ export const Sidebar: React.FC = () => {
       color: "var(--red)",
       onClick: async () => {
         await window.electronAPI.stash.drop(stash.index);
-        await loadData();
+        await Promise.all([loadData(), loadGraph()]);
       },
     },
   ];
@@ -591,6 +598,68 @@ export const Sidebar: React.FC = () => {
         open={dialog.type === "create-stash"}
         onClose={closeDialog}
       />
+
+      {/* Delete remote branch confirmation */}
+      <ModalDialog
+        open={dialog.type === "delete-remote-branch"}
+        title="Delete Remote Branch"
+        onClose={closeDialog}
+        width={380}
+      >
+        <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
+          Are you sure you want to delete remote branch &quot;{dialog.type === "delete-remote-branch" ? dialog.branch : ""}&quot;?
+          This will remove it from the remote server.
+        </p>
+        <DialogActions
+          onCancel={closeDialog}
+          onConfirm={async () => {
+            if (dialog.type !== "delete-remote-branch") return;
+            try {
+              // branch.name is like "origin/feature" — split into remote + branch
+              const fullName = dialog.branch;
+              const slashIdx = fullName.indexOf("/");
+              const remote = fullName.substring(0, slashIdx);
+              const branch = fullName.substring(slashIdx + 1);
+              await window.electronAPI.branch.deleteRemote(remote, branch);
+              await loadGraph();
+              loadData();
+            } catch (err) {
+              alert(`Failed to delete remote branch: ${err instanceof Error ? err.message : err}`);
+            }
+            setDialog({ type: "none" });
+          }}
+          confirmLabel="Delete"
+          confirmColor="var(--red)"
+        />
+      </ModalDialog>
+
+      {/* Delete tag confirmation */}
+      <ModalDialog
+        open={dialog.type === "delete-tag"}
+        title="Delete Tag"
+        onClose={closeDialog}
+        width={380}
+      >
+        <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
+          Are you sure you want to delete tag &quot;{dialog.type === "delete-tag" ? dialog.tag : ""}&quot;?
+        </p>
+        <DialogActions
+          onCancel={closeDialog}
+          onConfirm={async () => {
+            if (dialog.type !== "delete-tag") return;
+            try {
+              await window.electronAPI.tag.delete(dialog.tag);
+              await loadGraph();
+              loadData();
+            } catch (err) {
+              alert(`Failed to delete tag: ${err instanceof Error ? err.message : err}`);
+            }
+            setDialog({ type: "none" });
+          }}
+          confirmLabel="Delete"
+          confirmColor="var(--red)"
+        />
+      </ModalDialog>
     </div>
   );
 };

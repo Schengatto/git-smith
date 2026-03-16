@@ -73,8 +73,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.COMMIT.GET_RECENT_MESSAGES),
   },
   log: {
-    graph: (maxCount?: number, skip?: number): Promise<GraphRow[]> =>
-      ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip),
+    graph: (maxCount?: number, skip?: number, branchFilter?: string): Promise<GraphRow[]> =>
+      ipcRenderer.invoke(IPC.LOG.GRAPH, maxCount, skip, branchFilter),
     details: (hash: string): Promise<CommitInfo> =>
       ipcRenderer.invoke(IPC.LOG.DETAILS, hash),
     fullInfo: (hash: string): Promise<CommitFullInfo> =>
@@ -86,6 +86,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.CREATE, name, startPoint),
     delete: (name: string, force?: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.DELETE, name, force),
+    deleteRemote: (remote: string, branch: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.DELETE_REMOTE, remote, branch),
     rename: (oldName: string, newName: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.RENAME, oldName, newName),
     checkout: (ref: string): Promise<void> =>

@@ -266,12 +266,16 @@ export class GitService {
 
   async getLog(
     maxCount = 500,
-    skip = 0
+    skip = 0,
+    branchFilter?: string
   ): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
+    const refArgs = branchFilter
+      ? [`--branches=*${branchFilter}*`, `--remotes=*${branchFilter}*`]
+      : ["--all"];
     return this.run(
       "git log",
-      [`--max-count=${maxCount}`, `--skip=${skip}`, "--all", "--topo-order"],
+      [`--max-count=${maxCount}`, `--skip=${skip}`, ...refArgs, "--topo-order"],
       async () => {
         // Use %x1e (record separator) between commits and %x00 between fields.
         // Use %B (raw body) at the END so embedded newlines don't break parsing.
@@ -292,7 +296,7 @@ export class GitService {
 
         const result = await git.raw([
           "log",
-          "--all",
+          ...refArgs,
           "--topo-order",
           `--format=${RECORD_SEP}${format}`,
           `--max-count=${maxCount}`,
@@ -473,6 +477,13 @@ export class GitService {
     const flag = force ? "-D" : "-d";
     await this.run("git branch", [flag, name], () =>
       git.branch([flag, name])
+    );
+  }
+
+  async deleteRemoteBranch(remote: string, branch: string): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git push", [remote, "--delete", branch], () =>
+      git.raw(["push", remote, "--delete", branch])
     );
   }
 

@@ -249,38 +249,6 @@ export const MenuBar: React.FC<{
       ],
     },
     {
-      label: "GitHub",
-      items: [
-        {
-          label: "Fork/Clone repository...",
-          onClick: () => onOpenClone(),
-        },
-        { divider: true },
-        {
-          label: "View pull requests...",
-          disabled: !hasRepo,
-          onClick: () => {
-            /* TODO: open PR browser */
-          },
-        },
-        {
-          label: "Create pull request...",
-          disabled: !hasRepo,
-          onClick: () => {
-            /* TODO: open create PR */
-          },
-        },
-        { divider: true },
-        {
-          label: "Add upstream remote...",
-          disabled: !hasRepo,
-          onClick: () => {
-            /* TODO: add upstream */
-          },
-        },
-      ],
-    },
-    {
       label: "Tools",
       items: [
         {

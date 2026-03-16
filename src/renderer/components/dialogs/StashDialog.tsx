@@ -189,7 +189,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     try {
       await window.electronAPI.stash.drop(selectedStash);
-      await loadStashes();
+      await Promise.all([loadStashes(), loadGraph()]);
       setSelectedStash(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

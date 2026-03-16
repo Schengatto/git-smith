@@ -22,6 +22,13 @@ export function registerBranchHandlers() {
   );
 
   ipcMain.handle(
+    IPC.BRANCH.DELETE_REMOTE,
+    async (_event, remote: string, branch: string) => {
+      await gitService.deleteRemoteBranch(remote, branch);
+    }
+  );
+
+  ipcMain.handle(
     IPC.BRANCH.RENAME,
     async (_event, oldName: string, newName: string) => {
       await gitService.renameBranch(oldName, newName);

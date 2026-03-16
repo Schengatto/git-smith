@@ -8,11 +8,13 @@ interface GraphState {
   loading: boolean;
   hasMore: boolean;
   totalLoaded: number;
+  branchFilter: string;
 
   loadGraph: (maxCount?: number) => Promise<void>;
   loadMore: () => Promise<void>;
   selectCommit: (hash: string) => Promise<void>;
   clearSelection: () => void;
+  setBranchFilter: (filter: string) => void;
 }
 
 const CHUNK_SIZE = 500;
@@ -24,11 +26,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   loading: false,
   hasMore: true,
   totalLoaded: 0,
+  branchFilter: "",
 
   loadGraph: async (maxCount = CHUNK_SIZE) => {
     set({ loading: true });
     try {
-      const rows = await window.electronAPI.log.graph(maxCount, 0);
+      const { branchFilter } = get();
+      const rows = await window.electronAPI.log.graph(maxCount, 0, branchFilter || undefined);
       const rowMap = new Map<string, number>();
       rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
       set({
@@ -44,11 +48,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { rows, rowMap, loading, hasMore, totalLoaded } = get();
+    const { rows, rowMap, loading, hasMore, totalLoaded, branchFilter } = get();
     if (loading || !hasMore) return;
     set({ loading: true });
     try {
-      const more = await window.electronAPI.log.graph(CHUNK_SIZE, totalLoaded);
+      const more = await window.electronAPI.log.graph(CHUNK_SIZE, totalLoaded, branchFilter || undefined);
       const newRows = [...rows, ...more];
       const newMap = new Map(rowMap);
       more.forEach((r, i) => newMap.set(r.commit.hash, rows.length + i));
@@ -72,4 +76,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   clearSelection: () => set({ selectedCommit: null }),
+
+  setBranchFilter: (filter: string) => {
+    set({ branchFilter: filter });
+  },
 }));

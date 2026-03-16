@@ -43,6 +43,7 @@ export const IPC = {
     LIST: "git:branch:list",
     CREATE: "git:branch:create",
     DELETE: "git:branch:delete",
+    DELETE_REMOTE: "git:branch:delete-remote",
     RENAME: "git:branch:rename",
     CHECKOUT: "git:branch:checkout",
     MERGE: "git:branch:merge",

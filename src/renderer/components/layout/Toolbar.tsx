@@ -364,19 +364,28 @@ export const Toolbar: React.FC = () => {
       label: "Pull",
       sublabel: "Default strategy from git config",
       icon: <IconArrowDown />,
-      onClick: () => window.electronAPI.remote.pull(),
+      onClick: async () => {
+        await window.electronAPI.remote.pull();
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      },
     },
     {
       label: "Pull (Merge)",
       sublabel: "git pull --no-rebase",
       icon: <IconMerge />,
-      onClick: () => window.electronAPI.remote.pullMerge(),
+      onClick: async () => {
+        await window.electronAPI.remote.pullMerge();
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      },
     },
     {
       label: "Pull (Rebase)",
       sublabel: "git pull --rebase",
       icon: <IconRebase />,
-      onClick: () => window.electronAPI.remote.pullRebase(),
+      onClick: async () => {
+        await window.electronAPI.remote.pullRebase();
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      },
     },
   ];
 
@@ -433,20 +442,29 @@ export const Toolbar: React.FC = () => {
       label: "Fetch",
       sublabel: "Fetch from default remote",
       icon: <IconDownload />,
-      onClick: () => window.electronAPI.remote.fetch(),
+      onClick: async () => {
+        await window.electronAPI.remote.fetch();
+        await Promise.all([refreshInfo(), loadGraph()]);
+      },
     },
     {
       label: "Fetch All",
       sublabel: "git fetch --all",
       icon: <IconGlobe />,
-      onClick: () => window.electronAPI.remote.fetchAll(),
+      onClick: async () => {
+        await window.electronAPI.remote.fetchAll();
+        await Promise.all([refreshInfo(), loadGraph()]);
+      },
     },
     { divider: true },
     {
       label: "Fetch & Prune",
       sublabel: "git fetch --all --prune",
       icon: <IconPrune />,
-      onClick: () => window.electronAPI.remote.fetchPrune(),
+      onClick: async () => {
+        await window.electronAPI.remote.fetchPrune();
+        await Promise.all([refreshInfo(), loadGraph()]);
+      },
     },
   ];
 

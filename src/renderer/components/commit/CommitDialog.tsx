@@ -305,8 +305,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     setCommitDropdownOpen(false);
     try {
       await window.electronAPI.stash.create();
-      await loadFiles();
-      await refreshStatus();
+      await Promise.all([loadFiles(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     }
