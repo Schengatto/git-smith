@@ -25,6 +25,13 @@ export interface AppSettings {
   mergeToolArgs: string; // argument pattern with $BASE $LOCAL $REMOTE $MERGED placeholders
   // Advanced
   maxConcurrentGitProcesses: number;
+  gitBinaryPath: string; // custom git binary path, empty = use system PATH
+  // AI / MCP
+  aiProvider: "none" | "anthropic" | "openai" | "custom-mcp";
+  aiApiKey: string;
+  aiModel: string;
+  aiBaseUrl: string;
+  mcpServerEnabled: boolean;
 }
 
 export interface RepoCategory {
@@ -69,6 +76,12 @@ export const defaultSettings: AppSettings = {
   mergeToolPath: "",
   mergeToolArgs: "",
   maxConcurrentGitProcesses: 6,
+  gitBinaryPath: "",
+  aiProvider: "none",
+  aiApiKey: "",
+  aiModel: "",
+  aiBaseUrl: "",
+  mcpServerEnabled: false,
 };
 
 const defaults: AppStoreSchema = {

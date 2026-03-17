@@ -15,6 +15,7 @@ import type { AppSettings } from "./store";
 import { createMenu } from "./menu";
 import { initAutoUpdater } from "./auto-updater";
 import { IPC } from "../shared/ipc-channels";
+import { startMcpServer } from "./mcp/mcp-server";
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -102,6 +103,20 @@ function stopAutoFetch() {
   }
 }
 
+// ── MCP Server mode ──────────────────────────────────────────────
+// When launched with --mcp-server, run only the MCP server (no UI).
+// Usage: electron . --mcp-server --repo /path/to/repo
+if (app.commandLine.hasSwitch("mcp-server")) {
+  const repoPath = app.commandLine.getSwitchValue("repo") || process.cwd();
+  app.whenReady().then(() => {
+    startMcpServer(repoPath).catch((err) => {
+      console.error("[git-expansion] MCP server failed:", err.message);
+      app.quit();
+    });
+  });
+} else {
+// ── Normal GUI mode ────────────────────────────────────────────
+
 app.whenReady().then(() => {
   try {
     registerAllHandlers();
@@ -156,3 +171,5 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+} // end of normal GUI mode else block

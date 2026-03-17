@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useUIStore } from "../../store/ui-store";
 
-type Tab = "general" | "git" | "fetch" | "commit" | "diff" | "mergetool" | "advanced";
+type Tab = "general" | "git" | "fetch" | "commit" | "diff" | "mergetool" | "advanced" | "ai";
 
 interface AppSettings {
   theme: string;
@@ -18,6 +18,12 @@ interface AppSettings {
   mergeToolPath: string;
   mergeToolArgs: string;
   maxConcurrentGitProcesses: number;
+  gitBinaryPath: string;
+  aiProvider: string;
+  aiApiKey: string;
+  aiModel: string;
+  aiBaseUrl: string;
+  mcpServerEnabled: boolean;
 }
 
 interface GitConfig {
@@ -44,6 +50,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "diff", label: "Diff & Graph", icon: <IconDiff /> },
   { id: "mergetool", label: "Merge Tool", icon: <IconMergeTool /> },
   { id: "advanced", label: "Advanced", icon: <IconAdvanced /> },
+  { id: "ai", label: "AI / MCP", icon: <IconAi /> },
 ];
 
 export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
@@ -220,6 +227,9 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
             {settings && tab === "advanced" && (
               <AdvancedTab settings={settings} onChange={updateSetting} />
             )}
+            {settings && tab === "ai" && (
+              <AiTab settings={settings} onChange={updateSetting} />
+            )}
           </div>
         </div>
 
@@ -268,21 +278,49 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
 
 type OnChange = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
 
-const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => (
-  <div>
-    <SectionTitle>Appearance</SectionTitle>
-    <SettingRow label="Theme" description="Application color theme">
-      <Select
-        value={settings.theme}
-        options={[
-          { value: "dark", label: "Dark (Catppuccin Mocha)" },
-          { value: "light", label: "Light (Catppuccin Latte)" },
-        ]}
-        onChange={(v) => onChange("theme", v)}
-      />
-    </SettingRow>
-  </div>
-);
+const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
+  const handleBrowseGit = async () => {
+    const selected = await window.electronAPI.repo.browseFile("Select Git executable");
+    if (selected) onChange("gitBinaryPath", selected);
+  };
+
+  return (
+    <div>
+      <SectionTitle>Appearance</SectionTitle>
+      <SettingRow label="Theme" description="Application color theme">
+        <Select
+          value={settings.theme}
+          options={[
+            { value: "dark", label: "Dark (Catppuccin Mocha)" },
+            { value: "light", label: "Light (Catppuccin Latte)" },
+          ]}
+          onChange={(v) => onChange("theme", v)}
+        />
+      </SettingRow>
+      <SectionTitle>Git</SectionTitle>
+      <SettingRow label="Git binary path" description="Leave empty to use git from system PATH">
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <input
+            value={settings.gitBinaryPath}
+            onChange={(e) => onChange("gitBinaryPath", e.target.value)}
+            placeholder="git"
+            style={{
+              padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)",
+              background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12,
+              outline: "none", width: 220, fontFamily: "var(--font-mono, monospace)",
+            }}
+          />
+          <button onClick={handleBrowseGit} style={{
+            padding: "4px 10px", borderRadius: 4, border: "1px solid var(--border)",
+            background: "transparent", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer",
+          }}>
+            Browse
+          </button>
+        </div>
+      </SettingRow>
+    </div>
+  );
+};
 
 const FetchTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => (
   <div>
@@ -730,3 +768,120 @@ function IconAdvanced() {
     </svg>
   );
 }
+
+function IconAi() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+    </svg>
+  );
+}
+
+/* ---------- AI / MCP Tab ---------- */
+
+const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
+  const providerOptions = [
+    { value: "none", label: "Disabled" },
+    { value: "anthropic", label: "Anthropic (Claude)" },
+    { value: "openai", label: "OpenAI" },
+    { value: "custom-mcp", label: "Custom MCP Server" },
+  ];
+
+  const modelOptions: Record<string, { value: string; label: string }[]> = {
+    anthropic: [
+      { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4" },
+      { value: "claude-opus-4-20250514", label: "Claude Opus 4" },
+      { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
+    ],
+    openai: [
+      { value: "gpt-4o", label: "GPT-4o" },
+      { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+      { value: "o3-mini", label: "o3-mini" },
+    ],
+  };
+
+  return (
+    <div>
+      <SectionTitle>AI Provider</SectionTitle>
+      <SettingRow label="Provider" description="Select AI provider for code assistance features">
+        <Select
+          value={settings.aiProvider}
+          options={providerOptions}
+          onChange={(v) => onChange("aiProvider", v)}
+        />
+      </SettingRow>
+
+      {settings.aiProvider !== "none" && (
+        <>
+          <SettingRow label="API Key" description="Your API key (stored locally)">
+            <input
+              type="password"
+              value={settings.aiApiKey}
+              onChange={(e) => onChange("aiApiKey", e.target.value)}
+              placeholder="sk-..."
+              style={{
+                padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)",
+                background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12,
+                outline: "none", width: 220, fontFamily: "var(--font-mono, monospace)",
+              }}
+            />
+          </SettingRow>
+
+          {modelOptions[settings.aiProvider] && (
+            <SettingRow label="Model" description="AI model to use for generation">
+              <Select
+                value={settings.aiModel || modelOptions[settings.aiProvider]?.[0]?.value || ""}
+                options={modelOptions[settings.aiProvider]}
+                onChange={(v) => onChange("aiModel", v)}
+              />
+            </SettingRow>
+          )}
+
+          {settings.aiProvider === "openai" && (
+            <SettingRow label="Base URL" description="Custom API base URL (leave empty for default)">
+              <input
+                value={settings.aiBaseUrl}
+                onChange={(e) => onChange("aiBaseUrl", e.target.value)}
+                placeholder="https://api.openai.com"
+                style={{
+                  padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)",
+                  background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12,
+                  outline: "none", width: 220, fontFamily: "var(--font-mono, monospace)",
+                }}
+              />
+            </SettingRow>
+          )}
+        </>
+      )}
+
+      <SectionTitle>AI Features</SectionTitle>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+        When an AI provider is configured, the following features become available:
+      </div>
+      <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6 }}>
+        <div style={{ padding: "2px 0" }}>&#8226; Generate commit messages from staged changes</div>
+        <div style={{ padding: "2px 0" }}>&#8226; AI-assisted merge conflict resolution</div>
+        <div style={{ padding: "2px 0" }}>&#8226; Code review of commits</div>
+        <div style={{ padding: "2px 0" }}>&#8226; PR description generation</div>
+      </div>
+
+      <SectionTitle>MCP Server</SectionTitle>
+      <SettingRow
+        label="Enable MCP Server"
+        description="Expose git operations as MCP tools for AI assistants"
+      >
+        <Toggle
+          checked={settings.mcpServerEnabled}
+          onChange={(v) => onChange("mcpServerEnabled", v)}
+        />
+      </SettingRow>
+      {settings.mcpServerEnabled && (
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, lineHeight: 1.5 }}>
+          Start with: <code style={{ fontSize: 11, color: "var(--accent)" }}>
+            git-expansion --mcp-server --repo /path/to/repo
+          </code>
+        </div>
+      )}
+    </div>
+  );
+};

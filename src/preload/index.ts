@@ -361,6 +361,23 @@ const electronAPI = {
       return () => ipcRenderer.removeListener(IPC.EVENTS.TERMINAL_EXIT, handler);
     },
   },
+
+  mcp: {
+    serverStart: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.MCP.SERVER_START),
+    serverStop: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.MCP.SERVER_STOP),
+    serverStatus: (): Promise<{ running: boolean; repoPath: string | null }> =>
+      ipcRenderer.invoke(IPC.MCP.SERVER_STATUS),
+    generateCommitMessage: (): Promise<string> =>
+      ipcRenderer.invoke(IPC.MCP.GENERATE_COMMIT_MESSAGE),
+    suggestConflictResolution: (filePath: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.MCP.SUGGEST_CONFLICT_RESOLUTION, filePath),
+    generatePrDescription: (commitHashes: string[]): Promise<string> =>
+      ipcRenderer.invoke(IPC.MCP.GENERATE_PR_DESCRIPTION, commitHashes),
+    reviewCommit: (hash: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.MCP.REVIEW_COMMIT, hash),
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);

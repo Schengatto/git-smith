@@ -5,7 +5,10 @@ import { HunkStagingView } from "./HunkStagingView";
 import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import { MergeConflictDialog } from "../dialogs/MergeConflictDialog";
+import { FileHistoryPanel } from "../details/FileHistoryPanel";
+import { BlameView } from "../details/BlameView";
 import type { GitStatus, ConflictFile } from "../../../shared/git-types";
+import { AiCommitMessageButton } from "../ai/AiCommitMessageButton";
 
 interface Props {
   open: boolean;
@@ -105,6 +108,10 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     suggestedRemote: string;
     suggestedBranch: string;
   } | null>(null);
+
+  // File history / blame
+  const [historyFile, setHistoryFile] = useState<string | null>(null);
+  const [blameFile, setBlameFile] = useState<string | null>(null);
 
   // Merge conflict state
   const [mergeInProgress, setMergeInProgress] = useState(false);
@@ -555,6 +562,8 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               showDiscard={true}
               onStageFile={(p) => stageFiles([p])}
               onAddToGitignore={handleAddToGitignore}
+              onFileHistory={setHistoryFile}
+              onFileBlame={setBlameFile}
             />
 
             {/* Stage / Unstage action buttons */}
@@ -626,6 +635,8 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               showDiscard={false}
               onUnstageFile={(p) => unstageFiles([p])}
               onAddToGitignore={handleAddToGitignore}
+              onFileHistory={setHistoryFile}
+              onFileBlame={setBlameFile}
             />
           </div>
 
@@ -885,6 +896,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 </div>
               )}
 
+              <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
               <textarea
                 placeholder="Enter commit message..."
                 value={message}
@@ -912,6 +924,8 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   }
                 }}
               />
+              <AiCommitMessageButton onGenerated={(msg) => setMessage(msg)} />
+              </div>
 
               {error && (
                 <div style={{ fontSize: 11, color: "var(--red)", padding: "0 2px" }}>
@@ -1096,6 +1110,17 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
           loadFiles();
         }}
       />
+
+      <FileHistoryPanel
+        open={!!historyFile}
+        onClose={() => setHistoryFile(null)}
+        filePath={historyFile || ""}
+      />
+      <BlameView
+        open={!!blameFile}
+        onClose={() => setBlameFile(null)}
+        filePath={blameFile || ""}
+      />
     </div>
   );
 };
@@ -1120,7 +1145,9 @@ const FileListPanel: React.FC<{
   onStageFile?: (path: string) => void;
   onUnstageFile?: (path: string) => void;
   onAddToGitignore: (pattern: string) => void;
-}> = ({ title, count, files, selectedFile, selectedPaths, onSelectFile, onToggleSelect, accentColor, treeView, onToggleTreeView, onDiscard, onDiscardAll, showDiscard, onStageFile, onUnstageFile, onAddToGitignore }) => {
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ title, count, files, selectedFile, selectedPaths, onSelectFile, onToggleSelect, accentColor, treeView, onToggleTreeView, onDiscard, onDiscardAll, showDiscard, onStageFile, onUnstageFile, onAddToGitignore, onFileHistory, onFileBlame }) => {
   const [confirmDiscardAll, setConfirmDiscardAll] = useState(false);
   const [collapsedDirs, setCollapsedDirs] = useState<Set<string>>(new Set());
   const tree = useMemo(() => buildTree(files), [files]);
@@ -1236,6 +1263,8 @@ const FileListPanel: React.FC<{
                 onStageFile={onStageFile}
                 onUnstageFile={onUnstageFile}
                 onAddToGitignore={onAddToGitignore}
+                onFileHistory={onFileHistory}
+                onFileBlame={onFileBlame}
               />
             ))
           : files.map((f) => (
@@ -1251,6 +1280,8 @@ const FileListPanel: React.FC<{
                 onStage={onStageFile ? () => onStageFile(f.path) : undefined}
                 onUnstage={onUnstageFile ? () => onUnstageFile(f.path) : undefined}
                 onAddToGitignore={onAddToGitignore}
+                onFileHistory={onFileHistory}
+                onFileBlame={onFileBlame}
               />
             ))}
       </div>
@@ -1275,7 +1306,9 @@ const TreeNodeRow: React.FC<{
   onStageFile?: (path: string) => void;
   onUnstageFile?: (path: string) => void;
   onAddToGitignore: (pattern: string) => void;
-}> = ({ node, depth, selectedFile, selectedPaths, onSelectFile, onToggleSelect, collapsedDirs, onToggleDir, showDiscard, onDiscard, onStageFile, onUnstageFile, onAddToGitignore }) => {
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ node, depth, selectedFile, selectedPaths, onSelectFile, onToggleSelect, collapsedDirs, onToggleDir, showDiscard, onDiscard, onStageFile, onUnstageFile, onAddToGitignore, onFileHistory, onFileBlame }) => {
   const isDir = !node.file && node.children.length > 0;
   const isCollapsed = collapsedDirs.has(node.path);
 
@@ -1336,6 +1369,8 @@ const TreeNodeRow: React.FC<{
               onStageFile={onStageFile}
               onUnstageFile={onUnstageFile}
               onAddToGitignore={onAddToGitignore}
+              onFileHistory={onFileHistory}
+              onFileBlame={onFileBlame}
             />
           ))}
       </>
@@ -1363,6 +1398,8 @@ const TreeNodeRow: React.FC<{
       onStage={onStageFile ? () => onStageFile(file.path) : undefined}
       onUnstage={onUnstageFile ? () => onUnstageFile(file.path) : undefined}
       onAddToGitignore={onAddToGitignore}
+      onFileHistory={onFileHistory}
+      onFileBlame={onFileBlame}
     />
   );
 };
@@ -1381,7 +1418,9 @@ const FlatFileRow: React.FC<{
   onStage?: () => void;
   onUnstage?: () => void;
   onAddToGitignore: (pattern: string) => void;
-}> = ({ file, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore }) => {
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ file, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore, onFileHistory, onFileBlame }) => {
   const fileName = file.path.split("/").pop() || file.path;
   const dirPath = file.path.includes("/")
     ? file.path.slice(0, file.path.lastIndexOf("/"))
@@ -1402,6 +1441,8 @@ const FlatFileRow: React.FC<{
       onStage={onStage}
       onUnstage={onUnstage}
       onAddToGitignore={onAddToGitignore}
+      onFileHistory={onFileHistory}
+      onFileBlame={onFileBlame}
     />
   );
 };
@@ -1423,7 +1464,9 @@ const FileRow: React.FC<{
   onStage?: () => void;
   onUnstage?: () => void;
   onAddToGitignore: (pattern: string) => void;
-}> = ({ file, name, dirPath, depth, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore }) => {
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ file, name, dirPath, depth, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore, onFileHistory, onFileBlame }) => {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -1637,6 +1680,8 @@ const FileRow: React.FC<{
           onCopyPath={copyPath}
           onCopyFileName={copyFileName}
           onAddToGitignore={onAddToGitignore}
+          onFileHistory={onFileHistory}
+          onFileBlame={onFileBlame}
         />
       )}
     </>
@@ -1773,7 +1818,9 @@ const FileContextMenu: React.FC<{
   onCopyPath: () => void;
   onCopyFileName: () => void;
   onAddToGitignore: (pattern: string) => void;
-}> = ({ x, y, file, isStaged, onClose, onStage, onUnstage, onDiscard, onOpenFile, onShowInFolder, onCopyPath, onCopyFileName, onAddToGitignore }) => {
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ x, y, file, isStaged, onClose, onStage, onUnstage, onDiscard, onOpenFile, onShowInFolder, onCopyPath, onCopyFileName, onAddToGitignore, onFileHistory, onFileBlame }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
@@ -1891,6 +1938,30 @@ const FileContextMenu: React.FC<{
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
           <IconDiscard size={13} /> Confirm reset?
+        </button>
+      )}
+
+      {separator}
+
+      {/* File history & blame */}
+      {onFileHistory && (
+        <button
+          style={menuItemStyle}
+          onClick={() => { onFileHistory(file.path); onClose(); }}
+          onMouseEnter={handleItemHover}
+          onMouseLeave={handleItemLeave}
+        >
+          <IconHistory size={13} /> File history
+        </button>
+      )}
+      {onFileBlame && (
+        <button
+          style={menuItemStyle}
+          onClick={() => { onFileBlame(file.path); onClose(); }}
+          onMouseEnter={handleItemHover}
+          onMouseLeave={handleItemLeave}
+        >
+          <IconBlame size={13} /> Blame
         </button>
       )}
 
@@ -2129,6 +2200,15 @@ const IconHistory: React.FC<{ size?: number }> = ({ size = 14 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
     <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const IconBlame: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 

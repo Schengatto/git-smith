@@ -13,6 +13,7 @@ import { MergeDialog } from "../dialogs/MergeDialog";
 import { RebaseDialog } from "../dialogs/RebaseDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo, CommitInfo } from "../../../shared/git-types";
+import { AiReviewDialog } from "../ai/AiReviewDialog";
 
 const LANE_WIDTH = 16;
 const ROW_HEIGHT = 30;
@@ -74,6 +75,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
   const [compareTarget, setCompareTarget] = useState<{ commit1: CommitInfo; commit2: CommitInfo } | null>(null);
+  const [aiReviewHash, setAiReviewHash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -379,6 +381,11 @@ export const CommitGraphPanel: React.FC = () => {
       {
         label: `Copy Hash (${row.commit.abbreviatedHash})`,
         onClick: () => navigator.clipboard.writeText(row.commit.hash),
+      },
+      { divider: true },
+      {
+        label: "AI Code Review",
+        onClick: () => setAiReviewHash(row.commit.hash),
       },
     );
 
@@ -789,6 +796,13 @@ export const CommitGraphPanel: React.FC = () => {
         preselectedOnto={rebaseTarget?.onto}
         startInteractive={rebaseTarget?.interactive}
       />
+
+      {aiReviewHash && (
+        <AiReviewDialog
+          hash={aiReviewHash}
+          onClose={() => setAiReviewHash(null)}
+        />
+      )}
 
       <ConfirmDeleteDialog
         open={!!deleteTagTarget}

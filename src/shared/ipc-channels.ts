@@ -149,6 +149,17 @@ export const IPC = {
     SHOW_IN_FOLDER: "shell:show-in-folder",
     OPEN_FILE_IN_EDITOR: "shell:open-file-in-editor",
   },
+  MCP: {
+    // Server management
+    SERVER_START: "mcp:server:start",
+    SERVER_STOP: "mcp:server:stop",
+    SERVER_STATUS: "mcp:server:status",
+    // AI operations
+    GENERATE_COMMIT_MESSAGE: "mcp:ai:generate-commit-message",
+    SUGGEST_CONFLICT_RESOLUTION: "mcp:ai:suggest-conflict-resolution",
+    GENERATE_PR_DESCRIPTION: "mcp:ai:generate-pr-description",
+    REVIEW_COMMIT: "mcp:ai:review-commit",
+  },
   // Events pushed from main → renderer
   EVENTS: {
     COMMAND_LOG: "git:event:command-log",

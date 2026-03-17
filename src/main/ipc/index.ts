@@ -12,6 +12,7 @@ import { registerGitignoreHandlers } from "./git-gitignore.ipc";
 import { registerConflictHandlers } from "./git-conflict.ipc";
 import { registerOperationHandlers } from "./git-operation.ipc";
 import { registerTerminalHandlers } from "./terminal.ipc";
+import { registerMcpHandlers } from "./mcp.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -28,4 +29,5 @@ export function registerAllHandlers() {
   registerConflictHandlers();
   registerOperationHandlers();
   registerTerminalHandlers();
+  registerMcpHandlers();
 }

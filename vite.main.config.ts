@@ -7,7 +7,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ["node-pty"],
+      external: ["node-pty", "@modelcontextprotocol/sdk", "zod"],
       output: {
         entryFileNames: "main.js",
       },
