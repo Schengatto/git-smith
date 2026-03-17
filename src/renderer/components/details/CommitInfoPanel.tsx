@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useGraphStore } from "../../store/graph-store";
+import { useRepoStore } from "../../store/repo-store";
 import type { CommitFullInfo } from "../../../shared/git-types";
 
 const IconInfo = () => (
@@ -12,20 +13,24 @@ const IconInfo = () => (
 
 export const CommitInfoPanel: React.FC = () => {
   const { selectedCommit } = useGraphStore();
+  const repo = useRepoStore((s) => s.repo);
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
 
+  // Use selected commit or HEAD
+  const effectiveHash = selectedCommit?.hash || repo?.headCommit || null;
+
   useEffect(() => {
-    if (!selectedCommit) {
+    if (!effectiveHash) {
       setInfo(null);
       return;
     }
     window.electronAPI.log
-      .fullInfo(selectedCommit.hash)
+      .fullInfo(effectiveHash)
       .then(setInfo)
       .catch(() => setInfo(null));
-  }, [selectedCommit?.hash]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effectiveHash]);
 
-  if (!selectedCommit) {
+  if (!effectiveHash) {
     return (
       <div className="empty-state">
         <div className="empty-state-icon">

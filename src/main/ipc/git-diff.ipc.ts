@@ -29,6 +29,10 @@ export function registerDiffHandlers() {
     return gitService.getDiff(undefined, true);
   });
 
+  ipcMain.handle(IPC.DIFF.TREE_FILES, async (_event, hash: string) => {
+    return gitService.getTreeFiles(hash);
+  });
+
   ipcMain.handle(
     IPC.DIFF.RANGE_FILES,
     async (_event, hash1: string, hash2: string) => {

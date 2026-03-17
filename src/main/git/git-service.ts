@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { IPC } from "../../shared/ipc-channels";
+import { getSettings } from "../store";
 import type {
   CommandLogEntry,
   CommandOutputLine,
@@ -150,9 +151,10 @@ export class GitService {
 
   async openRepo(path: string): Promise<RepoInfo> {
     this.patchSpawn();
+    const gitBinary = getSettings().gitBinaryPath || "git";
     const options: Partial<SimpleGitOptions> = {
       baseDir: path,
-      binary: "git",
+      binary: gitBinary,
       maxConcurrentProcesses: 6,
     };
     this.git = simpleGit(options);
@@ -168,9 +170,10 @@ export class GitService {
 
   async initRepo(dirPath: string): Promise<RepoInfo> {
     fs.mkdirSync(dirPath, { recursive: true });
+    const gitBinary = getSettings().gitBinaryPath || "git";
     const options: Partial<SimpleGitOptions> = {
       baseDir: dirPath,
-      binary: "git",
+      binary: gitBinary,
       maxConcurrentProcesses: 6,
     };
     const git = simpleGit(options);
@@ -492,6 +495,13 @@ export class GitService {
         refs: parseRefs(parts[9] || ""),
         gravatarHash: detailEmail ? crypto.createHash("md5").update(detailEmail).digest("hex") : undefined,
       };
+    });
+  }
+
+  async showFile(hash: string, filePath: string): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git show", [`${hash}:${filePath}`], async () => {
+      return git.raw(["show", `${hash}:${filePath}`]);
     });
   }
 
@@ -1471,6 +1481,15 @@ export class GitService {
           refs: parseRefs(parts[9] || ""),
         };
       });
+    });
+  }
+
+  async getTreeFiles(hash: string): Promise<string[]> {
+    const git = this.ensureRepo();
+    return this.run("git ls-tree", ["-r", "--name-only", hash], async () => {
+      const result = await git.raw(["ls-tree", "-r", "--name-only", hash]);
+      if (!result.trim()) return [];
+      return result.trim().split("\n").filter(Boolean);
     });
   }
 

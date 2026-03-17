@@ -47,6 +47,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.REPO.DELETE_CATEGORY, category),
     browseDirectory: (title?: string): Promise<string | null> =>
       ipcRenderer.invoke(IPC.REPO.BROWSE_DIRECTORY, title),
+    browseFile: (title?: string): Promise<string | null> =>
+      ipcRenderer.invoke(IPC.REPO.BROWSE_FILE, title),
     scanForRepos: (rootPath: string, maxDepth?: number): Promise<string[]> =>
       ipcRenderer.invoke(IPC.REPO.SCAN_FOR_REPOS, rootPath, maxDepth ?? 4),
     openExternal: (url: string): Promise<void> =>
@@ -102,6 +104,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.LOG.DETAILS, hash),
     fullInfo: (hash: string): Promise<CommitFullInfo> =>
       ipcRenderer.invoke(IPC.LOG.FULL_INFO, hash),
+    showFile: (hash: string, filePath: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.LOG.SHOW_FILE, hash, filePath),
   },
   branch: {
     list: (): Promise<BranchInfo[]> => ipcRenderer.invoke(IPC.BRANCH.LIST),
@@ -208,6 +212,8 @@ const electronAPI = {
     commitFiles: (hash: string): Promise<CommitFileInfo[]> =>
       ipcRenderer.invoke(IPC.DIFF.COMMIT_FILES, hash),
     staged: (): Promise<string> => ipcRenderer.invoke(IPC.DIFF.STAGED),
+    treeFiles: (hash: string): Promise<string[]> =>
+      ipcRenderer.invoke(IPC.DIFF.TREE_FILES, hash),
     rangeFiles: (hash1: string, hash2: string): Promise<CommitFileInfo[]> =>
       ipcRenderer.invoke(IPC.DIFF.RANGE_FILES, hash1, hash2),
     rangeFile: (hash1: string, hash2: string, file: string): Promise<string> =>

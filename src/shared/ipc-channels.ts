@@ -16,6 +16,7 @@ export const IPC = {
     RENAME_CATEGORY: "git:repo:rename-category",
     DELETE_CATEGORY: "git:repo:delete-category",
     BROWSE_DIRECTORY: "git:repo:browse-directory",
+    BROWSE_FILE: "git:repo:browse-file",
     SCAN_FOR_REPOS: "git:repo:scan-for-repos",
     OPEN_EXTERNAL: "git:repo:open-external",
     GET_LAST_OPENED: "git:repo:get-last-opened",
@@ -40,6 +41,7 @@ export const IPC = {
     GRAPH: "git:log:graph",
     DETAILS: "git:log:details",
     FULL_INFO: "git:log:full-info",
+    SHOW_FILE: "git:log:show-file",
   },
   BRANCH: {
     LIST: "git:branch:list",
@@ -92,6 +94,7 @@ export const IPC = {
     STAGED: "git:diff:staged",
     RANGE_FILES: "git:diff:range-files",
     RANGE_FILE: "git:diff:range-file",
+    TREE_FILES: "git:diff:tree-files",
   },
   STASH: {
     LIST: "git:stash:list",
