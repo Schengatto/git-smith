@@ -11,6 +11,7 @@ import { Toolbar } from "./Toolbar";
 import { StatusBar } from "./StatusBar";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { useRepoStore } from "../../store/repo-store";
+import { useGraphStore } from "../../store/graph-store";
 import { useCommandLogStore } from "../../store/command-log-store";
 import { Sidebar } from "../sidebar/Sidebar";
 import { CommitGraphPanel } from "../graph/CommitGraphPanel";
@@ -74,6 +75,13 @@ export const AppShell: React.FC = () => {
     const unsubMenu = window.electronAPI.on.menuOpenRepo(() => {
       useRepoStore.getState().openRepoDialog();
     });
+    const unsubRepoChanged = window.electronAPI.on.repoChanged(() => {
+      const repo = useRepoStore.getState().repo;
+      if (!repo) return;
+      useRepoStore.getState().refreshInfo();
+      useRepoStore.getState().refreshStatus();
+      useGraphStore.getState().loadGraph();
+    });
 
     // Global keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -92,6 +100,7 @@ export const AppShell: React.FC = () => {
       unsub();
       unsubOutput();
       unsubMenu();
+      unsubRepoChanged();
       window.removeEventListener("keydown", handleKeyDown);
       if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);
     };

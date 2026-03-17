@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { RepoInfo, GitStatus } from "../../shared/git-types";
+import { useGraphStore } from "./graph-store";
 
 export interface RepoCategories {
   [repoPath: string]: string;
@@ -42,6 +43,12 @@ export const useRepoStore = create<RepoState>((set, get) => ({
       const info = await window.electronAPI.repo.open(path);
       set({ repo: info, loading: false });
       get().refreshStatus();
+      // Background fetch on repo open - don't await, don't block UI
+      window.electronAPI.remote.fetchAll().then(() => {
+        get().refreshInfo();
+        get().refreshStatus();
+        useGraphStore.getState().loadGraph();
+      }).catch(() => {});
     } catch (err: unknown) {
       set({
         loading: false,
@@ -57,6 +64,12 @@ export const useRepoStore = create<RepoState>((set, get) => ({
       if (info) {
         set({ repo: info, loading: false });
         get().refreshStatus();
+        // Background fetch on repo open
+        window.electronAPI.remote.fetchAll().then(() => {
+          get().refreshInfo();
+          get().refreshStatus();
+          useGraphStore.getState().loadGraph();
+        }).catch(() => {});
       } else {
         set({ loading: false });
       }
