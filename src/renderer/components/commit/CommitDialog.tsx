@@ -285,9 +285,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     setCommitDropdownOpen(false);
     try {
-      const toStage = stagedFiles.map((f) => f.path);
-      await window.electronAPI.status.stage(toStage);
-
+      // Unstage any files the user moved to the unstaged list
       const toUnstage = unstagedFiles.filter((f) => !f.isUntracked).map((f) => f.path);
       if (toUnstage.length > 0) {
         await window.electronAPI.status.unstage(toUnstage);

@@ -223,7 +223,9 @@ export class GitService {
 
   async stage(paths: string[]): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git add", paths, () => git.add(paths));
+    await this.run("git add", paths, () =>
+      git.raw(["add", "-A", "--", ...paths])
+    );
   }
 
   async unstage(paths: string[]): Promise<void> {
