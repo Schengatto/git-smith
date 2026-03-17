@@ -37,6 +37,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const [conflictCount, setConflictCount] = useState(0);
   const [mergeTool, setMergeTool] = useState<MergeToolSettings>({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
   const [launchingTool, setLaunchingTool] = useState(false);
+  const [useInternalEditor, setUseInternalEditor] = useState(false);
 
   const leftRef = useRef<HTMLTextAreaElement>(null);
   const centerRef = useRef<HTMLTextAreaElement>(null);
@@ -77,7 +78,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     setFiles([]); setSelectedFile(null); setContent(null);
     setOursText(""); setTheirsText("");
     setResolvedFiles(new Set()); setError(null); setConflictCount(0);
-    setLoading(true); setLaunchingTool(false);
+    setLoading(true); setLaunchingTool(false); setUseInternalEditor(false);
     window.electronAPI.settings.get().then((s) => {
       const settings = s as unknown as MergeToolSettings;
       setMergeTool({
@@ -93,8 +94,14 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   }, [open]);
 
   // Load file content — set textarea values directly via refs
+  // When external tool is configured and not using internal editor, auto-launch it
   useEffect(() => {
     if (!selectedFile) { setContent(null); return; }
+    if (hasExternalTool && !useInternalEditor) {
+      // Auto-launch external tool — no need to load content into textareas
+      handleLaunchExternalTool(selectedFile);
+      return;
+    }
     setLoading(true);
     window.electronAPI.conflict.fileContent(selectedFile)
       .then((fc) => {
@@ -105,7 +112,8 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }, [selectedFile]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFile, useInternalEditor]);
 
   // Resolve one conflict by index — operates directly on textarea DOM value
   const resolveConflict = useCallback((idx: number, pick: "ours" | "theirs" | "both" | "none") => {
@@ -168,32 +176,37 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
 
   const hasExternalTool = mergeTool.mergeToolName !== "" && mergeTool.mergeToolPath !== "";
 
-  const handleLaunchExternalTool = useCallback(async () => {
-    if (!selectedFile || !hasExternalTool) return;
+  const handleLaunchExternalTool = useCallback(async (fileToResolve?: string) => {
+    const target = fileToResolve || selectedFile;
+    if (!target || !hasExternalTool) return;
     setLaunchingTool(true); setError(null);
     try {
       const result = await window.electronAPI.conflict.launchMergeTool(
-        selectedFile, mergeTool.mergeToolPath, mergeTool.mergeToolArgs
+        target, mergeTool.mergeToolPath, mergeTool.mergeToolArgs
       );
-      if (result.exitCode === 0) {
-        // Tool exited successfully — reload the merged content
-        const fc = await window.electronAPI.conflict.fileContent(selectedFile);
-        setContent(fc);
-        setOursText(fc.ours || "");
-        setTheirsText(fc.theirs || "");
-        setCenterText(fc.merged || "");
-      } else {
-        // Reload anyway — user may have saved partial changes
-        const fc = await window.electronAPI.conflict.fileContent(selectedFile);
-        setContent(fc);
-        setCenterText(fc.merged || "");
+      // Reload file content after tool exits
+      const fc = await window.electronAPI.conflict.fileContent(target);
+      setContent(fc);
+      setOursText(fc.ours || "");
+      setTheirsText(fc.theirs || "");
+      setCenterText(fc.merged || "");
+      // Auto-resolve if no conflict markers remain and tool exited successfully
+      if (result.exitCode === 0 && countConflictMarkers(fc.merged) === 0) {
+        await window.electronAPI.conflict.resolve(target);
+        setResolvedFiles((prev) => new Set([...prev, target]));
+        const remaining = files.filter((f) => f.path !== target && !resolvedFiles.has(f.path));
+        if (remaining.length > 0) {
+          setSelectedFile(remaining[0].path);
+        } else {
+          setSelectedFile(null); setContent(null);
+        }
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLaunchingTool(false);
     }
-  }, [selectedFile, hasExternalTool, mergeTool, setCenterText]);
+  }, [selectedFile, hasExternalTool, mergeTool, setCenterText, files, resolvedFiles]);
 
   const allFilesResolved = files.length > 0 && files.every((f) => resolvedFiles.has(f.path));
   const unresolvedFileCount = files.filter((f) => !resolvedFiles.has(f.path)).length;
@@ -224,7 +237,27 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
 
           {/* Editor area */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            {selectedFile && content ? (
+            {/* External tool waiting state */}
+            {selectedFile && launchingTool ? (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+                  Waiting for {mergeToolDisplayName(mergeTool)}...
+                </span>
+                <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>{selectedFile}</span>
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  Resolve the conflict in the external tool, then save and close it.
+                </span>
+                <button
+                  onClick={() => { setLaunchingTool(false); setUseInternalEditor(true); }}
+                  style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer", marginTop: 8 }}
+                >
+                  Use internal editor instead
+                </button>
+              </div>
+            ) : selectedFile && content ? (
               <>
                 {/* Toolbar */}
                 <div style={toolbarStyle}>
@@ -250,16 +283,14 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                       <>
                         <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
                         <button
-                          onClick={handleLaunchExternalTool}
-                          disabled={launchingTool}
+                          onClick={() => handleLaunchExternalTool()}
                           style={{
                             padding: "2px 10px", fontSize: 10, fontWeight: 600,
-                            border: "1px solid var(--green)60", borderRadius: 3, cursor: launchingTool ? "wait" : "pointer",
-                            background: launchingTool ? "var(--surface-2)" : "var(--green)15",
-                            color: launchingTool ? "var(--text-muted)" : "var(--green)",
+                            border: "1px solid var(--green)60", borderRadius: 3, cursor: "pointer",
+                            background: "var(--green)15", color: "var(--green)",
                           }}
                         >
-                          {launchingTool ? "Waiting for tool..." : `Open in ${mergeTool.mergeToolName === "custom" ? "external tool" : mergeTool.mergeToolName}`}
+                          Open in {mergeToolDisplayName(mergeTool)}
                         </button>
                       </>
                     )}
@@ -421,6 +452,13 @@ const NavBtn: React.FC<{ label: string; icon: "up" | "down"; onClick: () => void
     </svg>
   </button>
 );
+
+/* ═══════════════ Helpers ═══════════════ */
+
+function mergeToolDisplayName(tool: MergeToolSettings): string {
+  if (!tool.mergeToolName || tool.mergeToolName === "custom") return "external tool";
+  return tool.mergeToolName;
+}
 
 /* ═══════════════ Conflict Parsing ═══════════════ */
 
