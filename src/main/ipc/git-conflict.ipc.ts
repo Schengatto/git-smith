@@ -27,4 +27,11 @@ export function registerConflictHandlers() {
       await gitService.saveMergedFile(filePath, content);
     }
   );
+
+  ipcMain.handle(
+    IPC.CONFLICT.LAUNCH_MERGE_TOOL,
+    async (_event, filePath: string, toolPath: string, toolArgs: string) => {
+      return gitService.launchExternalMergeTool(filePath, toolPath, toolArgs);
+    }
+  );
 }

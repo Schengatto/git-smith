@@ -125,6 +125,7 @@ export const IPC = {
     FILE_CONTENT: "git:conflict:file-content",
     RESOLVE: "git:conflict:resolve",
     SAVE_MERGED: "git:conflict:save-merged",
+    LAUNCH_MERGE_TOOL: "git:conflict:launch-merge-tool",
   },
   GITIGNORE: {
     ADD: "git:gitignore:add",

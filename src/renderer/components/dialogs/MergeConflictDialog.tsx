@@ -17,6 +17,12 @@ interface Props {
  * Gutters between panes have arrow buttons to copy the LOCAL/REMOTE version
  * of each conflict into the center editor.
  */
+interface MergeToolSettings {
+  mergeToolName: string;
+  mergeToolPath: string;
+  mergeToolArgs: string;
+}
+
 export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved }) => {
   const [files, setFiles] = useState<ConflictFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -29,6 +35,8 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const [error, setError] = useState<string | null>(null);
   // Only track conflict count for UI badges — not the full parsed conflicts
   const [conflictCount, setConflictCount] = useState(0);
+  const [mergeTool, setMergeTool] = useState<MergeToolSettings>({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
+  const [launchingTool, setLaunchingTool] = useState(false);
 
   const leftRef = useRef<HTMLTextAreaElement>(null);
   const centerRef = useRef<HTMLTextAreaElement>(null);
@@ -69,7 +77,15 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     setFiles([]); setSelectedFile(null); setContent(null);
     setOursText(""); setTheirsText("");
     setResolvedFiles(new Set()); setError(null); setConflictCount(0);
-    setLoading(true);
+    setLoading(true); setLaunchingTool(false);
+    window.electronAPI.settings.get().then((s) => {
+      const settings = s as unknown as MergeToolSettings;
+      setMergeTool({
+        mergeToolName: settings.mergeToolName || "",
+        mergeToolPath: settings.mergeToolPath || "",
+        mergeToolArgs: settings.mergeToolArgs || "",
+      });
+    }).catch(() => { /* use defaults */ });
     window.electronAPI.conflict.list()
       .then((cf) => { setFiles(cf); if (cf.length > 0) setSelectedFile(cf[0].path); })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
@@ -150,6 +166,35 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     finally { setSaving(false); }
   }, [selectedFile, getCenterText, files, resolvedFiles]);
 
+  const hasExternalTool = mergeTool.mergeToolName !== "" && mergeTool.mergeToolPath !== "";
+
+  const handleLaunchExternalTool = useCallback(async () => {
+    if (!selectedFile || !hasExternalTool) return;
+    setLaunchingTool(true); setError(null);
+    try {
+      const result = await window.electronAPI.conflict.launchMergeTool(
+        selectedFile, mergeTool.mergeToolPath, mergeTool.mergeToolArgs
+      );
+      if (result.exitCode === 0) {
+        // Tool exited successfully — reload the merged content
+        const fc = await window.electronAPI.conflict.fileContent(selectedFile);
+        setContent(fc);
+        setOursText(fc.ours || "");
+        setTheirsText(fc.theirs || "");
+        setCenterText(fc.merged || "");
+      } else {
+        // Reload anyway — user may have saved partial changes
+        const fc = await window.electronAPI.conflict.fileContent(selectedFile);
+        setContent(fc);
+        setCenterText(fc.merged || "");
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLaunchingTool(false);
+    }
+  }, [selectedFile, hasExternalTool, mergeTool, setCenterText]);
+
   const allFilesResolved = files.length > 0 && files.every((f) => resolvedFiles.has(f.path));
   const unresolvedFileCount = files.filter((f) => !resolvedFiles.has(f.path)).length;
   const hasConflictMarkers = conflictCount > 0;
@@ -201,6 +246,23 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
                     <QuickBtn label="Accept all LOCAL" color="var(--accent)" onClick={() => resolveAllAs("ours")} />
                     <QuickBtn label="Accept all REMOTE" color="var(--mauve)" onClick={() => resolveAllAs("theirs")} />
+                    {hasExternalTool && (
+                      <>
+                        <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
+                        <button
+                          onClick={handleLaunchExternalTool}
+                          disabled={launchingTool}
+                          style={{
+                            padding: "2px 10px", fontSize: 10, fontWeight: 600,
+                            border: "1px solid var(--green)60", borderRadius: 3, cursor: launchingTool ? "wait" : "pointer",
+                            background: launchingTool ? "var(--surface-2)" : "var(--green)15",
+                            color: launchingTool ? "var(--text-muted)" : "var(--green)",
+                          }}
+                        >
+                          {launchingTool ? "Waiting for tool..." : `Open in ${mergeTool.mergeToolName === "custom" ? "external tool" : mergeTool.mergeToolName}`}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 

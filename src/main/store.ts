@@ -19,6 +19,10 @@ export interface AppSettings {
   // Graph
   graphMaxInitialLoad: number;
   showRemoteBranchesInGraph: boolean;
+  // Merge Tool
+  mergeToolName: string; // preset name or "custom"
+  mergeToolPath: string; // executable path
+  mergeToolArgs: string; // argument pattern with $BASE $LOCAL $REMOTE $MERGED placeholders
   // Advanced
   maxConcurrentGitProcesses: number;
 }
@@ -61,6 +65,9 @@ export const defaultSettings: AppSettings = {
   preferSideBySideDiff: false,
   graphMaxInitialLoad: 500,
   showRemoteBranchesInGraph: true,
+  mergeToolName: "",
+  mergeToolPath: "",
+  mergeToolArgs: "",
   maxConcurrentGitProcesses: 6,
 };
 

@@ -73,6 +73,16 @@ beforeEach(() => {
       rebaseAbort: rebaseAbortMock,
       isRebaseInProgress: isRebaseInProgressMock,
     },
+    settings: {
+      get: vi.fn().mockResolvedValue({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" }),
+    },
+    conflict: {
+      list: vi.fn().mockResolvedValue([]),
+      fileContent: vi.fn().mockResolvedValue({ ours: "", theirs: "", base: "", merged: "" }),
+      resolve: vi.fn().mockResolvedValue(undefined),
+      saveMerged: vi.fn().mockResolvedValue(undefined),
+      launchMergeTool: vi.fn().mockResolvedValue({ exitCode: 0, mergedContent: "" }),
+    },
   };
 });
 

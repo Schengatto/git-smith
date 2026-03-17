@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useUIStore } from "../../store/ui-store";
 
-type Tab = "general" | "git" | "fetch" | "commit" | "diff" | "advanced";
+type Tab = "general" | "git" | "fetch" | "commit" | "diff" | "mergetool" | "advanced";
 
 interface AppSettings {
   theme: string;
@@ -14,6 +14,9 @@ interface AppSettings {
   preferSideBySideDiff: boolean;
   graphMaxInitialLoad: number;
   showRemoteBranchesInGraph: boolean;
+  mergeToolName: string;
+  mergeToolPath: string;
+  mergeToolArgs: string;
   maxConcurrentGitProcesses: number;
 }
 
@@ -39,6 +42,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "fetch", label: "Fetch", icon: <IconFetch /> },
   { id: "commit", label: "Commit", icon: <IconCommit /> },
   { id: "diff", label: "Diff & Graph", icon: <IconDiff /> },
+  { id: "mergetool", label: "Merge Tool", icon: <IconMergeTool /> },
   { id: "advanced", label: "Advanced", icon: <IconAdvanced /> },
 ];
 
@@ -204,6 +208,9 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
             {settings && tab === "diff" && (
               <DiffTab settings={settings} onChange={updateSetting} />
             )}
+            {settings && tab === "mergetool" && (
+              <MergeToolTab settings={settings} onChange={updateSetting} />
+            )}
             {settings && tab === "advanced" && (
               <AdvancedTab settings={settings} onChange={updateSetting} />
             )}
@@ -361,6 +368,92 @@ const DiffTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ sett
     </SettingRow>
   </div>
 );
+
+const MERGE_TOOL_PRESETS: { name: string; label: string; path: string; args: string }[] = [
+  { name: "", label: "None (use internal editor)", path: "", args: "" },
+  { name: "kdiff3", label: "KDiff3", path: "kdiff3", args: "\"$BASE\" \"$LOCAL\" \"$REMOTE\" -o \"$MERGED\"" },
+  { name: "meld", label: "Meld", path: "meld", args: "\"$LOCAL\" \"$BASE\" \"$REMOTE\" -o \"$MERGED\"" },
+  { name: "beyondcompare", label: "Beyond Compare", path: "bcomp", args: "\"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"" },
+  { name: "p4merge", label: "P4Merge", path: "p4merge", args: "\"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"" },
+  { name: "vscode", label: "VS Code", path: "code", args: "--wait --merge \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"" },
+  { name: "tortoisegitmerge", label: "TortoiseGitMerge", path: "TortoiseGitMerge", args: "-base:\"$BASE\" -theirs:\"$REMOTE\" -mine:\"$LOCAL\" -merged:\"$MERGED\"" },
+  { name: "winmerge", label: "WinMerge", path: "WinMergeU", args: "\"$LOCAL\" \"$REMOTE\" \"$MERGED\"" },
+  { name: "custom", label: "Custom...", path: "", args: "" },
+];
+
+const MergeToolTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
+  const handlePresetChange = (presetName: string) => {
+    const preset = MERGE_TOOL_PRESETS.find((p) => p.name === presetName);
+    if (!preset) return;
+    onChange("mergeToolName", preset.name);
+    if (preset.name !== "custom") {
+      onChange("mergeToolPath", preset.path);
+      onChange("mergeToolArgs", preset.args);
+    }
+  };
+
+  const handleBrowse = async () => {
+    const selected = await window.electronAPI.repo.browseDirectory("Select merge tool executable");
+    if (selected) onChange("mergeToolPath", selected);
+  };
+
+  const isCustom = settings.mergeToolName === "custom";
+  const hasToolConfigured = settings.mergeToolName !== "";
+
+  return (
+    <div>
+      <SectionTitle>External Merge Tool</SectionTitle>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
+        Configure an external tool for resolving merge conflicts. If none is set, the built-in editor will be used.
+      </div>
+      <SettingRow label="Merge tool" description="Select a preset or choose Custom">
+        <Select
+          value={settings.mergeToolName}
+          options={MERGE_TOOL_PRESETS.map((p) => ({ value: p.name, label: p.label }))}
+          onChange={handlePresetChange}
+        />
+      </SettingRow>
+      {hasToolConfigured && (
+        <>
+          <SettingRow label="Executable path" description="Path to the merge tool binary">
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input
+                value={settings.mergeToolPath}
+                onChange={(e) => onChange("mergeToolPath", e.target.value)}
+                placeholder="e.g. kdiff3 or /usr/bin/meld"
+                style={{
+                  padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)",
+                  background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12,
+                  outline: "none", width: 220,
+                }}
+              />
+              {isCustom && (
+                <button onClick={handleBrowse} style={{
+                  padding: "4px 10px", borderRadius: 4, border: "1px solid var(--border)",
+                  background: "transparent", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer",
+                }}>
+                  Browse
+                </button>
+              )}
+            </div>
+          </SettingRow>
+          <SettingRow label="Arguments" description="Use $BASE $LOCAL $REMOTE $MERGED as placeholders">
+            <input
+              value={settings.mergeToolArgs}
+              onChange={(e) => onChange("mergeToolArgs", e.target.value)}
+              placeholder={'$BASE $LOCAL $REMOTE -o $MERGED'}
+              style={{
+                padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)",
+                background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12,
+                outline: "none", width: 340, fontFamily: "var(--font-mono, monospace)",
+              }}
+            />
+          </SettingRow>
+        </>
+      )}
+    </div>
+  );
+};
 
 const AdvancedTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => (
   <div>
@@ -608,6 +701,14 @@ function IconDiff() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="12" y1="3" x2="12" y2="21" />
+    </svg>
+  );
+}
+
+function IconMergeTool() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M6 21V9a9 9 0 0 0 9 9" />
     </svg>
   );
 }

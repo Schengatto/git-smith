@@ -38,6 +38,8 @@ const listMock = vi.fn().mockResolvedValue(mockFiles);
 const fileContentMock = vi.fn().mockResolvedValue(mockFileContent);
 const resolveMock = vi.fn().mockResolvedValue(undefined);
 const saveMergedMock = vi.fn().mockResolvedValue(undefined);
+const launchMergeToolMock = vi.fn().mockResolvedValue({ exitCode: 0, mergedContent: "" });
+const settingsGetMock = vi.fn().mockResolvedValue({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,6 +49,10 @@ beforeEach(() => {
       fileContent: fileContentMock,
       resolve: resolveMock,
       saveMerged: saveMergedMock,
+      launchMergeTool: launchMergeToolMock,
+    },
+    settings: {
+      get: settingsGetMock,
     },
   };
 });
@@ -279,6 +285,74 @@ describe("resolveAllConflicts", () => {
     const diff3 = "<<<<<<< HEAD\nours\n||||||| base\noriginal\n=======\ntheirs\n>>>>>>> branch";
     expect(resolveAllConflicts(diff3, "ours")).toBe("ours");
     expect(resolveAllConflicts(diff3, "theirs")).toBe("theirs");
+  });
+});
+
+describe("MergeConflictDialog external merge tool", () => {
+  it("does not show external tool button when no tool configured", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept all LOCAL")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Open in/)).not.toBeInTheDocument();
+  });
+
+  it("shows external tool button when merge tool is configured", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "kdiff3",
+      mergeToolPath: "kdiff3",
+      mergeToolArgs: "\"$BASE\" \"$LOCAL\" \"$REMOTE\" -o \"$MERGED\"",
+    });
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Open in kdiff3")).toBeInTheDocument();
+    });
+  });
+
+  it("shows generic label for custom tool", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "custom",
+      mergeToolPath: "/usr/bin/my-tool",
+      mergeToolArgs: "\"$LOCAL\" \"$REMOTE\"",
+    });
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Open in external tool")).toBeInTheDocument();
+    });
+  });
+
+  it("calls launchMergeTool when external tool button is clicked", async () => {
+    listMock.mockResolvedValue(mockFiles);
+    fileContentMock.mockResolvedValue(mockFileContent);
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "meld",
+      mergeToolPath: "meld",
+      mergeToolArgs: "\"$LOCAL\" \"$BASE\" \"$REMOTE\" -o \"$MERGED\"",
+    });
+
+    launchMergeToolMock.mockResolvedValue({ exitCode: 0, mergedContent: "resolved content without markers" });
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Open in meld")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Open in meld"));
+
+    await waitFor(() => {
+      expect(launchMergeToolMock).toHaveBeenCalledWith(
+        "CHANGELOG.md",
+        "meld",
+        "\"$LOCAL\" \"$BASE\" \"$REMOTE\" -o \"$MERGED\""
+      );
+    });
   });
 });
 

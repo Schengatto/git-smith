@@ -218,6 +218,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.CONFLICT.RESOLVE, filePath),
     saveMerged: (filePath: string, content: string): Promise<void> =>
       ipcRenderer.invoke(IPC.CONFLICT.SAVE_MERGED, filePath, content),
+    launchMergeTool: (filePath: string, toolPath: string, toolArgs: string): Promise<{ exitCode: number; mergedContent: string }> =>
+      ipcRenderer.invoke(IPC.CONFLICT.LAUNCH_MERGE_TOOL, filePath, toolPath, toolArgs),
   },
   stash: {
     list: (): Promise<StashEntry[]> => ipcRenderer.invoke(IPC.STASH.LIST),

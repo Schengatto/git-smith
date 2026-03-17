@@ -969,6 +969,64 @@ export class GitService {
     fs.writeFileSync(fullPath, content, "utf-8");
   }
 
+  /**
+   * Launch an external merge tool for a conflicted file.
+   * Writes base/ours/theirs to temp files, passes the real merged file path,
+   * waits for the process to exit, then returns the updated merged content.
+   */
+  async launchExternalMergeTool(
+    filePath: string,
+    toolPath: string,
+    toolArgs: string
+  ): Promise<{ exitCode: number; mergedContent: string }> {
+    const { spawn } = await import("child_process");
+    const os = await import("os");
+
+    const repoPath = this.repoPath!;
+    const content = await this.getConflictFileContent(filePath);
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "git-expansion-merge-"));
+
+    const basePath = path.join(tmpDir, "BASE_" + path.basename(filePath));
+    const localPath = path.join(tmpDir, "LOCAL_" + path.basename(filePath));
+    const remotePath = path.join(tmpDir, "REMOTE_" + path.basename(filePath));
+    const mergedPath = path.join(repoPath, filePath);
+
+    fs.writeFileSync(basePath, content.base || "", "utf-8");
+    fs.writeFileSync(localPath, content.ours || "", "utf-8");
+    fs.writeFileSync(remotePath, content.theirs || "", "utf-8");
+
+    // Replace placeholders in the argument pattern
+    const resolvedArgs = toolArgs
+      .replace(/\$BASE/g, basePath)
+      .replace(/\$LOCAL/g, localPath)
+      .replace(/\$REMOTE/g, remotePath)
+      .replace(/\$MERGED/g, mergedPath);
+
+    // Parse args respecting quotes
+    const args = resolvedArgs.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(a => a.replace(/^"|"$/g, "")) || [];
+
+    return new Promise((resolve) => {
+      const proc = spawn(toolPath, args, { stdio: "ignore" });
+      proc.on("error", () => {
+        cleanup();
+        resolve({ exitCode: -1, mergedContent: "" });
+      });
+      proc.on("close", (code) => {
+        let mergedContent = "";
+        try { mergedContent = fs.readFileSync(mergedPath, "utf-8"); } catch { /* file may not exist */ }
+        cleanup();
+        resolve({ exitCode: code ?? -1, mergedContent });
+      });
+
+      function cleanup() {
+        try { fs.unlinkSync(basePath); } catch { /* ignore */ }
+        try { fs.unlinkSync(localPath); } catch { /* ignore */ }
+        try { fs.unlinkSync(remotePath); } catch { /* ignore */ }
+        try { fs.rmdirSync(tmpDir); } catch { /* ignore */ }
+      }
+    });
+  }
+
   async getConfig(key: string, global = false): Promise<string> {
     const git = this.ensureRepo();
     return this.run("git config", [key], async () => {
