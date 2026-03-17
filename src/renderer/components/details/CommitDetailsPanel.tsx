@@ -6,22 +6,21 @@ import { FileHistoryPanel } from "./FileHistoryPanel";
 import { BlameView } from "./BlameView";
 import type { CommitFileInfo } from "../../../shared/git-types";
 
-const IconInfo = () => (
+const IconFiles = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="16" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12.01" y2="8" />
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
   </svg>
 );
 
-type Tab = "info" | "files";
+type BottomTab = "diff" | "file-tree";
 
 export const CommitDetailsPanel: React.FC = () => {
   const { selectedCommit } = useGraphStore();
   const [files, setFiles] = useState<CommitFileInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileDiff, setFileDiff] = useState<string>("");
-  const [tab, setTab] = useState<Tab>("files");
+  const [tab, setTab] = useState<BottomTab>("diff");
 
   useEffect(() => {
     if (!selectedCommit) {
@@ -54,147 +53,59 @@ export const CommitDetailsPanel: React.FC = () => {
     return (
       <div className="empty-state">
         <div className="empty-state-icon">
-          <IconInfo />
+          <IconFiles />
         </div>
-        <span>Select a commit to view details</span>
+        <span>Select a commit to view files</span>
       </div>
     );
   }
 
-  const c = selectedCommit;
-
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Tab bar */}
       <div
         style={{
           display: "flex",
+          alignItems: "center",
           borderBottom: "1px solid var(--border-subtle)",
           flexShrink: 0,
+          background: "var(--surface-0)",
         }}
       >
-        <TabButton active={tab === "info"} onClick={() => setTab("info")}>
-          Info
+        <TabButton active={tab === "diff"} onClick={() => setTab("diff")}>
+          Diff
+          {files.length > 0 && <span style={tabBadgeStyle}>{files.length}</span>}
         </TabButton>
-        <TabButton active={tab === "files"} onClick={() => setTab("files")}>
-          Files
-          {files.length > 0 && (
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                padding: "0 5px",
-                lineHeight: "16px",
-                borderRadius: 8,
-                background: "var(--surface-3)",
-                color: "var(--text-muted)",
-                marginLeft: 6,
-              }}
-            >
-              {files.length}
-            </span>
-          )}
+        <TabButton active={tab === "file-tree"} onClick={() => setTab("file-tree")}>
+          File tree
         </TabButton>
       </div>
 
-      {tab === "info" ? (
-        <InfoTab commit={c} files={files} />
-      ) : (
-        <FilesTab
-          files={files}
-          selectedFile={selectedFile}
-          onSelect={setSelectedFile}
-          diff={fileDiff}
-        />
-      )}
-    </div>
-  );
-};
-
-const InfoTab: React.FC<{
-  commit: NonNullable<ReturnType<typeof useGraphStore.getState>["selectedCommit"]>;
-  files: CommitFileInfo[];
-}> = ({ commit: c, files }) => {
-  const totalAdditions = files.reduce((s, f) => s + f.additions, 0);
-  const totalDeletions = files.reduce((s, f) => s + f.deletions, 0);
-
-  return (
-    <div style={{ flex: 1, overflow: "auto", padding: 16 }}>
-      <div
-        style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}
-      >
-        {c.subject}
-      </div>
-      {c.body && (
-        <div
-          className="whitespace-pre-wrap"
-          style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 12, lineHeight: 1.6 }}
-        >
-          {c.body}
-        </div>
-      )}
-
-      <div
-        className="meta-grid"
-        style={{
-          marginBottom: 16,
-          padding: 12,
-          borderRadius: 8,
-          background: "var(--surface-1)",
-          border: "1px solid var(--border-subtle)",
-        }}
-      >
-        <span className="meta-label">Commit</span>
-        <span className="meta-value mono">{c.hash}</span>
-
-        <span className="meta-label">Author</span>
-        <span className="meta-value">
-          {c.authorName}{" "}
-          <span style={{ color: "var(--text-muted)" }}>&lt;{c.authorEmail}&gt;</span>
-        </span>
-
-        <span className="meta-label">Date</span>
-        <span className="meta-value">{new Date(c.authorDate).toLocaleString()}</span>
-
-        <span className="meta-label">Parents</span>
-        <span className="meta-value mono">
-          {c.parentHashes.length > 0
-            ? c.parentHashes.map((h) => h.slice(0, 8)).join(" \u2192 ")
-            : "\u2014"}
-        </span>
-
-        {c.refs.length > 0 && (
-          <>
-            <span className="meta-label">Refs</span>
-            <span className="flex gap-1 flex-wrap">
-              {c.refs.map((r) => (
-                <span
-                  key={r.name}
-                  title={r.name}
-                  className={`badge ${
-                    r.type === "head"
-                      ? r.current ? "badge-head-current" : "badge-head"
-                      : r.type === "remote" ? "badge-remote" : "badge-tag"
-                  }`}
-                >
-                  {r.name}
-                </span>
-              ))}
-            </span>
-          </>
+      {/* Tab content */}
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        {tab === "diff" ? (
+          <DiffTab
+            files={files}
+            selectedFile={selectedFile}
+            onSelect={setSelectedFile}
+            diff={fileDiff}
+          />
+        ) : (
+          <FileTreeTab
+            files={files}
+            selectedFile={selectedFile}
+            onSelect={setSelectedFile}
+            diff={fileDiff}
+          />
         )}
-
-        <span className="meta-label">Stats</span>
-        <span className="meta-value" style={{ display: "flex", gap: 8 }}>
-          <span>{files.length} file{files.length !== 1 ? "s" : ""}</span>
-          {totalAdditions > 0 && <span style={{ color: "var(--green)" }}>+{totalAdditions}</span>}
-          {totalDeletions > 0 && <span style={{ color: "var(--red)" }}>-{totalDeletions}</span>}
-        </span>
       </div>
     </div>
   );
 };
 
-const FilesTab: React.FC<{
+/* ── Diff Tab ── */
+
+const DiffTab: React.FC<{
   files: CommitFileInfo[];
   selectedFile: string | null;
   onSelect: (path: string) => void;
@@ -204,7 +115,7 @@ const FilesTab: React.FC<{
   const [blameFile, setBlameFile] = useState<string | null>(null);
 
   return (
-    <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
       <div
         style={{
           width: 260,
@@ -216,11 +127,7 @@ const FilesTab: React.FC<{
         }}
       >
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <FileTree
-            files={files}
-            selectedFile={selectedFile}
-            onSelect={onSelect}
-          />
+          <FileTree files={files} selectedFile={selectedFile} onSelect={onSelect} />
         </div>
         {selectedFile && (
           <div
@@ -232,44 +139,8 @@ const FilesTab: React.FC<{
               flexShrink: 0,
             }}
           >
-            <button
-              onClick={() => setHistoryFile(selectedFile)}
-              style={{
-                flex: 1,
-                padding: "4px 0",
-                borderRadius: 4,
-                border: "none",
-                background: "var(--surface-2)",
-                color: "var(--text-secondary)",
-                fontSize: 10,
-                fontWeight: 500,
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-3)"; e.currentTarget.style.color = "var(--text-primary)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-2)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
-            >
-              History
-            </button>
-            <button
-              onClick={() => setBlameFile(selectedFile)}
-              style={{
-                flex: 1,
-                padding: "4px 0",
-                borderRadius: 4,
-                border: "none",
-                background: "var(--surface-2)",
-                color: "var(--text-secondary)",
-                fontSize: 10,
-                fontWeight: 500,
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-3)"; e.currentTarget.style.color = "var(--text-primary)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-2)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
-            >
-              Blame
-            </button>
+            <SmallButton onClick={() => setHistoryFile(selectedFile)}>History</SmallButton>
+            <SmallButton onClick={() => setBlameFile(selectedFile)}>Blame</SmallButton>
           </div>
         )}
       </div>
@@ -298,15 +169,55 @@ const FilesTab: React.FC<{
   );
 };
 
-const TabButton: React.FC<{
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}> = ({ active, onClick, children }) => (
+/* ── File Tree Tab ── */
+
+const FileTreeTab: React.FC<{
+  files: CommitFileInfo[];
+  selectedFile: string | null;
+  onSelect: (path: string) => void;
+  diff: string;
+}> = ({ files, selectedFile, onSelect, diff }) => (
+  <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+    <div
+      style={{
+        width: 260,
+        minWidth: 180,
+        borderRight: "1px solid var(--border-subtle)",
+        overflowY: "auto",
+      }}
+    >
+      <FileTree files={files} selectedFile={selectedFile} onSelect={onSelect} />
+    </div>
+    <div style={{ flex: 1, overflow: "auto", background: "var(--surface-0)" }}>
+      {selectedFile ? (
+        <DiffViewer rawDiff={diff} />
+      ) : (
+        <div className="empty-state">
+          <span>Select a file to view diff</span>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+/* ── Shared UI ── */
+
+const tabBadgeStyle: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 600,
+  padding: "0 5px",
+  lineHeight: "16px",
+  borderRadius: 8,
+  background: "var(--surface-3)",
+  color: "var(--text-muted)",
+  marginLeft: 6,
+};
+
+const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
     style={{
-      padding: "8px 16px",
+      padding: "8px 14px",
       fontSize: 12,
       fontWeight: 500,
       background: "transparent",
@@ -318,6 +229,28 @@ const TabButton: React.FC<{
       display: "flex",
       alignItems: "center",
     }}
+  >
+    {children}
+  </button>
+);
+
+const SmallButton: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <button
+    onClick={onClick}
+    style={{
+      flex: 1,
+      padding: "4px 0",
+      borderRadius: 4,
+      border: "none",
+      background: "var(--surface-2)",
+      color: "var(--text-secondary)",
+      fontSize: 10,
+      fontWeight: 500,
+      cursor: "pointer",
+      transition: "all 0.15s",
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-3)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-2)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
   >
     {children}
   </button>

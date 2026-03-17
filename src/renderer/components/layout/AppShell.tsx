@@ -16,6 +16,7 @@ import { useCommandLogStore } from "../../store/command-log-store";
 import { Sidebar } from "../sidebar/Sidebar";
 import { CommitGraphPanel } from "../graph/CommitGraphPanel";
 import { CommitDetailsPanel } from "../details/CommitDetailsPanel";
+import { CommitInfoPanel } from "../details/CommitInfoPanel";
 import { CommandLogPanel } from "../command-log/CommandLogPanel";
 import { CloneDialog } from "../dialogs/CloneDialog";
 import { SettingsDialog } from "../dialogs/SettingsDialog";
@@ -28,6 +29,7 @@ import { useGitOperationStore } from "../../store/git-operation-store";
 const components: Record<string, React.FC<IDockviewPanelProps>> = {
   sidebar: () => <Sidebar />,
   graph: () => <CommitGraphPanel />,
+  commitInfo: () => <CommitInfoPanel />,
   details: () => <CommitDetailsPanel />,
   commandLog: () => <CommandLogPanel />,
 };
@@ -155,10 +157,17 @@ export const AppShell: React.FC = () => {
       position: { referencePanel: sidebarPanel, direction: "right" },
     });
 
+    event.api.addPanel({
+      id: "commitInfo",
+      component: "commitInfo",
+      title: "Commit Info",
+      position: { referencePanel: graphPanel, direction: "right" },
+    });
+
     const detailsPanel = event.api.addPanel({
       id: "details",
       component: "details",
-      title: "Details",
+      title: "Diff / Files",
       position: { referencePanel: graphPanel, direction: "below" },
     });
 

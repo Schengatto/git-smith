@@ -6,8 +6,7 @@ import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
-import { CommitInfoDialog } from "../dialogs/CommitInfoDialog";
-import { CommitDetailsDialog } from "../dialogs/CommitDetailsDialog";
+import { CommitInfoWindow } from "../dialogs/CommitInfoWindow";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { MergeDialog } from "../dialogs/MergeDialog";
 import { RebaseDialog } from "../dialogs/RebaseDialog";
@@ -71,7 +70,6 @@ export const CommitGraphPanel: React.FC = () => {
   const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
-  const [commitDetailsHash, setCommitDetailsHash] = useState<string | null>(null);
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -664,7 +662,7 @@ export const CommitGraphPanel: React.FC = () => {
               selected={selectedCommit?.hash === filteredRows[index].commit.hash}
               isHead={filteredRows[index].commit.hash === repo.headCommit}
               onClick={() => selectCommit(filteredRows[index].commit.hash)}
-              onDoubleClick={() => setCommitDetailsHash(filteredRows[index].commit.hash)}
+              onDoubleClick={() => setCommitInfoHash(filteredRows[index].commit.hash)}
               onContextMenu={(e) => handleContextMenu(e, filteredRows[index])}
             />
           )}
@@ -710,7 +708,7 @@ export const CommitGraphPanel: React.FC = () => {
         commitSubject={tagTarget?.subject || ""}
       />
 
-      <CommitInfoDialog
+      <CommitInfoWindow
         open={!!commitInfoHash}
         onClose={() => setCommitInfoHash(null)}
         commitHash={commitInfoHash || ""}
@@ -740,12 +738,6 @@ export const CommitGraphPanel: React.FC = () => {
           setDeleteBranchTarget(null);
         }}
         onCancel={() => setDeleteBranchTarget(null)}
-      />
-
-      <CommitDetailsDialog
-        open={!!commitDetailsHash}
-        onClose={() => setCommitDetailsHash(null)}
-        commitHash={commitDetailsHash || ""}
       />
 
       <CheckoutDialog

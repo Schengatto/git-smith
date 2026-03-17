@@ -12,6 +12,7 @@ interface MenuItemDef {
   onClick?: () => void;
   disabled?: boolean;
   divider?: false;
+  children?: MenuItem[];
 }
 
 interface MenuDivider {
@@ -115,31 +116,66 @@ const shortcutStyle: React.CSSProperties = {
 /*  MenuItemRow                                                        */
 /* ------------------------------------------------------------------ */
 
+const submenuArrowStyle: React.CSSProperties = {
+  fontSize: 10,
+  marginLeft: "auto",
+  color: "var(--text-muted)",
+};
+
+const submenuContainerStyle: React.CSSProperties = {
+  position: "absolute",
+  left: "100%",
+  top: -4,
+  minWidth: 220,
+  background: "var(--surface-2)",
+  border: "1px solid var(--border)",
+  borderRadius: 6,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+  padding: "4px 0",
+  zIndex: 1000,
+};
+
 const MenuItemRow: React.FC<{
   item: MenuItemDef;
   onClose: () => void;
 }> = ({ item, onClose }) => {
   const [hovered, setHovered] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <button
-      style={{
-        ...menuItemStyle,
-        ...(hovered && !item.disabled ? menuItemHoverStyle : {}),
-        ...(item.disabled ? menuItemDisabledStyle : {}),
-      }}
+    <div style={{ position: "relative" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => {
-        if (item.disabled) return;
-        item.onClick?.();
-        onClose();
-      }}
-      disabled={item.disabled}
     >
-      <span>{item.label}</span>
-      {item.shortcut && <span style={shortcutStyle}>{item.shortcut}</span>}
-    </button>
+      <button
+        style={{
+          ...menuItemStyle,
+          ...(hovered && !item.disabled ? menuItemHoverStyle : {}),
+          ...(item.disabled ? menuItemDisabledStyle : {}),
+        }}
+        onClick={() => {
+          if (item.disabled || hasChildren) return;
+          item.onClick?.();
+          onClose();
+        }}
+        disabled={item.disabled}
+      >
+        <span>{item.label}</span>
+        {item.shortcut && <span style={shortcutStyle}>{item.shortcut}</span>}
+        {hasChildren && <span style={submenuArrowStyle}>&#9654;</span>}
+      </button>
+      {hasChildren && hovered && (
+        <div style={submenuContainerStyle}>
+          {item.children!.map((child, i) =>
+            "divider" in child && child.divider ? (
+              <div key={i} style={dividerStyle} />
+            ) : (
+              <MenuItemRow key={i} item={child as MenuItemDef} onClose={onClose} />
+            )
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -173,7 +209,7 @@ export const MenuBar: React.FC<{
   onOpenAbout: () => void;
   onOpenStaleBranches: () => void;
 }> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout, onOpenStaleBranches }) => {
-  const { repo, openRepoDialog, initRepo } = useRepoStore();
+  const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } = useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -203,6 +239,27 @@ export const MenuBar: React.FC<{
 
   const hasRepo = !!repo;
 
+  // Build "Favorite repositories" submenu grouped by category
+  const categoryNames = [...new Set(Object.values(repoCategories))].sort();
+  const favoriteItems: MenuItem[] = categoryNames.flatMap((cat, i) => {
+    const reposInCat = recentRepos.filter((r) => repoCategories[r] === cat);
+    if (reposInCat.length === 0) return [];
+    const catItem: MenuItemDef = {
+      label: cat,
+      children: reposInCat.map((r) => ({
+        label: r.split(/[\\/]/).pop() || r,
+        onClick: () => openRepo(r),
+      })),
+    };
+    return i > 0 ? [{ divider: true } as MenuDivider, catItem] : [catItem];
+  });
+
+  // Build "Recent repositories" submenu (last 10 repos, regardless of category)
+  const recentItems: MenuItem[] = recentRepos.slice(0, 10).map((r) => ({
+    label: r.split(/[\\/]/).pop() || r,
+    onClick: () => openRepo(r),
+  }));
+
   const menus: MenuDef[] = [
     {
       label: "Start",
@@ -215,6 +272,17 @@ export const MenuBar: React.FC<{
           label: "Open repository...",
           shortcut: "Ctrl+O",
           onClick: () => openRepoDialog(),
+        },
+        { divider: true },
+        {
+          label: "Favorite repositories",
+          disabled: favoriteItems.length === 0,
+          children: favoriteItems,
+        },
+        {
+          label: "Recent repositories",
+          disabled: recentItems.length === 0,
+          children: recentItems,
         },
         { divider: true },
         {
