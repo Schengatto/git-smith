@@ -135,6 +135,20 @@ export const AppShell: React.FC = () => {
     if (savedLayout && typeof savedLayout === "object") {
       try {
         event.api.fromJSON(savedLayout as Parameters<DockviewApi["fromJSON"]>[0]);
+
+        // Migrate: add commitInfo panel if missing from saved layout
+        if (!event.api.getPanel("commitInfo")) {
+          const graphPanel = event.api.getPanel("graph");
+          if (graphPanel) {
+            event.api.addPanel({
+              id: "commitInfo",
+              component: "commitInfo",
+              title: "Commit Info",
+              position: { referencePanel: graphPanel, direction: "right" },
+            });
+          }
+        }
+
         // Subscribe to layout changes for persistence
         event.api.onDidLayoutChange(() => saveLayout());
         return;
