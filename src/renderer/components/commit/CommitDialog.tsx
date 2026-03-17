@@ -637,6 +637,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   rawDiff={diff}
                   fileName={selectedFile}
                   isStaged={!!files.find((f) => f.path === selectedFile)?.staged}
+                  isConflicted={files.find((f) => f.path === selectedFile)?.status === "conflicted"}
                   onStageHunk={handleStageHunk}
                   onUnstageHunk={handleUnstageHunk}
                 />

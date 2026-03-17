@@ -4,6 +4,7 @@ interface Props {
   rawDiff: string;
   fileName: string;
   isStaged: boolean;
+  isConflicted?: boolean;
   onStageHunk: (patch: string) => void;
   onUnstageHunk: (patch: string) => void;
 }
@@ -102,6 +103,7 @@ export const HunkStagingView: React.FC<Props> = ({
   rawDiff,
   fileName,
   isStaged,
+  isConflicted,
   onStageHunk,
   onUnstageHunk,
 }) => {
@@ -173,28 +175,30 @@ export const HunkStagingView: React.FC<Props> = ({
             <span className="mono" style={{ fontSize: 11, color: "var(--accent)" }}>
               {hunk.header}
             </span>
-            <button
-              onClick={() => handleStageHunk(hunkIdx)}
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                padding: "2px 10px",
-                borderRadius: 4,
-                border: "none",
-                cursor: "pointer",
-                background: isStaged ? "var(--red-dim)" : "var(--green-dim)",
-                color: isStaged ? "var(--red)" : "var(--green)",
-                transition: "all 0.15s",
-              }}
-            >
-              {isStaged
-                ? selectedLines[hunkIdx]?.size
-                  ? `Unstage ${selectedLines[hunkIdx].size} lines`
-                  : "Unstage Hunk"
-                : selectedLines[hunkIdx]?.size
-                ? `Stage ${selectedLines[hunkIdx].size} lines`
-                : "Stage Hunk"}
-            </button>
+            {!isConflicted && (
+              <button
+                onClick={() => handleStageHunk(hunkIdx)}
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: "2px 10px",
+                  borderRadius: 4,
+                  border: "none",
+                  cursor: "pointer",
+                  background: isStaged ? "var(--red-dim)" : "var(--green-dim)",
+                  color: isStaged ? "var(--red)" : "var(--green)",
+                  transition: "all 0.15s",
+                }}
+              >
+                {isStaged
+                  ? selectedLines[hunkIdx]?.size
+                    ? `Unstage ${selectedLines[hunkIdx].size} lines`
+                    : "Unstage Hunk"
+                  : selectedLines[hunkIdx]?.size
+                  ? `Stage ${selectedLines[hunkIdx].size} lines`
+                  : "Stage Hunk"}
+              </button>
+            )}
           </div>
 
           <pre
@@ -234,10 +238,10 @@ export const HunkStagingView: React.FC<Props> = ({
                     padding: "0 12px",
                     background: bg,
                     color,
-                    cursor: isChangeLine ? "pointer" : "default",
+                    cursor: isChangeLine && !isConflicted ? "pointer" : "default",
                     userSelect: "none",
                   }}
-                  onClick={() => isChangeLine && toggleLine(hunkIdx, lineIdx)}
+                  onClick={() => isChangeLine && !isConflicted && toggleLine(hunkIdx, lineIdx)}
                 >
                   <span
                     style={{
@@ -248,7 +252,7 @@ export const HunkStagingView: React.FC<Props> = ({
                       justifyContent: "center",
                     }}
                   >
-                    {isChangeLine && (
+                    {isChangeLine && !isConflicted && (
                       <span
                         style={{
                           width: 10,
