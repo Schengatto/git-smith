@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { HunkStagingView } from "./HunkStagingView";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, useGitOperationStore } from "../../store/git-operation-store";
+import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import type { GitStatus } from "../../../shared/git-types";
 
 interface Props {
@@ -97,6 +98,12 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   const [checkoutAfterCreate, setCheckoutAfterCreate] = useState(true);
   const [creatingBranch, setCreatingBranch] = useState(false);
   const [branchError, setBranchError] = useState<string | null>(null);
+
+  // Set upstream dialog (when push fails because no upstream)
+  const [setUpstreamError, setSetUpstreamError] = useState<{
+    suggestedRemote: string;
+    suggestedBranch: string;
+  } | null>(null);
 
   const loadFiles = useCallback(async () => {
     try {
@@ -298,7 +305,17 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         try {
           await runGitOperation("Push", () => window.electronAPI.remote.push());
         } catch (pushErr: unknown) {
-          setError(`Committed but push failed: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`);
+          const pushMsg = pushErr instanceof Error ? pushErr.message : String(pushErr);
+          if (pushMsg.includes("has no upstream branch")) {
+            const match = pushMsg.match(/git push --set-upstream (\S+) (\S+)/);
+            useGitOperationStore.getState().close();
+            setSetUpstreamError({
+              suggestedRemote: match?.[1] ?? "origin",
+              suggestedBranch: match?.[2] ?? (repo?.currentBranch ?? ""),
+            });
+          } else {
+            setError(`Committed but push failed: ${pushMsg}`);
+          }
           await Promise.all([refreshStatus(), refreshInfo(), loadGraph()]);
           setCommitting(false);
           return;
@@ -1000,6 +1017,13 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modal-in { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
       `}</style>
+
+      <SetUpstreamDialog
+        open={!!setUpstreamError}
+        onClose={() => setSetUpstreamError(null)}
+        suggestedRemote={setUpstreamError?.suggestedRemote ?? "origin"}
+        suggestedBranch={setUpstreamError?.suggestedBranch ?? ""}
+      />
     </div>
   );
 };

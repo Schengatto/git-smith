@@ -7,7 +7,7 @@ import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import { StashDialog } from "../dialogs/StashDialog";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, useGitOperationStore } from "../../store/git-operation-store";
 
 const IconFolder = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -327,6 +327,8 @@ export const Toolbar: React.FC = () => {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("has no upstream branch")) {
       const match = msg.match(/git push --set-upstream (\S+) (\S+)/);
+      // Close the operation log dialog — we handle the error with SetUpstreamDialog
+      useGitOperationStore.getState().close();
       setSetUpstreamError({
         suggestedRemote: match?.[1] ?? "origin",
         suggestedBranch: match?.[2] ?? (repo?.currentBranch ?? ""),
