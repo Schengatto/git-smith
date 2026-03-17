@@ -4,7 +4,8 @@ import { useGraphStore } from "../../store/graph-store";
 import { HunkStagingView } from "./HunkStagingView";
 import { runGitOperation, useGitOperationStore } from "../../store/git-operation-store";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
-import type { GitStatus } from "../../../shared/git-types";
+import { MergeConflictDialog } from "../dialogs/MergeConflictDialog";
+import type { GitStatus, ConflictFile } from "../../../shared/git-types";
 
 interface Props {
   open: boolean;
@@ -105,11 +106,18 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     suggestedBranch: string;
   } | null>(null);
 
+  // Merge conflict state
+  const [mergeInProgress, setMergeInProgress] = useState(false);
+  const [conflictedFiles, setConflictedFiles] = useState<ConflictFile[]>([]);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+
   const loadFiles = useCallback(async () => {
     try {
       const status: GitStatus = await window.electronAPI.status.get();
       const all = statusToFiles(status);
       setFiles(all);
+      setMergeInProgress(status.mergeInProgress);
+      setConflictedFiles(status.conflicted);
       setSelectedFile((prev) => {
         if (!prev && all.length > 0) return all[0].path;
         return prev;
@@ -178,16 +186,29 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const statusToFiles = (status: GitStatus): ChangedFile[] => {
     const all: ChangedFile[] = [];
-    for (const f of status.staged) all.push({ path: f.path, status: f.status, staged: true });
-    for (const f of status.unstaged) all.push({ path: f.path, status: f.status, staged: false });
+    const conflictedPaths = new Set(status.conflicted.map((c) => c.path));
+    for (const f of status.staged) {
+      if (!conflictedPaths.has(f.path)) all.push({ path: f.path, status: f.status, staged: true });
+    }
+    for (const f of status.unstaged) {
+      if (!conflictedPaths.has(f.path)) all.push({ path: f.path, status: f.status, staged: false });
+    }
     for (const p of status.untracked) all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
+    // Show conflicted files in the unstaged section with "conflicted" status
+    for (const c of status.conflicted) all.push({ path: c.path, status: "conflicted", staged: false });
     return all;
   };
 
   const stageFiles = async (paths: string[]) => {
+    // Don't try to stage conflicted files - they must be resolved first
+    const conflictedPaths = new Set(conflictedFiles.map((c) => c.path));
+    const safePaths = paths.filter((p) => !conflictedPaths.has(p));
+    if (safePaths.length === 0) return;
     try {
-      const status = await window.electronAPI.status.stage(paths);
+      const status = await window.electronAPI.status.stage(safePaths);
       setFiles(statusToFiles(status));
+      setMergeInProgress(status.mergeInProgress);
+      setConflictedFiles(status.conflicted);
       setSelectedUnstaged(new Set());
     } catch {}
   };
@@ -453,6 +474,49 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
             </svg>
           </button>
         </div>
+
+        {/* Merge conflict banner */}
+        {mergeInProgress && conflictedFiles.length > 0 && (
+          <div
+            style={{
+              padding: "8px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: "rgba(var(--red-rgb, 210, 80, 80), 0.12)",
+              borderBottom: "1px solid var(--red)",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 600, flex: 1 }}>
+              Merge in progress — {conflictedFiles.length} conflicted file{conflictedFiles.length !== 1 ? "s" : ""} to resolve
+            </span>
+            <button
+              onClick={() => setConflictDialogOpen(true)}
+              style={{
+                padding: "4px 12px",
+                borderRadius: 5,
+                border: "1px solid var(--red)",
+                background: "var(--red)",
+                color: "#fff",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              Resolve Conflicts
+            </button>
+          </div>
+        )}
 
         {/* Main content: left file panels + right diff/commit */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
@@ -1022,6 +1086,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         suggestedRemote={setUpstreamError?.suggestedRemote ?? "origin"}
         suggestedBranch={setUpstreamError?.suggestedBranch ?? ""}
       />
+
+      <MergeConflictDialog
+        open={conflictDialogOpen}
+        onClose={() => {
+          setConflictDialogOpen(false);
+          loadFiles();
+        }}
+      />
     </div>
   );
 };
@@ -1360,6 +1432,7 @@ const FileRow: React.FC<{
     renamed: "var(--mauve)",
     untracked: "var(--yellow)",
     copied: "var(--accent)",
+    conflicted: "var(--red)",
   };
   const statusLetters: Record<string, string> = {
     added: "A",
@@ -1368,6 +1441,7 @@ const FileRow: React.FC<{
     renamed: "R",
     untracked: "?",
     copied: "C",
+    conflicted: "!",
   };
 
   const color = statusColors[file.status] || "var(--text-muted)";

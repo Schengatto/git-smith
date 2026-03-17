@@ -19,6 +19,7 @@ import type {
   RemoteInfo,
   StaleRemoteBranch,
   RebaseOptions,
+  ConflictFile,
 } from "../../shared/git-types";
 
 let idCounter = 0;
@@ -213,10 +214,35 @@ export class GitService {
         else staged.push({ path: r.to, status: "renamed", oldPath: r.from });
       }
 
+      // Detect merge-in-progress
+      const mergeInProgress = this.repoPath
+        ? fs.existsSync(path.join(this.repoPath, ".git", "MERGE_HEAD"))
+        : false;
+
+      // Detect conflicted files (unmerged entries have U in index or working_dir)
+      const conflicted: ConflictFile[] = [];
+      if (mergeInProgress) {
+        for (const f of status.conflicted) {
+          const xy = status.files.find((sf) => sf.path === f)
+            ? `${status.files.find((sf) => sf.path === f)!.index}${status.files.find((sf) => sf.path === f)!.working_dir}`
+            : "UU";
+          let reason = "both-modified";
+          if (xy === "AA") reason = "both-added";
+          else if (xy === "DD") reason = "both-deleted";
+          else if (xy === "DU") reason = "deleted-by-us";
+          else if (xy === "UD") reason = "deleted-by-them";
+          else if (xy === "AU") reason = "added-by-us";
+          else if (xy === "UA") reason = "added-by-them";
+          conflicted.push({ path: f, reason });
+        }
+      }
+
       return {
         staged,
         unstaged,
         untracked: status.not_added,
+        mergeInProgress,
+        conflicted,
       };
     });
   }

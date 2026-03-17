@@ -12,6 +12,10 @@ export interface GitStatus {
   staged: FileStatus[];
   unstaged: FileStatus[];
   untracked: string[];
+  /** True when a merge is in progress (MERGE_HEAD exists) */
+  mergeInProgress: boolean;
+  /** Files with unresolved merge conflicts */
+  conflicted: ConflictFile[];
 }
 
 export interface FileStatus {
