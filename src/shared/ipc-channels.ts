@@ -90,6 +90,8 @@ export const IPC = {
     COMMIT_FILE: "git:diff:commit-file",
     COMMIT_FILES: "git:diff:commit-files",
     STAGED: "git:diff:staged",
+    RANGE_FILES: "git:diff:range-files",
+    RANGE_FILE: "git:diff:range-file",
   },
   STASH: {
     LIST: "git:stash:list",
@@ -126,6 +128,9 @@ export const IPC = {
     RESOLVE: "git:conflict:resolve",
     SAVE_MERGED: "git:conflict:save-merged",
     LAUNCH_MERGE_TOOL: "git:conflict:launch-merge-tool",
+  },
+  OPERATION: {
+    CANCEL: "git:operation:cancel",
   },
   GITIGNORE: {
     ADD: "git:gitignore:add",

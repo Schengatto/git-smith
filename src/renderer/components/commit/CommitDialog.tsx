@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { HunkStagingView } from "./HunkStagingView";
-import { runGitOperation, useGitOperationStore } from "../../store/git-operation-store";
+import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import { MergeConflictDialog } from "../dialogs/MergeConflictDialog";
 import type { GitStatus, ConflictFile } from "../../../shared/git-types";
@@ -344,6 +344,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       await Promise.all([refreshStatus(), refreshInfo(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setCommitting(false);

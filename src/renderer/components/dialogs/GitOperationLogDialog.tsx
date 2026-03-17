@@ -4,7 +4,7 @@ import type { OutputLine } from "../../store/git-operation-store";
 import type { CommandLogEntry } from "../../../shared/git-types";
 
 export const GitOperationLogDialog: React.FC = () => {
-  const { open, label, entries, outputLines, running, error, close, autoClose, setAutoClose } = useGitOperationStore();
+  const { open, label, entries, outputLines, running, error, close, cancel, autoClose, setAutoClose } = useGitOperationStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Group output lines by entry id
@@ -190,7 +190,25 @@ export const GitOperationLogDialog: React.FC = () => {
             />
             Close on success
           </label>
-          {!running && (
+          {running ? (
+            <button
+              onClick={cancel}
+              style={{
+                padding: "6px 16px",
+                borderRadius: 6,
+                border: "1px solid var(--red)",
+                background: "transparent",
+                color: "var(--red)",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "color-mix(in srgb, var(--red) 12%, transparent)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              Cancel
+            </button>
+          ) : (
             <button
               onClick={close}
               style={{

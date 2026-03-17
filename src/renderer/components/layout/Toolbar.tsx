@@ -7,7 +7,7 @@ import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import { StashDialog } from "../dialogs/StashDialog";
-import { runGitOperation, useGitOperationStore } from "../../store/git-operation-store";
+import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 
 const IconFolder = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -349,6 +349,7 @@ export const Toolbar: React.FC = () => {
           await runGitOperation("Push", () => window.electronAPI.remote.push());
           await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
         } catch (err) {
+          if (err instanceof GitOperationCancelledError) return;
           handlePushError(err, false);
         }
       },
@@ -601,6 +602,7 @@ export const Toolbar: React.FC = () => {
             await runGitOperation("Force Push", () => window.electronAPI.remote.push(undefined, undefined, true));
             await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
           } catch (err) {
+            if (err instanceof GitOperationCancelledError) return;
             handlePushError(err, true);
           } finally {
             setForcePushConfirm(false);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogInput, DialogActions, DialogError, DialogCheckbox } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
 interface BaseProps {
   open: boolean;
@@ -44,6 +44,7 @@ export const CreateBranchDialog: React.FC<BaseProps & { startPoint?: string }> =
       await refresh();
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -100,6 +101,7 @@ export const DeleteBranchDialog: React.FC<BaseProps & { branchName: string }> = 
       await refresh();
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("not fully merged")) {
         setError("Branch is not fully merged. Enable force delete to proceed.");
@@ -152,6 +154,7 @@ export const RenameBranchDialog: React.FC<BaseProps & { branchName: string }> = 
       await refresh();
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -208,6 +211,7 @@ export const MergeBranchDialog: React.FC<BaseProps & { branchName: string }> = (
         onClose();
       }
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -258,6 +262,7 @@ export const RebaseBranchDialog: React.FC<BaseProps & { onto: string }> = ({
       await refresh();
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -307,6 +312,7 @@ export const CherryPickDialog: React.FC<BaseProps & { commitHash: string; commit
       await refresh();
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);

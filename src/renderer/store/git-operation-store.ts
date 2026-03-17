@@ -8,6 +8,14 @@ export interface OutputLine {
   entryId: string;
 }
 
+/** Thrown when the user cancels a running git operation */
+export class GitOperationCancelledError extends Error {
+  readonly cancelled = true;
+  constructor() {
+    super("Cancelled");
+  }
+}
+
 const AUTOCLOSE_KEY = "git-expansion-operation-autoclose";
 
 function getPersistedAutoClose(): boolean {
@@ -35,6 +43,8 @@ interface GitOperationState {
   _autoCloseTimer: ReturnType<typeof setTimeout> | null;
   /** Whether to auto-close the dialog on success */
   autoClose: boolean;
+  /** Whether the current operation was cancelled by the user */
+  cancelled: boolean;
 
   /** Start tracking a new operation */
   start: (label: string) => void;
@@ -46,6 +56,8 @@ interface GitOperationState {
   finish: (error?: string) => void;
   /** Close the dialog */
   close: () => void;
+  /** Cancel the running operation: kill the git process and close the dialog */
+  cancel: () => void;
   /** Toggle auto-close preference */
   setAutoClose: (value: boolean) => void;
 }
@@ -59,6 +71,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
   error: null,
   _autoCloseTimer: null,
   autoClose: getPersistedAutoClose(),
+  cancelled: false,
 
   start: (label: string) => {
     const prev = get()._autoCloseTimer;
@@ -70,6 +83,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
       outputLines: [],
       running: true,
       error: null,
+      cancelled: false,
       _autoCloseTimer: null,
     });
   },
@@ -124,6 +138,13 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
     set({ open: false, entries: [], outputLines: [], running: false, error: null, _autoCloseTimer: null });
   },
 
+  cancel: () => {
+    const prev = get()._autoCloseTimer;
+    if (prev) clearTimeout(prev);
+    set({ open: false, entries: [], outputLines: [], running: false, error: null, cancelled: true, _autoCloseTimer: null });
+    window.electronAPI.operation.cancel().catch(() => {});
+  },
+
   setAutoClose: (value: boolean) => {
     try { localStorage.setItem(AUTOCLOSE_KEY, String(value)); } catch {}
     // If toggling to auto-close while showing a successful result, start the timer
@@ -156,9 +177,17 @@ export async function runGitOperation<T>(
   store.start(label);
   try {
     const result = await fn();
-    useGitOperationStore.getState().finish();
+    const state = useGitOperationStore.getState();
+    if (state.cancelled) {
+      throw new GitOperationCancelledError();
+    }
+    state.finish();
     return result;
   } catch (err: unknown) {
+    const state = useGitOperationStore.getState();
+    if (state.cancelled) {
+      throw new GitOperationCancelledError();
+    }
     const message = err instanceof Error ? err.message : String(err);
     useGitOperationStore.getState().finish(message);
     throw err;

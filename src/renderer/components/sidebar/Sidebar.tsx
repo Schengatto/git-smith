@@ -13,7 +13,7 @@ import { CreateStashDialog } from "../dialogs/StashDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import { AddSubmoduleDialog } from "../dialogs/AddSubmoduleDialog";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 import { InteractiveRebaseDialog } from "../dialogs/InteractiveRebaseDialog";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types";
@@ -630,6 +630,7 @@ export const Sidebar: React.FC = () => {
               await loadGraph();
               loadData();
             } catch (err) {
+              if (err instanceof GitOperationCancelledError) return;
               alert(`Failed to delete remote branch: ${err instanceof Error ? err.message : err}`);
             }
             setDialog({ type: "none" });
@@ -658,6 +659,7 @@ export const Sidebar: React.FC = () => {
               await loadGraph();
               loadData();
             } catch (err) {
+              if (err instanceof GitOperationCancelledError) return;
               alert(`Failed to delete tag: ${err instanceof Error ? err.message : err}`);
             }
             setDialog({ type: "none" });

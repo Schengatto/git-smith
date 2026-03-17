@@ -3,7 +3,7 @@ import { ModalDialog, DialogError } from "./ModalDialog";
 import { MergeConflictDialog } from "./MergeConflictDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 import type { CommitInfo } from "../../../shared/git-types";
 
 type RebaseAction = "pick" | "reword" | "squash" | "fixup" | "edit" | "drop";
@@ -147,6 +147,7 @@ export const RebaseDialog: React.FC<Props> = ({
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
       // Check if this triggered a conflict / rebase-in-progress
@@ -173,6 +174,7 @@ export const RebaseDialog: React.FC<Props> = ({
         onClose();
       }
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -190,6 +192,7 @@ export const RebaseDialog: React.FC<Props> = ({
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -210,6 +213,7 @@ export const RebaseDialog: React.FC<Props> = ({
         onClose();
       }
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);

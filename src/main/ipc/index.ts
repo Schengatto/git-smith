@@ -10,6 +10,7 @@ import { registerBlameHandlers } from "./git-blame.ipc";
 import { registerShellHandlers } from "./shell.ipc";
 import { registerGitignoreHandlers } from "./git-gitignore.ipc";
 import { registerConflictHandlers } from "./git-conflict.ipc";
+import { registerOperationHandlers } from "./git-operation.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -24,4 +25,5 @@ export function registerAllHandlers() {
   registerShellHandlers();
   registerGitignoreHandlers();
   registerConflictHandlers();
+  registerOperationHandlers();
 }

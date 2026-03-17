@@ -3,7 +3,7 @@ import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import type { StaleRemoteBranch, CommitInfo } from "../../../shared/git-types";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
 interface Props {
   open: boolean;
@@ -34,6 +34,7 @@ export const StaleBranchesDialog: React.FC<Props> = ({ open, onClose }) => {
       const result = await window.electronAPI.branch.staleRemote(days);
       setBranches(result);
     } catch (err) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -81,6 +82,7 @@ export const StaleBranchesDialog: React.FC<Props> = ({ open, onClose }) => {
         useGraphStore.getState().loadGraph(),
       ]);
     } catch (err) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setDeleting(null);

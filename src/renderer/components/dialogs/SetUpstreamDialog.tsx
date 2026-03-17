@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
 interface Props {
   open: boolean;
@@ -57,6 +57,7 @@ export const SetUpstreamDialog: React.FC<Props> = ({
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setPushError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);

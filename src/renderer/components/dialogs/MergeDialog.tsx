@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 import type { BranchInfo } from "../../../shared/git-types";
 
 interface Props {
@@ -83,6 +83,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);

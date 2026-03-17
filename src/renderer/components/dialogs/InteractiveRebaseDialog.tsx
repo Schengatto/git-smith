@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import type { CommitInfo } from "../../../shared/git-types";
-import { runGitOperation } from "../../store/git-operation-store";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
 type RebaseAction = "pick" | "reword" | "squash" | "fixup" | "edit" | "drop";
 
@@ -48,6 +48,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }
         setEntries(commits.map((c) => ({ action: "pick", commit: c })));
       })
       .catch((err: unknown) => {
+        if (err instanceof GitOperationCancelledError) return;
         setError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => setLoading(false));
@@ -123,6 +124,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setExecuting(false);

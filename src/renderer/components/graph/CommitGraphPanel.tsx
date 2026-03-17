@@ -7,11 +7,12 @@ import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { CommitInfoWindow } from "../dialogs/CommitInfoWindow";
+import { CommitCompareDialog } from "../dialogs/CommitCompareDialog";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { MergeDialog } from "../dialogs/MergeDialog";
 import { RebaseDialog } from "../dialogs/RebaseDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
-import type { GraphRow, BranchInfo } from "../../../shared/git-types";
+import type { GraphRow, BranchInfo, CommitInfo } from "../../../shared/git-types";
 
 const LANE_WIDTH = 16;
 const ROW_HEIGHT = 30;
@@ -72,6 +73,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
+  const [compareTarget, setCompareTarget] = useState<{ commit1: CommitInfo; commit2: CommitInfo } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -356,6 +358,24 @@ export const CommitGraphPanel: React.FC = () => {
         label: "View Commit Info",
         onClick: () => setCommitInfoHash(row.commit.hash),
       },
+    );
+
+    // Compare options
+    const headRow = rows.find((r) => r.commit.hash === repo?.headCommit);
+    if (headRow && headRow.commit.hash !== row.commit.hash) {
+      items.push({
+        label: "Compare with HEAD",
+        onClick: () => setCompareTarget({ commit1: row.commit, commit2: headRow.commit }),
+      });
+    }
+    if (selectedCommit && selectedCommit.hash !== row.commit.hash && selectedCommit.hash !== headRow?.commit.hash) {
+      items.push({
+        label: `Compare with selected (${selectedCommit.abbreviatedHash})`,
+        onClick: () => setCompareTarget({ commit1: row.commit, commit2: selectedCommit }),
+      });
+    }
+
+    items.push(
       {
         label: `Copy Hash (${row.commit.abbreviatedHash})`,
         onClick: () => navigator.clipboard.writeText(row.commit.hash),
@@ -707,6 +727,15 @@ export const CommitGraphPanel: React.FC = () => {
         commitHash={tagTarget?.hash || ""}
         commitSubject={tagTarget?.subject || ""}
       />
+
+      {compareTarget && (
+        <CommitCompareDialog
+          open={true}
+          onClose={() => setCompareTarget(null)}
+          commit1={compareTarget.commit1}
+          commit2={compareTarget.commit2}
+        />
+      )}
 
       <CommitInfoWindow
         open={!!commitInfoHash}

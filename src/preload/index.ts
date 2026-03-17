@@ -208,6 +208,10 @@ const electronAPI = {
     commitFiles: (hash: string): Promise<CommitFileInfo[]> =>
       ipcRenderer.invoke(IPC.DIFF.COMMIT_FILES, hash),
     staged: (): Promise<string> => ipcRenderer.invoke(IPC.DIFF.STAGED),
+    rangeFiles: (hash1: string, hash2: string): Promise<CommitFileInfo[]> =>
+      ipcRenderer.invoke(IPC.DIFF.RANGE_FILES, hash1, hash2),
+    rangeFile: (hash1: string, hash2: string, file: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.DIFF.RANGE_FILE, hash1, hash2, file),
   },
   conflict: {
     list: (): Promise<ConflictFile[]> =>
@@ -265,6 +269,9 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.GIT_CONFIG.SET, key, value, global),
     list: (global?: boolean): Promise<Record<string, string>> =>
       ipcRenderer.invoke(IPC.GIT_CONFIG.LIST, global),
+  },
+  operation: {
+    cancel: (): Promise<void> => ipcRenderer.invoke(IPC.OPERATION.CANCEL),
   },
   gitignore: {
     add: (pattern: string): Promise<void> =>

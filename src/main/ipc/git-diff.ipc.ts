@@ -28,4 +28,18 @@ export function registerDiffHandlers() {
   ipcMain.handle(IPC.DIFF.STAGED, async () => {
     return gitService.getDiff(undefined, true);
   });
+
+  ipcMain.handle(
+    IPC.DIFF.RANGE_FILES,
+    async (_event, hash1: string, hash2: string) => {
+      return gitService.getRangeFiles(hash1, hash2);
+    }
+  );
+
+  ipcMain.handle(
+    IPC.DIFF.RANGE_FILE,
+    async (_event, hash1: string, hash2: string, file: string) => {
+      return gitService.getRangeFileDiff(hash1, hash2, file);
+    }
+  );
 }
