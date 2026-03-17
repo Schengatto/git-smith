@@ -75,20 +75,25 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
   },
 
   addEntry: (entry: CommandLogEntry) => {
-    if (!get().open) return;
-    set((s) => {
-      const idx = s.entries.findIndex((e) => e.id === entry.id);
-      if (idx >= 0) {
+    const state = get();
+    if (!state.open) return;
+    // Only accept new entries while the operation is running;
+    // allow updates to existing entries (e.g. exitCode/duration) even after finish
+    const idx = state.entries.findIndex((e) => e.id === entry.id);
+    if (idx >= 0) {
+      set((s) => {
         const updated = [...s.entries];
         updated[idx] = entry;
         return { entries: updated };
-      }
-      return { entries: [...s.entries, entry] };
-    });
+      });
+    } else if (state.running) {
+      set((s) => ({ entries: [...s.entries, entry] }));
+    }
   },
 
   addOutputLine: (line: CommandOutputLine) => {
-    if (!get().open) return;
+    const state = get();
+    if (!state.open || !state.running) return;
     set((s) => ({
       outputLines: [...s.outputLines, { stream: line.stream, text: line.text, entryId: line.id }],
     }));
