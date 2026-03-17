@@ -13,14 +13,11 @@ const IconFiles = () => (
   </svg>
 );
 
-type BottomTab = "diff" | "file-tree";
-
 export const CommitDetailsPanel: React.FC = () => {
   const { selectedCommit } = useGraphStore();
   const [files, setFiles] = useState<CommitFileInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileDiff, setFileDiff] = useState<string>("");
-  const [tab, setTab] = useState<BottomTab>("diff");
 
   useEffect(() => {
     if (!selectedCommit) {
@@ -62,7 +59,7 @@ export const CommitDetailsPanel: React.FC = () => {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* Tab bar */}
+      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -70,34 +67,24 @@ export const CommitDetailsPanel: React.FC = () => {
           borderBottom: "1px solid var(--border-subtle)",
           flexShrink: 0,
           background: "var(--surface-0)",
+          padding: "8px 14px",
+          fontSize: 12,
+          fontWeight: 500,
+          color: "var(--text-primary)",
         }}
       >
-        <TabButton active={tab === "diff"} onClick={() => setTab("diff")}>
-          Diff
-          {files.length > 0 && <span style={tabBadgeStyle}>{files.length}</span>}
-        </TabButton>
-        <TabButton active={tab === "file-tree"} onClick={() => setTab("file-tree")}>
-          File tree
-        </TabButton>
+        Diff
+        {files.length > 0 && <span style={tabBadgeStyle}>{files.length}</span>}
       </div>
 
-      {/* Tab content */}
+      {/* Content */}
       <div style={{ flex: 1, overflow: "hidden" }}>
-        {tab === "diff" ? (
-          <DiffTab
-            files={files}
-            selectedFile={selectedFile}
-            onSelect={setSelectedFile}
-            diff={fileDiff}
-          />
-        ) : (
-          <FileTreeTab
-            files={files}
-            selectedFile={selectedFile}
-            onSelect={setSelectedFile}
-            diff={fileDiff}
-          />
-        )}
+        <DiffTab
+          files={files}
+          selectedFile={selectedFile}
+          onSelect={setSelectedFile}
+          diff={fileDiff}
+        />
       </div>
     </div>
   );
@@ -169,37 +156,6 @@ const DiffTab: React.FC<{
   );
 };
 
-/* ── File Tree Tab ── */
-
-const FileTreeTab: React.FC<{
-  files: CommitFileInfo[];
-  selectedFile: string | null;
-  onSelect: (path: string) => void;
-  diff: string;
-}> = ({ files, selectedFile, onSelect, diff }) => (
-  <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
-    <div
-      style={{
-        width: 260,
-        minWidth: 180,
-        borderRight: "1px solid var(--border-subtle)",
-        overflowY: "auto",
-      }}
-    >
-      <FileTree files={files} selectedFile={selectedFile} onSelect={onSelect} />
-    </div>
-    <div style={{ flex: 1, overflow: "auto", background: "var(--surface-0)" }}>
-      {selectedFile ? (
-        <DiffViewer rawDiff={diff} />
-      ) : (
-        <div className="empty-state">
-          <span>Select a file to view diff</span>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
 /* ── Shared UI ── */
 
 const tabBadgeStyle: React.CSSProperties = {
@@ -212,27 +168,6 @@ const tabBadgeStyle: React.CSSProperties = {
   color: "var(--text-muted)",
   marginLeft: 6,
 };
-
-const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <button
-    onClick={onClick}
-    style={{
-      padding: "8px 14px",
-      fontSize: 12,
-      fontWeight: 500,
-      background: "transparent",
-      border: "none",
-      borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
-      color: active ? "var(--text-primary)" : "var(--text-muted)",
-      cursor: "pointer",
-      transition: "all 0.15s",
-      display: "flex",
-      alignItems: "center",
-    }}
-  >
-    {children}
-  </button>
-);
 
 const SmallButton: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
   <button

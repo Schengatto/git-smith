@@ -13,7 +13,10 @@ const config: ForgeConfig = {
     appBundleId: "com.git-expansion.app",
     icon: "./assets/icon",
   },
-  rebuildConfig: {},
+  rebuildConfig: {
+    // node-pty ships with prebuilt NAPI binaries — skip native rebuild
+    onlyModules: [],
+  },
   makers: [
     new MakerSquirrel({
       name: "git-expansion",

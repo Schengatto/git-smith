@@ -273,6 +273,16 @@ const electronAPI = {
   operation: {
     cancel: (): Promise<void> => ipcRenderer.invoke(IPC.OPERATION.CANCEL),
   },
+  terminal: {
+    spawn: (cols: number, rows: number): Promise<number> =>
+      ipcRenderer.invoke(IPC.TERMINAL.SPAWN, cols, rows),
+    input: (data: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.TERMINAL.INPUT, data),
+    resize: (cols: number, rows: number): Promise<void> =>
+      ipcRenderer.invoke(IPC.TERMINAL.RESIZE, cols, rows),
+    kill: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.TERMINAL.KILL),
+  },
   gitignore: {
     add: (pattern: string): Promise<void> =>
       ipcRenderer.invoke(IPC.GITIGNORE.ADD, pattern),
@@ -331,6 +341,18 @@ const electronAPI = {
         callback(data);
       ipcRenderer.on("app:update-status", handler);
       return () => ipcRenderer.removeListener("app:update-status", handler);
+    },
+    terminalData: (callback: (data: string) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, data: string) =>
+        callback(data);
+      ipcRenderer.on(IPC.EVENTS.TERMINAL_DATA, handler);
+      return () => ipcRenderer.removeListener(IPC.EVENTS.TERMINAL_DATA, handler);
+    },
+    terminalExit: (callback: (exitCode: number) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, exitCode: number) =>
+        callback(exitCode);
+      ipcRenderer.on(IPC.EVENTS.TERMINAL_EXIT, handler);
+      return () => ipcRenderer.removeListener(IPC.EVENTS.TERMINAL_EXIT, handler);
     },
   },
 };

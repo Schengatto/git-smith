@@ -11,6 +11,7 @@ import { registerShellHandlers } from "./shell.ipc";
 import { registerGitignoreHandlers } from "./git-gitignore.ipc";
 import { registerConflictHandlers } from "./git-conflict.ipc";
 import { registerOperationHandlers } from "./git-operation.ipc";
+import { registerTerminalHandlers } from "./terminal.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -26,4 +27,5 @@ export function registerAllHandlers() {
   registerGitignoreHandlers();
   registerConflictHandlers();
   registerOperationHandlers();
+  registerTerminalHandlers();
 }

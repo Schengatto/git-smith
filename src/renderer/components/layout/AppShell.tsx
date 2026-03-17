@@ -18,6 +18,7 @@ import { CommitGraphPanel } from "../graph/CommitGraphPanel";
 import { CommitDetailsPanel } from "../details/CommitDetailsPanel";
 import { CommitInfoPanel } from "../details/CommitInfoPanel";
 import { CommandLogPanel } from "../command-log/CommandLogPanel";
+import { ConsolePanel } from "../console/ConsolePanel";
 import { CloneDialog } from "../dialogs/CloneDialog";
 import { SettingsDialog } from "../dialogs/SettingsDialog";
 import { ScanDialog } from "../dialogs/ScanDialog";
@@ -32,6 +33,7 @@ const components: Record<string, React.FC<IDockviewPanelProps>> = {
   commitInfo: () => <CommitInfoPanel />,
   details: () => <CommitDetailsPanel />,
   commandLog: () => <CommandLogPanel />,
+  console: () => <ConsolePanel />,
 };
 
 export const AppShell: React.FC = () => {
@@ -189,6 +191,13 @@ export const AppShell: React.FC = () => {
       id: "commandLog",
       component: "commandLog",
       title: "Command Log",
+      position: { referencePanel: detailsPanel, direction: "within" },
+    });
+
+    event.api.addPanel({
+      id: "console",
+      component: "console",
+      title: "Console",
       position: { referencePanel: detailsPanel, direction: "within" },
     });
 

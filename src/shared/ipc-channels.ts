@@ -135,6 +135,12 @@ export const IPC = {
   GITIGNORE: {
     ADD: "git:gitignore:add",
   },
+  TERMINAL: {
+    SPAWN: "terminal:spawn",
+    INPUT: "terminal:input",
+    RESIZE: "terminal:resize",
+    KILL: "terminal:kill",
+  },
   SHELL: {
     OPEN_FILE: "shell:open-file",
     SHOW_IN_FOLDER: "shell:show-in-folder",
@@ -146,5 +152,7 @@ export const IPC = {
     COMMAND_OUTPUT: "git:event:command-output",
     REPO_CHANGED: "git:event:repo-changed",
     SCAN_PROGRESS: "git:event:scan-progress",
+    TERMINAL_DATA: "terminal:data",
+    TERMINAL_EXIT: "terminal:exit",
   },
 } as const;

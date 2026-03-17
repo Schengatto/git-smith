@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { registerAllHandlers } from "./ipc/index";
+import { killTerminal } from "./ipc/terminal.ipc";
 import { gitService } from "./git/git-service";
 import {
   getWindowBounds,
@@ -144,6 +145,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   stopAutoFetch();
+  killTerminal();
   if (process.platform !== "darwin") {
     app.quit();
   }
