@@ -16,7 +16,7 @@ interface Hunk {
 }
 
 /** Splits a raw unified diff string into its file header lines and individual hunks. */
-function parseHunks(rawDiff: string): { header: string[]; hunks: Hunk[] } {
+export function parseHunks(rawDiff: string): { header: string[]; hunks: Hunk[] } {
   const lines = rawDiff.split("\n");
   const header: string[] = [];
   const hunks: Hunk[] = [];
@@ -42,7 +42,7 @@ function parseHunks(rawDiff: string): { header: string[]; hunks: Hunk[] } {
  * Builds a patch string for a single hunk, optionally including only selected lines.
  * Unselected deletions are converted to context lines to preserve the patch format.
  */
-function buildPatch(
+export function buildPatch(
   headerLines: string[],
   hunk: Hunk,
   selectedLineIndices?: Set<number>
@@ -75,6 +75,9 @@ function buildPatch(
           oldCount++;
           newCount++;
         }
+      } else if (line.startsWith("\\")) {
+        // "\ No newline at end of file" marker — preserve but don't count
+        newLines.push(line);
       } else {
         // Context line
         newLines.push(line);
