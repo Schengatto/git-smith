@@ -554,21 +554,35 @@ export class GitService {
     );
   }
 
+  /**
+   * Strip remote prefix from a ref so git DWIM creates a local tracking branch.
+   * Handles both "remotes/origin/feature" and "origin/feature" formats.
+   */
+  private async stripRemotePrefix(ref: string): Promise<string> {
+    if (ref.startsWith("remotes/")) {
+      return ref.replace(/^remotes\/[^/]+\//, "");
+    }
+    if (ref.includes("/")) {
+      const git = this.ensureRepo();
+      const remotes = await git.getRemotes();
+      for (const remote of remotes) {
+        if (ref.startsWith(remote.name + "/")) {
+          return ref.slice(remote.name.length + 1);
+        }
+      }
+    }
+    return ref;
+  }
+
   async checkout(ref: string): Promise<void> {
     const git = this.ensureRepo();
-    // Remote tracking refs (remotes/origin/feature) cause detached HEAD.
-    // Strip the remote prefix so git DWIM creates/switches to a local tracking branch.
-    const checkoutRef = ref.startsWith("remotes/")
-      ? ref.replace(/^remotes\/[^/]+\//, "")
-      : ref;
+    const checkoutRef = await this.stripRemotePrefix(ref);
     await this.run("git checkout", [checkoutRef], () => git.checkout(checkoutRef));
   }
 
   async checkoutWithOptions(ref: string, options: { merge?: boolean }): Promise<void> {
     const git = this.ensureRepo();
-    const checkoutRef = ref.startsWith("remotes/")
-      ? ref.replace(/^remotes\/[^/]+\//, "")
-      : ref;
+    const checkoutRef = await this.stripRemotePrefix(ref);
     const args = [checkoutRef];
     if (options.merge) args.push("--merge");
     await this.run("git checkout", args, () => git.raw(["checkout", ...args]));
