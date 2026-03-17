@@ -141,6 +141,18 @@ export function registerRepoHandlers() {
     return result.filePaths[0];
   });
 
+  ipcMain.handle(IPC.REPO.BROWSE_FILE, async (event, title?: string, filters?: Electron.FileFilter[]) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return null;
+    const result = await dialog.showOpenDialog(win, {
+      properties: ["openFile"],
+      title: title || "Select File",
+      filters: filters || [{ name: "All Files", extensions: ["*"] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
   ipcMain.handle(IPC.REPO.GET_VIEW_SETTINGS, (_event, repoPath: string) => {
     return getRepoViewSettings(repoPath);
   });

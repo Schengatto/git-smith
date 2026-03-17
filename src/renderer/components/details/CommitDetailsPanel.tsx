@@ -5,6 +5,7 @@ import { FileTree } from "./FileTree";
 import { DiffViewer } from "../diff/DiffViewer";
 import { FileHistoryPanel } from "./FileHistoryPanel";
 import { BlameView } from "./BlameView";
+import { FileContextMenu } from "../shared/FileContextMenu";
 import type { CommitFileInfo } from "../../../shared/git-types";
 
 type TabId = "diff" | "files";
@@ -209,7 +210,7 @@ const DiffTab: React.FC<{
       >
         <SearchBar value={search} onChange={setSearch} placeholder="Search files..." />
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <FileTree files={filteredFiles} selectedFile={selectedFile} onSelect={onSelect} />
+          <FileTree files={filteredFiles} selectedFile={selectedFile} onSelect={onSelect} onFileHistory={setHistoryFile} onFileBlame={setBlameFile} />
         </div>
         {selectedFile && (
           <div
@@ -315,6 +316,9 @@ const FilesTab: React.FC<{
   content: string;
 }> = ({ files, selectedFile, onSelect, content }) => {
   const [search, setSearch] = useState("");
+  const [historyFile, setHistoryFile] = useState<string | null>(null);
+  const [blameFile, setBlameFile] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(null);
 
   const filteredFiles = useMemo(() => {
     if (!search) return files;
@@ -351,6 +355,7 @@ const FilesTab: React.FC<{
                   depth={0}
                   selectedFile={selectedFile}
                   onSelect={onSelect}
+                  onContextMenu={setContextMenu}
                 />
               ))}
             </div>
@@ -380,6 +385,26 @@ const FilesTab: React.FC<{
           </div>
         )}
       </div>
+      {contextMenu && (
+        <FileContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          filePath={contextMenu.path}
+          onClose={() => setContextMenu(null)}
+          onHistory={setHistoryFile}
+          onBlame={setBlameFile}
+        />
+      )}
+      <FileHistoryPanel
+        open={!!historyFile}
+        onClose={() => setHistoryFile(null)}
+        filePath={historyFile || ""}
+      />
+      <BlameView
+        open={!!blameFile}
+        onClose={() => setBlameFile(null)}
+        filePath={blameFile || ""}
+      />
     </div>
   );
 };
@@ -389,7 +414,8 @@ const SimpleTreeNodeRow: React.FC<{
   depth: number;
   selectedFile: string | null;
   onSelect: (path: string) => void;
-}> = ({ node, depth, selectedFile, onSelect }) => {
+  onContextMenu: (menu: { x: number; y: number; path: string } | null) => void;
+}> = ({ node, depth, selectedFile, onSelect, onContextMenu }) => {
   const [expanded, setExpanded] = useState(true);
 
   if (node.isDir) {
@@ -435,6 +461,7 @@ const SimpleTreeNodeRow: React.FC<{
               depth={depth + 1}
               selectedFile={selectedFile}
               onSelect={onSelect}
+              onContextMenu={onContextMenu}
             />
           ))}
       </>
@@ -443,9 +470,16 @@ const SimpleTreeNodeRow: React.FC<{
 
   const selected = selectedFile === node.path;
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu({ x: e.clientX, y: e.clientY, path: node.path });
+  };
+
   return (
     <div
       onClick={() => onSelect(node.path)}
+      onContextMenu={handleContextMenu}
       style={{
         display: "flex",
         alignItems: "center",

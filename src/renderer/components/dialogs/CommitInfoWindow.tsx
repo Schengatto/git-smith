@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { DiffViewer } from "../diff/DiffViewer";
 import { FileTree } from "../details/FileTree";
+import { FileHistoryPanel } from "../details/FileHistoryPanel";
+import { BlameView } from "../details/BlameView";
+import { FileContextMenu } from "../shared/FileContextMenu";
 import type { CommitFullInfo, CommitFileInfo } from "../../../shared/git-types";
 
 interface Props {
@@ -42,6 +45,8 @@ export const CommitInfoWindow: React.FC<Props> = ({
   const [diffLoading, setDiffLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bottomTab, setBottomTab] = useState<BottomTab>("diff");
+  const [historyFile, setHistoryFile] = useState<string | null>(null);
+  const [blameFile, setBlameFile] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !commitHash) return;
@@ -336,6 +341,8 @@ export const CommitInfoWindow: React.FC<Props> = ({
                     onFileClick={handleFileClick}
                     diff={diff}
                     diffLoading={diffLoading}
+                    onFileHistory={setHistoryFile}
+                    onFileBlame={setBlameFile}
                   />
                 ) : (
                   <FileTreeTab
@@ -344,6 +351,8 @@ export const CommitInfoWindow: React.FC<Props> = ({
                     onSelect={handleFileSelect}
                     diff={diff}
                     diffLoading={diffLoading}
+                    onFileHistory={setHistoryFile}
+                    onFileBlame={setBlameFile}
                   />
                 )}
               </div>
@@ -351,6 +360,16 @@ export const CommitInfoWindow: React.FC<Props> = ({
           </div>
         )}
       </div>
+      <FileHistoryPanel
+        open={!!historyFile}
+        onClose={() => setHistoryFile(null)}
+        filePath={historyFile || ""}
+      />
+      <BlameView
+        open={!!blameFile}
+        onClose={() => setBlameFile(null)}
+        filePath={blameFile || ""}
+      />
       <style>{`
         @keyframes ciw-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes ciw-modal-in { from { opacity: 0; transform: scale(0.97) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
@@ -453,7 +472,12 @@ const DiffTab: React.FC<{
   onFileClick: (path: string) => void;
   diff: string;
   diffLoading: boolean;
-}> = ({ files, selectedFile, onFileClick, diff, diffLoading }) => (
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ files, selectedFile, onFileClick, diff, diffLoading, onFileHistory, onFileBlame }) => {
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(null);
+
+  return (
   <div style={{ height: "100%", overflow: "auto", display: "flex", flexDirection: "column" }}>
     {/* File list */}
     <div style={{ flexShrink: 0 }}>
@@ -463,6 +487,11 @@ const DiffTab: React.FC<{
           file={file}
           selected={selectedFile === file.path}
           onClick={() => onFileClick(file.path)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setContextMenu({ x: e.clientX, y: e.clientY, path: file.path });
+          }}
         />
       ))}
       {files.length === 0 && (
@@ -497,16 +526,29 @@ const DiffTab: React.FC<{
         )}
       </div>
     )}
+    {contextMenu && (
+      <FileContextMenu
+        x={contextMenu.x}
+        y={contextMenu.y}
+        filePath={contextMenu.path}
+        onClose={() => setContextMenu(null)}
+        onHistory={onFileHistory || (() => {})}
+        onBlame={onFileBlame}
+      />
+    )}
   </div>
-);
+  );
+};
 
 const FileEntry: React.FC<{
   file: CommitFileInfo;
   selected: boolean;
   onClick: () => void;
-}> = ({ file, selected, onClick }) => (
+  onContextMenu?: (e: React.MouseEvent) => void;
+}> = ({ file, selected, onClick, onContextMenu }) => (
   <div
     onClick={onClick}
+    onContextMenu={onContextMenu}
     style={{
       display: "flex",
       alignItems: "center",
@@ -572,7 +614,9 @@ const FileTreeTab: React.FC<{
   onSelect: (path: string) => void;
   diff: string;
   diffLoading: boolean;
-}> = ({ files, selectedFile, onSelect, diff, diffLoading }) => (
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
+}> = ({ files, selectedFile, onSelect, diff, diffLoading, onFileHistory, onFileBlame }) => (
   <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
     <div
       style={{
@@ -582,7 +626,7 @@ const FileTreeTab: React.FC<{
         overflowY: "auto",
       }}
     >
-      <FileTree files={files} selectedFile={selectedFile} onSelect={onSelect} />
+      <FileTree files={files} selectedFile={selectedFile} onSelect={onSelect} onFileHistory={onFileHistory} onFileBlame={onFileBlame} />
     </div>
     <div style={{ flex: 1, overflow: "auto", background: "var(--surface-0)" }}>
       {selectedFile ? (

@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from "react";
 import type { CommitFileInfo } from "../../../shared/git-types";
+import { FileContextMenu } from "../shared/FileContextMenu";
 
 interface Props {
   files: CommitFileInfo[];
   selectedFile: string | null;
   onSelect: (path: string) => void;
+  onFileHistory?: (path: string) => void;
+  onFileBlame?: (path: string) => void;
 }
 
 interface TreeNode {
@@ -71,8 +74,9 @@ function buildTree(files: CommitFileInfo[]): TreeNode[] {
   return collapse(root.children);
 }
 
-export const FileTree: React.FC<Props> = ({ files, selectedFile, onSelect }) => {
+export const FileTree: React.FC<Props> = ({ files, selectedFile, onSelect, onFileHistory, onFileBlame }) => {
   const tree = useMemo(() => buildTree(files), [files]);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(null);
 
   if (files.length === 0) {
     return (
@@ -91,8 +95,19 @@ export const FileTree: React.FC<Props> = ({ files, selectedFile, onSelect }) => 
           depth={0}
           selectedFile={selectedFile}
           onSelect={onSelect}
+          onContextMenu={setContextMenu}
         />
       ))}
+      {contextMenu && (
+        <FileContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          filePath={contextMenu.path}
+          onClose={() => setContextMenu(null)}
+          onHistory={onFileHistory || (() => {})}
+          onBlame={onFileBlame}
+        />
+      )}
     </div>
   );
 };
@@ -102,7 +117,8 @@ const TreeNodeRow: React.FC<{
   depth: number;
   selectedFile: string | null;
   onSelect: (path: string) => void;
-}> = ({ node, depth, selectedFile, onSelect }) => {
+  onContextMenu: (menu: { x: number; y: number; path: string } | null) => void;
+}> = ({ node, depth, selectedFile, onSelect, onContextMenu }) => {
   const [expanded, setExpanded] = useState(true);
 
   if (node.isDir) {
@@ -148,6 +164,7 @@ const TreeNodeRow: React.FC<{
               depth={depth + 1}
               selectedFile={selectedFile}
               onSelect={onSelect}
+              onContextMenu={onContextMenu}
             />
           ))}
       </>
@@ -156,6 +173,12 @@ const TreeNodeRow: React.FC<{
 
   const file = node.file!;
   const selected = selectedFile === file.path;
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu({ x: e.clientX, y: e.clientY, path: file.path });
+  };
   const statusColors: Record<string, string> = {
     added: "var(--green)",
     modified: "var(--peach)",
@@ -176,6 +199,7 @@ const TreeNodeRow: React.FC<{
   return (
     <div
       onClick={() => onSelect(file.path)}
+      onContextMenu={handleContextMenu}
       style={{
         display: "flex",
         alignItems: "center",

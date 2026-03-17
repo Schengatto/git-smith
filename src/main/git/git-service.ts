@@ -431,7 +431,7 @@ export class GitService {
         const result = await git.raw([
           "log",
           ...refArgs,
-          "--topo-order",
+          "--date-order",
           `--format=${RECORD_SEP}${format}`,
           `--max-count=${maxCount}`,
           `--skip=${skip}`,
