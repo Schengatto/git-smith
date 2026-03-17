@@ -84,6 +84,12 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
     setDirty(true);
   };
 
+  const updateSettings = (partial: Partial<AppSettings>) => {
+    if (!settings) return;
+    setSettings({ ...settings, ...partial });
+    setDirty(true);
+  };
+
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
@@ -209,7 +215,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
               <DiffTab settings={settings} onChange={updateSetting} />
             )}
             {settings && tab === "mergetool" && (
-              <MergeToolTab settings={settings} onChange={updateSetting} />
+              <MergeToolTab settings={settings} onChange={updateSetting} onBatchChange={updateSettings} />
             )}
             {settings && tab === "advanced" && (
               <AdvancedTab settings={settings} onChange={updateSetting} />
@@ -381,14 +387,18 @@ const MERGE_TOOL_PRESETS: { name: string; label: string; path: string; args: str
   { name: "custom", label: "Custom...", path: "", args: "" },
 ];
 
-const MergeToolTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
+const MergeToolTab: React.FC<{ settings: AppSettings; onChange: OnChange; onBatchChange: (partial: Partial<AppSettings>) => void }> = ({ settings, onChange, onBatchChange }) => {
   const handlePresetChange = (presetName: string) => {
     const preset = MERGE_TOOL_PRESETS.find((p) => p.name === presetName);
     if (!preset) return;
-    onChange("mergeToolName", preset.name);
-    if (preset.name !== "custom") {
-      onChange("mergeToolPath", preset.path);
-      onChange("mergeToolArgs", preset.args);
+    if (preset.name === "custom") {
+      onBatchChange({ mergeToolName: preset.name });
+    } else {
+      onBatchChange({
+        mergeToolName: preset.name,
+        mergeToolPath: preset.path,
+        mergeToolArgs: preset.args,
+      });
     }
   };
 
