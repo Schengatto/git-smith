@@ -223,6 +223,27 @@
   background: var(--surface-1);
   border-right: 1px solid var(--border-subtle);
   min-width: 40px;
+  position: static;
+  display: table-cell;
+  width: auto;
+}
+
+.diff2html-wrapper .d2h-code-line {
+  display: table-cell;
+  padding: 0 0.5em;
+  width: 100%;
+}
+
+.diff2html-wrapper .d2h-code-side-linenumber {
+  position: static;
+  display: table-cell;
+  width: auto;
+}
+
+.diff2html-wrapper .d2h-code-side-line {
+  display: table-cell;
+  padding: 0 0.5em;
+  width: 100%;
 }
 
 .diff2html-wrapper .d2h-ins .d2h-code-linenumber,
