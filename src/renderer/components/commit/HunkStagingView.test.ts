@@ -136,5 +136,33 @@ describe("buildPatch", () => {
       // Actually: - counts oldCount only, context from + counts both old and new
       expect(patch).toMatch(/@@ -1,2 \+1,1 @@/);
     });
+
+    it("full hunk unstage works for single-line file (no-newline)", () => {
+      // When all + lines are selected for unstaging, handleStageHunk falls back
+      // to full hunk (selectedLineIndices=undefined) — verify the full hunk patch is valid
+      const hunk = {
+        header: "@@ -1 +1 @@",
+        lines: ["-Hello from Branch B", "+Hello from Branch A", "\\ No newline at end of file"],
+        startIndex: 4,
+      };
+      const patch = buildPatch(header, hunk, undefined, true);
+      expect(patch).toContain("@@ -1 +1 @@");
+      expect(patch).toContain("-Hello from Branch B");
+      expect(patch).toContain("+Hello from Branch A");
+      expect(patch).toContain("\\ No newline at end of file");
+    });
+
+    it("partial reverse patch with only + selected produces oldCount=0 (invalid)", () => {
+      // This documents WHY handleStageHunk detects all-+ selected and falls back
+      // to full hunk: a partial reverse patch with only + lines has oldCount=0
+      const hunk = {
+        header: "@@ -1 +1 @@",
+        lines: ["-Hello from Branch B", "+Hello from Branch A", "\\ No newline at end of file"],
+        startIndex: 4,
+      };
+      // Selecting only the + line produces @@ -1,0 +1,1 @@ which is invalid for --reverse
+      const patch = buildPatch(header, hunk, new Set([1]), true);
+      expect(patch).toMatch(/@@ -1,0 \+1,1 @@/);
+    });
   });
 });

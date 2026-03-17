@@ -1,5 +1,6 @@
 import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git";
 import { BrowserWindow } from "electron";
+import type { ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
@@ -31,6 +32,8 @@ export class GitService {
   private git: SimpleGit | null = null;
   private repoPath: string | null = null;
   private mainWindow: BrowserWindow | null = null;
+  private _activeChildProcess: ChildProcess | null = null;
+  private _spawnPatched = false;
 
   getRepoPath(): string | null {
     return this.repoPath;
@@ -65,6 +68,38 @@ export class GitService {
 
   /** ID of the currently running command (for associating output handler lines) */
   private _currentRunId: string | null = null;
+
+  /**
+   * Intercept child_process.spawn to capture git child processes.
+   * Called once; patches spawn globally to track the active git process.
+   */
+  private patchSpawn() {
+    if (this._spawnPatched) return;
+    this._spawnPatched = true;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cp = require("child_process");
+    const originalSpawn = cp.spawn;
+    cp.spawn = function (...args: unknown[]) {
+      const child: ChildProcess = originalSpawn.apply(this, args);
+      const cmd = String(args[0] || "");
+      if (cmd === "git" || cmd.endsWith("/git") || cmd.endsWith("\\git") || cmd.endsWith("git.exe")) {
+        self._activeChildProcess = child;
+        child.on("exit", () => {
+          if (self._activeChildProcess === child) self._activeChildProcess = null;
+        });
+      }
+      return child;
+    };
+  }
+
+  killCurrentOperation() {
+    if (this._activeChildProcess && !this._activeChildProcess.killed) {
+      this._activeChildProcess.kill();
+      this._activeChildProcess = null;
+    }
+  }
 
   private setupOutputHandler() {
     if (!this.git) return;
@@ -114,6 +149,7 @@ export class GitService {
   }
 
   async openRepo(path: string): Promise<RepoInfo> {
+    this.patchSpawn();
     const options: Partial<SimpleGitOptions> = {
       baseDir: path,
       binary: "git",
@@ -1452,6 +1488,58 @@ export class GitService {
           )
         );
       }
+    });
+  }
+
+  async getRangeFiles(hash1: string, hash2: string): Promise<CommitFileInfo[]> {
+    const git = this.ensureRepo();
+    return this.run("git diff", [hash1, hash2, "--numstat"], async () => {
+      const numstatResult = await git.raw([
+        "diff", "--numstat", "--diff-filter=ACDMR", "-M", hash1, hash2,
+      ]);
+      const nameStatusResult = await git.raw([
+        "diff", "--name-status", "--diff-filter=ACDMR", "-M", hash1, hash2,
+      ]);
+
+      const statusMap = new Map<string, string>();
+      for (const line of nameStatusResult.trim().split("\n").filter(Boolean)) {
+        const parts = line.split("\t");
+        const statusChar = parts[0][0];
+        const filePath = parts[parts.length - 1];
+        statusMap.set(filePath, statusChar);
+      }
+
+      return numstatResult
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => {
+          const parts = line.split("\t");
+          const additions = parseInt(parts[0]) || 0;
+          const deletions = parseInt(parts[1]) || 0;
+          const filePath = parts[2] || "";
+          const s = statusMap.get(filePath) || "M";
+          const statusLookup: Record<string, CommitFileInfo["status"]> = {
+            A: "added",
+            M: "modified",
+            D: "deleted",
+            R: "renamed",
+            C: "copied",
+          };
+          return {
+            path: filePath,
+            status: statusLookup[s] || "modified",
+            additions,
+            deletions,
+          };
+        });
+    });
+  }
+
+  async getRangeFileDiff(hash1: string, hash2: string, file: string): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git diff", [hash1, hash2, "--", file], async () => {
+      return git.raw(["diff", hash1, hash2, "--", file]);
     });
   }
 }

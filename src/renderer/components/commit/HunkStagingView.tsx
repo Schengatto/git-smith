@@ -135,7 +135,23 @@ export const HunkStagingView: React.FC<Props> = ({
   const handleStageHunk = (hunkIdx: number) => {
     const hunk = hunks[hunkIdx];
     const selected = selectedLines[hunkIdx];
-    const patch = buildPatch(header, hunk, selected && selected.size > 0 ? selected : undefined, isStaged);
+    let sel = selected && selected.size > 0 ? selected : undefined;
+
+    // When unstaging: if all + lines in the hunk are selected, unstage the
+    // whole hunk instead of building a partial patch.  A partial reverse patch
+    // that contains only + lines (oldCount=0) is invalid for git apply --reverse
+    // and this also matches VS Code behaviour (unstaging every changed line = unstage file).
+    if (isStaged && sel) {
+      const plusIndices = hunk.lines.reduce<number[]>((acc, l, i) => {
+        if (l.startsWith("+")) acc.push(i);
+        return acc;
+      }, []);
+      if (plusIndices.length > 0 && plusIndices.every((i) => sel!.has(i))) {
+        sel = undefined;
+      }
+    }
+
+    const patch = buildPatch(header, hunk, sel, isStaged);
     if (isStaged) {
       onUnstageHunk(patch);
     } else {
