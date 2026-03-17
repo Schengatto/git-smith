@@ -88,4 +88,53 @@ describe("buildPatch", () => {
     expect(patch).toContain("@@ -1 +1 @@");
     expect(patch).toContain("\\ No newline at end of file");
   });
+
+  describe("reverse (unstage) mode", () => {
+    it("converts unselected additions to context when unstaging", () => {
+      const hunk = {
+        header: "@@ -1,3 +1,3 @@",
+        lines: [" line1", "-old", "+new", " line3"],
+        startIndex: 4,
+      };
+      // Select only the - line (index 1) for unstaging
+      const patch = buildPatch(header, hunk, new Set([1]), true);
+      expect(patch).toContain("-old");
+      // Unselected addition should be converted to context
+      expect(patch).not.toContain("+new");
+      expect(patch).toContain(" new");
+    });
+
+    it("skips unselected deletions when unstaging", () => {
+      const hunk = {
+        header: "@@ -1,3 +1,3 @@",
+        lines: [" line1", "-old", "+new", " line3"],
+        startIndex: 4,
+      };
+      // Select only the + line (index 2) for unstaging
+      const patch = buildPatch(header, hunk, new Set([2]), true);
+      expect(patch).toContain("+new");
+      // Unselected deletion should be skipped entirely
+      expect(patch).not.toContain("-old");
+      expect(patch).not.toContain(" old");
+    });
+
+    it("unstages single deletion line with no-newline marker", () => {
+      const hunk = {
+        header: "@@ -1 +1 @@",
+        lines: ["-Hello from Branch B", "+Hello from Branch A", "\\ No newline at end of file"],
+        startIndex: 4,
+      };
+      // Select the - line (index 0) for unstaging — the exact scenario from the bug
+      const patch = buildPatch(header, hunk, new Set([0]), true);
+      expect(patch).toContain("-Hello from Branch B");
+      // Unselected + line becomes context
+      expect(patch).toContain(" Hello from Branch A");
+      expect(patch).not.toContain("+Hello from Branch A");
+      expect(patch).toContain("\\ No newline at end of file");
+      // oldCount=1 (-), newCount=2 (context from +, no count for \)
+      // Wait: oldCount=1 (the -), newCount=1 (context from +). The context counts both.
+      // Actually: - counts oldCount only, context from + counts both old and new
+      expect(patch).toMatch(/@@ -1,2 \+1,1 @@/);
+    });
+  });
 });

@@ -45,15 +45,18 @@ export function parseHunks(rawDiff: string): { header: string[]; hunks: Hunk[] }
 export function buildPatch(
   headerLines: string[],
   hunk: Hunk,
-  selectedLineIndices?: Set<number>
+  selectedLineIndices?: Set<number>,
+  isReverse?: boolean
 ): string {
   let hunkLines: string[];
 
   if (!selectedLineIndices) {
-    // Stage entire hunk
+    // Stage/unstage entire hunk
     hunkLines = [hunk.header, ...hunk.lines];
   } else {
     // Build partial hunk: keep context and selected +/- lines
+    // For staging (forward apply): unselected "-" become context, unselected "+" are skipped
+    // For unstaging (reverse apply): unselected "+" become context, unselected "-" are skipped
     const newLines: string[] = [];
     let oldCount = 0;
     let newCount = 0;
@@ -64,13 +67,18 @@ export function buildPatch(
         if (selectedLineIndices.has(i)) {
           newLines.push(line);
           newCount++;
+        } else if (isReverse) {
+          // Convert unselected add to context for reverse apply
+          newLines.push(" " + line.slice(1));
+          oldCount++;
+          newCount++;
         }
       } else if (line.startsWith("-")) {
         if (selectedLineIndices.has(i)) {
           newLines.push(line);
           oldCount++;
-        } else {
-          // Convert unselected remove to context
+        } else if (!isReverse) {
+          // Convert unselected remove to context for forward apply
           newLines.push(" " + line.slice(1));
           oldCount++;
           newCount++;
@@ -127,7 +135,7 @@ export const HunkStagingView: React.FC<Props> = ({
   const handleStageHunk = (hunkIdx: number) => {
     const hunk = hunks[hunkIdx];
     const selected = selectedLines[hunkIdx];
-    const patch = buildPatch(header, hunk, selected && selected.size > 0 ? selected : undefined);
+    const patch = buildPatch(header, hunk, selected && selected.size > 0 ? selected : undefined, isStaged);
     if (isStaged) {
       onUnstageHunk(patch);
     } else {
