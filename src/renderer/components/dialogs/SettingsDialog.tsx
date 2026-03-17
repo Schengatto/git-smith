@@ -784,6 +784,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
     { value: "none", label: "Disabled" },
     { value: "anthropic", label: "Anthropic (Claude)" },
     { value: "openai", label: "OpenAI" },
+    { value: "gemini", label: "Google Gemini" },
     { value: "custom-mcp", label: "Custom MCP Server" },
   ];
 
@@ -797,6 +798,11 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
       { value: "gpt-4o", label: "GPT-4o" },
       { value: "gpt-4o-mini", label: "GPT-4o Mini" },
       { value: "o3-mini", label: "o3-mini" },
+    ],
+    gemini: [
+      { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+      { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+      { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
     ],
   };
 

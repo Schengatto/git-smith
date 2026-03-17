@@ -123,6 +123,48 @@ describe("McpAiClient", () => {
     );
   });
 
+  it("calls Gemini API for commit message", async () => {
+    vi.mocked(getSettings).mockReturnValue({
+      ...mockSettings,
+      aiProvider: "gemini",
+      aiModel: "gemini-2.5-flash",
+    } as never);
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ candidates: [{ content: { parts: [{ text: "feat: new thing" }] } }] }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await client.generateCommitMessage("diff", {
+      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+    });
+
+    expect(result).toBe("feat: new thing");
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"),
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("handles Gemini API errors", async () => {
+    vi.mocked(getSettings).mockReturnValue({
+      ...mockSettings,
+      aiProvider: "gemini",
+      aiModel: "gemini-2.5-flash",
+    } as never);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: () => Promise.resolve("Forbidden"),
+    }));
+
+    await expect(
+      client.generateCommitMessage("diff", {
+        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+      })
+    ).rejects.toThrow("Gemini API error (403)");
+  });
+
   it("handles Anthropic API errors", async () => {
     vi.mocked(getSettings).mockReturnValue(mockSettings as never);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({

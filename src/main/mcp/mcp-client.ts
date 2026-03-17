@@ -130,6 +130,8 @@ Be concise and actionable.`;
       return this.callAnthropic(prompt, settings.aiApiKey, settings.aiModel || "claude-sonnet-4-20250514");
     } else if (settings.aiProvider === "openai") {
       return this.callOpenAi(prompt, settings.aiApiKey, settings.aiModel || "gpt-4o", settings.aiBaseUrl);
+    } else if (settings.aiProvider === "gemini") {
+      return this.callGemini(prompt, settings.aiApiKey, settings.aiModel || "gemini-2.5-flash");
     } else if (settings.aiProvider === "custom-mcp") {
       throw new Error("Custom MCP provider not yet implemented");
     }
@@ -191,5 +193,28 @@ Be concise and actionable.`;
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "";
+  }
+
+  private async callGemini(prompt: string, apiKey: string, model: string): Promise<string> {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 1024 },
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Gemini API error (${response.status}): ${err}`);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
   }
 }

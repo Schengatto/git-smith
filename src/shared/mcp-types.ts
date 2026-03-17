@@ -1,7 +1,7 @@
 // MCP-related types shared between main process and renderer
 
 /** AI provider options for the MCP client */
-export type AiProvider = "none" | "anthropic" | "openai" | "custom-mcp";
+export type AiProvider = "none" | "anthropic" | "openai" | "gemini" | "custom-mcp";
 
 /** Configuration for an external MCP server */
 export interface McpExternalServer {

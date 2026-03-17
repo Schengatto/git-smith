@@ -27,7 +27,7 @@ export interface AppSettings {
   maxConcurrentGitProcesses: number;
   gitBinaryPath: string; // custom git binary path, empty = use system PATH
   // AI / MCP
-  aiProvider: "none" | "anthropic" | "openai" | "custom-mcp";
+  aiProvider: "none" | "anthropic" | "openai" | "gemini" | "custom-mcp";
   aiApiKey: string;
   aiModel: string;
   aiBaseUrl: string;
