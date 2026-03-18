@@ -7,6 +7,7 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { PublisherGithub } from "@electron-forge/publisher-github";
 import { createHash } from "crypto";
 import { readFile, writeFile, stat } from "fs/promises";
+import fs from "fs";
 import path from "path";
 
 async function computeSha512(filePath: string): Promise<string> {
@@ -24,7 +25,7 @@ const config: ForgeConfig = {
     icon: "./assets/icon",
   },
   rebuildConfig: {
-    // node-pty ships with prebuilt NAPI binaries — skip native rebuild
+    // node-pty ships prebuilt NAPI binaries — skip native rebuild (no VS C++ needed)
     onlyModules: [],
   },
   makers: [
@@ -61,6 +62,17 @@ const config: ForgeConfig = {
     }),
   ],
   hooks: {
+    packageAfterCopy: async (_config, buildPath) => {
+      // node-pty is a native module externalized from Vite — copy it into the package
+      const nativeModules = ["node-pty", "node-addon-api"];
+      for (const mod of nativeModules) {
+        const src = path.join(__dirname, "node_modules", mod);
+        const dest = path.join(buildPath, "node_modules", mod);
+        if (fs.existsSync(src)) {
+          fs.cpSync(src, dest, { recursive: true });
+        }
+      }
+    },
     postMake: async (_forgeConfig, makeResults) => {
       const releaseDate = new Date().toISOString();
 

@@ -3,9 +3,10 @@ import path from "path";
 
 const mockStatus = vi.fn();
 const mockRaw = vi.fn().mockResolvedValue("");
+const mockCommit = vi.fn().mockResolvedValue({ commit: "abc123" });
 
 vi.mock("simple-git", () => {
-  const fn = () => ({ status: mockStatus, raw: mockRaw });
+  const fn = () => ({ status: mockStatus, raw: mockRaw, commit: mockCommit });
   fn.default = fn;
   return { default: fn };
 });
@@ -61,6 +62,7 @@ function setupService(): GitService {
   (service as unknown as Record<string, unknown>)["git"] = {
     status: mockStatus,
     raw: mockRaw,
+    commit: mockCommit,
   };
   return service;
 }
@@ -198,5 +200,58 @@ describe("GitService.getStatus - operation detection", () => {
     const result = await service.getStatus();
     expect(result.operationInProgress).toBe("rebase");
     expect(result.rebaseStep).toBeUndefined();
+  });
+});
+
+describe("abort/continue methods", () => {
+  let service: GitService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    service = setupService();
+    mockExistsSync.mockReturnValue(false);
+    mockReadFileSync.mockReturnValue("");
+  });
+
+  it("should call git merge --abort", async () => {
+    mockRaw.mockResolvedValue("");
+    await service.mergeAbort();
+    expect(mockRaw).toHaveBeenCalledWith(["merge", "--abort"]);
+  });
+
+  it("should call git commit for mergeContinue (reads MERGE_MSG)", async () => {
+    const mergeMsgPath = path.join(fakeRepoPath, ".git", "MERGE_MSG");
+    mockReadFileSync.mockImplementation((p: string) => {
+      if (p === mergeMsgPath) return "Merge branch 'feature' into main";
+      return "";
+    });
+    mockCommit.mockResolvedValue({ commit: "def456" });
+
+    await service.mergeContinue();
+
+    expect(mockCommit).toHaveBeenCalledWith("Merge branch 'feature' into main");
+  });
+
+  it("should use default message for mergeContinue when MERGE_MSG is missing", async () => {
+    mockReadFileSync.mockImplementation(() => {
+      throw new Error("ENOENT: no such file or directory");
+    });
+    mockCommit.mockResolvedValue({ commit: "def456" });
+
+    await service.mergeContinue();
+
+    expect(mockCommit).toHaveBeenCalledWith("Merge commit");
+  });
+
+  it("should call git cherry-pick --abort", async () => {
+    mockRaw.mockResolvedValue("");
+    await service.cherryPickAbort();
+    expect(mockRaw).toHaveBeenCalledWith(["cherry-pick", "--abort"]);
+  });
+
+  it("should call git cherry-pick --continue", async () => {
+    mockRaw.mockResolvedValue("");
+    await service.cherryPickContinue();
+    expect(mockRaw).toHaveBeenCalledWith(["cherry-pick", "--continue"]);
   });
 });

@@ -821,6 +821,37 @@ export class GitService {
     await this.run("git rebase", ["--abort"], () => git.rebase(["--abort"]));
   }
 
+  async mergeAbort(): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git merge", ["--abort"], () => git.raw(["merge", "--abort"]));
+  }
+
+  async mergeContinue(): Promise<void> {
+    const git = this.ensureRepo();
+    const mergeMsgPath = path.join(this.repoPath!, ".git", "MERGE_MSG");
+    let message = "Merge commit";
+    try {
+      message = fs.readFileSync(mergeMsgPath, "utf-8").trim();
+    } catch {
+      // Fallback to default message
+    }
+    await this.run("git commit", [message], () => git.commit(message));
+  }
+
+  async cherryPickAbort(): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git cherry-pick", ["--abort"], () =>
+      git.raw(["cherry-pick", "--abort"])
+    );
+  }
+
+  async cherryPickContinue(): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git cherry-pick", ["--continue"], () =>
+      git.raw(["cherry-pick", "--continue"])
+    );
+  }
+
   async resetToCommit(hash: string, mode: "soft" | "mixed" | "hard"): Promise<void> {
     const git = this.ensureRepo();
     const flag = `--${mode}`;
