@@ -17,8 +17,9 @@ async function computeSha512(filePath: string): Promise<string> {
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true,
-    asarUnpack: ["node_modules/node-pty/**"],
+    asar: {
+      unpack: "{**/*.node,**/node-pty/**}",
+    },
     name: "Git Expansion",
     executableName: "git-expansion",
     appBundleId: "com.git-expansion.app",
