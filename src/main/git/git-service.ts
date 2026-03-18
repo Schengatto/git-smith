@@ -1603,6 +1603,271 @@ export class GitService {
       return git.raw(["diff", hash1, hash2, "--", file]);
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Stats methods
+  // ---------------------------------------------------------------------------
+
+  async getLeaderboard(timeframe: import("../../shared/stats-types").Timeframe): Promise<import("../../shared/stats-types").LeaderboardEntry[]> {
+    const git = this.ensureRepo();
+    return this.run("git log --shortstat", ["--format=COMMIT_START"], async () => {
+      const sinceArg: string[] = [];
+      if (timeframe === "week") {
+        const since = new Date();
+        since.setUTCDate(since.getUTCDate() - 7);
+        sinceArg.push(`--since=${since.toISOString()}`);
+      } else if (timeframe === "month") {
+        const since = new Date();
+        since.setUTCMonth(since.getUTCMonth() - 1);
+        sinceArg.push(`--since=${since.toISOString()}`);
+      }
+
+      const output = await git.raw([
+        "log",
+        "--format=COMMIT_START%n%H%n%an%n%ae%n%aI",
+        "--shortstat",
+        ...sinceArg,
+      ]);
+
+      interface AuthorAccum {
+        authorName: string;
+        authorEmail: string;
+        commits: number;
+        linesAdded: number;
+        linesRemoved: number;
+        dates: string[];
+      }
+
+      const authorMap = new Map<string, AuthorAccum>();
+
+      const blocks = output.split("COMMIT_START\n").filter((b) => b.trim().length > 0);
+      for (const block of blocks) {
+        const lines = block.split("\n");
+        // lines[0] = hash, lines[1] = authorName, lines[2] = authorEmail, lines[3] = date
+        const _hash = (lines[0] || "").trim();
+        const authorName = (lines[1] || "").trim();
+        const authorEmail = (lines[2] || "").trim();
+        const date = (lines[3] || "").trim();
+        if (!authorEmail) continue;
+
+        // Find stat line: " N files changed, M insertions(+), K deletions(-)"
+        let added = 0;
+        let removed = 0;
+        for (let i = 4; i < lines.length; i++) {
+          const line = lines[i].trim();
+          const insMatch = line.match(/(\d+)\s+insertion/);
+          const delMatch = line.match(/(\d+)\s+deletion/);
+          if (insMatch) added += parseInt(insMatch[1]);
+          if (delMatch) removed += parseInt(delMatch[1]);
+        }
+
+        const entry = authorMap.get(authorEmail);
+        if (entry) {
+          entry.commits++;
+          entry.linesAdded += added;
+          entry.linesRemoved += removed;
+          entry.dates.push(date);
+        } else {
+          authorMap.set(authorEmail, {
+            authorName,
+            authorEmail,
+            commits: 1,
+            linesAdded: added,
+            linesRemoved: removed,
+            dates: [date],
+          });
+        }
+      }
+
+      const result: import("../../shared/stats-types").LeaderboardEntry[] = [];
+      for (const accum of authorMap.values()) {
+        const gravatarHash = crypto.createHash("md5").update(accum.authorEmail.toLowerCase().trim()).digest("hex");
+
+        // Sort dates ascending
+        const sortedDates = accum.dates
+          .map((d) => d.substring(0, 10))
+          .filter((d) => d.length === 10)
+          .sort();
+        const uniqueDates = [...new Set(sortedDates)];
+
+        const longestStreak = computeLongestStreak(uniqueDates);
+        const firstCommitDate = accum.dates.slice().sort()[0] || "";
+        const lastCommitDate = accum.dates.slice().sort().reverse()[0] || "";
+
+        result.push({
+          authorName: accum.authorName,
+          authorEmail: accum.authorEmail,
+          gravatarHash,
+          commits: accum.commits,
+          linesAdded: accum.linesAdded,
+          linesRemoved: accum.linesRemoved,
+          firstCommitDate,
+          lastCommitDate,
+          longestStreak,
+          rank: 0,
+        });
+      }
+
+      result.sort((a, b) => b.commits - a.commits);
+      result.forEach((e, i) => { e.rank = i + 1; });
+      return result;
+    });
+  }
+
+  async getAuthorDetail(
+    email: string,
+    timeframe: import("../../shared/stats-types").Timeframe
+  ): Promise<import("../../shared/stats-types").AuthorDetail> {
+    const git = this.ensureRepo();
+    return this.run("git log --numstat", ["--format=COMMIT_START", `--author=^${email}$`], async () => {
+      const sinceArg: string[] = [];
+      if (timeframe === "week") {
+        const since = new Date();
+        since.setUTCDate(since.getUTCDate() - 7);
+        sinceArg.push(`--since=${since.toISOString()}`);
+      } else if (timeframe === "month") {
+        const since = new Date();
+        since.setUTCMonth(since.getUTCMonth() - 1);
+        sinceArg.push(`--since=${since.toISOString()}`);
+      }
+
+      const output = await git.raw([
+        "log",
+        `--author=^${email}$`,
+        "--format=COMMIT_START%n%an%n%aI%n%ae",
+        "--numstat",
+        ...sinceArg,
+      ]);
+
+      if (!output.trim()) {
+        return {
+          authorName: "",
+          authorEmail: email,
+          commitTimeline: [],
+          topFiles: [],
+          hourlyDistribution: new Array(24).fill(0),
+          dailyDistribution: new Array(7).fill(0),
+          avgCommitSize: 0,
+          linesAdded: 0,
+          linesRemoved: 0,
+          longestStreak: 0,
+          currentStreak: 0,
+          firstCommitDate: "",
+          lastCommitDate: "",
+        };
+      }
+
+      let authorName = "";
+      let totalAdded = 0;
+      let totalRemoved = 0;
+      const dates: string[] = [];
+      const fileMap = new Map<string, number>();
+      const hourlyDist = new Array(24).fill(0);
+      const dailyDist = new Array(7).fill(0);
+      const commitSizes: number[] = [];
+      let firstCommitDate = "";
+      let lastCommitDate = "";
+
+      const blocks = output.split("COMMIT_START\n").filter((b) => b.trim().length > 0);
+      for (const block of blocks) {
+        const lines = block.split("\n");
+        const name = (lines[0] || "").trim();
+        const dateStr = (lines[1] || "").trim();
+        // lines[2] = email (we already know it)
+
+        if (name && !authorName) authorName = name;
+        if (dateStr) {
+          dates.push(dateStr);
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            hourlyDist[d.getUTCHours()]++;
+            dailyDist[d.getUTCDay()]++;
+          }
+        }
+
+        let commitAdded = 0;
+        let commitRemoved = 0;
+        for (let i = 3; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          const parts = line.split("\t");
+          if (parts.length < 3) continue;
+          const added = parseInt(parts[0]) || 0;
+          const removed = parseInt(parts[1]) || 0;
+          const filePath = parts[2].trim();
+          if (!filePath) continue;
+          commitAdded += added;
+          commitRemoved += removed;
+          fileMap.set(filePath, (fileMap.get(filePath) || 0) + added + removed);
+        }
+        totalAdded += commitAdded;
+        totalRemoved += commitRemoved;
+        commitSizes.push(commitAdded + commitRemoved);
+      }
+
+      const sortedDates = dates
+        .map((d) => d.substring(0, 10))
+        .filter((d) => d.length === 10)
+        .sort();
+
+      const allSortedFull = dates.slice().sort();
+      firstCommitDate = allSortedFull[0] || "";
+      lastCommitDate = allSortedFull[allSortedFull.length - 1] || "";
+
+      const uniqueDates = [...new Set(sortedDates)];
+      const longestStreak = computeLongestStreak(uniqueDates);
+      const currentStreak = computeCurrentStreak(uniqueDates);
+
+      // Commit timeline: group by day (week/month), week (all)
+      const timelineMap = new Map<string, number>();
+      for (const d of dates) {
+        let key: string;
+        if (timeframe === "all") {
+          // group by week: ISO week start (Monday)
+          const dt = new Date(d);
+          const dayOfWeek = dt.getUTCDay(); // 0=Sun
+          const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          const monday = new Date(dt);
+          monday.setUTCDate(dt.getUTCDate() - diff);
+          key = monday.toISOString().substring(0, 10);
+        } else {
+          // group by day
+          key = d.substring(0, 10);
+        }
+        timelineMap.set(key, (timelineMap.get(key) || 0) + 1);
+      }
+      const commitTimeline = [...timelineMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([date, count]) => ({ date, count }));
+
+      // Top files
+      const topFiles = [...fileMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([path, changes]) => ({ path, changes }));
+
+      const avgCommitSize =
+        commitSizes.length > 0
+          ? commitSizes.reduce((a, b) => a + b, 0) / commitSizes.length
+          : 0;
+
+      return {
+        authorName,
+        authorEmail: email,
+        commitTimeline,
+        topFiles,
+        hourlyDistribution: hourlyDist,
+        dailyDistribution: dailyDist,
+        avgCommitSize,
+        linesAdded: totalAdded,
+        linesRemoved: totalRemoved,
+        longestStreak,
+        currentStreak,
+        firstCommitDate,
+        lastCommitDate,
+      };
+    });
+  }
 }
 
 function parseRefs(refString: string): CommitInfo["refs"] {
@@ -1620,6 +1885,49 @@ function parseRefs(refString: string): CommitInfo["refs"] {
     }
     return { name: trimmed, type: "head" };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Streak helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Given an array of unique YYYY-MM-DD date strings (sorted ascending),
+ * returns the length of the longest run of consecutive calendar days.
+ */
+function computeLongestStreak(sortedUniqueDates: string[]): number {
+  if (sortedUniqueDates.length === 0) return 0;
+  let longest = 1;
+  let current = 1;
+  for (let i = 1; i < sortedUniqueDates.length; i++) {
+    const prev = new Date(sortedUniqueDates[i - 1] + "T00:00:00Z");
+    const curr = new Date(sortedUniqueDates[i] + "T00:00:00Z");
+    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      current++;
+      if (current > longest) longest = current;
+    } else {
+      current = 1;
+    }
+  }
+  return longest;
+}
+
+/**
+ * Given an array of unique YYYY-MM-DD date strings (sorted ascending),
+ * returns how many consecutive days ending at today (UTC) have commits.
+ */
+function computeCurrentStreak(sortedUniqueDates: string[]): number {
+  if (sortedUniqueDates.length === 0) return 0;
+  const todayStr = new Date().toISOString().substring(0, 10);
+  const dateSet = new Set(sortedUniqueDates);
+  let streak = 0;
+  const cursor = new Date(todayStr + "T00:00:00Z");
+  while (dateSet.has(cursor.toISOString().substring(0, 10))) {
+    streak++;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return streak;
 }
 
 // Singleton
