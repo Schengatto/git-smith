@@ -15,6 +15,7 @@ import { registerTerminalHandlers } from "./terminal.ipc";
 import { registerMcpHandlers } from "./mcp.ipc";
 import { registerAccountHandlers } from "./git-account.ipc";
 import { registerDialogHandlers } from "./dialog.ipc";
+import { registerStatsHandlers } from "./stats.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -34,4 +35,5 @@ export function registerAllHandlers() {
   registerMcpHandlers();
   registerAccountHandlers();
   registerDialogHandlers();
+  registerStatsHandlers();
 }
