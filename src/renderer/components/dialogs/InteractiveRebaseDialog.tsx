@@ -15,6 +15,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onto: string;
+  mode?: "overlay" | "window";
 }
 
 const ACTIONS: { value: RebaseAction; label: string; color: string; shortKey: string }[] = [
@@ -26,7 +27,7 @@ const ACTIONS: { value: RebaseAction; label: string; color: string; shortKey: st
   { value: "drop", label: "Drop", color: "var(--red)", shortKey: "d" },
 ];
 
-export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }) => {
+export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto, mode = "overlay" }) => {
   const { refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -121,7 +122,9 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }
       }));
 
       await runGitOperation("Interactive Rebase", () => window.electronAPI.branch.rebaseInteractive(onto, fullTodo));
-      await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      if (mode === "overlay") {
+        await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
+      }
       onClose();
     } catch (err: unknown) {
       if (err instanceof GitOperationCancelledError) return;
@@ -152,39 +155,8 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }
   const dropCount = entries.filter((e) => e.action === "drop").length;
   const squashCount = entries.filter((e) => e.action === "squash" || e.action === "fixup").length;
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(0,0,0,0.6)",
-        backdropFilter: "blur(4px)",
-        animation: "fade-in 0.15s ease-out",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        style={{
-          width: "85vw",
-          maxWidth: 800,
-          height: "75vh",
-          maxHeight: 600,
-          borderRadius: 12,
-          background: "var(--surface-1)",
-          border: "1px solid var(--border)",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          animation: "modal-in 0.2s ease-out",
-        }}
-      >
+  const innerContent = (
+    <>
         {/* Header */}
         <div
           style={{
@@ -324,6 +296,60 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto }
             </button>
           </div>
         </div>
+    </>
+  );
+
+  if (mode === "window") {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--surface-1)",
+          overflow: "hidden",
+        }}
+      >
+        {innerContent}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(4px)",
+        animation: "fade-in 0.15s ease-out",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        style={{
+          width: "85vw",
+          maxWidth: 800,
+          height: "75vh",
+          maxHeight: 600,
+          borderRadius: 12,
+          background: "var(--surface-1)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          animation: "modal-in 0.2s ease-out",
+        }}
+      >
+        {innerContent}
       </div>
 
       <style>{`
