@@ -377,6 +377,19 @@ export const CommitGraphPanel: React.FC = () => {
     }
 
     items.push(
+      { divider: true },
+      {
+        label: "Generate Changelog...",
+        icon: "📋",
+        onClick: () =>
+          openDialogWindow({
+            dialog: "ChangelogDialog",
+            data: { commitHash: row.commit.hash, commitSubject: row.commit.subject },
+          }),
+      },
+    );
+
+    items.push(
       {
         label: `Copy Hash (${row.commit.abbreviatedHash})`,
         onClick: () => navigator.clipboard.writeText(row.commit.hash),

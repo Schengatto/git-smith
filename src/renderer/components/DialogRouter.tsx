@@ -6,6 +6,7 @@ import { CommitInfoWindow as _CommitInfoWindow } from "./dialogs/CommitInfoWindo
 import { StashDialog as _StashDialog } from "./dialogs/StashDialog";
 import { SettingsDialog as _SettingsDialog } from "./dialogs/SettingsDialog";
 import { InteractiveRebaseDialog as _InteractiveRebaseDialog } from "./dialogs/InteractiveRebaseDialog";
+import { ChangelogDialog } from "./dialogs/ChangelogDialog";
 
 // Temporary casts until Tasks 6-10 add the `mode` prop to each dialog
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,6 +139,16 @@ export const DialogRouter: React.FC<Props> = ({ dialog }) => {
             open={true}
             onClose={handleClose}
             onto={(initData.onto as string) || ""}
+            mode="window"
+          />
+        );
+      case "ChangelogDialog":
+        return (
+          <ChangelogDialog
+            open={true}
+            onClose={handleClose}
+            commitHash={(initData.commitHash as string) || "HEAD"}
+            commitSubject={initData.commitSubject as string | undefined}
             mode="window"
           />
         );
