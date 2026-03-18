@@ -313,6 +313,23 @@ const electronAPI = {
     parseSshConfig: (): Promise<import("../shared/git-types").SshHostEntry[]> =>
       ipcRenderer.invoke(IPC.ACCOUNT.PARSE_SSH_CONFIG),
   },
+  dialog: {
+    open: (request: import("../shared/dialog-types").DialogOpenRequest): Promise<{ windowId: number }> =>
+      ipcRenderer.invoke(IPC.DIALOG.OPEN, request),
+    close: (dialogKey: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.DIALOG.CLOSE, dialogKey),
+    getInitData: (): Promise<Record<string, unknown> | undefined> =>
+      ipcRenderer.invoke(IPC.DIALOG.GET_INIT_DATA),
+    sendResult: (result: import("../shared/dialog-types").DialogResult): void => {
+      ipcRenderer.send(IPC.DIALOG.RESULT, result);
+    },
+    onResult: (callback: (result: import("../shared/dialog-types").DialogResult) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, result: import("../shared/dialog-types").DialogResult) =>
+        callback(result);
+      ipcRenderer.on(IPC.DIALOG.ON_RESULT, handler);
+      return () => ipcRenderer.removeListener(IPC.DIALOG.ON_RESULT, handler);
+    },
+  },
   shell: {
     openFile: (filePath: string): Promise<void> =>
       ipcRenderer.invoke(IPC.SHELL.OPEN_FILE, filePath),
