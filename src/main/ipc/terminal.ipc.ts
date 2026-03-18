@@ -4,8 +4,13 @@ import fs from "fs";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pty = require("node-pty");
+let pty: typeof import("node-pty") | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  pty = require("node-pty");
+} catch {
+  console.warn("node-pty not available — terminal feature disabled");
+}
 
 type IPty = {
   pid: number;
@@ -38,6 +43,9 @@ function getShell(): { command: string; args: string[] } {
 
 export function registerTerminalHandlers() {
   ipcMain.handle(IPC.TERMINAL.SPAWN, (event, cols: number, rows: number) => {
+    if (!pty) {
+      throw new Error("Terminal not available: node-pty module could not be loaded");
+    }
     // Kill existing PTY if any
     killTerminal();
 
