@@ -42,6 +42,26 @@ export const ChangelogDialog: React.FC<Props> = ({
       });
   }, [open, commitHash]);
 
+  // Auto-generate when selectedBase changes (including initial load)
+  useEffect(() => {
+    if (!open || !selectedBase || selectedBase === "__custom__") return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    window.electronAPI.changelog
+      .generate(selectedBase, commitHash)
+      .then((result) => {
+        if (!cancelled) setChangelog(result);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [open, selectedBase, commitHash]);
+
   useEffect(() => {
     if (mode === "window") {
       document.title = changelog
@@ -52,7 +72,7 @@ export const ChangelogDialog: React.FC<Props> = ({
 
   const effectiveBase = selectedBase === "__custom__" ? customBase.trim() : selectedBase;
 
-  const handleGenerate = async () => {
+  const handleGenerateCustom = async () => {
     if (!effectiveBase) return;
     setLoading(true);
     setError(null);
@@ -188,7 +208,7 @@ export const ChangelogDialog: React.FC<Props> = ({
           {error && (
             <div style={{ color: "var(--red)", marginBottom: 12 }}>{error}</div>
           )}
-          {!changelog && !error && !loading && (
+          {!changelog && !error && loading && (
             <div
               style={{
                 display: "flex",
@@ -198,7 +218,20 @@ export const ChangelogDialog: React.FC<Props> = ({
                 color: "var(--text-muted)",
               }}
             >
-              Click Generate to create changelog
+              Generating changelog...
+            </div>
+          )}
+          {!changelog && !error && !loading && selectedBase === "__custom__" && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: "var(--text-muted)",
+              }}
+            >
+              Enter a ref and click Generate
             </div>
           )}
           {changelog && changelog.totalCommits === 0 && (
@@ -274,23 +307,25 @@ export const ChangelogDialog: React.FC<Props> = ({
               : ""}
           </span>
           <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={handleGenerate}
-              disabled={!effectiveBase || loading}
-              style={{
-                background: "var(--blue)",
-                color: "var(--surface-0)",
-                border: "none",
-                borderRadius: 4,
-                padding: "5px 14px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: effectiveBase && !loading ? "pointer" : "not-allowed",
-                opacity: !effectiveBase || loading ? 0.6 : 1,
-              }}
-            >
-              {loading ? "Generating..." : "Generate"}
-            </button>
+            {selectedBase === "__custom__" && (
+              <button
+                onClick={handleGenerateCustom}
+                disabled={!effectiveBase || loading}
+                style={{
+                  background: "var(--blue)",
+                  color: "var(--surface-0)",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "5px 14px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: effectiveBase && !loading ? "pointer" : "not-allowed",
+                  opacity: !effectiveBase || loading ? 0.6 : 1,
+                }}
+              >
+                {loading ? "Generating..." : "Generate"}
+              </button>
+            )}
             {changelog && (
               <button
                 onClick={handleCopyMarkdown}
