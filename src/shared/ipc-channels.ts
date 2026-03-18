@@ -192,4 +192,8 @@ export const IPC = {
     RESULT: "dialog:result",
     ON_RESULT: "dialog:on-result",
   },
+  STATS: {
+    LEADERBOARD: "git:stats:leaderboard",
+    AUTHOR_DETAIL: "git:stats:author-detail",
+  },
 } as const;
