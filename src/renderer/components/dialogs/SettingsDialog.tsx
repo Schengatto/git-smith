@@ -42,6 +42,7 @@ interface GitConfig {
 interface Props {
   open: boolean;
   onClose: () => void;
+  mode?: "overlay" | "window";
 }
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -56,7 +57,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "ai", label: "AI / MCP", icon: <IconAi /> },
 ];
 
-export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
+export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }) => {
   const [tab, setTab] = useState<Tab>("general");
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [gitConfig, setGitConfig] = useState<GitConfig | null>(null);
@@ -122,7 +123,13 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
 
   return (
     <div
-      style={{
+      style={mode === "window" ? {
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        alignItems: "stretch",
+        justifyContent: "stretch",
+      } : {
         position: "fixed",
         inset: 0,
         zIndex: 100,
@@ -133,10 +140,18 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
         backdropFilter: "blur(4px)",
         animation: "fade-in 0.15s ease-out",
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={mode === "overlay" ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}
     >
       <div
-        style={{
+        style={mode === "window" ? {
+          width: "100%",
+          height: "100%",
+          background: "var(--surface-1)",
+          border: "none",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        } : {
           width: "80vw",
           maxWidth: 750,
           height: "70vh",
@@ -212,7 +227,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
             {settings && tab === "general" && (
               <GeneralTab settings={settings} onChange={updateSetting} />
             )}
-            {tab === "accounts" && <AccountsTab />}
+            {tab === "accounts" && <AccountsTab mode={mode} />}
             {tab === "git" && gitConfig && globalConfig && (
               <GitConfigTab local={gitConfig} global={globalConfig} onSave={handleSaveGitConfig} />
             )}
@@ -908,7 +923,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
 
 const emptyAccount = { label: "", name: "", email: "", signingKey: "", sshKeyPath: "" };
 
-const AccountsTab: React.FC = () => {
+const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overlay" }) => {
   const { accounts, loadAccounts, addAccount, updateAccount, deleteAccount } = useAccountStore();
   const [form, setForm] = useState(emptyAccount);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -916,7 +931,7 @@ const AccountsTab: React.FC = () => {
   const [sshEntries, setSshEntries] = useState<SshHostEntry[] | null>(null);
   const [showSshImport, setShowSshImport] = useState(false);
 
-  useEffect(() => { loadAccounts(); }, []);
+  useEffect(() => { if (mode === "overlay") { loadAccounts(); } }, []);
 
   const handleLoadSshConfig = async () => {
     const entries = await window.electronAPI.account.parseSshConfig();
