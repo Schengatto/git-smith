@@ -1735,7 +1735,7 @@ export class GitService {
       const output = await git.raw([
         "log",
         "--all",
-        `--author=^${email}$`,
+        `--author=${email}`,
         "--format=COMMIT_START%n%an%n%aI%n%ae",
         "--numstat",
         ...sinceArg,
@@ -1775,7 +1775,10 @@ export class GitService {
         const lines = block.split("\n");
         const name = (lines[0] || "").trim();
         const dateStr = (lines[1] || "").trim();
-        // lines[2] = email (we already know it)
+        const commitEmail = (lines[2] || "").trim().toLowerCase();
+
+        // Safety net: verify exact email match (--author does substring matching)
+        if (commitEmail !== email.toLowerCase()) continue;
 
         if (name && !authorName) authorName = name;
         if (dateStr) {

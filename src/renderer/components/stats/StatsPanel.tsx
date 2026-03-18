@@ -384,31 +384,15 @@ export const StatsPanel: React.FC = () => {
                         backgroundColor: isSelected
                           ? "var(--surface-1)"
                           : "transparent",
-                        position: "relative",
+                        backgroundImage: `linear-gradient(to right, rgba(147,187,255,0.07) ${barWidth}%, transparent ${barWidth}%)`,
                       }}
                     >
-                      {/* Proportional bar (behind content) */}
-                      <td colSpan={6} style={{ padding: 0, position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none" }}>
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            bottom: 0,
-                            width: `${barWidth}%`,
-                            backgroundColor: "var(--accent)",
-                            opacity: 0.07,
-                          }}
-                        />
-                      </td>
-
                       <td
                         style={{
                           padding: "6px 8px",
                           textAlign: "center",
                           color: "var(--text-muted)",
                           fontWeight: 500,
-                          position: "relative",
                         }}
                       >
                         {entry.rank}
@@ -416,7 +400,7 @@ export const StatsPanel: React.FC = () => {
                       <td
                         style={{
                           padding: "6px 8px",
-                          position: "relative",
+
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
@@ -442,7 +426,7 @@ export const StatsPanel: React.FC = () => {
                           padding: "6px 8px",
                           textAlign: "right",
                           color: "var(--text-secondary)",
-                          position: "relative",
+
                         }}
                       >
                         {entry.commits}
@@ -452,7 +436,7 @@ export const StatsPanel: React.FC = () => {
                           padding: "6px 8px",
                           textAlign: "right",
                           color: "var(--green)",
-                          position: "relative",
+
                         }}
                       >
                         +{formatNumber(entry.linesAdded)}
@@ -462,7 +446,7 @@ export const StatsPanel: React.FC = () => {
                           padding: "6px 8px",
                           textAlign: "right",
                           color: "var(--red)",
-                          position: "relative",
+
                         }}
                       >
                         -{formatNumber(entry.linesRemoved)}
@@ -472,7 +456,7 @@ export const StatsPanel: React.FC = () => {
                           padding: "6px 8px",
                           textAlign: "right",
                           color: "var(--text-secondary)",
-                          position: "relative",
+
                         }}
                       >
                         {entry.longestStreak}d

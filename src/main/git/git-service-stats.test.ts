@@ -266,12 +266,12 @@ describe("GitService.getAuthorDetail", () => {
     expect(result.dailyDistribution[dayIndex]).toBe(1);
   });
 
-  it("uses anchored --author= regex for exact email match", async () => {
+  it("passes --author= with email and filters by exact email in post-processing", async () => {
     mockRaw.mockResolvedValueOnce("");
     await service.getAuthorDetail("alice@example.com", "all");
     const callArgs = mockRaw.mock.calls[0][0] as string[];
     const authorArg = callArgs.find((a) => a.startsWith("--author="));
-    expect(authorArg).toBe("--author=^alice@example.com$");
+    expect(authorArg).toBe("--author=alice@example.com");
   });
 
   it("calculates longestStreak for consecutive days", async () => {
