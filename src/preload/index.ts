@@ -338,9 +338,9 @@ const electronAPI = {
   },
   app: {
     checkForUpdates: (): Promise<void> =>
-      ipcRenderer.invoke("app:check-for-updates"),
+      ipcRenderer.invoke(IPC.APP.CHECK_FOR_UPDATES),
     getVersion: (): Promise<string> =>
-      ipcRenderer.invoke("app:get-version"),
+      ipcRenderer.invoke(IPC.APP.GET_VERSION),
   },
   on: {
     commandLog: (callback: (entry: CommandLogEntry) => void) => {
@@ -382,8 +382,8 @@ const electronAPI = {
     updateStatus: (callback: (status: { status: string; detail?: string }) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, data: { status: string; detail?: string }) =>
         callback(data);
-      ipcRenderer.on("app:update-status", handler);
-      return () => ipcRenderer.removeListener("app:update-status", handler);
+      ipcRenderer.on(IPC.APP.UPDATE_STATUS, handler);
+      return () => ipcRenderer.removeListener(IPC.APP.UPDATE_STATUS, handler);
     },
     terminalData: (callback: (data: string) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, data: string) =>

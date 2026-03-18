@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import { IPC } from "../shared/ipc-channels";
 
 let mainWindow: BrowserWindow | null = null;
+let manualCheckInProgress = false;
 
 export function initAutoUpdater(win: BrowserWindow) {
   if (!app.isPackaged) return;
@@ -19,6 +20,7 @@ export function initAutoUpdater(win: BrowserWindow) {
 
   autoUpdater.on("update-available", (info: UpdateInfo) => {
     sendStatus("available", info.version);
+    manualCheckInProgress = false;
 
     if (!mainWindow || mainWindow.isDestroyed()) return;
     dialog
@@ -40,6 +42,17 @@ export function initAutoUpdater(win: BrowserWindow) {
 
   autoUpdater.on("update-not-available", () => {
     sendStatus("up-to-date");
+
+    if (manualCheckInProgress && mainWindow && !mainWindow.isDestroyed()) {
+      dialog.showMessageBox(mainWindow, {
+        type: "info",
+        title: "No Updates Available",
+        message: "You are running the latest version.",
+        detail: `Current version: ${autoUpdater.currentVersion.version}`,
+        buttons: ["OK"],
+      });
+    }
+    manualCheckInProgress = false;
   });
 
   autoUpdater.on("download-progress", (progress) => {
@@ -69,14 +82,26 @@ export function initAutoUpdater(win: BrowserWindow) {
 
   autoUpdater.on("error", (err) => {
     sendStatus("error", err.message);
+
+    if (manualCheckInProgress && mainWindow && !mainWindow.isDestroyed()) {
+      dialog.showMessageBox(mainWindow, {
+        type: "error",
+        title: "Update Error",
+        message: "Failed to check for updates.",
+        detail: err.message,
+        buttons: ["OK"],
+      });
+    }
+    manualCheckInProgress = false;
   });
 
   // IPC handlers
   ipcMain.handle(IPC.APP.CHECK_FOR_UPDATES, async () => {
+    manualCheckInProgress = true;
     try {
       await autoUpdater.checkForUpdates();
     } catch {
-      // silent — may fail without internet
+      manualCheckInProgress = false;
     }
   });
 
@@ -84,7 +109,7 @@ export function initAutoUpdater(win: BrowserWindow) {
     return autoUpdater.currentVersion.version;
   });
 
-  // Check on startup (after a delay)
+  // Check on startup (after a delay) — silent, no dialog if up-to-date
   setTimeout(() => {
     autoUpdater.checkForUpdates().catch(() => {});
   }, 10000);
