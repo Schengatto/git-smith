@@ -342,6 +342,12 @@ const electronAPI = {
     getVersion: (): Promise<string> =>
       ipcRenderer.invoke(IPC.APP.GET_VERSION),
   },
+  stats: {
+    getLeaderboard: (timeframe: import("../shared/stats-types").Timeframe): Promise<import("../shared/stats-types").LeaderboardEntry[]> =>
+      ipcRenderer.invoke(IPC.STATS.LEADERBOARD, timeframe),
+    getAuthorDetail: (email: string, timeframe: import("../shared/stats-types").Timeframe): Promise<import("../shared/stats-types").AuthorDetail> =>
+      ipcRenderer.invoke(IPC.STATS.AUTHOR_DETAIL, email, timeframe),
+  },
   on: {
     commandLog: (callback: (entry: CommandLogEntry) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, entry: CommandLogEntry) =>
