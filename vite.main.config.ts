@@ -7,7 +7,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ["node-pty", "electron-updater"],
+      external: ["node-pty"],
       output: {
         entryFileNames: "main.js",
       },
