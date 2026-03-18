@@ -68,8 +68,19 @@ export class GitService {
     }
   }
 
-  /** ID of the currently running command (for associating output handler lines) */
+  /** ID of the currently running tracked command (for associating output handler lines).
+   *  Only set for mutation commands (push, pull, commit, etc.) to avoid flooding the
+   *  renderer with output from read-only commands like git log, git status, git diff. */
   private _currentRunId: string | null = null;
+
+  /** Command prefixes whose stdout/stderr should be captured and sent to the operation log dialog.
+   *  Read-only commands (git log, git diff, git status, etc.) are excluded to avoid
+   *  flooding the renderer with output during background refreshes. */
+  private static readonly TRACKED_PREFIXES = [
+    "git push", "git pull", "git fetch", "git commit", "git rebase",
+    "git merge", "git stash", "git reset", "git checkout", "git clone",
+    "git cherry-pick", "git revert", "git apply", "git clean",
+  ];
 
   /**
    * Intercept child_process.spawn to capture git child processes.
@@ -106,15 +117,20 @@ export class GitService {
   private setupOutputHandler() {
     if (!this.git) return;
     this.git.outputHandler((_command, stdout, stderr) => {
+      // Capture runId at command-start time to avoid attributing output to the wrong command
+      // when concurrent run() calls overwrite _currentRunId
+      const runId = this._currentRunId;
+      if (!runId) return; // Skip output for non-tracked (read-only) commands
+
       const bindStream = (stream: NodeJS.ReadableStream, name: "stdout" | "stderr") => {
         stream.on("data", (data: Buffer) => {
-          const id = this._currentRunId;
-          if (!id) return;
+          // Verify this command is still the active tracked one
+          if (this._currentRunId !== runId) return;
           const text = data.toString("utf-8");
           // Split into lines and emit each non-empty line
           for (const line of text.split(/\r?\n/)) {
             if (line.length > 0) {
-              this.emitCommandOutput({ id, stream: name, text: line });
+              this.emitCommandOutput({ id: runId, stream: name, text: line });
             }
           }
         });
@@ -130,7 +146,10 @@ export class GitService {
     fn: () => Promise<T>
   ): Promise<T> {
     const entry = this.logCommand(description, args);
-    this._currentRunId = entry.id;
+    // Only capture stdout/stderr for mutation commands to avoid flooding the
+    // renderer with output from read-only commands (git log, git status, etc.)
+    const tracked = GitService.TRACKED_PREFIXES.some(p => description.startsWith(p));
+    if (tracked) this._currentRunId = entry.id;
     this.emitCommandLog(entry);
     const start = Date.now();
     try {
@@ -146,7 +165,7 @@ export class GitService {
       this.emitCommandLog(entry);
       throw err;
     } finally {
-      this._currentRunId = null;
+      if (tracked) this._currentRunId = null;
     }
   }
 

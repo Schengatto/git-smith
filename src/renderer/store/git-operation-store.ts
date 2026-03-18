@@ -101,6 +101,10 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
         return { entries: updated };
       });
     } else if (state.running) {
+      // Reject finalized entries (with exitCode) that arrive as "new" — these are
+      // late-arriving updates from a previous operation whose entries were cleared
+      // by start(). A genuinely new entry never has exitCode on first emission.
+      if (entry.exitCode !== undefined) return;
       set((s) => ({ entries: [...s.entries, entry] }));
     }
   },

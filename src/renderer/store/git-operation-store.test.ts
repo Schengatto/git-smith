@@ -81,6 +81,30 @@ describe("Git Operation Store", () => {
     expect(useGitOperationStore.getState().entries).toHaveLength(0);
   });
 
+  it("addEntry() rejects new entries that are not running", () => {
+    useGitOperationStore.getState().start("Push");
+    useGitOperationStore.getState().finish();
+    // After finish, running=false — new entries should be rejected
+    useGitOperationStore.getState().addEntry(makeEntry("cmd-new"));
+    expect(useGitOperationStore.getState().entries).toHaveLength(0);
+  });
+
+  it("addEntry() rejects late-arriving finalized entries from previous operation", () => {
+    // Simulate: Commit operation creates entry cmd-1
+    useGitOperationStore.getState().start("Commit");
+    useGitOperationStore.getState().addEntry(makeEntry("cmd-1"));
+    useGitOperationStore.getState().finish();
+
+    // Push operation starts — clears entries
+    useGitOperationStore.getState().start("Push");
+    expect(useGitOperationStore.getState().entries).toHaveLength(0);
+
+    // Late-arriving finalized commit entry (with exitCode) arrives via IPC
+    // This should NOT be added as a new entry to the push operation
+    useGitOperationStore.getState().addEntry(makeEntry("cmd-1", 0));
+    expect(useGitOperationStore.getState().entries).toHaveLength(0);
+  });
+
   it("finish() with autoClose=true auto-closes after 1.5s", () => {
     useGitOperationStore.getState().start("Push");
     useGitOperationStore.getState().finish();
