@@ -23,6 +23,10 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 let mainWindow: BrowserWindow | null = null;
 let autoFetchTimer: ReturnType<typeof setInterval> | null = null;
 
+export function getMainWindow(): BrowserWindow | null {
+  return mainWindow;
+}
+
 function createWindow() {
   const bounds = getWindowBounds();
 
