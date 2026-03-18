@@ -224,6 +224,12 @@ describe("CommitInfoWindow", () => {
     expect(screen.queryAllByText(/Committer/)).toHaveLength(0);
   });
 
+  it("renders without overlay backdrop in window mode", () => {
+    render(<CommitInfoWindow open={true} onClose={vi.fn()} commitHash="abc123def456789012345678901234567890abcd" mode="window" />);
+    const container = document.querySelector('[style*="position: fixed"]');
+    expect(container).toBeNull();
+  });
+
   it("shows committer when different from author", async () => {
     const differentCommitter = {
       ...mockFullInfo,

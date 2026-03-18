@@ -11,6 +11,7 @@ interface Props {
   onClose: () => void;
   commitHash: string;
   onNavigateToCommit?: (hash: string) => void;
+  mode?: "overlay" | "window";
 }
 
 type BottomTab = "diff" | "file-tree";
@@ -36,6 +37,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
   onClose,
   commitHash,
   onNavigateToCommit,
+  mode = "overlay",
 }) => {
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
   const [files, setFiles] = useState<CommitFileInfo[]>([]);
@@ -103,9 +105,9 @@ export const CommitInfoWindow: React.FC<Props> = ({
 
   if (!open) return null;
 
-  return (
-    <div
-      style={{
+  const outerStyle: React.CSSProperties = mode === "window"
+    ? { width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "var(--surface-1)" }
+    : {
         position: "fixed",
         inset: 0,
         zIndex: 100,
@@ -115,26 +117,32 @@ export const CommitInfoWindow: React.FC<Props> = ({
         background: "rgba(0,0,0,0.5)",
         backdropFilter: "blur(2px)",
         animation: "ciw-fade-in 0.12s ease-out",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      };
+
+  const innerStyle: React.CSSProperties = mode === "window"
+    ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
+    : {
+        width: 920,
+        maxWidth: "94vw",
+        height: "88vh",
+        maxHeight: "88vh",
+        borderRadius: 12,
+        background: "var(--surface-1)",
+        border: "1px solid var(--border)",
+        boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
+        animation: "ciw-modal-in 0.15s ease-out",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      };
+
+  return (
+    <div
+      style={outerStyle}
+      onClick={mode === "overlay" ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}
     >
       <div
-        style={{
-          width: 920,
-          maxWidth: "94vw",
-          height: "88vh",
-          maxHeight: "88vh",
-          borderRadius: 12,
-          background: "var(--surface-1)",
-          border: "1px solid var(--border)",
-          boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
-          animation: "ciw-modal-in 0.15s ease-out",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        style={innerStyle}
       >
         {/* Title bar */}
         <div
