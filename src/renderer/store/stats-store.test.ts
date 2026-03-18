@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { LeaderboardEntry, AuthorDetail, Timeframe } from "../../shared/stats-types";
+import type { LeaderboardEntry, AuthorDetail } from "../../shared/stats-types";
 
 const mockGetLeaderboard = vi.fn();
 const mockGetAuthorDetail = vi.fn();

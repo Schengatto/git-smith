@@ -44,9 +44,6 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   const cellGap = 3;
   const labelW = 28;
 
-  // Hourly row dimensions
-  const hourlyRowW = labelW + 24 * (cellSize + cellGap) - cellGap;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Hourly distribution */}
