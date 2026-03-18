@@ -119,7 +119,7 @@ export const ChangelogDialog: React.FC<Props> = ({
       <div
         style={{
           ...(isWindow
-            ? { flex: 1, display: "flex", flexDirection: "column" }
+            ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
             : {
                 background: "var(--surface-0)",
                 borderRadius: 8,
@@ -204,7 +204,7 @@ export const ChangelogDialog: React.FC<Props> = ({
         </div>
 
         {/* Content area */}
-        <div style={{ flex: 1, overflowY: "auto", padding: 16, fontSize: 13, lineHeight: 1.6 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 16, fontSize: 13, lineHeight: 1.6 }}>
           {error && (
             <div style={{ color: "var(--red)", marginBottom: 12 }}>{error}</div>
           )}
