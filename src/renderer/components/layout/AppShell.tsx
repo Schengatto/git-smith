@@ -19,6 +19,7 @@ import { CommitDetailsPanel } from "../details/CommitDetailsPanel";
 import { CommitInfoPanel } from "../details/CommitInfoPanel";
 import { CommandLogPanel } from "../command-log/CommandLogPanel";
 import { ConsolePanel } from "../console/ConsolePanel";
+import { StatsPanel } from "../stats/StatsPanel";
 import { CloneDialog } from "../dialogs/CloneDialog";
 import { ScanDialog } from "../dialogs/ScanDialog";
 import { openDialogWindow } from "../../utils/open-dialog";
@@ -34,6 +35,7 @@ const components: Record<string, React.FC<IDockviewPanelProps>> = {
   details: () => <CommitDetailsPanel />,
   commandLog: () => <CommandLogPanel />,
   console: () => <ConsolePanel />,
+  stats: () => <StatsPanel />,
 };
 
 export const AppShell: React.FC = () => {
@@ -168,6 +170,22 @@ export const AppShell: React.FC = () => {
           }
         }
 
+        // Migrate: add stats panel if missing from saved layout
+        if (!event.api.getPanel("stats")) {
+          const detailsPanel = event.api.getPanel("details");
+          const consolePanel = event.api.getPanel("console");
+          const commandLogPanel = event.api.getPanel("commandLog");
+          const referencePanel = consolePanel ?? commandLogPanel ?? detailsPanel;
+          if (referencePanel) {
+            event.api.addPanel({
+              id: "stats",
+              component: "stats",
+              title: "Author Statistics",
+              position: { referencePanel: referencePanel, direction: "within" },
+            });
+          }
+        }
+
         // Subscribe to layout changes for persistence
         event.api.onDidLayoutChange(() => saveLayout());
         return;
@@ -215,6 +233,13 @@ export const AppShell: React.FC = () => {
       id: "console",
       component: "console",
       title: "Console",
+      position: { referencePanel: detailsPanel, direction: "within" },
+    });
+
+    event.api.addPanel({
+      id: "stats",
+      component: "stats",
+      title: "Author Statistics",
       position: { referencePanel: detailsPanel, direction: "within" },
     });
 
