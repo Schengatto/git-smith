@@ -27,6 +27,7 @@ import { AboutDialog } from "../dialogs/AboutDialog";
 import { StaleBranchesDialog } from "../dialogs/StaleBranchesDialog";
 import { GitOperationLogDialog } from "../dialogs/GitOperationLogDialog";
 import { useGitOperationStore } from "../../store/git-operation-store";
+import { ConflictBanner } from "./ConflictBanner";
 
 const components: Record<string, React.FC<IDockviewPanelProps>> = {
   sidebar: () => <Sidebar />,
@@ -40,6 +41,7 @@ const components: Record<string, React.FC<IDockviewPanelProps>> = {
 
 export const AppShell: React.FC = () => {
   const { repo, loadRecentRepos, openRepoDialog, initRepo } = useRepoStore();
+  const status = useRepoStore((s) => s.status);
   const { addEntry } = useCommandLogStore();
   const {
     theme,
@@ -312,6 +314,7 @@ export const AppShell: React.FC = () => {
         onResetLayout={resetLayout}
       />
       {repo && <Toolbar />}
+      {repo && status && <ConflictBanner status={status} />}
       <div className="flex-1 overflow-hidden">
         {repo && layoutLoaded ? (
           <DockviewReact
