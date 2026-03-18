@@ -1,4 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
+import started from "electron-squirrel-startup";
+if (started) app.quit();
+
 import path from "path";
 import { registerAllHandlers } from "./ipc/index";
 import { killTerminal } from "./ipc/terminal.ipc";

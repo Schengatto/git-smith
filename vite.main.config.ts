@@ -7,7 +7,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ["node-pty", "@modelcontextprotocol/sdk", "zod"],
+      external: ["node-pty", "@modelcontextprotocol/sdk", "zod", "electron-updater", "electron-squirrel-startup"],
       output: {
         entryFileNames: "main.js",
       },
