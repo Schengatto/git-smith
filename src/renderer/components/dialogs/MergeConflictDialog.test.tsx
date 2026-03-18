@@ -41,6 +41,7 @@ const resolveMock = vi.fn().mockResolvedValue(undefined);
 const saveMergedMock = vi.fn().mockResolvedValue(undefined);
 const launchMergeToolMock = vi.fn().mockResolvedValue({ exitCode: 0, mergedContent: "" });
 const settingsGetMock = vi.fn().mockResolvedValue({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
+const suggestConflictResolutionMock = vi.fn().mockResolvedValue("resolved by AI");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -54,6 +55,9 @@ beforeEach(() => {
     },
     settings: {
       get: settingsGetMock,
+    },
+    mcp: {
+      suggestConflictResolution: suggestConflictResolutionMock,
     },
   };
 });
@@ -431,5 +435,152 @@ describe("computeLineDiff", () => {
       { type: "same", line: "d" },
       { type: "added", line: "e" },
     ]);
+  });
+
+  it("handles trailing newlines without phantom empty lines", () => {
+    const result = computeLineDiff("a\nb\n", "a\nb\n");
+    expect(result).toEqual([
+      { type: "same", line: "a" },
+      { type: "same", line: "b" },
+    ]);
+  });
+});
+
+describe("MergeConflictDialog AI conflict resolution", () => {
+  it("does not show Resolve with AI button when AI is not configured", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "none", aiApiKey: "",
+    });
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept all LOCAL")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Resolve with AI")).not.toBeInTheDocument();
+  });
+
+  it("shows Resolve with AI button when AI is configured", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "anthropic", aiApiKey: "sk-test-key",
+    });
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Resolve with AI")).toBeInTheDocument();
+    });
+  });
+
+  it("calls suggestConflictResolution and shows overlay on click", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "openai", aiApiKey: "sk-test",
+    });
+    suggestConflictResolutionMock.mockResolvedValue("resolved content by AI");
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Resolve with AI")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Resolve with AI"));
+
+    await waitFor(() => {
+      expect(suggestConflictResolutionMock).toHaveBeenCalledWith("CHANGELOG.md");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("AI Suggestion")).toBeInTheDocument();
+      expect(screen.getByText("Apply")).toBeInTheDocument();
+      expect(screen.getByText("Dismiss")).toBeInTheDocument();
+    });
+  });
+
+  it("dismisses overlay without applying changes", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "anthropic", aiApiKey: "sk-test",
+    });
+    suggestConflictResolutionMock.mockResolvedValue("ai resolved");
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getByText("Resolve with AI")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Resolve with AI"));
+    await waitFor(() => expect(screen.getByText("AI Suggestion")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText("Dismiss"));
+
+    await waitFor(() => {
+      expect(screen.queryByText("AI Suggestion")).not.toBeInTheDocument();
+    });
+  });
+
+  it("applies AI suggestion to center textarea on Apply", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "anthropic", aiApiKey: "sk-test",
+    });
+    suggestConflictResolutionMock.mockResolvedValue("clean resolved content");
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getByText("Resolve with AI")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Resolve with AI"));
+    await waitFor(() => expect(screen.getByText("Apply")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText("Apply"));
+
+    await waitFor(() => {
+      expect(screen.queryByText("AI Suggestion")).not.toBeInTheDocument();
+      expect(screen.getByText("No conflicts remaining")).toBeInTheDocument();
+    });
+  });
+
+  it("discards stale AI result when file selection changes mid-flight", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "anthropic", aiApiKey: "sk-test",
+    });
+    let resolveAi!: (value: string) => void;
+    suggestConflictResolutionMock.mockReturnValue(
+      new Promise<string>((resolve) => { resolveAi = resolve; })
+    );
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getByText("Resolve with AI")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText("Resolve with AI"));
+
+    fireEvent.click(screen.getByText("v.info"));
+
+    resolveAi("stale suggestion for wrong file");
+
+    await waitFor(() => {
+      expect(screen.queryByText("AI Suggestion")).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows error when AI call fails", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "anthropic", aiApiKey: "sk-test",
+    });
+    suggestConflictResolutionMock.mockRejectedValue(new Error("API rate limited"));
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getByText("Resolve with AI")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Resolve with AI"));
+
+    await waitFor(() => {
+      expect(screen.getByText("API rate limited")).toBeInTheDocument();
+    });
   });
 });

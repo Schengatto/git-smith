@@ -3,9 +3,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockCheckout = vi.fn().mockResolvedValue(undefined);
 const mockRaw = vi.fn().mockResolvedValue("");
 const mockGetRemotes = vi.fn().mockResolvedValue([{ name: "origin" }, { name: "upstream" }]);
+const mockMerge = vi.fn().mockResolvedValue({ result: "success" });
 
 vi.mock("simple-git", () => {
-  const fn = () => ({ checkout: mockCheckout, raw: mockRaw, getRemotes: mockGetRemotes });
+  const fn = () => ({ checkout: mockCheckout, raw: mockRaw, getRemotes: mockGetRemotes, merge: mockMerge });
   fn.default = fn;
   return { default: fn };
 });
@@ -28,12 +29,18 @@ describe("GitService.checkout", () => {
       checkout: mockCheckout,
       raw: mockRaw,
       getRemotes: mockGetRemotes,
+      merge: mockMerge,
     };
   });
 
   it("checks out a local branch as-is", async () => {
     await service.checkout("develop");
     expect(mockCheckout).toHaveBeenCalledWith("develop");
+  });
+
+  it("does not fast-forward for local branch checkout", async () => {
+    await service.checkout("develop");
+    expect(mockMerge).not.toHaveBeenCalled();
   });
 
   it("strips remotes/ prefix for remote refs", async () => {
@@ -44,6 +51,23 @@ describe("GitService.checkout", () => {
   it("strips origin/ prefix for remote refs (parseRefs format)", async () => {
     await service.checkout("origin/feature");
     expect(mockCheckout).toHaveBeenCalledWith("feature");
+  });
+
+  it("fast-forwards local branch to remote after checkout from remote ref", async () => {
+    await service.checkout("origin/feature");
+    expect(mockMerge).toHaveBeenCalledWith(["origin/feature", "--ff-only"]);
+  });
+
+  it("fast-forwards after checkout from remotes/ format", async () => {
+    await service.checkout("remotes/origin/feature");
+    expect(mockMerge).toHaveBeenCalledWith(["remotes/origin/feature", "--ff-only"]);
+  });
+
+  it("does not throw when fast-forward fails (diverged history)", async () => {
+    mockMerge.mockRejectedValueOnce(new Error("Not possible to fast-forward"));
+    await expect(service.checkout("origin/feature")).resolves.toBeUndefined();
+    expect(mockCheckout).toHaveBeenCalledWith("feature");
+    expect(mockMerge).toHaveBeenCalledWith(["origin/feature", "--ff-only"]);
   });
 
   it("strips upstream/ prefix for remote refs", async () => {
@@ -60,6 +84,11 @@ describe("GitService.checkout", () => {
     await service.checkout("feature/my-thing");
     expect(mockCheckout).toHaveBeenCalledWith("feature/my-thing");
   });
+
+  it("does not fast-forward for local branch with slashes", async () => {
+    await service.checkout("feature/my-thing");
+    expect(mockMerge).not.toHaveBeenCalled();
+  });
 });
 
 describe("GitService.checkoutWithOptions", () => {
@@ -73,11 +102,17 @@ describe("GitService.checkoutWithOptions", () => {
       checkout: mockCheckout,
       raw: mockRaw,
       getRemotes: mockGetRemotes,
+      merge: mockMerge,
     };
   });
 
   it("strips origin/ prefix with merge option", async () => {
     await service.checkoutWithOptions("origin/develop", { merge: true });
     expect(mockRaw).toHaveBeenCalledWith(["checkout", "develop", "--merge"]);
+  });
+
+  it("fast-forwards local branch to remote after checkoutWithOptions", async () => {
+    await service.checkoutWithOptions("origin/develop", { merge: true });
+    expect(mockMerge).toHaveBeenCalledWith(["origin/develop", "--ff-only"]);
   });
 });

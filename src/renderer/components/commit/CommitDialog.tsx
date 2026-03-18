@@ -610,6 +610,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               >
                 <IconDoubleArrowUp size={14} />
               </StageIconButton>
+              <div style={{ width: 1, height: 18, background: "var(--border-subtle)", margin: "0 3px" }} />
+              <StageIconButton
+                title="Refresh file list"
+                disabled={false}
+                onClick={loadFiles}
+              >
+                <IconRefresh size={14} />
+              </StageIconButton>
             </div>
 
             {/* Staged section */}
@@ -2238,6 +2246,13 @@ const IconGitignore: React.FC<{ size?: number }> = ({ size = 14 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+  </svg>
+);
+
+const IconRefresh: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10" />
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
   </svg>
 );
 

@@ -180,4 +180,11 @@ export const IPC = {
     TERMINAL_DATA: "terminal:data",
     TERMINAL_EXIT: "terminal:exit",
   },
+  DIALOG: {
+    OPEN: "dialog:open",
+    CLOSE: "dialog:close",
+    GET_INIT_DATA: "dialog:get-init-data",
+    RESULT: "dialog:result",
+    ON_RESULT: "dialog:on-result",
+  },
 } as const;

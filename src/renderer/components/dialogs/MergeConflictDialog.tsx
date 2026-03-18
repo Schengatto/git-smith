@@ -38,6 +38,10 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const [mergeTool, setMergeTool] = useState<MergeToolSettings>({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
   const [launchingTool, setLaunchingTool] = useState(false);
   const [useInternalEditor, setUseInternalEditor] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<{ suggestion: string; baseText: string } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiConfigured, setAiConfigured] = useState(false);
+  const aiRequestFileRef = useRef<string | null>(null);
 
   const leftRef = useRef<HTMLTextAreaElement>(null);
   const centerRef = useRef<HTMLTextAreaElement>(null);
@@ -79,6 +83,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     setOursText(""); setTheirsText("");
     setResolvedFiles(new Set()); setError(null); setConflictCount(0);
     setLoading(true); setLaunchingTool(false); setUseInternalEditor(false);
+    setAiSuggestion(null); setAiLoading(false);
     window.electronAPI.settings.get().then((s) => {
       const settings = s as unknown as MergeToolSettings;
       setMergeTool({
@@ -86,12 +91,21 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
         mergeToolPath: settings.mergeToolPath || "",
         mergeToolArgs: settings.mergeToolArgs || "",
       });
+      const aiSettings = s as unknown as { aiProvider?: string; aiApiKey?: string };
+      setAiConfigured(!!aiSettings.aiProvider && aiSettings.aiProvider !== "none" && !!aiSettings.aiApiKey);
     }).catch(() => { /* use defaults */ });
     window.electronAPI.conflict.list()
       .then((cf) => { setFiles(cf); if (cf.length > 0) setSelectedFile(cf[0].path); })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   }, [open]);
+
+  // Reset AI state when file selection changes
+  useEffect(() => {
+    setAiSuggestion(null);
+    setAiLoading(false);
+    aiRequestFileRef.current = null;
+  }, [selectedFile]);
 
   // Load file content — set textarea values directly via refs
   // When external tool is configured and not using internal editor, auto-launch it
@@ -133,6 +147,27 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const resolveAllAs = useCallback((pick: "ours" | "theirs") => {
     setCenterText(resolveAllConflicts(getCenterText(), pick));
   }, [getCenterText, setCenterText]);
+
+  const handleResolveWithAi = useCallback(async () => {
+    if (!selectedFile || aiLoading) return;
+    setAiLoading(true);
+    setError(null);
+    aiRequestFileRef.current = selectedFile;
+    try {
+      const suggestion = await window.electronAPI.mcp.suggestConflictResolution(selectedFile);
+      if (aiRequestFileRef.current === selectedFile) {
+        setAiSuggestion({ suggestion, baseText: getCenterText() });
+      }
+    } catch (e: unknown) {
+      if (aiRequestFileRef.current === selectedFile) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    } finally {
+      if (aiRequestFileRef.current === selectedFile) {
+        setAiLoading(false);
+      }
+    }
+  }, [selectedFile, aiLoading, getCenterText]);
 
   // Navigate to next/prev conflict in center textarea
   const scrollToConflict = useCallback((direction: "next" | "prev") => {
@@ -294,6 +329,34 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                         </button>
                       </>
                     )}
+                    {aiConfigured && (
+                      <>
+                        <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
+                        <button
+                          onClick={handleResolveWithAi}
+                          disabled={aiLoading || resolvedFiles.has(selectedFile!)}
+                          style={{
+                            padding: "2px 10px", fontSize: 10, fontWeight: 600,
+                            border: "1px solid var(--mauve)60", borderRadius: 3,
+                            cursor: aiLoading || resolvedFiles.has(selectedFile!) ? "not-allowed" : "pointer",
+                            background: "var(--mauve)15", color: "var(--mauve)",
+                            opacity: aiLoading || resolvedFiles.has(selectedFile!) ? 0.5 : 1,
+                            display: "flex", alignItems: "center", gap: 4,
+                          }}
+                        >
+                          {aiLoading ? (
+                            <>
+                              <svg width="10" height="10" viewBox="0 0 24 24" style={{ animation: "spin 1s linear infinite" }}>
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+                              </svg>
+                              Resolving...
+                            </>
+                          ) : (
+                            "Resolve with AI"
+                          )}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -314,7 +377,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                 </div>
 
                 {/* 3 textareas — center is uncontrolled for performance */}
-                <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+                <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
                   <textarea
                     ref={leftRef}
                     value={oursText}
@@ -338,6 +401,15 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     onScroll={() => handleScroll("right")}
                     style={{ ...editorStyle, borderLeft: "1px solid var(--border-subtle)", background: "var(--surface-0)" }}
                   />
+                  {aiSuggestion !== null && selectedFile && (
+                    <AiSuggestionOverlay
+                      currentText={aiSuggestion.baseText}
+                      suggestion={aiSuggestion.suggestion}
+                      filePath={selectedFile}
+                      onApply={() => { setCenterText(aiSuggestion.suggestion); setAiSuggestion(null); }}
+                      onDismiss={() => setAiSuggestion(null)}
+                    />
+                  )}
                 </div>
 
                 {/* Conflict action bar — resolve first remaining conflict */}
@@ -394,6 +466,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       <style>{`
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modal-in { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
@@ -601,8 +674,8 @@ interface DiffLine {
 
 /** LCS-based line diff — returns minimal edit sequence */
 function computeLineDiff(oldText: string, newText: string): DiffLine[] {
-  const oldLines = oldText === "" ? [] : oldText.split("\n");
-  const newLines = newText === "" ? [] : newText.split("\n");
+  const oldLines = oldText ? oldText.replace(/\n$/, "").split("\n") : [];
+  const newLines = newText ? newText.replace(/\n$/, "").split("\n") : [];
   const m = oldLines.length;
   const n = newLines.length;
 
@@ -634,6 +707,80 @@ function computeLineDiff(oldText: string, newText: string): DiffLine[] {
 
   return result.reverse();
 }
+
+/* ═══════════════ AI Suggestion Overlay ═══════════════ */
+
+const AiSuggestionOverlay: React.FC<{
+  currentText: string;
+  suggestion: string;
+  filePath: string;
+  onApply: () => void;
+  onDismiss: () => void;
+}> = ({ currentText, suggestion, filePath, onApply, onDismiss }) => {
+  const diffLines = useMemo(() => computeLineDiff(currentText, suggestion), [currentText, suggestion]);
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0, zIndex: 10,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
+      display: "flex", flexDirection: "column",
+      animation: "fade-in 0.15s ease-out",
+    }}>
+      <div style={{
+        padding: "10px 16px", borderBottom: "1px solid var(--border-subtle)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "var(--surface-1)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mauve)" }}>AI Suggestion</span>
+          <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>{filePath}</span>
+        </div>
+      </div>
+
+      <div style={{
+        flex: 1, overflow: "auto", padding: "8px 0",
+        background: "var(--surface-0)",
+        fontFamily: "var(--font-mono, monospace)", fontSize: 12, lineHeight: "20px",
+      }}>
+        {diffLines.map((d, i) => (
+          <div key={i} style={{
+            padding: "0 12px 0 8px", minHeight: 20,
+            display: "flex",
+            background: d.type === "added" ? "rgba(166,227,161,0.1)"
+              : d.type === "removed" ? "rgba(243,139,168,0.1)"
+              : "transparent",
+          }}>
+            <span style={{
+              width: 40, flexShrink: 0, textAlign: "right", paddingRight: 8,
+              color: "var(--text-muted)", fontSize: 11, userSelect: "none",
+            }}>
+              {i + 1}
+            </span>
+            <span style={{
+              color: d.type === "added" ? "var(--green)"
+                : d.type === "removed" ? "var(--red)"
+                : "var(--text-primary)",
+            }}>
+              <span style={{ userSelect: "none", marginRight: 4 }}>
+                {d.type === "added" ? "+" : d.type === "removed" ? "-" : " "}
+              </span>
+              {d.line}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        padding: "10px 16px", borderTop: "1px solid var(--border-subtle)",
+        display: "flex", justifyContent: "flex-end", gap: 8,
+        background: "var(--surface-1)",
+      }}>
+        <button onClick={onDismiss} style={secondaryBtnStyle}>Dismiss</button>
+        <button onClick={onApply} style={{ ...primaryBtnStyle, background: "var(--mauve)" }}>Apply</button>
+      </div>
+    </div>
+  );
+};
 
 /* ═══════════════ Styles ═══════════════ */
 

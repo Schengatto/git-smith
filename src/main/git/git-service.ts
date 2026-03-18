@@ -652,6 +652,15 @@ export class GitService {
     const git = this.ensureRepo();
     const checkoutRef = await this.stripRemotePrefix(ref);
     await this.run("git checkout", [checkoutRef], () => git.checkout(checkoutRef));
+    // If we checked out from a remote ref and a local branch already existed,
+    // fast-forward it to match the remote so the user sees the latest commits.
+    if (ref !== checkoutRef) {
+      try {
+        await git.merge([ref, "--ff-only"]);
+      } catch {
+        // Can't fast-forward (diverged history) — stay on local branch as-is
+      }
+    }
   }
 
   async checkoutWithOptions(ref: string, options: { merge?: boolean }): Promise<void> {
@@ -660,6 +669,14 @@ export class GitService {
     const args = [checkoutRef];
     if (options.merge) args.push("--merge");
     await this.run("git checkout", args, () => git.raw(["checkout", ...args]));
+    // Fast-forward local branch to remote if checking out from a remote ref
+    if (ref !== checkoutRef) {
+      try {
+        await git.merge([ref, "--ff-only"]);
+      } catch {
+        // Can't fast-forward — stay on local branch as-is
+      }
+    }
   }
 
   async renameBranch(oldName: string, newName: string): Promise<void> {
