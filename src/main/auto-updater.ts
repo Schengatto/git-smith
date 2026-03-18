@@ -1,10 +1,12 @@
 import { autoUpdater, UpdateInfo } from "electron-updater";
-import { BrowserWindow, ipcMain, dialog } from "electron";
-
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { IPC } from "../shared/ipc-channels";
 
 let mainWindow: BrowserWindow | null = null;
 
 export function initAutoUpdater(win: BrowserWindow) {
+  if (!app.isPackaged) return;
+
   mainWindow = win;
 
   // Configure
@@ -27,6 +29,7 @@ export function initAutoUpdater(win: BrowserWindow) {
         detail: "Would you like to download it now?",
         buttons: ["Download", "Later"],
         defaultId: 0,
+        cancelId: 1,
       })
       .then(({ response }) => {
         if (response === 0) {
@@ -55,6 +58,7 @@ export function initAutoUpdater(win: BrowserWindow) {
         detail: "Restart the application to apply the update.",
         buttons: ["Restart Now", "Later"],
         defaultId: 0,
+        cancelId: 1,
       })
       .then(({ response }) => {
         if (response === 0) {
@@ -68,7 +72,7 @@ export function initAutoUpdater(win: BrowserWindow) {
   });
 
   // IPC handlers
-  ipcMain.handle("app:check-for-updates", async () => {
+  ipcMain.handle(IPC.APP.CHECK_FOR_UPDATES, async () => {
     try {
       await autoUpdater.checkForUpdates();
     } catch {
@@ -76,7 +80,7 @@ export function initAutoUpdater(win: BrowserWindow) {
     }
   });
 
-  ipcMain.handle("app:get-version", () => {
+  ipcMain.handle(IPC.APP.GET_VERSION, () => {
     return autoUpdater.currentVersion.version;
   });
 
@@ -88,6 +92,6 @@ export function initAutoUpdater(win: BrowserWindow) {
 
 function sendStatus(status: string, detail?: string) {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send("app:update-status", { status, detail });
+    mainWindow.webContents.send(IPC.APP.UPDATE_STATUS, { status, detail });
   }
 }
