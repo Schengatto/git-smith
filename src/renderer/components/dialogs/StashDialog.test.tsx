@@ -180,4 +180,10 @@ describe("StashDialog", () => {
     expect(screen.getByLabelText("Keep index")).toBeInTheDocument();
     expect(screen.getByLabelText("Include untracked")).toBeInTheDocument();
   });
+
+  it("renders without overlay backdrop in window mode", () => {
+    render(<StashDialog open={true} onClose={vi.fn()} mode="window" />);
+    const container = document.querySelector('[style*="position: fixed"]');
+    expect(container).toBeNull();
+  });
 });

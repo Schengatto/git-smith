@@ -7,6 +7,7 @@ import { runGitOperation, GitOperationCancelledError } from "../../store/git-ope
 interface Props {
   open: boolean;
   onClose: () => void;
+  mode?: "overlay" | "window";
 }
 
 type ChangedFile = {
@@ -104,7 +105,7 @@ function sortTree(nodes: TreeNode[]): TreeNode[] {
   }).map((n) => ({ ...n, children: sortTree(n.children) }));
 }
 
-export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
+export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }) => {
   const { refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -165,7 +166,11 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const afterStashAction = async () => {
-    await Promise.all([refreshStatus(), loadGraph(), loadWorkingChanges(), loadStashes()]);
+    const promises: Promise<unknown>[] = [loadWorkingChanges(), loadStashes()];
+    if (mode === "overlay") {
+      promises.push(refreshStatus(), loadGraph());
+    }
+    await Promise.all(promises);
   };
 
   const handleStashAll = async () => {
@@ -191,7 +196,11 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     try {
       await window.electronAPI.stash.drop(selectedStash);
-      await Promise.all([loadStashes(), loadGraph()]);
+      const dropPromises: Promise<unknown>[] = [loadStashes()];
+      if (mode === "overlay") {
+        dropPromises.push(loadGraph());
+      }
+      await Promise.all(dropPromises);
       setSelectedStash(null);
     } catch (err) {
       if (err instanceof GitOperationCancelledError) return;
@@ -287,27 +296,33 @@ export const StashDialog: React.FC<Props> = ({ open, onClose }) => {
     );
   };
 
-  return (
-    <div
-      style={{
+  const outerStyle: React.CSSProperties = mode === "window"
+    ? { width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "var(--surface-0)" }
+    : {
         position: "fixed", inset: 0, zIndex: 100,
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)",
         animation: "fade-in 0.12s ease-out",
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      };
+
+  const innerStyle: React.CSSProperties = mode === "window"
+    ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
+    : {
+        width: 820, height: 560,
+        borderRadius: 12, overflow: "hidden",
+        background: "var(--surface-0)",
+        border: "1px solid var(--border)",
+        boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
+        animation: "modal-in 0.15s ease-out",
+        display: "flex", flexDirection: "column",
+      };
+
+  return (
+    <div
+      style={outerStyle}
+      onClick={mode === "overlay" ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}
     >
-      <div
-        style={{
-          width: 820, height: 560,
-          borderRadius: 12, overflow: "hidden",
-          background: "var(--surface-0)",
-          border: "1px solid var(--border)",
-          boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
-          animation: "modal-in 0.15s ease-out",
-          display: "flex", flexDirection: "column",
-        }}
-      >
+      <div style={innerStyle}>
         {/* Header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
