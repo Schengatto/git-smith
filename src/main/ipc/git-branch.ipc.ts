@@ -140,6 +140,13 @@ export function registerBranchHandlers() {
   });
 
   ipcMain.handle(
+    IPC.TAG.DELETE_REMOTE,
+    async (_event, name: string, remote?: string) => {
+      await gitService.deleteRemoteTag(name, remote);
+    }
+  );
+
+  ipcMain.handle(
     IPC.TAG.PUSH,
     async (_event, name: string, remote?: string) => {
       await gitService.pushTag(name, remote);

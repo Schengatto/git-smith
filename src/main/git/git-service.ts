@@ -818,6 +818,13 @@ export class GitService {
     await this.run("git tag", ["-d", name], () => git.tag(["-d", name]));
   }
 
+  async deleteRemoteTag(name: string, remote = "origin"): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git push --delete tag", [remote, "--delete", `refs/tags/${name}`], () =>
+      git.raw(["push", remote, "--delete", `refs/tags/${name}`])
+    );
+  }
+
   async pushTag(name: string, remote = "origin"): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git push", [remote, name], () =>

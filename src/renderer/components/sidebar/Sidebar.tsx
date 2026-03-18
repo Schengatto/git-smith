@@ -112,6 +112,7 @@ export const Sidebar: React.FC = () => {
     stashes: false,
   });
   const [dialog, setDialog] = useState<DialogState>({ type: "none" });
+  const [deleteTagRemote, setDeleteTagRemote] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<CtxMenu>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -638,18 +639,25 @@ export const Sidebar: React.FC = () => {
       <ModalDialog
         open={dialog.type === "delete-tag"}
         title="Delete Tag"
-        onClose={closeDialog}
+        onClose={() => { closeDialog(); setDeleteTagRemote(false); }}
         width={380}
       >
         <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
           Are you sure you want to delete tag &quot;{dialog.type === "delete-tag" ? dialog.tag : ""}&quot;?
         </p>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 13, color: "var(--text-primary)", cursor: "pointer" }}>
+          <input type="checkbox" checked={deleteTagRemote} onChange={(e) => setDeleteTagRemote(e.target.checked)} />
+          Delete tag from remote
+        </label>
         <DialogActions
-          onCancel={closeDialog}
+          onCancel={() => { closeDialog(); setDeleteTagRemote(false); }}
           onConfirm={async () => {
             if (dialog.type !== "delete-tag") return;
             try {
               await window.electronAPI.tag.delete(dialog.tag);
+              if (deleteTagRemote) {
+                await window.electronAPI.tag.deleteRemote(dialog.tag);
+              }
               await loadGraph();
               loadData();
             } catch (err) {
@@ -657,6 +665,7 @@ export const Sidebar: React.FC = () => {
               alert(`Failed to delete tag: ${err instanceof Error ? err.message : err}`);
             }
             setDialog({ type: "none" });
+            setDeleteTagRemote(false);
           }}
           confirmLabel="Delete"
           confirmColor="var(--red)"

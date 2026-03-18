@@ -70,6 +70,7 @@ export const IPC = {
     LIST: "git:tag:list",
     CREATE: "git:tag:create",
     DELETE: "git:tag:delete",
+    DELETE_REMOTE: "git:tag:delete-remote",
     PUSH: "git:tag:push",
   },
   REMOTE: {

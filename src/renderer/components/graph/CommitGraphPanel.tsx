@@ -70,6 +70,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
+  const [deleteTagRemote, setDeleteTagRemote] = useState(false);
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
@@ -809,14 +810,23 @@ export const CommitGraphPanel: React.FC = () => {
           if (!deleteTagTarget) return;
           try {
             await window.electronAPI.tag.delete(deleteTagTarget);
+            if (deleteTagRemote) {
+              await window.electronAPI.tag.deleteRemote(deleteTagTarget);
+            }
             loadGraph();
           } catch (err) {
             alert(`Failed to delete tag: ${err instanceof Error ? err.message : err}`);
           }
           setDeleteTagTarget(null);
+          setDeleteTagRemote(false);
         }}
-        onCancel={() => setDeleteTagTarget(null)}
-      />
+        onCancel={() => { setDeleteTagTarget(null); setDeleteTagRemote(false); }}
+      >
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 13, color: "var(--text-primary)", cursor: "pointer" }}>
+          <input type="checkbox" checked={deleteTagRemote} onChange={(e) => setDeleteTagRemote(e.target.checked)} />
+          Delete tag from remote
+        </label>
+      </ConfirmDeleteDialog>
     </div>
   );
 };
@@ -991,9 +1001,11 @@ const ConfirmDeleteDialog: React.FC<{
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
-}> = ({ open, title, message, onConfirm, onCancel }) => (
+  children?: React.ReactNode;
+}> = ({ open, title, message, onConfirm, onCancel, children }) => (
   <ModalDialog open={open} title={title} onClose={onCancel} width={380}>
     <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>{message}</p>
+    {children}
     <DialogActions
       onCancel={onCancel}
       onConfirm={onConfirm}

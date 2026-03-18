@@ -161,6 +161,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.TAG.CREATE, name, commitHash, message),
     delete: (name: string): Promise<void> =>
       ipcRenderer.invoke(IPC.TAG.DELETE, name),
+    deleteRemote: (name: string, remote?: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.TAG.DELETE_REMOTE, name, remote),
     push: (name: string, remote?: string): Promise<void> =>
       ipcRenderer.invoke(IPC.TAG.PUSH, name, remote),
   },
