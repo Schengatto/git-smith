@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/Schengatto/git-expansion/compare/v0.3.0...v0.3.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* bundle electron-squirrel-startup instead of externalizing it ([7e21c72](https://github.com/Schengatto/git-expansion/commit/7e21c72440ba448fc634776d0a01cb8b2c29224a))
+
+
+### CI/CD
+
+* remove unnecessary installer build from CI workflow ([8f2f4c8](https://github.com/Schengatto/git-expansion/commit/8f2f4c8d853cd207dea4f762e23cfcf6474834ba))
+
 ## 0.3.0 (2026-03-18)
 
 
