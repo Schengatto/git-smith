@@ -1875,8 +1875,21 @@ export class GitService {
     });
   }
 
+  private validateRef(ref: string): void {
+    if (!ref || ref.startsWith("-")) {
+      throw new Error(`Invalid git ref: ${ref}`);
+    }
+    for (let i = 0; i < ref.length; i++) {
+      const code = ref.charCodeAt(i);
+      if (code <= 0x1f || code === 0x7f) {
+        throw new Error(`Invalid git ref: ${ref}`);
+      }
+    }
+  }
+
   async getTagsBefore(hash: string): Promise<string[]> {
     if (!this.git) throw new Error("No repo open");
+    this.validateRef(hash);
     const result = await this.git.raw([
       "tag", "--merged", hash, "--sort=-creatordate",
     ]);
@@ -1891,6 +1904,8 @@ export class GitService {
     to: string,
   ): Promise<ChangelogEntry[]> {
     if (!this.git) throw new Error("No repo open");
+    this.validateRef(from);
+    this.validateRef(to);
     const FIELD_SEP = "\x00";
     const RECORD_SEP = "\x1e";
     const format = ["%H", "%h", "%s", "%b", "%an", "%aI"].join(FIELD_SEP) + RECORD_SEP;

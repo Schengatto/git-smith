@@ -167,12 +167,16 @@ export const ChangelogDialog: React.FC<Props> = ({
               padding: "4px 8px",
               fontSize: 13,
               color: "var(--text-muted)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              minWidth: 0,
+              flex: 1,
             }}
           >
             {commitHash.slice(0, 7)}
             {commitSubject ? ` — ${commitSubject}` : ""}
           </span>
-          <div style={{ flex: 1 }} />
           <button
             onClick={handleGenerate}
             disabled={!effectiveBase || loading}
@@ -182,6 +186,7 @@ export const ChangelogDialog: React.FC<Props> = ({
               border: "none",
               borderRadius: 4,
               padding: "5px 14px",
+              flexShrink: 0,
               fontSize: 13,
               fontWeight: 600,
               cursor: effectiveBase && !loading ? "pointer" : "not-allowed",

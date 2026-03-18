@@ -126,4 +126,17 @@ describe("parseChangelog", () => {
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
     expect(result.groups[0].label).toBe("Breaking Changes");
   });
+
+  it("does not duplicate breaking commits in their type group", () => {
+    const entries: ChangelogEntry[] = [
+      makeEntry({ subject: "feat!: remove legacy API" }),
+      makeEntry({ subject: "feat: add new API" }),
+    ];
+    const result = parseChangelog(entries, "v1.0.0", "abc1234");
+    const breaking = result.groups.find((g) => g.label === "Breaking Changes");
+    const feats = result.groups.find((g) => g.label === "Features");
+    expect(breaking!.entries).toHaveLength(1);
+    expect(feats!.entries).toHaveLength(1);
+    expect(feats!.entries[0].description).toBe("add new API");
+  });
 });

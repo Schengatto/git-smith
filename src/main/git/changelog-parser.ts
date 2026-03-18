@@ -37,12 +37,12 @@ export function parseChangelog(
 
     if (isBreaking) {
       breakingEntries.push(entry);
+    } else {
+      const groupLabel = findGroupLabel(parsed.type);
+      const existing = grouped.get(groupLabel) || [];
+      existing.push(entry);
+      grouped.set(groupLabel, existing);
     }
-
-    const groupLabel = findGroupLabel(parsed.type);
-    const existing = grouped.get(groupLabel) || [];
-    existing.push(entry);
-    grouped.set(groupLabel, existing);
   }
 
   const groups: ChangelogGroup[] = [];
