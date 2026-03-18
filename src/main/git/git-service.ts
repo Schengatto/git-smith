@@ -1624,6 +1624,7 @@ export class GitService {
 
       const output = await git.raw([
         "log",
+        "--all",
         "--format=COMMIT_START%n%H%n%an%n%ae%n%aI",
         "--shortstat",
         ...sinceArg,
@@ -1733,6 +1734,7 @@ export class GitService {
 
       const output = await git.raw([
         "log",
+        "--all",
         `--author=^${email}$`,
         "--format=COMMIT_START%n%an%n%aI%n%ae",
         "--numstat",
