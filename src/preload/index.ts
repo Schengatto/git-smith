@@ -16,6 +16,7 @@ import type {
   RebaseOptions,
   ConflictFile,
   ConflictFileContent,
+  ChangelogData,
 } from "../shared/git-types";
 
 const electronAPI = {
@@ -420,6 +421,13 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.MCP.GENERATE_PR_DESCRIPTION, commitHashes),
     reviewCommit: (hash: string): Promise<string> =>
       ipcRenderer.invoke(IPC.MCP.REVIEW_COMMIT, hash),
+  },
+
+  changelog: {
+    getTagsBefore: (hash: string): Promise<string[]> =>
+      ipcRenderer.invoke(IPC.CHANGELOG.TAGS_BEFORE, hash),
+    generate: (from: string, to: string): Promise<ChangelogData> =>
+      ipcRenderer.invoke(IPC.CHANGELOG.GENERATE, from, to),
   },
 };
 
