@@ -8,14 +8,20 @@ export interface RepoInfo {
   headCommit: string;
 }
 
+export type GitOperation = 'merge' | 'rebase' | 'cherry-pick' | null;
+
 export interface GitStatus {
   staged: FileStatus[];
   unstaged: FileStatus[];
   untracked: string[];
-  /** True when a merge is in progress (MERGE_HEAD exists) */
+  /** @deprecated Use operationInProgress === 'merge' instead */
   mergeInProgress: boolean;
   /** Files with unresolved merge conflicts */
   conflicted: ConflictFile[];
+  /** Which git operation is currently in progress */
+  operationInProgress: GitOperation;
+  /** Rebase step progress (only set when operationInProgress === 'rebase') */
+  rebaseStep?: { current: number; total: number };
 }
 
 export interface FileStatus {

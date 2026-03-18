@@ -32,14 +32,14 @@ describe("McpAiClient", () => {
   it("throws when provider is none", async () => {
     vi.mocked(getSettings).mockReturnValue({ ...mockSettings, aiProvider: "none" } as never);
     await expect(
-      client.generateCommitMessage("diff", { staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [] })
+      client.generateCommitMessage("diff", { staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null })
     ).rejects.toThrow("No AI provider configured");
   });
 
   it("throws when API key is missing", async () => {
     vi.mocked(getSettings).mockReturnValue({ ...mockSettings, aiApiKey: "" } as never);
     await expect(
-      client.generateCommitMessage("diff", { staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [] })
+      client.generateCommitMessage("diff", { staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null })
     ).rejects.toThrow("API key not configured");
   });
 
@@ -57,6 +57,7 @@ describe("McpAiClient", () => {
       untracked: [],
       mergeInProgress: false,
       conflicted: [],
+      operationInProgress: null,
     });
 
     expect(result).toBe("feat: add feature");
@@ -85,7 +86,7 @@ describe("McpAiClient", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     const result = await client.generateCommitMessage("diff", {
-      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
     });
 
     expect(result).toBe("fix: bug");
@@ -114,7 +115,7 @@ describe("McpAiClient", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     await client.generateCommitMessage("diff", {
-      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -136,7 +137,7 @@ describe("McpAiClient", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     const result = await client.generateCommitMessage("diff", {
-      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
     });
 
     expect(result).toBe("feat: new thing");
@@ -160,7 +161,7 @@ describe("McpAiClient", () => {
 
     await expect(
       client.generateCommitMessage("diff", {
-        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
       })
     ).rejects.toThrow("Gemini API error (403)");
   });
@@ -175,7 +176,7 @@ describe("McpAiClient", () => {
 
     await expect(
       client.generateCommitMessage("diff", {
-        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [],
+        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
       })
     ).rejects.toThrow("Anthropic API error (401)");
   });

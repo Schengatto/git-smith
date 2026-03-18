@@ -302,6 +302,7 @@ export class GitService {
         untracked: status.not_added,
         mergeInProgress,
         conflicted,
+        operationInProgress: mergeInProgress ? 'merge' : null,
       };
     });
   }
