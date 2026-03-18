@@ -30,9 +30,14 @@ interface GitStatus {
 
 Detection logic in `getStatus()`:
 - `MERGE_HEAD` exists → `'merge'`
-- `rebase-merge/` or `rebase-apply/` exists → `'rebase'` (read `msgnum`/`end` for step progress)
+- `rebase-merge/` or `rebase-apply/` exists → `'rebase'`
+  - Step progress: read `rebase-merge/msgnum` + `rebase-merge/end` for interactive rebases, or `rebase-apply/next` + `rebase-apply/last` for non-interactive rebases
 - `CHERRY_PICK_HEAD` exists → `'cherry-pick'`
 - None → `null`
+
+**Critical fix:** The current `getStatus()` only populates `conflicted[]` when `mergeInProgress` is true. This guard must be removed so that conflicted files are detected for all operation types (merge, rebase, cherry-pick). The `status.conflicted` array from simple-git reflects unmerged entries regardless of operation type.
+
+**Backward compatibility:** The existing `mergeInProgress` boolean field on `GitStatus` is kept for backward compatibility with CommitDialog. It is derived from `operationInProgress === 'merge'`.
 
 ### 2. Missing Backend Methods (git-service.ts)
 
@@ -41,10 +46,17 @@ Add methods that don't exist yet:
 | Method | Git command | Notes |
 |--------|------------|-------|
 | `mergeAbort()` | `git merge --abort` | New |
+| `mergeContinue()` | `git commit` (reads `.git/MERGE_MSG`) | New — completes the merge by committing with the auto-generated merge message |
 | `cherryPickAbort()` | `git cherry-pick --abort` | New |
 | `cherryPickContinue()` | `git cherry-pick --continue` | New |
 
 Existing: `rebaseAbort()`, `rebaseContinue()`.
+
+New IPC channel for merge continue:
+
+```typescript
+MERGE_CONTINUE: "git:branch:merge-continue",
+```
 
 ### 3. New IPC Channels (ipc-channels.ts)
 
@@ -60,7 +72,7 @@ Handlers registered in `git-branch.ipc.ts`, exposed in `preload/index.ts`.
 
 **Location:** `src/renderer/components/layout/ConflictBanner.tsx`
 **Rendered in:** AppShell.tsx, between `<Toolbar />` and the main Dockview content area.
-**Visibility:** When `status.operationInProgress !== null` AND (`status.conflicted.length > 0` OR operation just completed resolution).
+**Visibility:** When `status.operationInProgress !== null`. The red/green sub-state is determined by `status.conflicted.length`.
 
 #### Two Visual States
 
@@ -80,6 +92,20 @@ Handlers registered in `git-branch.ipc.ts`, exposed in `preload/index.ts`.
 #### Progress Tracking
 
 The total conflict count is captured in a `useRef` when the banner first appears (or when the count increases). The "resolved" count is `total - current conflicted count`.
+
+**Rebase step resets:** For multi-step rebases, the conflict set can change when moving to the next step (after `rebase --continue`). The total ref resets whenever `rebaseStep.current` changes, since a new step brings a new set of conflicts.
+
+#### Action Variants by Operation
+
+| Operation   | Resolve            | Continue                                       | Abort              | Extra                                        |
+| ----------- | ------------------ | ---------------------------------------------- | ------------------ | -------------------------------------------- |
+| Merge       | Resolve Conflicts  | Continue Merge (commits with `.git/MERGE_MSG`) | Abort Merge        | —                                            |
+| Rebase      | Resolve Conflicts  | Continue Rebase                                | Abort Rebase       | Skip Commit (uses existing `rebaseSkip()`)   |
+| Cherry-pick | Resolve Conflicts  | Continue Cherry-pick                           | Abort Cherry-pick  | —                                            |
+
+#### Error Handling
+
+If abort/continue operations fail (e.g., unstaged resolved files, conflicts in next rebase step), the error is shown via the existing `GitOperationLogDialog` which captures real-time git output. The banner remains in its current state and refreshes after the operation log closes.
 
 #### Styling
 
