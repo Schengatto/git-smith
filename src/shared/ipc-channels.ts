@@ -171,6 +171,11 @@ export const IPC = {
     GENERATE_PR_DESCRIPTION: "mcp:ai:generate-pr-description",
     REVIEW_COMMIT: "mcp:ai:review-commit",
   },
+  APP: {
+    CHECK_FOR_UPDATES: "app:check-for-updates",
+    GET_VERSION: "app:get-version",
+    UPDATE_STATUS: "app:update-status",
+  },
   // Events pushed from main → renderer
   EVENTS: {
     COMMAND_LOG: "git:event:command-log",
