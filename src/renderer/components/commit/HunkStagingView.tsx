@@ -35,6 +35,15 @@ export function parseHunks(rawDiff: string): { header: string[]; hunks: Hunk[] }
   }
   if (currentHunk) hunks.push(currentHunk);
 
+  // Strip trailing empty lines from each hunk (artifacts of split("\n") on
+  // diff output that ends with a newline).  These empty strings would be
+  // mis-counted as context lines in buildPatch, corrupting the hunk header.
+  for (const h of hunks) {
+    while (h.lines.length > 0 && h.lines[h.lines.length - 1] === "") {
+      h.lines.pop();
+    }
+  }
+
   return { header, hunks };
 }
 
@@ -60,6 +69,7 @@ export function buildPatch(
     const newLines: string[] = [];
     let oldCount = 0;
     let newCount = 0;
+    let lastLineEmitted = false;
 
     for (let i = 0; i < hunk.lines.length; i++) {
       const line = hunk.lines[i];
@@ -67,30 +77,43 @@ export function buildPatch(
         if (selectedLineIndices.has(i)) {
           newLines.push(line);
           newCount++;
+          lastLineEmitted = true;
         } else if (isReverse) {
           // Convert unselected add to context for reverse apply
           newLines.push(" " + line.slice(1));
           oldCount++;
           newCount++;
+          lastLineEmitted = true;
+        } else {
+          lastLineEmitted = false;
         }
       } else if (line.startsWith("-")) {
         if (selectedLineIndices.has(i)) {
           newLines.push(line);
           oldCount++;
+          lastLineEmitted = true;
         } else if (!isReverse) {
           // Convert unselected remove to context for forward apply
           newLines.push(" " + line.slice(1));
           oldCount++;
           newCount++;
+          lastLineEmitted = true;
+        } else {
+          lastLineEmitted = false;
         }
       } else if (line.startsWith("\\")) {
-        // "\ No newline at end of file" marker — preserve but don't count
-        newLines.push(line);
+        // "\ No newline at end of file" marker — only preserve if the line
+        // it applies to (the immediately preceding line) was emitted.
+        // Blindly preserving it would misattribute the marker to the wrong line.
+        if (lastLineEmitted) {
+          newLines.push(line);
+        }
       } else {
         // Context line
         newLines.push(line);
         oldCount++;
         newCount++;
+        lastLineEmitted = true;
       }
     }
 
