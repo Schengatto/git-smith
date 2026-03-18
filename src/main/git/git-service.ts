@@ -22,6 +22,7 @@ import type {
   StaleRemoteBranch,
   RebaseOptions,
   ConflictFile,
+  ChangelogEntry,
 } from "../../shared/git-types";
 
 let idCounter = 0;
@@ -1872,6 +1873,50 @@ export class GitService {
         lastCommitDate,
       };
     });
+  }
+
+  async getTagsBefore(hash: string): Promise<string[]> {
+    if (!this.git) throw new Error("No repo open");
+    const result = await this.git.raw([
+      "tag", "--merged", hash, "--sort=-creatordate",
+    ]);
+    return result
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
+
+  async getChangelogCommits(
+    from: string,
+    to: string,
+  ): Promise<ChangelogEntry[]> {
+    if (!this.git) throw new Error("No repo open");
+    const FIELD_SEP = "\x00";
+    const RECORD_SEP = "\x1e";
+    const format = ["%H", "%h", "%s", "%b", "%an", "%aI"].join(FIELD_SEP) + RECORD_SEP;
+
+    const raw = await this.git.raw([
+      "log", `${from}..${to}`, "--no-merges", `--format=${format}`,
+    ]);
+
+    if (!raw.trim()) return [];
+
+    return raw
+      .split(RECORD_SEP)
+      .filter((r) => r.trim())
+      .map((record) => {
+        const fields = record.split(FIELD_SEP);
+        return {
+          hash: fields[0].trim(),
+          abbreviatedHash: fields[1]?.trim() || "",
+          subject: fields[2]?.trim() || "",
+          description: fields[3]?.trim() || "",
+          type: "other",
+          breaking: false,
+          authorName: fields[4]?.trim() || "",
+          authorDate: fields[5]?.trim() || "",
+        };
+      });
   }
 }
 
