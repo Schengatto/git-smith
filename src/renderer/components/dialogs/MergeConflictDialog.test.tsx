@@ -8,6 +8,7 @@ import {
   parseMergeSections,
   resolveAllConflicts,
   buildMergedContent,
+  computeLineDiff,
 } from "./MergeConflictDialog";
 import type { MergeSection } from "./MergeConflictDialog";
 import type { ConflictFile, ConflictFileContent } from "../../../shared/git-types";
@@ -364,5 +365,71 @@ describe("buildMergedContent", () => {
       { type: "common", common: ["line 3"], resolution: null },
     ];
     expect(buildMergedContent(sections)).toBe("line 1\nours\nline 3");
+  });
+});
+
+describe("computeLineDiff", () => {
+  it("returns all 'same' for identical texts", () => {
+    const result = computeLineDiff("a\nb\nc", "a\nb\nc");
+    expect(result).toEqual([
+      { type: "same", line: "a" },
+      { type: "same", line: "b" },
+      { type: "same", line: "c" },
+    ]);
+  });
+
+  it("detects added lines", () => {
+    const result = computeLineDiff("a\nc", "a\nb\nc");
+    expect(result).toEqual([
+      { type: "same", line: "a" },
+      { type: "added", line: "b" },
+      { type: "same", line: "c" },
+    ]);
+  });
+
+  it("detects removed lines", () => {
+    const result = computeLineDiff("a\nb\nc", "a\nc");
+    expect(result).toEqual([
+      { type: "same", line: "a" },
+      { type: "removed", line: "b" },
+      { type: "same", line: "c" },
+    ]);
+  });
+
+  it("detects replaced lines", () => {
+    const result = computeLineDiff("a\nold\nc", "a\nnew\nc");
+    expect(result).toEqual([
+      { type: "same", line: "a" },
+      { type: "removed", line: "old" },
+      { type: "added", line: "new" },
+      { type: "same", line: "c" },
+    ]);
+  });
+
+  it("handles empty old text", () => {
+    const result = computeLineDiff("", "a\nb");
+    expect(result).toEqual([
+      { type: "added", line: "a" },
+      { type: "added", line: "b" },
+    ]);
+  });
+
+  it("handles empty new text", () => {
+    const result = computeLineDiff("a\nb", "");
+    expect(result).toEqual([
+      { type: "removed", line: "a" },
+      { type: "removed", line: "b" },
+    ]);
+  });
+
+  it("handles multiple insertions and deletions", () => {
+    const result = computeLineDiff("a\nb\nc\nd", "a\nc\nd\ne");
+    expect(result).toEqual([
+      { type: "same", line: "a" },
+      { type: "removed", line: "b" },
+      { type: "same", line: "c" },
+      { type: "same", line: "d" },
+      { type: "added", line: "e" },
+    ]);
   });
 });
