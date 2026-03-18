@@ -70,6 +70,12 @@ describe("MergeConflictDialog", () => {
     expect(container.innerHTML).toBe("");
   });
 
+  it("renders without overlay backdrop in window mode", () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} mode="window" />);
+    const container = document.querySelector('[style*="position: fixed"]');
+    expect(container).toBeNull();
+  });
+
   it("loads and displays conflict files when opened", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 

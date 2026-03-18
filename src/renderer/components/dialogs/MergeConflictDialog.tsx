@@ -5,6 +5,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onResolved?: () => void;
+  mode?: "overlay" | "window";
 }
 
 /**
@@ -23,7 +24,7 @@ interface MergeToolSettings {
   mergeToolArgs: string;
 }
 
-export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved }) => {
+export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved, mode = "overlay" }) => {
   const [files, setFiles] = useState<ConflictFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [content, setContent] = useState<ConflictFileContent | null>(null);
@@ -249,9 +250,17 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
 
   if (!open) return null;
 
+  const outerStyle: React.CSSProperties = mode === "window"
+    ? { width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "var(--surface-0)" }
+    : backdropStyle;
+
+  const innerStyle: React.CSSProperties = mode === "window"
+    ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
+    : dialogStyle;
+
   return (
-    <div style={backdropStyle} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={dialogStyle}>
+    <div style={outerStyle} onClick={mode === "overlay" ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}>
+      <div style={innerStyle}>
         {/* Header */}
         <div style={headerStyle}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
