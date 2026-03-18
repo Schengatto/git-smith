@@ -181,25 +181,6 @@ export const ChangelogDialog: React.FC<Props> = ({
               }}
             />
           )}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button
-              onClick={handleGenerate}
-              disabled={!effectiveBase || loading}
-              style={{
-                background: "var(--blue)",
-                color: "var(--surface-0)",
-                border: "none",
-                borderRadius: 4,
-                padding: "5px 14px",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: effectiveBase && !loading ? "pointer" : "not-allowed",
-                opacity: !effectiveBase || loading ? 0.6 : 1,
-              }}
-            >
-              {loading ? "Generating..." : "Generate"}
-            </button>
-          </div>
         </div>
 
         {/* Content area */}
@@ -293,6 +274,23 @@ export const ChangelogDialog: React.FC<Props> = ({
               : ""}
           </span>
           <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={handleGenerate}
+              disabled={!effectiveBase || loading}
+              style={{
+                background: "var(--blue)",
+                color: "var(--surface-0)",
+                border: "none",
+                borderRadius: 4,
+                padding: "5px 14px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: effectiveBase && !loading ? "pointer" : "not-allowed",
+                opacity: !effectiveBase || loading ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Generating..." : "Generate"}
+            </button>
             {changelog && (
               <button
                 onClick={handleCopyMarkdown}
