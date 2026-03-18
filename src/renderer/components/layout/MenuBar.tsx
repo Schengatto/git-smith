@@ -208,7 +208,8 @@ export const MenuBar: React.FC<{
   onOpenScan: () => void;
   onOpenAbout: () => void;
   onOpenStaleBranches: () => void;
-}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout, onOpenStaleBranches }) => {
+  onResetLayout: () => void;
+}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout, onOpenStaleBranches, onResetLayout }) => {
   const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } = useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -314,6 +315,12 @@ export const MenuBar: React.FC<{
               useRepoStore.getState().refreshInfo();
             }
           },
+        },
+        { divider: true },
+        {
+          label: "Reset layout",
+          disabled: !hasRepo,
+          onClick: () => onResetLayout(),
         },
       ],
     },

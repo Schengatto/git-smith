@@ -149,6 +149,31 @@ export const AppShell: React.FC = () => {
     });
   }, [repo?.path]);
 
+  const resetLayout = useCallback(() => {
+    const api = dockviewApiRef.current;
+    const repoPath = useRepoStore.getState().repo?.path;
+    if (!api || !repoPath) return;
+
+    // Clear saved layout
+    window.electronAPI.repo.setViewSettings(repoPath, { dockviewLayout: null });
+
+    // Remove all existing panels
+    const panels = api.panels.slice();
+    for (const p of panels) {
+      try { api.removePanel(p); } catch {}
+    }
+
+    // Rebuild default layout
+    const sidebarPanel = api.addPanel({ id: "sidebar", component: "sidebar", title: "Explorer" });
+    const graphPanel = api.addPanel({ id: "graph", component: "graph", title: "Commit Graph", position: { referencePanel: sidebarPanel, direction: "right" } });
+    api.addPanel({ id: "commitInfo", component: "commitInfo", title: "Commit Info", position: { referencePanel: graphPanel, direction: "right" } });
+    const detailsPanel = api.addPanel({ id: "details", component: "details", title: "Diff / Files", position: { referencePanel: graphPanel, direction: "below" } });
+    api.addPanel({ id: "commandLog", component: "commandLog", title: "Command Log", position: { referencePanel: detailsPanel, direction: "within" } });
+    api.addPanel({ id: "console", component: "console", title: "Console", position: { referencePanel: detailsPanel, direction: "within" } });
+    api.addPanel({ id: "stats", component: "stats", title: "Author Statistics", position: { referencePanel: detailsPanel, direction: "within" } });
+    sidebarPanel.api.setSize({ width: 220 });
+  }, []);
+
   const onReady = useCallback((event: DockviewReadyEvent) => {
     dockviewApiRef.current = event.api;
 
@@ -166,6 +191,21 @@ export const AppShell: React.FC = () => {
               component: "commitInfo",
               title: "Commit Info",
               position: { referencePanel: graphPanel, direction: "right" },
+            });
+          }
+        }
+
+        // Migrate: add console panel if missing from saved layout
+        if (!event.api.getPanel("console")) {
+          const detailsPanel = event.api.getPanel("details");
+          const commandLogPanel = event.api.getPanel("commandLog");
+          const referencePanel = commandLogPanel ?? detailsPanel;
+          if (referencePanel) {
+            event.api.addPanel({
+              id: "console",
+              component: "console",
+              title: "Console",
+              position: { referencePanel: referencePanel, direction: "within" },
             });
           }
         }
@@ -269,6 +309,7 @@ export const AppShell: React.FC = () => {
         onOpenScan={openScanDialog}
         onOpenAbout={openAboutDialog}
         onOpenStaleBranches={openStaleBranchesDialog}
+        onResetLayout={resetLayout}
       />
       {repo && <Toolbar />}
       <div className="flex-1 overflow-hidden">
