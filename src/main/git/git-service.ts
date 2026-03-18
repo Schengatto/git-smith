@@ -1908,7 +1908,8 @@ export class GitService {
     this.validateRef(to);
     const FIELD_SEP = "\x00";
     const RECORD_SEP = "\x1e";
-    const format = ["%H", "%h", "%s", "%b", "%an", "%aI"].join(FIELD_SEP) + RECORD_SEP;
+    // Use git's %x00/%x1e format escapes so the argument string has no literal null bytes
+    const format = "%H%x00%h%x00%s%x00%b%x00%an%x00%aI%x1e";
 
     const raw = await this.git.raw([
       "log", `${from}..${to}`, "--no-merges", `--format=${format}`,
