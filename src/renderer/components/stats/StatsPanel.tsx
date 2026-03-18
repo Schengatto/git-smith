@@ -33,7 +33,6 @@ export const StatsPanel: React.FC = () => {
     setTimeframe,
     setSortField,
     clearSelection,
-    reset,
   } = useStatsStore();
 
   // Load leaderboard on mount (when repo is open) and when timeframe changes
@@ -43,10 +42,11 @@ export const StatsPanel: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.path, timeframe]);
 
-  // Listen for repoChanged events to reset
+  // Listen for repoChanged events to reload stats (e.g. after auto-fetch)
   useEffect(() => {
     const cleanup = window.electronAPI.on.repoChanged(() => {
-      reset();
+      clearSelection();
+      loadLeaderboard(useStatsStore.getState().timeframe);
     });
     return () => { cleanup(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -262,4 +262,39 @@ describe("StatsPanel", () => {
       expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
     });
   });
+
+  it("reloads leaderboard on repoChanged event", async () => {
+    // Capture the repoChanged callback
+    let repoChangedCb: (() => void) | null = null;
+    (window as unknown as Record<string, unknown>).electronAPI = {
+      stats: {
+        getLeaderboard: mockGetLeaderboard,
+        getAuthorDetail: mockGetAuthorDetail,
+      },
+      on: {
+        repoChanged: vi.fn((cb: () => void) => {
+          repoChangedCb = cb;
+          return () => {};
+        }),
+      },
+    };
+
+    mockGetLeaderboard.mockResolvedValue(mockLeaderboard);
+    render(<StatsPanel />);
+
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+    });
+    expect(mockGetLeaderboard).toHaveBeenCalledTimes(1);
+
+    // Simulate repoChanged event (e.g. from auto-fetch)
+    expect(repoChangedCb).not.toBeNull();
+    repoChangedCb!();
+
+    // Should reload leaderboard
+    await waitFor(() => {
+      expect(mockGetLeaderboard).toHaveBeenCalledTimes(2);
+    });
+  });
 });
