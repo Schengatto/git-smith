@@ -147,6 +147,14 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.REBASE_IN_PROGRESS),
     cherryPick: (hash: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK, hash),
+    mergeAbort: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.MERGE_ABORT),
+    mergeContinue: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.MERGE_CONTINUE),
+    cherryPickAbort: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK_ABORT),
+    cherryPickContinue: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK_CONTINUE),
     reset: (hash: string, mode: "soft" | "mixed" | "hard"): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.RESET, hash, mode),
     staleRemote: (olderThanDays: number): Promise<StaleRemoteBranch[]> =>
