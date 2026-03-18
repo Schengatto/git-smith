@@ -116,31 +116,53 @@ export const ChangelogDialog: React.FC<Props> = ({
             padding: "12px 16px",
             borderBottom: "1px solid var(--surface-2)",
             display: "flex",
-            alignItems: "center",
-            gap: 10,
+            flexDirection: "column",
+            gap: 8,
           }}
         >
-          <span style={{ color: "var(--text-muted)", fontSize: 13 }}>From</span>
-          <select
-            value={selectedBase}
-            onChange={(e) => setSelectedBase(e.target.value)}
-            style={{
-              background: "var(--surface-1)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--surface-2)",
-              borderRadius: 4,
-              padding: "4px 8px",
-              fontSize: 13,
-              minWidth: 140,
-            }}
-          >
-            {tags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
-              </option>
-            ))}
-            <option value="__custom__">Custom ref...</option>
-          </select>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ color: "var(--text-muted)", fontSize: 13, flexShrink: 0 }}>From</span>
+            <select
+              value={selectedBase}
+              onChange={(e) => setSelectedBase(e.target.value)}
+              style={{
+                background: "var(--surface-1)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--surface-2)",
+                borderRadius: 4,
+                padding: "4px 8px",
+                fontSize: 13,
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {tags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+              <option value="__custom__">Custom ref...</option>
+            </select>
+            <span style={{ color: "var(--text-muted)", fontSize: 13, flexShrink: 0 }}>to</span>
+            <span
+              style={{
+                background: "var(--surface-1)",
+                border: "1px solid var(--surface-2)",
+                borderRadius: 4,
+                padding: "4px 8px",
+                fontSize: 13,
+                color: "var(--text-muted)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                minWidth: 0,
+                flex: 1,
+              }}
+            >
+              {commitHash.slice(0, 7)}
+              {commitSubject ? ` — ${commitSubject}` : ""}
+            </span>
+          </div>
           {selectedBase === "__custom__" && (
             <input
               type="text"
@@ -154,47 +176,30 @@ export const ChangelogDialog: React.FC<Props> = ({
                 borderRadius: 4,
                 padding: "4px 8px",
                 fontSize: 13,
-                minWidth: 160,
+                width: "100%",
+                boxSizing: "border-box",
               }}
             />
           )}
-          <span style={{ color: "var(--text-muted)", fontSize: 13 }}>to</span>
-          <span
-            style={{
-              background: "var(--surface-1)",
-              border: "1px solid var(--surface-2)",
-              borderRadius: 4,
-              padding: "4px 8px",
-              fontSize: 13,
-              color: "var(--text-muted)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              minWidth: 0,
-              flex: 1,
-            }}
-          >
-            {commitHash.slice(0, 7)}
-            {commitSubject ? ` — ${commitSubject}` : ""}
-          </span>
-          <button
-            onClick={handleGenerate}
-            disabled={!effectiveBase || loading}
-            style={{
-              background: "var(--blue)",
-              color: "var(--surface-0)",
-              border: "none",
-              borderRadius: 4,
-              padding: "5px 14px",
-              flexShrink: 0,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: effectiveBase && !loading ? "pointer" : "not-allowed",
-              opacity: !effectiveBase || loading ? 0.6 : 1,
-            }}
-          >
-            {loading ? "Generating..." : "Generate"}
-          </button>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleGenerate}
+              disabled={!effectiveBase || loading}
+              style={{
+                background: "var(--blue)",
+                color: "var(--surface-0)",
+                border: "none",
+                borderRadius: 4,
+                padding: "5px 14px",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: effectiveBase && !loading ? "pointer" : "not-allowed",
+                opacity: !effectiveBase || loading ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Generating..." : "Generate"}
+            </button>
+          </div>
         </div>
 
         {/* Content area */}
