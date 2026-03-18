@@ -249,3 +249,30 @@ export interface CloneOptions {
   recurseSubmodules?: boolean;
   shallow?: boolean; // when true, --depth 1
 }
+
+// Changelog
+export interface ChangelogEntry {
+  hash: string;
+  abbreviatedHash: string;
+  subject: string;
+  description: string;
+  type: string;
+  scope?: string;
+  breaking: boolean;
+  authorName: string;
+  authorDate: string;
+}
+
+export interface ChangelogGroup {
+  label: string;
+  color: string;
+  entries: ChangelogEntry[];
+}
+
+export interface ChangelogData {
+  from: string;
+  to: string;
+  groups: ChangelogGroup[];
+  totalCommits: number;
+  authors: string[];
+}

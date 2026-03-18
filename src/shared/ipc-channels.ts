@@ -196,4 +196,8 @@ export const IPC = {
     LEADERBOARD: "git:stats:leaderboard",
     AUTHOR_DETAIL: "git:stats:author-detail",
   },
+  CHANGELOG: {
+    TAGS_BEFORE: "git:changelog:tags-before",
+    GENERATE: "git:changelog:generate",
+  },
 } as const;

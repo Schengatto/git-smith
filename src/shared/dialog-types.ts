@@ -3,7 +3,8 @@ export type DialogName =
   | "CommitInfoWindow"
   | "StashDialog"
   | "SettingsDialog"
-  | "InteractiveRebaseDialog";
+  | "InteractiveRebaseDialog"
+  | "ChangelogDialog";
 
 export interface DialogWindowConfig {
   width: number;
@@ -19,6 +20,7 @@ export const DIALOG_CONFIGS: Record<DialogName, DialogWindowConfig> = {
   StashDialog:             { width: 850,  height: 600, minWidth: 600, minHeight: 400, modal: true },
   SettingsDialog:          { width: 800,  height: 600, minWidth: 600, minHeight: 400, modal: true },
   InteractiveRebaseDialog: { width: 900,  height: 650, minWidth: 700, minHeight: 400, modal: true },
+  ChangelogDialog:         { width: 700,  height: 550, minWidth: 500, minHeight: 400, modal: false },
 };
 
 export interface DialogOpenRequest {
