@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/Schengatto/git-expansion/compare/v0.3.1...v0.3.2) (2026-03-18)
+
+
+### Features
+
+* **tag:** add option to delete remote tag from confirmation dialog ([be867f6](https://github.com/Schengatto/git-expansion/commit/be867f686fb252781a8dd44aa3f6f8411ce7d048))
+
+
+### Bug Fixes
+
+* bundle MCP SDK and zod instead of externalizing them ([d585b50](https://github.com/Schengatto/git-expansion/commit/d585b504464e1fdfa479f714f17bc31f04d20088))
+
 ### [0.3.1](https://github.com/Schengatto/git-expansion/compare/v0.3.0...v0.3.1) (2026-03-18)
 
 
