@@ -273,27 +273,54 @@ export class GitService {
         else staged.push({ path: r.to, status: "renamed", oldPath: r.from });
       }
 
-      // Detect merge-in-progress
+      // Detect operations in progress
       const mergeInProgress = this.repoPath
         ? fs.existsSync(path.join(this.repoPath, ".git", "MERGE_HEAD"))
         : false;
+      const rebaseMerge = this.repoPath && fs.existsSync(path.join(this.repoPath, ".git", "rebase-merge"));
+      const rebaseApply = this.repoPath && fs.existsSync(path.join(this.repoPath, ".git", "rebase-apply"));
+      const cherryPickInProgress = this.repoPath
+        ? fs.existsSync(path.join(this.repoPath, ".git", "CHERRY_PICK_HEAD"))
+        : false;
+
+      let operationInProgress: import("../../shared/git-types").GitOperation = null;
+      let rebaseStep: { current: number; total: number } | undefined;
+
+      if (mergeInProgress) {
+        operationInProgress = "merge";
+      } else if (rebaseMerge || rebaseApply) {
+        operationInProgress = "rebase";
+        try {
+          if (rebaseMerge) {
+            const current = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-merge", "msgnum"), "utf-8").trim(), 10);
+            const total = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-merge", "end"), "utf-8").trim(), 10);
+            rebaseStep = { current, total };
+          } else {
+            const current = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-apply", "next"), "utf-8").trim(), 10);
+            const total = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-apply", "last"), "utf-8").trim(), 10);
+            rebaseStep = { current, total };
+          }
+        } catch {
+          // Step info files may not exist; that's fine
+        }
+      } else if (cherryPickInProgress) {
+        operationInProgress = "cherry-pick";
+      }
 
       // Detect conflicted files (unmerged entries have U in index or working_dir)
       const conflicted: ConflictFile[] = [];
-      if (mergeInProgress) {
-        for (const f of status.conflicted) {
-          const xy = status.files.find((sf) => sf.path === f)
-            ? `${status.files.find((sf) => sf.path === f)!.index}${status.files.find((sf) => sf.path === f)!.working_dir}`
-            : "UU";
-          let reason = "both-modified";
-          if (xy === "AA") reason = "both-added";
-          else if (xy === "DD") reason = "both-deleted";
-          else if (xy === "DU") reason = "deleted-by-us";
-          else if (xy === "UD") reason = "deleted-by-them";
-          else if (xy === "AU") reason = "added-by-us";
-          else if (xy === "UA") reason = "added-by-them";
-          conflicted.push({ path: f, reason });
-        }
+      for (const f of status.conflicted) {
+        const xy = status.files.find((sf) => sf.path === f)
+          ? `${status.files.find((sf) => sf.path === f)!.index}${status.files.find((sf) => sf.path === f)!.working_dir}`
+          : "UU";
+        let reason = "both-modified";
+        if (xy === "AA") reason = "both-added";
+        else if (xy === "DD") reason = "both-deleted";
+        else if (xy === "DU") reason = "deleted-by-us";
+        else if (xy === "UD") reason = "deleted-by-them";
+        else if (xy === "AU") reason = "added-by-us";
+        else if (xy === "UA") reason = "added-by-them";
+        conflicted.push({ path: f, reason });
       }
 
       return {
@@ -302,7 +329,8 @@ export class GitService {
         untracked: status.not_added,
         mergeInProgress,
         conflicted,
-        operationInProgress: mergeInProgress ? 'merge' : null,
+        operationInProgress,
+        rebaseStep,
       };
     });
   }
