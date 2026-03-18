@@ -6,8 +6,8 @@ import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
-import { CommitInfoWindow } from "../dialogs/CommitInfoWindow";
 import { CommitCompareDialog } from "../dialogs/CommitCompareDialog";
+import { openDialogWindow } from "../../utils/open-dialog";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { MergeDialog } from "../dialogs/MergeDialog";
 import { RebaseDialog } from "../dialogs/RebaseDialog";
@@ -68,7 +68,6 @@ export const CommitGraphPanel: React.FC = () => {
   const [createBranchFrom, setCreateBranchFrom] = useState<string | null>(null);
   const [resetTarget, setResetTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
-  const [commitInfoHash, setCommitInfoHash] = useState<string | null>(null);
   const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
@@ -358,7 +357,7 @@ export const CommitGraphPanel: React.FC = () => {
       { divider: true },
       {
         label: "View Commit Info",
-        onClick: () => setCommitInfoHash(row.commit.hash),
+        onClick: () => openDialogWindow({ dialog: "CommitInfoWindow", data: { commitHash: row.commit.hash } }),
       },
     );
 
@@ -689,7 +688,7 @@ export const CommitGraphPanel: React.FC = () => {
               selected={selectedCommit?.hash === filteredRows[index].commit.hash}
               isHead={filteredRows[index].commit.hash === repo.headCommit}
               onClick={() => selectCommit(filteredRows[index].commit.hash)}
-              onDoubleClick={() => setCommitInfoHash(filteredRows[index].commit.hash)}
+              onDoubleClick={() => openDialogWindow({ dialog: "CommitInfoWindow", data: { commitHash: filteredRows[index].commit.hash } })}
               onContextMenu={(e) => handleContextMenu(e, filteredRows[index])}
             />
           )}
@@ -743,21 +742,6 @@ export const CommitGraphPanel: React.FC = () => {
           commit2={compareTarget.commit2}
         />
       )}
-
-      <CommitInfoWindow
-        open={!!commitInfoHash}
-        onClose={() => setCommitInfoHash(null)}
-        commitHash={commitInfoHash || ""}
-        onNavigateToCommit={(hash) => {
-          setCommitInfoHash(null);
-          selectCommit(hash);
-          const targetRows = searchQuery.trim() ? filteredRows : rows;
-          const idx = targetRows.findIndex((r) => r.commit.hash === hash);
-          if (idx !== -1) {
-            virtuosoRef.current?.scrollToIndex({ index: idx, behavior: "smooth", align: "center" });
-          }
-        }}
-      />
 
       <ConfirmDeleteDialog
         open={!!deleteBranchTarget}

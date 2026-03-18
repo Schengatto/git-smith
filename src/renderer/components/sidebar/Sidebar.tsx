@@ -14,8 +14,8 @@ import { CreateTagDialog } from "../dialogs/TagDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import { AddSubmoduleDialog } from "../dialogs/AddSubmoduleDialog";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
-import { InteractiveRebaseDialog } from "../dialogs/InteractiveRebaseDialog";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
+import { openDialogWindow } from "../../utils/open-dialog";
 import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types";
 
 /* ---------- Icons ---------- */
@@ -81,7 +81,6 @@ type DialogState =
   | { type: "rename-branch"; branch: string }
   | { type: "merge-branch"; branch: string }
   | { type: "rebase"; onto: string }
-  | { type: "interactive-rebase"; onto: string }
   | { type: "create-tag" }
   | { type: "delete-tag"; tag: string }
   | { type: "add-submodule" }
@@ -236,7 +235,7 @@ export const Sidebar: React.FC = () => {
         });
         items.push({
           label: "Interactive Rebase onto This",
-          onClick: () => setDialog({ type: "interactive-rebase", onto: branch.name }),
+          onClick: () => openDialogWindow({ dialog: "InteractiveRebaseDialog", data: { onto: branch.name } }),
         });
       }
 
@@ -579,11 +578,6 @@ export const Sidebar: React.FC = () => {
         open={dialog.type === "rebase"}
         onClose={closeDialog}
         onto={dialog.type === "rebase" ? dialog.onto : ""}
-      />
-      <InteractiveRebaseDialog
-        open={dialog.type === "interactive-rebase"}
-        onClose={closeDialog}
-        onto={dialog.type === "interactive-rebase" ? dialog.onto : ""}
       />
       <CreateTagDialog
         open={dialog.type === "create-tag"}

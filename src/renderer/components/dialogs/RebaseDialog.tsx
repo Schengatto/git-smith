@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ModalDialog, DialogError } from "./ModalDialog";
-import { MergeConflictDialog } from "./MergeConflictDialog";
+import { openDialogWindow } from "../../utils/open-dialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
@@ -61,7 +61,6 @@ export const RebaseDialog: React.FC<Props> = ({
 
   // Rebase-in-progress state
   const [rebaseInProgress, setRebaseInProgress] = useState(false);
-  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -478,7 +477,7 @@ export const RebaseDialog: React.FC<Props> = ({
           <button onClick={handleSkip} disabled={loading} style={secondaryBtnStyle}>
             Skip currently applying commit
           </button>
-          <button onClick={() => setConflictDialogOpen(true)} disabled={loading} style={primaryBtnStyle}>
+          <button onClick={() => openDialogWindow({ dialog: "MergeConflictDialog" })} disabled={loading} style={primaryBtnStyle}>
             Solve conflicts
           </button>
           <button onClick={handleAbort} disabled={loading} style={dangerBtnStyle}>
@@ -507,14 +506,6 @@ export const RebaseDialog: React.FC<Props> = ({
         </div>
       )}
 
-      <MergeConflictDialog
-        open={conflictDialogOpen}
-        onClose={() => setConflictDialogOpen(false)}
-        onResolved={async () => {
-          setConflictDialogOpen(false);
-          await handleContinue();
-        }}
-      />
     </ModalDialog>
   );
 };

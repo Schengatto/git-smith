@@ -83,6 +83,9 @@ beforeEach(() => {
       saveMerged: vi.fn().mockResolvedValue(undefined),
       launchMergeTool: vi.fn().mockResolvedValue({ exitCode: 0, mergedContent: "" }),
     },
+    dialog: {
+      open: vi.fn(),
+    },
   };
 });
 
@@ -223,14 +226,11 @@ describe("RebaseDialog", () => {
 
   it("opens merge conflict dialog on Solve conflicts click", async () => {
     isRebaseInProgressMock.mockResolvedValueOnce(true).mockResolvedValue(false);
-    const conflictListMock = vi.fn().mockResolvedValue([]);
+    const dialogOpenMock = vi.fn();
     (window as unknown as { electronAPI: Record<string, unknown> }).electronAPI = {
       ...(window as unknown as { electronAPI: Record<string, unknown> }).electronAPI,
-      conflict: {
-        list: conflictListMock,
-        fileContent: vi.fn().mockResolvedValue({ ours: "", theirs: "", base: "", merged: "" }),
-        resolve: vi.fn(),
-        saveMerged: vi.fn(),
+      dialog: {
+        open: dialogOpenMock,
       },
     };
 
@@ -242,9 +242,7 @@ describe("RebaseDialog", () => {
 
     fireEvent.click(screen.getByText("Solve conflicts"));
 
-    await waitFor(() => {
-      expect(screen.getByText("Resolve merge conflicts")).toBeInTheDocument();
-    });
+    expect(dialogOpenMock).toHaveBeenCalledWith({ dialog: "MergeConflictDialog" });
   });
 
   it("calls rebaseAbort on Abort click", async () => {

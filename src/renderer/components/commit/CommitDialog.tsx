@@ -4,7 +4,7 @@ import { useGraphStore } from "../../store/graph-store";
 import { HunkStagingView } from "./HunkStagingView";
 import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
-import { MergeConflictDialog } from "../dialogs/MergeConflictDialog";
+import { openDialogWindow } from "../../utils/open-dialog";
 import { FileHistoryPanel } from "../details/FileHistoryPanel";
 import { BlameView } from "../details/BlameView";
 import type { GitStatus, ConflictFile } from "../../../shared/git-types";
@@ -117,7 +117,6 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   // Merge conflict state
   const [mergeInProgress, setMergeInProgress] = useState(false);
   const [conflictedFiles, setConflictedFiles] = useState<ConflictFile[]>([]);
-  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   const loadFiles = useCallback(async () => {
     try {
@@ -506,7 +505,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               Merge in progress — {conflictedFiles.length} conflicted file{conflictedFiles.length !== 1 ? "s" : ""} to resolve
             </span>
             <button
-              onClick={() => setConflictDialogOpen(true)}
+              onClick={() => openDialogWindow({ dialog: "MergeConflictDialog" })}
               style={{
                 padding: "4px 12px",
                 borderRadius: 5,
@@ -1112,14 +1111,6 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         onClose={() => setSetUpstreamError(null)}
         suggestedRemote={setUpstreamError?.suggestedRemote ?? "origin"}
         suggestedBranch={setUpstreamError?.suggestedBranch ?? ""}
-      />
-
-      <MergeConflictDialog
-        open={conflictDialogOpen}
-        onClose={() => {
-          setConflictDialogOpen(false);
-          loadFiles();
-        }}
       />
 
       <FileHistoryPanel

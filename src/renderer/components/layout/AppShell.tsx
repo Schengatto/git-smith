@@ -20,8 +20,8 @@ import { CommitInfoPanel } from "../details/CommitInfoPanel";
 import { CommandLogPanel } from "../command-log/CommandLogPanel";
 import { ConsolePanel } from "../console/ConsolePanel";
 import { CloneDialog } from "../dialogs/CloneDialog";
-import { SettingsDialog } from "../dialogs/SettingsDialog";
 import { ScanDialog } from "../dialogs/ScanDialog";
+import { openDialogWindow } from "../../utils/open-dialog";
 import { AboutDialog } from "../dialogs/AboutDialog";
 import { StaleBranchesDialog } from "../dialogs/StaleBranchesDialog";
 import { GitOperationLogDialog } from "../dialogs/GitOperationLogDialog";
@@ -42,7 +42,6 @@ export const AppShell: React.FC = () => {
   const {
     theme,
     cloneDialogOpen, closeCloneDialog, openCloneDialog,
-    settingsDialogOpen, closeSettingsDialog, openSettingsDialog,
     scanDialogOpen, closeScanDialog, openScanDialog,
     aboutDialogOpen, closeAboutDialog, openAboutDialog,
     staleBranchesDialogOpen, closeStaleBranchesDialog, openStaleBranchesDialog,
@@ -87,6 +86,23 @@ export const AppShell: React.FC = () => {
       useGraphStore.getState().loadGraph();
     });
 
+    const unsubDialogResult = window.electronAPI.dialog.onResult((result) => {
+      if (result.action === "resolved" || result.action === "closed") {
+        useRepoStore.getState().refreshInfo();
+        useRepoStore.getState().refreshStatus();
+        useGraphStore.getState().loadGraph();
+      }
+      if (result.action === "navigate" && result.data?.hash) {
+        const hash = result.data.hash as string;
+        const { rows, selectCommit } = useGraphStore.getState();
+        selectCommit(hash);
+        const idx = rows.findIndex((r) => r.commit.hash === hash);
+        if (idx !== -1) {
+          // Graph scrolling is handled by CommitGraphPanel via store subscription
+        }
+      }
+    });
+
     // Global keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "o") {
@@ -105,6 +121,7 @@ export const AppShell: React.FC = () => {
       unsubOutput();
       unsubMenu();
       unsubRepoChanged();
+      unsubDialogResult();
       window.removeEventListener("keydown", handleKeyDown);
       if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);
     };
@@ -223,7 +240,7 @@ export const AppShell: React.FC = () => {
     <div className="flex flex-col h-screen bg-surface-0 text-text-primary">
       <MenuBar
         onOpenClone={openCloneDialog}
-        onOpenSettings={openSettingsDialog}
+        onOpenSettings={() => openDialogWindow({ dialog: "SettingsDialog" })}
         onOpenScan={openScanDialog}
         onOpenAbout={openAboutDialog}
         onOpenStaleBranches={openStaleBranchesDialog}
@@ -248,7 +265,6 @@ export const AppShell: React.FC = () => {
       <StatusBar />
 
       <CloneDialog open={cloneDialogOpen} onClose={closeCloneDialog} />
-      <SettingsDialog open={settingsDialogOpen} onClose={closeSettingsDialog} />
       <ScanDialog open={scanDialogOpen} onClose={closeScanDialog} />
       <AboutDialog open={aboutDialogOpen} onClose={closeAboutDialog} />
       <StaleBranchesDialog open={staleBranchesDialogOpen} onClose={closeStaleBranchesDialog} />

@@ -7,8 +7,8 @@ import { DropdownButton, DropdownEntry } from "./DropdownButton";
 import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
-import { StashDialog } from "../dialogs/StashDialog";
 import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
+import { openDialogWindow } from "../../utils/open-dialog";
 
 const IconFolder = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -296,7 +296,6 @@ const IconUser = () => (
 const AccountSelector: React.FC = () => {
   const { repo } = useRepoStore();
   const { accounts, currentAccount, loadAccounts, loadCurrentAccount, setAccountForRepo, setDefaultAccount } = useAccountStore();
-  const { openSettingsDialog } = useUIStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -418,7 +417,7 @@ const AccountSelector: React.FC = () => {
           {/* Manage accounts */}
           <div style={{ height: 1, margin: "4px 8px", background: "var(--border-subtle)" }} />
           <div
-            onClick={() => { openSettingsDialog(); setOpen(false); }}
+            onClick={() => { openDialogWindow({ dialog: "SettingsDialog" }); setOpen(false); }}
             style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: "6px 12px", cursor: "pointer", fontSize: 11, color: "var(--accent)",
@@ -437,10 +436,8 @@ const AccountSelector: React.FC = () => {
 export const Toolbar: React.FC = () => {
   const { repo, status, refreshStatus, refreshInfo } = useRepoStore();
   const { loadGraph } = useGraphStore();
-  const { openSettingsDialog } = useUIStore();
   const [commitOpen, setCommitOpen] = useState(false);
   const [remotesOpen, setRemotesOpen] = useState(false);
-  const [stashOpen, setStashOpen] = useState(false);
 
   const changedCount = status
     ? (status.staged.length || 0) +
@@ -579,13 +576,13 @@ export const Toolbar: React.FC = () => {
       label: "Manage stashes...",
       sublabel: "View and manage all stashes",
       icon: <IconStash />,
-      onClick: () => setStashOpen(true),
+      onClick: () => openDialogWindow({ dialog: "StashDialog" }),
     },
     {
       label: "Create a stash...",
       sublabel: "Stash with message and options",
       icon: <IconStash />,
-      onClick: () => setStashOpen(true),
+      onClick: () => openDialogWindow({ dialog: "StashDialog" }),
     },
   ];
 
@@ -728,7 +725,7 @@ export const Toolbar: React.FC = () => {
       <div className="flex-1" />
 
       <button
-        onClick={openSettingsDialog}
+        onClick={() => openDialogWindow({ dialog: "SettingsDialog" })}
         className="toolbar-btn"
         title="Settings"
       >
@@ -741,7 +738,6 @@ export const Toolbar: React.FC = () => {
 
       <CommitDialog open={commitOpen} onClose={() => setCommitOpen(false)} />
       <RemoteDialog open={remotesOpen} onClose={() => setRemotesOpen(false)} />
-      <StashDialog open={stashOpen} onClose={() => setStashOpen(false)} />
       <SetUpstreamDialog
         open={!!setUpstreamError}
         onClose={() => setSetUpstreamError(null)}
