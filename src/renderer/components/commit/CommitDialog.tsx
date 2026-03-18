@@ -77,6 +77,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const [files, setFiles] = useState<ChangedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFileStaged, setSelectedFileStaged] = useState(false);
   const [diff, setDiff] = useState<string>("");
   const [message, setMessage] = useState("");
   const [amend, setAmend] = useState(false);
@@ -154,7 +155,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setDiff("");
       return;
     }
-    const file = files.find((f) => f.path === selectedFile);
+    const file = files.find((f) => f.path === selectedFile && f.staged === selectedFileStaged);
     if (!file) return;
 
     const loadDiff = async () => {
@@ -162,7 +163,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         if (file.isUntracked) {
           setDiff("(New untracked file)");
         } else {
-          const d = await window.electronAPI.diff.file(selectedFile, file.staged);
+          const d = await window.electronAPI.diff.file(selectedFile, selectedFileStaged);
           setDiff(d || "(No diff available)");
         }
       } catch {
@@ -170,7 +171,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       }
     };
     loadDiff();
-  }, [selectedFile, files, open]);
+  }, [selectedFile, selectedFileStaged, files, open]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -543,9 +544,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               title="Changes"
               count={unstagedFiles.length}
               files={unstagedFiles}
-              selectedFile={selectedFile}
+              selectedFile={selectedFileStaged ? null : selectedFile}
               selectedPaths={selectedUnstaged}
-              onSelectFile={(path) => setSelectedFile(path)}
+              onSelectFile={(path) => { setSelectedFile(path); setSelectedFileStaged(false); }}
               onToggleSelect={(path) => {
                 setSelectedUnstaged((prev) => {
                   const next = new Set(prev);
@@ -624,9 +625,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               title="Staged"
               count={stagedFiles.length}
               files={stagedFiles}
-              selectedFile={selectedFile}
+              selectedFile={selectedFileStaged ? selectedFile : null}
               selectedPaths={selectedStaged}
-              onSelectFile={(path) => setSelectedFile(path)}
+              onSelectFile={(path) => { setSelectedFile(path); setSelectedFileStaged(true); }}
               onToggleSelect={(path) => {
                 setSelectedStaged((prev) => {
                   const next = new Set(prev);
@@ -656,8 +657,8 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 <HunkStagingView
                   rawDiff={diff}
                   fileName={selectedFile}
-                  isStaged={!!files.find((f) => f.path === selectedFile)?.staged}
-                  isConflicted={files.find((f) => f.path === selectedFile)?.status === "conflicted"}
+                  isStaged={selectedFileStaged}
+                  isConflicted={files.find((f) => f.path === selectedFile && f.staged === selectedFileStaged)?.status === "conflicted"}
                   onStageHunk={handleStageHunk}
                   onUnstageHunk={handleUnstageHunk}
                 />
