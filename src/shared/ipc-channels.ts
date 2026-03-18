@@ -138,6 +138,17 @@ export const IPC = {
   GITIGNORE: {
     ADD: "git:gitignore:add",
   },
+  ACCOUNT: {
+    LIST: "git:account:list",
+    ADD: "git:account:add",
+    UPDATE: "git:account:update",
+    DELETE: "git:account:delete",
+    GET_FOR_REPO: "git:account:get-for-repo",
+    SET_FOR_REPO: "git:account:set-for-repo",
+    GET_DEFAULT: "git:account:get-default",
+    SET_DEFAULT: "git:account:set-default",
+    PARSE_SSH_CONFIG: "git:account:parse-ssh-config",
+  },
   TERMINAL: {
     SPAWN: "terminal:spawn",
     INPUT: "terminal:input",

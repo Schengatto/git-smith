@@ -224,6 +224,22 @@ export interface ConflictFileContent {
   merged: string;
 }
 
+export interface GitAccount {
+  id: string;
+  label: string;
+  name: string;
+  email: string;
+  signingKey?: string;
+  sshKeyPath?: string;
+}
+
+export interface SshHostEntry {
+  host: string;
+  hostName?: string;
+  user?: string;
+  identityFile?: string;
+}
+
 export interface CloneOptions {
   url: string;
   destination: string;

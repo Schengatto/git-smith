@@ -293,6 +293,26 @@ const electronAPI = {
     add: (pattern: string): Promise<void> =>
       ipcRenderer.invoke(IPC.GITIGNORE.ADD, pattern),
   },
+  account: {
+    list: (): Promise<import("../shared/git-types").GitAccount[]> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.LIST),
+    add: (account: import("../shared/git-types").GitAccount): Promise<void> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.ADD, account),
+    update: (id: string, partial: Partial<import("../shared/git-types").GitAccount>): Promise<void> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.UPDATE, id, partial),
+    delete: (id: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.DELETE, id),
+    getForRepo: (repoPath: string): Promise<import("../shared/git-types").GitAccount | null> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.GET_FOR_REPO, repoPath),
+    setForRepo: (repoPath: string, accountId: string | null): Promise<void> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.SET_FOR_REPO, repoPath, accountId),
+    getDefault: (): Promise<import("../shared/git-types").GitAccount | null> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.GET_DEFAULT),
+    setDefault: (accountId: string | null): Promise<void> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.SET_DEFAULT, accountId),
+    parseSshConfig: (): Promise<import("../shared/git-types").SshHostEntry[]> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.PARSE_SSH_CONFIG),
+  },
   shell: {
     openFile: (filePath: string): Promise<void> =>
       ipcRenderer.invoke(IPC.SHELL.OPEN_FILE, filePath),

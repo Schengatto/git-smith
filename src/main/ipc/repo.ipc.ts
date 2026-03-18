@@ -17,14 +17,28 @@ import {
   setLastOpenedRepo,
   getRepoViewSettings,
   setRepoViewSettings,
+  getRepoAccount,
+  getGitAccounts,
 } from "../store";
 import type { RepoViewSettings } from "../store";
+
+async function applyRepoAccount(repoPath: string): Promise<void> {
+  const accountId = getRepoAccount(repoPath);
+  if (!accountId) return;
+  const account = getGitAccounts().find((a) => a.id === accountId);
+  if (!account) return;
+  await gitService.applyAccount(account.name, account.email, {
+    signingKey: account.signingKey,
+    sshKeyPath: account.sshKeyPath,
+  });
+}
 
 export function registerRepoHandlers() {
   ipcMain.handle(IPC.REPO.OPEN, async (_event, path: string) => {
     const info = await gitService.openRepo(path);
     addRecentRepo(path);
     setLastOpenedRepo(path);
+    await applyRepoAccount(path);
     return info;
   });
 
@@ -40,6 +54,7 @@ export function registerRepoHandlers() {
     const info = await gitService.openRepo(path);
     addRecentRepo(path);
     setLastOpenedRepo(path);
+    await applyRepoAccount(path);
     return info;
   });
 

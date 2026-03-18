@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
+import { useAccountStore } from "../../store/account-store";
 import { DropdownButton, DropdownEntry } from "./DropdownButton";
 import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
@@ -280,6 +281,153 @@ const RepoSelector: React.FC = () => {
             <span style={{ color: "var(--text-muted)", flexShrink: 0 }}><IconDownload /></span>
             Clone...
           </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const IconUser = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const AccountSelector: React.FC = () => {
+  const { repo } = useRepoStore();
+  const { accounts, currentAccount, loadAccounts, loadCurrentAccount, setAccountForRepo, setDefaultAccount } = useAccountStore();
+  const { openSettingsDialog } = useUIStore();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    loadAccounts();
+  }, []);
+
+  useEffect(() => {
+    if (repo?.path) loadCurrentAccount(repo.path);
+  }, [repo?.path]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  if (!repo || accounts.length === 0) return null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        className="toolbar-btn"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          gap: 5,
+          maxWidth: 180,
+          ...(open ? { background: "var(--surface-3)", color: "var(--text-primary)" } : {}),
+        }}
+        title={currentAccount ? `${currentAccount.name} <${currentAccount.email}>` : "No account assigned"}
+      >
+        <IconUser />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11 }}>
+          {currentAccount?.label || "No account"}
+        </span>
+        <IconChevronDown />
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            zIndex: 50,
+            minWidth: 260,
+            maxWidth: 360,
+            padding: "4px 0",
+            borderRadius: 8,
+            background: "var(--surface-2)",
+            border: "1px solid var(--border)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)",
+            animation: "dropdown-in 0.12s ease-out",
+          }}
+        >
+          <div style={{ padding: "6px 12px 4px", fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Set for this repo
+          </div>
+
+          {/* None option */}
+          <div
+            onClick={() => { setAccountForRepo(repo.path, null); setOpen(false); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "6px 12px", cursor: "pointer", fontSize: 12,
+              color: !currentAccount ? "var(--accent)" : "var(--text-secondary)",
+              background: !currentAccount ? "var(--accent-dim)" : "transparent",
+            }}
+            onMouseEnter={(e) => { if (currentAccount) e.currentTarget.style.background = "var(--surface-3)"; }}
+            onMouseLeave={(e) => { if (currentAccount) e.currentTarget.style.background = "transparent"; }}
+          >
+            None (use git config default)
+          </div>
+
+          {accounts.map((account) => (
+            <div
+              key={account.id}
+              onClick={() => { setAccountForRepo(repo.path, account.id); setOpen(false); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "6px 12px", cursor: "pointer",
+                color: currentAccount?.id === account.id ? "var(--accent)" : "var(--text-primary)",
+                background: currentAccount?.id === account.id ? "var(--accent-dim)" : "transparent",
+              }}
+              onMouseEnter={(e) => { if (currentAccount?.id !== account.id) e.currentTarget.style.background = "var(--surface-3)"; }}
+              onMouseLeave={(e) => { if (currentAccount?.id !== account.id) e.currentTarget.style.background = "transparent"; }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 500 }}>{account.label}</div>
+                <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{account.name} &lt;{account.email}&gt;</div>
+              </div>
+            </div>
+          ))}
+
+          {/* Set as global default */}
+          <div style={{ height: 1, margin: "4px 8px", background: "var(--border-subtle)" }} />
+          <div style={{ padding: "6px 12px 4px", fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Set as global default
+          </div>
+          {accounts.map((account) => (
+            <div
+              key={`global-${account.id}`}
+              onClick={() => { setDefaultAccount(account.id); setOpen(false); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "5px 12px", cursor: "pointer", fontSize: 11,
+                color: "var(--text-secondary)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-3)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <IconGlobe /> {account.label}
+            </div>
+          ))}
+
+          {/* Manage accounts */}
+          <div style={{ height: 1, margin: "4px 8px", background: "var(--border-subtle)" }} />
+          <div
+            onClick={() => { openSettingsDialog(); setOpen(false); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "6px 12px", cursor: "pointer", fontSize: 11, color: "var(--accent)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-3)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            Manage accounts...
+          </div>
         </div>
       )}
     </div>
@@ -569,6 +717,13 @@ export const Toolbar: React.FC = () => {
           >
             <IconGlobe /> Remotes
           </button>
+
+          <div
+            className="mx-1"
+            style={{ width: 1, height: 18, background: "var(--border)" }}
+          />
+
+          <AccountSelector />
 
       <div className="flex-1" />
 

@@ -9,6 +9,7 @@ import { FileHistoryPanel } from "../details/FileHistoryPanel";
 import { BlameView } from "../details/BlameView";
 import type { GitStatus, ConflictFile } from "../../../shared/git-types";
 import { AiCommitMessageButton } from "../ai/AiCommitMessageButton";
+import { useAccountStore } from "../../store/account-store";
 
 interface Props {
   open: boolean;
@@ -926,6 +927,8 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               />
               <AiCommitMessageButton onGenerated={(msg) => setMessage(msg)} />
               </div>
+
+              <AuthorInfo />
 
               {error && (
                 <div style={{ fontSize: 11, color: "var(--red)", padding: "0 2px" }}>
@@ -2237,3 +2240,46 @@ const IconGitignore: React.FC<{ size?: number }> = ({ size = 14 }) => (
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
   </svg>
 );
+
+const AuthorInfo: React.FC = () => {
+  const { currentAccount } = useAccountStore();
+  const [gitName, setGitName] = useState("");
+  const [gitEmail, setGitEmail] = useState("");
+
+  useEffect(() => {
+    if (!currentAccount) {
+      // Fallback: read from git config
+      Promise.all([
+        window.electronAPI.gitConfig.get("user.name"),
+        window.electronAPI.gitConfig.get("user.email"),
+      ]).then(([name, email]) => {
+        setGitName(name);
+        setGitEmail(email);
+      });
+    }
+  }, [currentAccount]);
+
+  const name = currentAccount?.name || gitName;
+  const email = currentAccount?.email || gitEmail;
+
+  if (!name && !email) return null;
+
+  return (
+    <div
+      style={{
+        fontSize: 11, color: "var(--text-muted)", padding: "2px 2px",
+        display: "flex", alignItems: "center", gap: 4,
+      }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+      </svg>
+      <span>
+        Author: {name}{email && ` <${email}>`}
+        {currentAccount && (
+          <span style={{ color: "var(--accent)", marginLeft: 6 }}>({currentAccount.label})</span>
+        )}
+      </span>
+    </div>
+  );
+};

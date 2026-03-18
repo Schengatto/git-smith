@@ -13,6 +13,7 @@ import { registerConflictHandlers } from "./git-conflict.ipc";
 import { registerOperationHandlers } from "./git-operation.ipc";
 import { registerTerminalHandlers } from "./terminal.ipc";
 import { registerMcpHandlers } from "./mcp.ipc";
+import { registerAccountHandlers } from "./git-account.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -30,4 +31,5 @@ export function registerAllHandlers() {
   registerOperationHandlers();
   registerTerminalHandlers();
   registerMcpHandlers();
+  registerAccountHandlers();
 }

@@ -1,6 +1,7 @@
 import { app } from "electron";
 import path from "path";
 import fs from "fs";
+import { GitAccount } from "../shared/git-types";
 
 export interface AppSettings {
   // General
@@ -58,6 +59,9 @@ export interface AppStoreSchema {
   windowBounds: { width: number; height: number; x?: number; y?: number };
   settings: AppSettings;
   repoViewSettings: { [repoPath: string]: RepoViewSettings };
+  gitAccounts: GitAccount[];
+  repoAccountMap: Record<string, string>; // repoPath → accountId
+  defaultAccountId: string | null;
 }
 
 export const defaultSettings: AppSettings = {
@@ -92,6 +96,9 @@ const defaults: AppStoreSchema = {
   windowBounds: { width: 1280, height: 800 },
   settings: { ...defaultSettings },
   repoViewSettings: {},
+  gitAccounts: [],
+  repoAccountMap: {},
+  defaultAccountId: null,
 };
 
 function getStorePath(): string {
@@ -331,6 +338,66 @@ export function setRepoViewSettings(repoPath: string, partial: Partial<RepoViewS
     ...store.repoViewSettings[repoPath],
     ...partial,
   };
+  writeStore(store);
+}
+
+// --- Git Accounts ---
+
+export function getGitAccounts(): GitAccount[] {
+  return readStore().gitAccounts;
+}
+
+export function addGitAccount(account: GitAccount): void {
+  const store = readStore();
+  store.gitAccounts.push(account);
+  writeStore(store);
+}
+
+export function updateGitAccount(id: string, partial: Partial<GitAccount>): void {
+  const store = readStore();
+  const idx = store.gitAccounts.findIndex((a) => a.id === id);
+  if (idx >= 0) {
+    store.gitAccounts[idx] = { ...store.gitAccounts[idx], ...partial, id };
+    writeStore(store);
+  }
+}
+
+export function deleteGitAccount(id: string): void {
+  const store = readStore();
+  store.gitAccounts = store.gitAccounts.filter((a) => a.id !== id);
+  // Clean up references
+  for (const key of Object.keys(store.repoAccountMap)) {
+    if (store.repoAccountMap[key] === id) {
+      delete store.repoAccountMap[key];
+    }
+  }
+  if (store.defaultAccountId === id) {
+    store.defaultAccountId = null;
+  }
+  writeStore(store);
+}
+
+export function getRepoAccount(repoPath: string): string | null {
+  return readStore().repoAccountMap[repoPath] || null;
+}
+
+export function setRepoAccount(repoPath: string, accountId: string | null): void {
+  const store = readStore();
+  if (accountId) {
+    store.repoAccountMap[repoPath] = accountId;
+  } else {
+    delete store.repoAccountMap[repoPath];
+  }
+  writeStore(store);
+}
+
+export function getDefaultAccountId(): string | null {
+  return readStore().defaultAccountId;
+}
+
+export function setDefaultAccountId(accountId: string | null): void {
+  const store = readStore();
+  store.defaultAccountId = accountId;
   writeStore(store);
 }
 

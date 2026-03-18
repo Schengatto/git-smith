@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useUIStore } from "../../store/ui-store";
+import { useAccountStore } from "../../store/account-store";
+import type { GitAccount, SshHostEntry } from "../../../shared/git-types";
 
-type Tab = "general" | "git" | "fetch" | "commit" | "diff" | "mergetool" | "advanced" | "ai";
+type Tab = "general" | "accounts" | "git" | "fetch" | "commit" | "diff" | "mergetool" | "advanced" | "ai";
 
 interface AppSettings {
   theme: string;
@@ -44,6 +46,7 @@ interface Props {
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "general", label: "General", icon: <IconSettings /> },
+  { id: "accounts", label: "Accounts", icon: <IconAccount /> },
   { id: "git", label: "Git Config", icon: <IconGit /> },
   { id: "fetch", label: "Fetch", icon: <IconFetch /> },
   { id: "commit", label: "Commit", icon: <IconCommit /> },
@@ -209,6 +212,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose }) => {
             {settings && tab === "general" && (
               <GeneralTab settings={settings} onChange={updateSetting} />
             )}
+            {tab === "accounts" && <AccountsTab />}
             {tab === "git" && gitConfig && globalConfig && (
               <GitConfigTab local={gitConfig} global={globalConfig} onSave={handleSaveGitConfig} />
             )}
@@ -777,6 +781,14 @@ function IconAi() {
   );
 }
 
+function IconAccount() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
 /* ---------- AI / MCP Tab ---------- */
 
 const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
@@ -886,6 +898,314 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
           Start with: <code style={{ fontSize: 11, color: "var(--accent)" }}>
             git-expansion --mcp-server --repo /path/to/repo
           </code>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ---------- Accounts Tab ---------- */
+
+const emptyAccount = { label: "", name: "", email: "", signingKey: "", sshKeyPath: "" };
+
+const AccountsTab: React.FC = () => {
+  const { accounts, loadAccounts, addAccount, updateAccount, deleteAccount } = useAccountStore();
+  const [form, setForm] = useState(emptyAccount);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [sshEntries, setSshEntries] = useState<SshHostEntry[] | null>(null);
+  const [showSshImport, setShowSshImport] = useState(false);
+
+  useEffect(() => { loadAccounts(); }, []);
+
+  const handleLoadSshConfig = async () => {
+    const entries = await window.electronAPI.account.parseSshConfig();
+    setSshEntries(entries);
+    setShowSshImport(true);
+  };
+
+  const handleImportSshEntry = (entry: SshHostEntry) => {
+    setForm({
+      label: entry.host,
+      name: "",
+      email: "",
+      signingKey: "",
+      sshKeyPath: entry.identityFile || "",
+    });
+    setEditingId(null);
+    setShowForm(true);
+    setShowSshImport(false);
+  };
+
+  const handleSave = async () => {
+    if (!form.label.trim() || !form.name.trim() || !form.email.trim()) return;
+    if (editingId) {
+      await updateAccount(editingId, form);
+      setEditingId(null);
+    } else {
+      await addAccount(form);
+    }
+    setForm(emptyAccount);
+    setShowForm(false);
+  };
+
+  const handleEdit = (account: GitAccount) => {
+    setEditingId(account.id);
+    setForm({
+      label: account.label,
+      name: account.name,
+      email: account.email,
+      signingKey: account.signingKey || "",
+      sshKeyPath: account.sshKeyPath || "",
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteAccount(id);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setForm(emptyAccount);
+    setShowForm(false);
+  };
+
+  const handleBrowseSshKey = async () => {
+    const selected = await window.electronAPI.repo.browseFile("Select SSH Private Key");
+    if (selected) setForm({ ...form, sshKeyPath: selected });
+  };
+
+  const inputStyle: React.CSSProperties = {
+    padding: "6px 8px", borderRadius: 6, border: "1px solid var(--border)",
+    background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12,
+    outline: "none", width: "100%",
+  };
+
+  return (
+    <div>
+      <SectionTitle>Git Accounts</SectionTitle>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 12, lineHeight: 1.5 }}>
+        Configure named Git identities. Assign an account to a repository to set its local user.name, user.email, and SSH key.
+      </div>
+
+      {accounts.length === 0 && !showForm && (
+        <div style={{ fontSize: 12, color: "var(--text-muted)", padding: "16px 0", textAlign: "center" }}>
+          No accounts configured yet.
+        </div>
+      )}
+
+      {accounts.map((account) => (
+        <div
+          key={account.id}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "8px 10px", marginBottom: 4, borderRadius: 6,
+            background: "var(--surface-0)", border: "1px solid var(--border-subtle)",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{account.label}</div>
+            <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 2 }}>
+              {account.name} &lt;{account.email}&gt;
+              {account.sshKeyPath && (
+                <span style={{ color: "var(--text-muted)", marginLeft: 8 }}>
+                  SSH: {account.sshKeyPath.split(/[\\/]/).pop()}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => handleEdit(account)}
+            style={{
+              padding: "3px 8px", borderRadius: 4, border: "1px solid var(--border)",
+              background: "transparent", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer",
+            }}
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(account.id)}
+            style={{
+              padding: "3px 8px", borderRadius: 4, border: "1px solid var(--border)",
+              background: "transparent", color: "var(--error, #f38ba8)", fontSize: 11, cursor: "pointer",
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      ))}
+
+      {showForm ? (
+        <div
+          style={{
+            marginTop: 12, padding: 12, borderRadius: 8,
+            border: "1px solid var(--border)", background: "var(--surface-0)",
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", marginBottom: 10 }}>
+            {editingId ? "Edit Account" : "New Account"}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div>
+              <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 3 }}>Label *</label>
+              <input
+                style={inputStyle}
+                value={form.label}
+                onChange={(e) => setForm({ ...form, label: e.target.value })}
+                placeholder="e.g. Work, Personal"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 3 }}>Name *</label>
+              <input
+                style={inputStyle}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="John Doe"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 3 }}>Email *</label>
+              <input
+                style={inputStyle}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="john@example.com"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 3 }}>Signing Key</label>
+              <input
+                style={inputStyle}
+                value={form.signingKey}
+                onChange={(e) => setForm({ ...form, signingKey: e.target.value })}
+                placeholder="GPG key ID (optional)"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "block", marginBottom: 3 }}>SSH Private Key</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input
+                  style={{ ...inputStyle, flex: 1 }}
+                  value={form.sshKeyPath}
+                  onChange={(e) => setForm({ ...form, sshKeyPath: e.target.value })}
+                  placeholder="~/.ssh/id_ed25519 (optional)"
+                />
+                <button
+                  onClick={handleBrowseSshKey}
+                  style={{
+                    padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)",
+                    background: "var(--surface-1)", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer", whiteSpace: "nowrap",
+                  }}
+                >
+                  Browse
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+            <button
+              onClick={handleCancel}
+              style={{
+                padding: "5px 14px", borderRadius: 6, border: "1px solid var(--border)",
+                background: "transparent", color: "var(--text-secondary)", fontSize: 12, cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!form.label.trim() || !form.name.trim() || !form.email.trim()}
+              style={{
+                padding: "5px 14px", borderRadius: 6, border: "none",
+                background: "var(--accent)", color: "var(--surface-0)", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                opacity: (!form.label.trim() || !form.name.trim() || !form.email.trim()) ? 0.5 : 1,
+              }}
+            >
+              {editingId ? "Update" : "Add Account"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button
+            onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyAccount); }}
+            style={{
+              flex: 1, padding: "6px 14px", borderRadius: 6, border: "1px dashed var(--border)",
+              background: "transparent", color: "var(--accent)", fontSize: 12, cursor: "pointer",
+            }}
+          >
+            + Add Account
+          </button>
+          <button
+            onClick={handleLoadSshConfig}
+            style={{
+              flex: 1, padding: "6px 14px", borderRadius: 6, border: "1px dashed var(--border)",
+              background: "transparent", color: "var(--text-secondary)", fontSize: 12, cursor: "pointer",
+            }}
+          >
+            Import from SSH Config
+          </button>
+        </div>
+      )}
+
+      {/* SSH Import panel */}
+      {showSshImport && sshEntries !== null && (
+        <div
+          style={{
+            marginTop: 12, padding: 12, borderRadius: 8,
+            border: "1px solid var(--border)", background: "var(--surface-0)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
+              SSH Config Entries (~/.ssh/config)
+            </div>
+            <button
+              onClick={() => setShowSshImport(false)}
+              style={{
+                background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 11,
+              }}
+            >
+              Close
+            </button>
+          </div>
+          {sshEntries.length === 0 ? (
+            <div style={{ fontSize: 12, color: "var(--text-muted)", padding: "8px 0", textAlign: "center" }}>
+              No SSH host entries with IdentityFile found in ~/.ssh/config
+            </div>
+          ) : (
+            sshEntries.map((entry, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "6px 8px", marginBottom: 3, borderRadius: 6,
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{entry.host}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                    {entry.hostName && <span>{entry.hostName} </span>}
+                    <span style={{ color: "var(--text-muted)" }}>
+                      Key: {entry.identityFile?.split(/[\\/]/).pop()}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleImportSshEntry(entry)}
+                  style={{
+                    padding: "3px 10px", borderRadius: 4, border: "none",
+                    background: "var(--accent)", color: "var(--surface-0)", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  Import
+                </button>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

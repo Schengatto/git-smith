@@ -1151,6 +1151,31 @@ export class GitService {
     });
   }
 
+  async applyAccount(
+    name: string,
+    email: string,
+    options?: { signingKey?: string; sshKeyPath?: string; global?: boolean }
+  ): Promise<void> {
+    const global = options?.global ?? false;
+    await this.setConfig("user.name", name, global);
+    await this.setConfig("user.email", email, global);
+    if (options?.signingKey) {
+      await this.setConfig("user.signingKey", options.signingKey, global);
+    }
+    if (options?.sshKeyPath) {
+      await this.setConfig(
+        "core.sshCommand",
+        `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes`,
+        global
+      );
+    } else {
+      // Remove core.sshCommand to fall back to default SSH behavior
+      const git = this.ensureRepo();
+      const scope = global ? "--global" : "--local";
+      await git.raw(["config", "--unset", scope, "core.sshCommand"]).catch(() => {});
+    }
+  }
+
   async addSubmodule(url: string, path?: string): Promise<void> {
     const git = this.ensureRepo();
     const args = ["add", url];
