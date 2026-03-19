@@ -7,6 +7,9 @@ out/
 .vite/
 *.tsbuildinfo
 
+# Superpowers brainstorm artifacts
+.superpowers/
+
 # OS files
 .DS_Store
 Thumbs.db
