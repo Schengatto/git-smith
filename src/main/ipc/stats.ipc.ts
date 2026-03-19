@@ -11,4 +11,8 @@ export function registerStatsHandlers() {
   ipcMain.handle(IPC.STATS.AUTHOR_DETAIL, async (_event, email: string, timeframe: Timeframe) => {
     return gitService.getAuthorDetail(email, timeframe);
   });
+
+  ipcMain.handle(IPC.STATS.CODEBASE, async () => {
+    return gitService.getCodebaseStats();
+  });
 }

@@ -200,6 +200,7 @@ export const IPC = {
   STATS: {
     LEADERBOARD: "git:stats:leaderboard",
     AUTHOR_DETAIL: "git:stats:author-detail",
+    CODEBASE: "git:stats:codebase",
   },
   CHANGELOG: {
     TAGS_BEFORE: "git:changelog:tags-before",

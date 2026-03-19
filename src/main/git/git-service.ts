@@ -1,4 +1,5 @@
 import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git";
+import { getCodebaseStats as computeCodebaseStats } from "./codebase-stats";
 import { BrowserWindow } from "electron";
 import type { ChildProcess } from "child_process";
 import path from "path";
@@ -1694,6 +1695,13 @@ export class GitService {
   // ---------------------------------------------------------------------------
   // Stats methods
   // ---------------------------------------------------------------------------
+
+  async getCodebaseStats(): Promise<import("../../shared/codebase-stats-types").CodebaseStats> {
+    const git = this.ensureRepo();
+    return this.run("git ls-files (codebase stats)", [], async () => {
+      return computeCodebaseStats(git);
+    });
+  }
 
   async getLeaderboard(timeframe: import("../../shared/stats-types").Timeframe): Promise<import("../../shared/stats-types").LeaderboardEntry[]> {
     const git = this.ensureRepo();

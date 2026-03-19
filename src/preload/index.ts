@@ -358,6 +358,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.STATS.LEADERBOARD, timeframe),
     getAuthorDetail: (email: string, timeframe: import("../shared/stats-types").Timeframe): Promise<import("../shared/stats-types").AuthorDetail> =>
       ipcRenderer.invoke(IPC.STATS.AUTHOR_DETAIL, email, timeframe),
+    getCodebaseStats: (): Promise<import("../shared/codebase-stats-types").CodebaseStats> =>
+      ipcRenderer.invoke(IPC.STATS.CODEBASE),
   },
   on: {
     commandLog: (callback: (entry: CommandLogEntry) => void) => {
