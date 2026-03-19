@@ -363,21 +363,6 @@ export const MenuBar: React.FC<{
               "https://github.com/Schengatto/git-expansion/wiki"
             ),
         },
-        {
-          label: "Changelog",
-          onClick: () =>
-            window.electronAPI.repo.openExternal(
-              "https://github.com/nicenemo/git-expansion/releases"
-            ),
-        },
-        { divider: true },
-        {
-          label: "Donate",
-          onClick: () =>
-            window.electronAPI.repo.openExternal(
-              "https://www.paypal.com/donate"
-            ),
-        },
         { divider: true },
         {
           label: "Report an issue",
