@@ -73,6 +73,14 @@ const config: ForgeConfig = {
           fs.cpSync(src, dest, { recursive: true });
         }
       }
+
+      // Generate app-update.yml for electron-updater (normally created by electron-builder)
+      const appUpdateYml = [
+        "provider: github",
+        "owner: Schengatto",
+        "repo: git-expansion",
+      ].join("\n");
+      fs.writeFileSync(path.join(buildPath, "app-update.yml"), appUpdateYml, "utf-8");
     },
     postMake: async (_forgeConfig, makeResults) => {
       const releaseDate = new Date().toISOString();
