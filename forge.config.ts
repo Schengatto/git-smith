@@ -74,13 +74,24 @@ const config: ForgeConfig = {
         }
       }
 
-      // Generate app-update.yml for electron-updater (normally created by electron-builder)
+    },
+    postPackage: async (_config, { outputPaths }) => {
+      // Generate app-update.yml for electron-updater (must be in resources/, outside asar)
       const appUpdateYml = [
         "provider: github",
         "owner: Schengatto",
         "repo: git-expansion",
       ].join("\n");
-      fs.writeFileSync(path.join(buildPath, "app-update.yml"), appUpdateYml, "utf-8");
+      for (const outputPath of outputPaths) {
+        const resourcesDir = path.join(outputPath, "resources");
+        if (fs.existsSync(resourcesDir)) {
+          fs.writeFileSync(
+            path.join(resourcesDir, "app-update.yml"),
+            appUpdateYml,
+            "utf-8"
+          );
+        }
+      }
     },
     postMake: async (_forgeConfig, makeResults) => {
       const releaseDate = new Date().toISOString();
