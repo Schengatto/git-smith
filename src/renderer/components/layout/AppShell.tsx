@@ -20,6 +20,7 @@ import { CommitInfoPanel } from "../details/CommitInfoPanel";
 import { CommandLogPanel } from "../command-log/CommandLogPanel";
 import { ConsolePanel } from "../console/ConsolePanel";
 import { StatsPanel } from "../stats/StatsPanel";
+import { CodebaseStatsPanel } from "../stats/CodebaseStatsPanel";
 import { CloneDialog } from "../dialogs/CloneDialog";
 import { ScanDialog } from "../dialogs/ScanDialog";
 import { openDialogWindow } from "../../utils/open-dialog";
@@ -37,6 +38,7 @@ const components: Record<string, React.FC<IDockviewPanelProps>> = {
   commandLog: () => <CommandLogPanel />,
   console: () => <ConsolePanel />,
   stats: () => <StatsPanel />,
+  codebaseStats: () => <CodebaseStatsPanel />,
 };
 
 export const AppShell: React.FC = () => {
@@ -228,6 +230,23 @@ export const AppShell: React.FC = () => {
           }
         }
 
+        // Migrate: add codebaseStats panel if missing from saved layout
+        if (!event.api.getPanel("codebaseStats")) {
+          const ref =
+            event.api.getPanel("stats") ??
+            event.api.getPanel("console") ??
+            event.api.getPanel("commandLog") ??
+            event.api.getPanel("details");
+          if (ref) {
+            event.api.addPanel({
+              id: "codebaseStats",
+              component: "codebaseStats",
+              title: "Codebase Stats",
+              position: { referencePanel: ref, direction: "within" },
+            });
+          }
+        }
+
         // Subscribe to layout changes for persistence
         event.api.onDidLayoutChange(() => saveLayout());
         return;
@@ -282,6 +301,13 @@ export const AppShell: React.FC = () => {
       id: "stats",
       component: "stats",
       title: "Author Statistics",
+      position: { referencePanel: detailsPanel, direction: "within" },
+    });
+
+    event.api.addPanel({
+      id: "codebaseStats",
+      component: "codebaseStats",
+      title: "Codebase Stats",
       position: { referencePanel: detailsPanel, direction: "within" },
     });
 
