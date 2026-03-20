@@ -497,18 +497,24 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                   )}
                                 </div>
                                 {/* Ours preview */}
-                                <div style={{ borderBottom: "1px dashed var(--border-subtle)" }}>
-                                  <div style={sectionLabelStyle("var(--accent)")}>Current (ours)</div>
+                                <div style={{ borderBottom: "2px solid var(--border-subtle)", borderLeft: "3px solid var(--accent)", background: "var(--accent)10" }}>
+                                  <div style={sectionLabelStyle("var(--accent)")}>
+                                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>CURRENT</span>
+                                    <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4, opacity: 0.7 }}>(ours)</span>
+                                  </div>
                                   {(section.ours || []).map((line, i) => (
-                                    <LineRow key={i} text={line} bg="var(--accent)08" />
+                                    <LineRow key={i} text={line} bg="var(--accent)12" />
                                   ))}
                                   {(section.ours || []).length === 0 && <EmptyLine />}
                                 </div>
                                 {/* Theirs preview */}
-                                <div>
-                                  <div style={sectionLabelStyle("var(--mauve)")}>Incoming (theirs)</div>
+                                <div style={{ borderLeft: "3px solid var(--mauve)", background: "var(--mauve)10" }}>
+                                  <div style={sectionLabelStyle("var(--mauve)")}>
+                                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>INCOMING</span>
+                                    <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4, opacity: 0.7 }}>(theirs)</span>
+                                  </div>
                                   {(section.theirs || []).map((line, i) => (
-                                    <LineRow key={i} text={line} bg="var(--mauve)08" />
+                                    <LineRow key={i} text={line} bg="var(--mauve)12" />
                                   ))}
                                   {(section.theirs || []).length === 0 && <EmptyLine />}
                                 </div>
@@ -1021,8 +1027,8 @@ const tinyBtnStyle: React.CSSProperties = {
 };
 
 const sectionLabelStyle = (color: string): React.CSSProperties => ({
-  padding: "1px 8px", fontSize: 9, fontWeight: 600, color,
-  textTransform: "uppercase", letterSpacing: "0.05em", background: `${color}08`,
+  padding: "3px 8px", display: "flex", alignItems: "center", color,
+  background: `${color}15`, borderBottom: `1px solid ${color}25`,
 });
 
 export { parseMergeSections, resolveAllConflicts, buildMergedContent, computeLineDiff };

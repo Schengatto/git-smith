@@ -263,8 +263,8 @@ describe("MergeConflictDialog", () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Current (ours)")).toBeInTheDocument();
-      expect(screen.getByText("Incoming (theirs)")).toBeInTheDocument();
+      expect(screen.getByText("CURRENT")).toBeInTheDocument();
+      expect(screen.getByText("INCOMING")).toBeInTheDocument();
     });
   });
 
