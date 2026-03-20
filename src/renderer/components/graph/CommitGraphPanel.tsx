@@ -14,6 +14,7 @@ import { RebaseDialog } from "../dialogs/RebaseDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo, CommitInfo } from "../../../shared/git-types";
 import { AiReviewDialog } from "../ai/AiReviewDialog";
+import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
 const LANE_WIDTH = 16;
 const ROW_HEIGHT = 30;
@@ -69,6 +70,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [resetTarget, setResetTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
+  const [deleteRemoteBranchTarget, setDeleteRemoteBranchTarget] = useState<string | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
   const [deleteTagRemote, setDeleteTagRemote] = useState(false);
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
@@ -327,15 +329,29 @@ export const CommitGraphPanel: React.FC = () => {
 
     // Add delete options for branches on this commit
     const localBranches = row.commit.refs.filter((r) => r.type === "head" && !r.current);
+    const remoteBranches = row.commit.refs.filter((r) => {
+      if (r.type !== "remote") return false;
+      // Exclude the remote tracking branch for the current local branch
+      const slashIdx = r.name.indexOf("/");
+      const branchPart = slashIdx >= 0 ? r.name.substring(slashIdx + 1) : r.name;
+      return branchPart !== repo?.currentBranch;
+    });
     const tags = row.commit.refs.filter((r) => r.type === "tag");
 
-    if (localBranches.length > 0 || tags.length > 0) {
+    if (localBranches.length > 0 || remoteBranches.length > 0 || tags.length > 0) {
       items.push({ divider: true });
       for (const branch of localBranches) {
         items.push({
           label: `Delete Branch "${branch.name}"`,
           color: "var(--red)",
           onClick: () => setDeleteBranchTarget(branch.name),
+        });
+      }
+      for (const branch of remoteBranches) {
+        items.push({
+          label: `Delete Remote Branch "${branch.name}"`,
+          color: "var(--red)",
+          onClick: () => setDeleteRemoteBranchTarget(branch.name),
         });
       }
       for (const tag of tags) {
@@ -772,6 +788,28 @@ export const CommitGraphPanel: React.FC = () => {
           setDeleteBranchTarget(null);
         }}
         onCancel={() => setDeleteBranchTarget(null)}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!deleteRemoteBranchTarget}
+        title="Delete Remote Branch"
+        message={`Are you sure you want to delete remote branch "${deleteRemoteBranchTarget}"?`}
+        onConfirm={async () => {
+          if (!deleteRemoteBranchTarget) return;
+          try {
+            const fullName = deleteRemoteBranchTarget;
+            const slashIdx = fullName.indexOf("/");
+            const remote = fullName.substring(0, slashIdx);
+            const branch = fullName.substring(slashIdx + 1);
+            await runGitOperation("Delete Remote Branch", () => window.electronAPI.branch.deleteRemote(remote, branch));
+            loadGraph();
+          } catch (err) {
+            if (err instanceof GitOperationCancelledError) return;
+            alert(`Failed to delete remote branch: ${err instanceof Error ? err.message : err}`);
+          }
+          setDeleteRemoteBranchTarget(null);
+        }}
+        onCancel={() => setDeleteRemoteBranchTarget(null)}
       />
 
       <CheckoutDialog
