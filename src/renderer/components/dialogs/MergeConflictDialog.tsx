@@ -38,6 +38,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   // Section-based conflict model
   const [sections, setSections] = useState<ParsedSection[]>([]);
   const [editingConflictId, setEditingConflictId] = useState<number | null>(null);
+  const [visibleConflictId, setVisibleConflictId] = useState<number | null>(null);
 
   // External merge tool
   const [mergeTool, setMergeTool] = useState<MergeToolSettings>({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
@@ -102,6 +103,24 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     }
     return items;
   }, [sections, lineNumbers]);
+
+  // Map from flat-item index → conflict section id (for visible-conflict tracking)
+  const flatIndexToConflictId = useMemo(() => {
+    const map = new Map<number, number>();
+    flatItems.forEach((item, idx) => {
+      if (item.kind === "conflict") map.set(idx, sections[item.sectionIdx].id);
+    });
+    return map;
+  }, [flatItems, sections]);
+
+  const handleVisibleRangeChanged = useCallback((range: { startIndex: number; endIndex: number }) => {
+    // Find the first conflict section visible in the range
+    for (let i = range.startIndex; i <= range.endIndex; i++) {
+      const cid = flatIndexToConflictId.get(i);
+      if (cid !== undefined) { setVisibleConflictId(cid); return; }
+    }
+    setVisibleConflictId(null);
+  }, [flatIndexToConflictId]);
 
   // ═══════════════ Effects ═══════════════
 
@@ -367,19 +386,26 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     {/* Conflict navigation badges */}
                     {conflictSections.length > 0 && (
                       <div style={{ display: "flex", gap: 2, alignItems: "center", marginRight: 4 }}>
-                        {conflictSections.map((s, i) => (
-                          <button key={s.id} onClick={() => scrollToConflictById(s.id)}
-                            title={`Conflict ${i + 1}${s.resolution !== "unresolved" ? " (resolved)" : ""}`}
-                            style={{
-                              width: 18, height: 18, fontSize: 9, fontWeight: 600,
-                              border: `1px solid ${s.resolution === "unresolved" ? "var(--yellow)" : "var(--green)"}60`,
-                              borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                              background: s.resolution === "unresolved" ? "var(--yellow)15" : "var(--green)15",
-                              color: s.resolution === "unresolved" ? "var(--yellow)" : "var(--green)",
-                            }}>
-                            {i + 1}
-                          </button>
-                        ))}
+                        {conflictSections.map((s, i) => {
+                          const isActive = s.id === visibleConflictId;
+                          const isDone = s.resolution !== "unresolved";
+                          const baseColor = isDone ? "var(--green)" : "var(--yellow)";
+                          return (
+                            <button key={s.id} onClick={() => scrollToConflictById(s.id)}
+                              title={`Conflict ${i + 1}${isDone ? " (resolved)" : ""}`}
+                              style={{
+                                width: 20, height: 20, fontSize: 9, fontWeight: 700,
+                                border: isActive ? `2px solid ${baseColor}` : `1px solid ${baseColor}60`,
+                                borderRadius: 4, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                                background: isActive ? `${baseColor}30` : isDone ? `${baseColor}15` : `${baseColor}10`,
+                                color: baseColor,
+                                boxShadow: isActive ? `0 0 6px ${baseColor}40` : "none",
+                                transition: "all 0.15s ease",
+                              }}>
+                              {isDone ? "✓" : i + 1}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                     <NavBtn label="Prev conflict" icon="up" onClick={() => scrollToConflict("prev")} disabled={unresolvedCount === 0} />
@@ -445,6 +471,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     totalCount={flatItems.length}
                     defaultItemHeight={20}
                     overscan={200}
+                    rangeChanged={handleVisibleRangeChanged}
                     itemContent={(index) => {
                       const item = flatItems[index];
                       if (item.kind === "common") {
