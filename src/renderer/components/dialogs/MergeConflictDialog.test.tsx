@@ -3,6 +3,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
+
+// Mock react-virtuoso — Virtuoso doesn't render in jsdom (no viewport dimensions)
+vi.mock("react-virtuoso", () => ({
+  Virtuoso: React.forwardRef(({ totalCount, itemContent }: { totalCount: number; itemContent: (index: number) => React.ReactNode }, ref: React.Ref<unknown>) => {
+    React.useImperativeHandle(ref, () => ({ scrollToIndex: () => {} }));
+    return React.createElement("div", { "data-testid": "virtuoso-mock" },
+      Array.from({ length: totalCount }, (_, i) => React.createElement("div", { key: i }, itemContent(i)))
+    );
+  }),
+}));
+
 import {
   MergeConflictDialog,
   parseMergeSections,

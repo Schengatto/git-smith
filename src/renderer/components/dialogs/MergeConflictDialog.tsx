@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import type { ConflictFile, ConflictFileContent } from "../../../shared/git-types";
 
 interface Props {
@@ -51,7 +52,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
 
   // Refs
   const conflictRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<VirtuosoHandle>(null);
 
   // --- Derived ---
   const conflictSections = useMemo(() => sections.filter(s => s.type === "conflict"), [sections]);
@@ -80,6 +81,27 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       return entry;
     });
   }, [sections]);
+
+  // --- Flat items for virtualization ---
+  type FlatItem =
+    | { kind: "common"; text: string; leftLn: number; centerLn: number; rightLn: number }
+    | { kind: "conflict"; sectionIdx: number };
+
+  const flatItems = useMemo((): FlatItem[] => {
+    const items: FlatItem[] = [];
+    for (let si = 0; si < sections.length; si++) {
+      const s = sections[si];
+      const ln = lineNumbers[si];
+      if (s.type === "common") {
+        for (let i = 0; i < (s.common || []).length; i++) {
+          items.push({ kind: "common", text: (s.common || [])[i], leftLn: ln.leftStart + i, centerLn: ln.centerStart + i, rightLn: ln.rightStart + i });
+        }
+      } else {
+        items.push({ kind: "conflict", sectionIdx: si });
+      }
+    }
+    return items;
+  }, [sections, lineNumbers]);
 
   // ═══════════════ Effects ═══════════════
 
@@ -244,30 +266,39 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     setAiSuggestion(null);
   }, [aiSuggestion, sections, conflictSections]);
 
+  /** Find the flat-item index for a given section id */
+  const findFlatIndexForSection = useCallback((sectionId: number): number => {
+    const sIdx = sections.findIndex(s => s.id === sectionId);
+    if (sIdx === -1) return -1;
+    return flatItems.findIndex(item => item.kind === "conflict" && item.sectionIdx === sIdx);
+  }, [sections, flatItems]);
+
   const scrollToConflict = useCallback((direction: "next" | "prev") => {
     const unresolved = conflictSections.filter(s => s.resolution === "unresolved");
-    if (unresolved.length === 0) return;
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const containerRect = container.getBoundingClientRect();
-    const containerMid = containerRect.top + containerRect.height / 2;
+    if (unresolved.length === 0 || !scrollContainerRef.current) return;
+    // Simple round-robin: find which unresolved conflict to jump to
+    // Use the first visible conflict ref to determine current position
     let currentIdx = -1;
     for (let i = 0; i < unresolved.length; i++) {
       const el = conflictRefs.current.get(unresolved[i].id);
       if (el) {
         const rect = el.getBoundingClientRect();
-        if (rect.top <= containerMid && rect.bottom >= containerMid) { currentIdx = i; break; }
+        if (rect.top >= 0 && rect.top < window.innerHeight) { currentIdx = i; break; }
       }
     }
     const targetIdx = direction === "next"
       ? (currentIdx < unresolved.length - 1 ? currentIdx + 1 : 0)
       : (currentIdx > 0 ? currentIdx - 1 : unresolved.length - 1);
-    conflictRefs.current.get(unresolved[targetIdx].id)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [conflictSections]);
+    const flatIdx = findFlatIndexForSection(unresolved[targetIdx].id);
+    if (flatIdx >= 0) scrollContainerRef.current.scrollToIndex({ index: flatIdx, align: "center", behavior: "smooth" });
+  }, [conflictSections, findFlatIndexForSection]);
 
   const scrollToConflictById = useCallback((id: number) => {
-    conflictRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, []);
+    const flatIdx = findFlatIndexForSection(id);
+    if (flatIdx >= 0 && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollToIndex({ index: flatIdx, align: "center", behavior: "smooth" });
+    }
+  }, [findFlatIndexForSection]);
 
   // ═══════════════ Render ═══════════════
 
@@ -407,40 +438,37 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                   </div>
                 </div>
 
-                {/* Section-based 3-column view */}
+                {/* Virtualized 3-column view */}
                 <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-                  <div ref={scrollContainerRef} style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
-                    {sections.map((section, sectionIdx) => {
-                      const ln = lineNumbers[sectionIdx];
-
-                      if (section.type === "common") {
+                  <Virtuoso
+                    ref={scrollContainerRef}
+                    totalCount={flatItems.length}
+                    defaultItemHeight={20}
+                    overscan={200}
+                    itemContent={(index) => {
+                      const item = flatItems[index];
+                      if (item.kind === "common") {
                         return (
-                          <div key={section.id} style={{ display: "flex" }}>
+                          <div style={{ display: "flex" }}>
                             <div style={{ flex: 1, borderRight: "1px solid var(--border-subtle)" }}>
-                              {(section.common || []).map((line, i) => (
-                                <LineRow key={i} lineNum={ln.leftStart + i} text={line} />
-                              ))}
+                              <LineRow lineNum={item.leftLn} text={item.text} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              {(section.common || []).map((line, i) => (
-                                <LineRow key={i} lineNum={ln.centerStart + i} text={line} />
-                              ))}
+                              <LineRow lineNum={item.centerLn} text={item.text} />
                             </div>
                             <div style={{ flex: 1, borderLeft: "1px solid var(--border-subtle)" }}>
-                              {(section.common || []).map((line, i) => (
-                                <LineRow key={i} lineNum={ln.rightStart + i} text={line} />
-                              ))}
+                              <LineRow lineNum={item.rightLn} text={item.text} />
                             </div>
                           </div>
                         );
                       }
-
-                      // ── Conflict section ──
+                      // ── Conflict section (rendered as single variable-height item) ──
+                      const section = sections[item.sectionIdx];
+                      const ln = lineNumbers[item.sectionIdx];
                       const isResolved = section.resolution !== "unresolved";
                       const isEditing = editingConflictId === section.id;
-
                       return (
-                        <div key={section.id}
+                        <div
                           ref={el => { conflictRefs.current.set(section.id, el); }}
                           data-testid={`conflict-section-${section.id}`}
                           style={{ display: "flex", borderTop: `2px solid ${isResolved ? "var(--green)" : "var(--yellow)"}40`, borderBottom: `2px solid ${isResolved ? "var(--green)" : "var(--yellow)"}40` }}>
@@ -451,7 +479,6 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                             ))}
                             {(section.ours || []).length === 0 && <EmptyLine />}
                           </div>
-
                           {/* Center: resolution area */}
                           <div style={{ flex: 1, background: isResolved ? "var(--green)04" : "var(--surface-1)" }}>
                             {isEditing ? (
@@ -480,7 +507,6 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                               </div>
                             ) : (
                               <div>
-                                {/* Per-conflict action bar */}
                                 <div style={conflictActionBarStyle}>
                                   <ConflictPickBtn label="Accept Current" color="var(--accent)" onClick={() => resolveConflict(section.id, "ours")} />
                                   <ConflictPickBtn label="Accept Incoming" color="var(--mauve)" onClick={() => resolveConflict(section.id, "theirs")} />
@@ -496,7 +522,6 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                     </button>
                                   )}
                                 </div>
-                                {/* Ours preview */}
                                 <div style={{ borderBottom: "2px solid var(--border-subtle)", borderLeft: "3px solid var(--accent)", background: "var(--accent)10" }}>
                                   <div style={sectionLabelStyle("var(--accent)")}>
                                     <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>CURRENT</span>
@@ -507,7 +532,6 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                   ))}
                                   {(section.ours || []).length === 0 && <EmptyLine />}
                                 </div>
-                                {/* Theirs preview */}
                                 <div style={{ borderLeft: "3px solid var(--mauve)", background: "var(--mauve)10" }}>
                                   <div style={sectionLabelStyle("var(--mauve)")}>
                                     <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>INCOMING</span>
@@ -521,7 +545,6 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                               </div>
                             )}
                           </div>
-
                           {/* Right: theirs */}
                           <div style={{ flex: 1, borderLeft: "1px solid var(--border-subtle)", background: isResolved ? "var(--green)06" : "var(--mauve)06" }}>
                             {(section.theirs || []).map((line, i) => (
@@ -531,8 +554,8 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
+                    }}
+                  />
 
                   {/* AI suggestion overlay */}
                   {aiSuggestion !== null && selectedFile && (
