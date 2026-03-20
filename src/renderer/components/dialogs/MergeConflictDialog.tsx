@@ -263,6 +263,33 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     }
   }, [selectedFile, aiLoading, sections]);
 
+  /** Per-conflict AI: skip overlay, extract & apply resolutions directly */
+  const handlePerConflictAi = useCallback(async () => {
+    if (!selectedFile || aiLoading) return;
+    setAiLoading(true); setError(null);
+    aiRequestFileRef.current = selectedFile;
+    try {
+      const suggestion = await window.electronAPI.mcp.suggestConflictResolution(selectedFile);
+      if (aiRequestFileRef.current !== selectedFile) return;
+      const resolutions = extractAiResolutions(sections, suggestion);
+      const applied = conflictSections.some(s => resolutions.has(s.id));
+      if (applied) {
+        setSections(prev => prev.map(s => {
+          if (s.type !== "conflict") return s;
+          const resolved = resolutions.get(s.id);
+          if (resolved !== undefined) return { ...s, resolution: "custom" as const, resolvedLines: resolved };
+          return s;
+        }));
+      } else {
+        setError("Could not extract AI resolutions — try the toolbar 'Resolve with AI' button for manual review.");
+      }
+    } catch (e: unknown) {
+      if (aiRequestFileRef.current === selectedFile) setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (aiRequestFileRef.current === selectedFile) setAiLoading(false);
+    }
+  }, [selectedFile, aiLoading, sections, conflictSections]);
+
   const applyAiSuggestion = useCallback(() => {
     if (!aiSuggestion) return;
     const resolutions = extractAiResolutions(sections, aiSuggestion.suggestion);
@@ -584,7 +611,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                     Edit
                                   </button>
                                   {aiConfigured && (
-                                    <button onClick={handleResolveWithAi} disabled={aiLoading}
+                                    <button onClick={handlePerConflictAi} disabled={aiLoading}
                                       style={{ ...conflictPickBtnBase, border: "1px solid var(--mauve)40", color: "var(--mauve)", opacity: aiLoading ? 0.5 : 1 }}>
                                       AI
                                     </button>
@@ -798,7 +825,10 @@ const AiSuggestionOverlay: React.FC<{
   onApply: () => void;
   onDismiss: () => void;
 }> = ({ currentText, suggestion, filePath, onApply, onDismiss }) => {
-  const diffLines = useMemo(() => computeLineDiff(currentText, suggestion), [currentText, suggestion]);
+  const MAX_DIFF_LINES = 2000;
+  const tooLarge = (currentText.split("\n").length + suggestion.split("\n").length) > MAX_DIFF_LINES * 2;
+  const diffLines = useMemo(() => tooLarge ? null : computeLineDiff(currentText, suggestion), [currentText, suggestion, tooLarge]);
+  const suggestionLines = useMemo(() => tooLarge ? suggestion.split("\n") : null, [suggestion, tooLarge]);
 
   return (
     <div style={{
@@ -822,7 +852,12 @@ const AiSuggestionOverlay: React.FC<{
         background: "var(--surface-0)",
         fontFamily: "var(--font-mono, monospace)", fontSize: 12, lineHeight: "20px",
       }}>
-        {diffLines.map((d, i) => (
+        {tooLarge && (
+          <div style={{ padding: "8px 12px", background: "var(--yellow)10", borderBottom: "1px solid var(--yellow)20", fontSize: 11, color: "var(--yellow)" }}>
+            File too large for inline diff ({suggestion.split("\n").length} lines). Showing AI output directly — click Apply to resolve all conflicts.
+          </div>
+        )}
+        {diffLines ? diffLines.map((d, i) => (
           <div key={i} style={{
             padding: "0 12px 0 8px", minHeight: 20, display: "flex",
             background: d.type === "added" ? "rgba(166,227,161,0.1)" : d.type === "removed" ? "rgba(243,139,168,0.1)" : "transparent",
@@ -832,6 +867,11 @@ const AiSuggestionOverlay: React.FC<{
               <span style={{ userSelect: "none", marginRight: 4 }}>{d.type === "added" ? "+" : d.type === "removed" ? "-" : " "}</span>
               {d.line}
             </span>
+          </div>
+        )) : suggestionLines?.map((line, i) => (
+          <div key={i} style={{ padding: "0 12px 0 8px", minHeight: 20, display: "flex" }}>
+            <span style={{ width: 40, flexShrink: 0, textAlign: "right", paddingRight: 8, color: "var(--text-muted)", fontSize: 11, userSelect: "none" }}>{i + 1}</span>
+            <span style={{ color: "var(--text-primary)" }}>{line}</span>
           </div>
         ))}
       </div>
