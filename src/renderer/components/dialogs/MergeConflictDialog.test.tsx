@@ -45,6 +45,14 @@ const suggestConflictResolutionMock = vi.fn().mockResolvedValue("resolved by AI"
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Reset mock implementations (clearAllMocks only clears call history, not implementations)
+  listMock.mockResolvedValue(mockFiles);
+  fileContentMock.mockResolvedValue(mockFileContent);
+  resolveMock.mockResolvedValue(undefined);
+  saveMergedMock.mockResolvedValue(undefined);
+  launchMergeToolMock.mockResolvedValue({ exitCode: 0, mergedContent: "" });
+  settingsGetMock.mockResolvedValue({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
+  suggestConflictResolutionMock.mockResolvedValue("resolved by AI");
   (window as unknown as { electronAPI: Record<string, unknown> }).electronAPI = {
     conflict: {
       list: listMock,
@@ -115,25 +123,14 @@ describe("MergeConflictDialog", () => {
     });
   });
 
-  it("populates ours and theirs in textareas", async () => {
+  it("renders ours and theirs content in section-based view", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      const textareas = document.querySelectorAll("textarea");
-      // 3 textareas: left, center, right
-      expect(textareas.length).toBe(3);
-      expect(textareas[0].value).toBe("our version of the line");
-      expect(textareas[2].value).toBe("their version of the line");
-    });
-  });
-
-  it("loads merged content into center textarea (uncontrolled)", async () => {
-    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
-
-    // Center textarea is uncontrolled — content is set via ref after load
-    // We verify the conflict count badge instead, which confirms content was parsed
-    await waitFor(() => {
-      expect(screen.getByText("1 conflict")).toBeInTheDocument();
+      // In the section-based view, ours/theirs appear as text in the conflict section
+      const allText = document.body.textContent || "";
+      expect(allText).toContain("our version of the line");
+      expect(allText).toContain("their version of the line");
     });
   });
 
@@ -145,14 +142,13 @@ describe("MergeConflictDialog", () => {
     });
   });
 
-  it("shows conflict action buttons", async () => {
+  it("shows per-conflict action buttons", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Use LOCAL →")).toBeInTheDocument();
-      expect(screen.getByText("← Use REMOTE")).toBeInTheDocument();
-      expect(screen.getByText("Both")).toBeInTheDocument();
-      expect(screen.getByText("None")).toBeInTheDocument();
+      expect(screen.getByText("Accept Current")).toBeInTheDocument();
+      expect(screen.getByText("Accept Incoming")).toBeInTheDocument();
+      expect(screen.getByText("Accept Both")).toBeInTheDocument();
     });
   });
 
@@ -190,19 +186,85 @@ describe("MergeConflictDialog", () => {
     });
   });
 
-  it("resolves conflict by clicking LOCAL button and updates count", async () => {
+  it("resolves conflict by clicking Accept Current and updates count", async () => {
     render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Use LOCAL →")).toBeInTheDocument();
+      expect(screen.getByText("Accept Current")).toBeInTheDocument();
       expect(screen.getByText("1 conflict")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText("Use LOCAL →"));
+    fireEvent.click(screen.getByText("Accept Current"));
 
-    // After resolving, conflict count should drop to 0
     await waitFor(() => {
       expect(screen.getByText("No conflicts remaining")).toBeInTheDocument();
+    });
+  });
+
+  it("resolves conflict by clicking Accept Incoming", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept Incoming")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Accept Incoming"));
+
+    await waitFor(() => {
+      expect(screen.getByText("No conflicts remaining")).toBeInTheDocument();
+    });
+  });
+
+  it("resolves conflict by clicking Accept Both", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept Both")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Accept Both"));
+
+    await waitFor(() => {
+      expect(screen.getByText("No conflicts remaining")).toBeInTheDocument();
+    });
+  });
+
+  it("shows undo button after resolving and can unresolve", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept Current")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Accept Current"));
+
+    await waitFor(() => {
+      expect(screen.getByText("↩ Undo")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("↩ Undo"));
+
+    await waitFor(() => {
+      expect(screen.getByText("1 conflict")).toBeInTheDocument();
+      expect(screen.getByText("Accept Current")).toBeInTheDocument();
+    });
+  });
+
+  it("shows conflict navigation badges", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      // Should show badge "1" for the single conflict
+      expect(screen.getByTitle("Conflict 1")).toBeInTheDocument();
+    });
+  });
+
+  it("shows current/incoming labels in conflict center", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Current (ours)")).toBeInTheDocument();
+      expect(screen.getByText("Incoming (theirs)")).toBeInTheDocument();
     });
   });
 
@@ -233,6 +295,49 @@ describe("MergeConflictDialog", () => {
     await waitFor(() => {
       expect(screen.getByText("All conflicts resolved!")).toBeInTheDocument();
       expect(screen.getByText("Continue")).toBeInTheDocument();
+    });
+  });
+
+  it("shows edit mode when Edit button is clicked", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept Current")).toBeInTheDocument();
+    });
+
+    // Find the Edit button in the conflict action bar (exact match)
+    const editBtns = screen.getAllByText("Edit");
+    fireEvent.click(editBtns[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Custom edit")).toBeInTheDocument();
+      expect(screen.getByText("Done")).toBeInTheDocument();
+      expect(screen.getByText("Cancel")).toBeInTheDocument();
+    });
+  });
+
+  it("saves custom edit and resolves conflict", async () => {
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Accept Current")).toBeInTheDocument();
+    });
+
+    const editBtns = screen.getAllByText("Edit");
+    fireEvent.click(editBtns[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Done")).toBeInTheDocument();
+    });
+
+    // The textarea in edit mode should be present
+    const textarea = document.querySelector("textarea");
+    expect(textarea).not.toBeNull();
+
+    fireEvent.click(screen.getByText("Done"));
+
+    await waitFor(() => {
+      expect(screen.getByText("No conflicts remaining")).toBeInTheDocument();
     });
   });
 });
@@ -527,7 +632,7 @@ describe("MergeConflictDialog AI conflict resolution", () => {
     });
   });
 
-  it("applies AI suggestion to center textarea on Apply", async () => {
+  it("applies AI suggestion and resolves conflicts", async () => {
     settingsGetMock.mockResolvedValue({
       mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
       aiProvider: "anthropic", aiApiKey: "sk-test",
@@ -587,6 +692,21 @@ describe("MergeConflictDialog AI conflict resolution", () => {
 
     await waitFor(() => {
       expect(screen.getByText("API rate limited")).toBeInTheDocument();
+    });
+  });
+
+  it("shows per-conflict AI button when configured", async () => {
+    settingsGetMock.mockResolvedValue({
+      mergeToolName: "", mergeToolPath: "", mergeToolArgs: "",
+      aiProvider: "anthropic", aiApiKey: "sk-test",
+    });
+
+    render(<MergeConflictDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      // Per-conflict AI button in the conflict action bar
+      const aiButtons = screen.getAllByText("AI");
+      expect(aiButtons.length).toBeGreaterThan(0);
     });
   });
 });

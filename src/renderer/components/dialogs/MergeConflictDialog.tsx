@@ -8,83 +8,87 @@ interface Props {
   mode?: "overlay" | "window";
 }
 
-/**
- * Meld-style 3-pane merge dialog.
- *
- * Left  = LOCAL  (ours)   — full file, read-only textarea
- * Center = MERGED (result) — full file, editable textarea (starts with conflict markers)
- * Right = REMOTE (theirs) — full file, read-only textarea
- *
- * Gutters between panes have arrow buttons to copy the LOCAL/REMOTE version
- * of each conflict into the center editor.
- */
 interface MergeToolSettings {
   mergeToolName: string;
   mergeToolPath: string;
   mergeToolArgs: string;
 }
 
+/** Internal section model with resolution state */
+interface ParsedSection {
+  id: number;
+  type: "common" | "conflict";
+  common?: string[];
+  ours?: string[];
+  theirs?: string[];
+  resolution: "unresolved" | "ours" | "theirs" | "both" | "custom";
+  resolvedLines?: string[];
+}
+
 export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved, mode = "overlay" }) => {
   const [files, setFiles] = useState<ConflictFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [content, setContent] = useState<ConflictFileContent | null>(null);
-  const [oursText, setOursText] = useState("");
-  const [theirsText, setTheirsText] = useState("");
   const [resolvedFiles, setResolvedFiles] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Only track conflict count for UI badges — not the full parsed conflicts
-  const [conflictCount, setConflictCount] = useState(0);
+
+  // Section-based conflict model
+  const [sections, setSections] = useState<ParsedSection[]>([]);
+  const [editingConflictId, setEditingConflictId] = useState<number | null>(null);
+
+  // External merge tool
   const [mergeTool, setMergeTool] = useState<MergeToolSettings>({ mergeToolName: "", mergeToolPath: "", mergeToolArgs: "" });
   const [launchingTool, setLaunchingTool] = useState(false);
   const [useInternalEditor, setUseInternalEditor] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<{ suggestion: string; baseText: string } | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
+
+  // AI
   const [aiConfigured, setAiConfigured] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<{ suggestion: string; baseText: string } | null>(null);
   const aiRequestFileRef = useRef<string | null>(null);
 
-  const leftRef = useRef<HTMLTextAreaElement>(null);
-  const centerRef = useRef<HTMLTextAreaElement>(null);
-  const rightRef = useRef<HTMLTextAreaElement>(null);
-  const scrollingRef = useRef(false);
-  // Shadow copy for environments where ref.value may not persist (e.g. jsdom)
-  const centerTextRef = useRef("");
+  // Refs
+  const conflictRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  /** Read center textarea value directly from DOM — no React state */
-  const getCenterText = useCallback(() => centerRef.current?.value || centerTextRef.current, []);
+  // --- Derived ---
+  const conflictSections = useMemo(() => sections.filter(s => s.type === "conflict"), [sections]);
+  const unresolvedCount = useMemo(() => conflictSections.filter(s => s.resolution === "unresolved").length, [conflictSections]);
+  const hasExternalTool = mergeTool.mergeToolName !== "" && mergeTool.mergeToolPath !== "";
+  const allFilesResolved = files.length > 0 && files.every(f => resolvedFiles.has(f.path));
+  const unresolvedFileCount = files.filter(f => !resolvedFiles.has(f.path)).length;
 
-  /** Write to center textarea directly — no React re-render */
-  const setCenterText = useCallback((text: string) => {
-    centerTextRef.current = text;
-    if (centerRef.current) centerRef.current.value = text;
-    setConflictCount(countConflictMarkers(text));
-  }, []);
-
-  // Sync scroll across 3 textareas (proportional)
-  const handleScroll = useCallback((source: "left" | "center" | "right") => {
-    if (scrollingRef.current) return;
-    scrollingRef.current = true;
-    const refs = { left: leftRef.current, center: centerRef.current, right: rightRef.current };
-    const src = refs[source];
-    if (!src) { scrollingRef.current = false; return; }
-    const pct = src.scrollTop / (src.scrollHeight - src.clientHeight || 1);
-    for (const [k, el] of Object.entries(refs)) {
-      if (k !== source && el) {
-        el.scrollTop = pct * (el.scrollHeight - el.clientHeight || 1);
+  // --- Line numbers per column ---
+  const lineNumbers = useMemo(() => {
+    let leftLine = 1, rightLine = 1, centerLine = 1;
+    return sections.map(s => {
+      const entry = { leftStart: leftLine, rightStart: rightLine, centerStart: centerLine };
+      if (s.type === "common") {
+        const n = (s.common || []).length;
+        leftLine += n; rightLine += n; centerLine += n;
+      } else {
+        leftLine += (s.ours || []).length;
+        rightLine += (s.theirs || []).length;
+        if (s.resolution !== "unresolved") {
+          centerLine += (s.resolvedLines || []).length;
+        } else {
+          centerLine += (s.ours || []).length + (s.theirs || []).length + 3;
+        }
       }
-    }
-    requestAnimationFrame(() => { scrollingRef.current = false; });
-  }, []);
+      return entry;
+    });
+  }, [sections]);
 
-  // Load files on open
+  // ═══════════════ Effects ═══════════════
+
   useEffect(() => {
     if (!open) return;
-    setFiles([]); setSelectedFile(null); setContent(null);
-    setOursText(""); setTheirsText("");
-    setResolvedFiles(new Set()); setError(null); setConflictCount(0);
-    setLoading(true); setLaunchingTool(false); setUseInternalEditor(false);
-    setAiSuggestion(null); setAiLoading(false);
+    setFiles([]); setSelectedFile(null); setContent(null); setSections([]);
+    setResolvedFiles(new Set()); setError(null); setLoading(true);
+    setLaunchingTool(false); setUseInternalEditor(false);
+    setAiSuggestion(null); setAiLoading(false); setEditingConflictId(null);
     window.electronAPI.settings.get().then((s) => {
       const settings = s as unknown as MergeToolSettings;
       setMergeTool({
@@ -94,26 +98,21 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       });
       const aiSettings = s as unknown as { aiProvider?: string; aiApiKey?: string };
       setAiConfigured(!!aiSettings.aiProvider && aiSettings.aiProvider !== "none" && !!aiSettings.aiApiKey);
-    }).catch(() => { /* use defaults */ });
+    }).catch(() => {});
     window.electronAPI.conflict.list()
       .then((cf) => { setFiles(cf); if (cf.length > 0) setSelectedFile(cf[0].path); })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   }, [open]);
 
-  // Reset AI state when file selection changes
   useEffect(() => {
-    setAiSuggestion(null);
-    setAiLoading(false);
-    aiRequestFileRef.current = null;
+    setAiSuggestion(null); setAiLoading(false);
+    aiRequestFileRef.current = null; setEditingConflictId(null);
   }, [selectedFile]);
 
-  // Load file content — set textarea values directly via refs
-  // When external tool is configured and not using internal editor, auto-launch it
   useEffect(() => {
-    if (!selectedFile) { setContent(null); return; }
+    if (!selectedFile) { setContent(null); setSections([]); return; }
     if (hasExternalTool && !useInternalEditor) {
-      // Auto-launch external tool — no need to load content into textareas
       handleLaunchExternalTool(selectedFile);
       return;
     }
@@ -121,96 +120,65 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     window.electronAPI.conflict.fileContent(selectedFile)
       .then((fc) => {
         setContent(fc);
-        setOursText(fc.ours || "");
-        setTheirsText(fc.theirs || "");
-        setCenterText(fc.merged || "");
+        const parsed = parseMergeSections(fc.merged || "");
+        setSections(parsed.map((s, i) => ({
+          id: i, type: s.type, common: s.common, ours: s.ours, theirs: s.theirs,
+          resolution: "unresolved" as const, resolvedLines: undefined,
+        })));
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFile, useInternalEditor]);
 
-  // Resolve one conflict by index — operates directly on textarea DOM value
-  const resolveConflict = useCallback((idx: number, pick: "ours" | "theirs" | "both" | "none") => {
-    const prev = getCenterText();
-    const c = parseConflictPositions(prev);
-    if (idx >= c.length) return;
-    const target = c[idx];
-    let replacement: string;
-    if (pick === "ours") replacement = target.oursContent;
-    else if (pick === "theirs") replacement = target.theirsContent;
-    else if (pick === "both") replacement = target.oursContent + (target.oursContent && target.theirsContent ? "\n" : "") + target.theirsContent;
-    else replacement = "";
-    if (replacement && target.endOffset < prev.length) replacement += "\n";
-    setCenterText(prev.substring(0, target.startOffset) + replacement + prev.substring(target.endOffset));
-  }, [getCenterText, setCenterText]);
+  // ═══════════════ Handlers ═══════════════
+
+  const resolveConflict = useCallback((id: number, pick: "ours" | "theirs" | "both") => {
+    setSections(prev => prev.map(s => {
+      if (s.id !== id || s.type !== "conflict") return s;
+      let resolvedLines: string[];
+      if (pick === "ours") resolvedLines = [...(s.ours || [])];
+      else if (pick === "theirs") resolvedLines = [...(s.theirs || [])];
+      else resolvedLines = [...(s.ours || []), ...(s.theirs || [])];
+      return { ...s, resolution: pick, resolvedLines };
+    }));
+    setEditingConflictId(null);
+  }, []);
+
+  const unresolveConflict = useCallback((id: number) => {
+    setSections(prev => prev.map(s =>
+      s.id === id ? { ...s, resolution: "unresolved" as const, resolvedLines: undefined } : s
+    ));
+  }, []);
 
   const resolveAllAs = useCallback((pick: "ours" | "theirs") => {
-    setCenterText(resolveAllConflicts(getCenterText(), pick));
-  }, [getCenterText, setCenterText]);
+    setSections(prev => prev.map(s => {
+      if (s.type !== "conflict" || s.resolution !== "unresolved") return s;
+      return { ...s, resolution: pick, resolvedLines: pick === "ours" ? [...(s.ours || [])] : [...(s.theirs || [])] };
+    }));
+  }, []);
 
-  const handleResolveWithAi = useCallback(async () => {
-    if (!selectedFile || aiLoading) return;
-    setAiLoading(true);
-    setError(null);
-    aiRequestFileRef.current = selectedFile;
-    try {
-      const suggestion = await window.electronAPI.mcp.suggestConflictResolution(selectedFile);
-      if (aiRequestFileRef.current === selectedFile) {
-        setAiSuggestion({ suggestion, baseText: getCenterText() });
-      }
-    } catch (e: unknown) {
-      if (aiRequestFileRef.current === selectedFile) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
-    } finally {
-      if (aiRequestFileRef.current === selectedFile) {
-        setAiLoading(false);
-      }
-    }
-  }, [selectedFile, aiLoading, getCenterText]);
-
-  // Navigate to next/prev conflict in center textarea
-  const scrollToConflict = useCallback((direction: "next" | "prev") => {
-    const ta = centerRef.current;
-    if (!ta) return;
-    const cursorPos = ta.selectionStart;
-    const cs = parseConflictPositions(ta.value);
-    if (cs.length === 0) return;
-    let target: ConflictPosition | undefined;
-    if (direction === "next") {
-      target = cs.find((c) => c.startOffset > cursorPos) || cs[0];
-    } else {
-      for (let i = cs.length - 1; i >= 0; i--) {
-        if (cs[i].startOffset < cursorPos) { target = cs[i]; break; }
-      }
-      if (!target) target = cs[cs.length - 1];
-    }
-    if (target) {
-      ta.focus();
-      ta.setSelectionRange(target.startOffset, target.startOffset);
-      const linesBefore = ta.value.substring(0, target.startOffset).split("\n").length;
-      const lineH = ta.scrollHeight / (ta.value.split("\n").length || 1);
-      ta.scrollTop = Math.max(0, (linesBefore - 3) * lineH);
-      handleScroll("center");
-    }
-  }, [handleScroll]);
+  const saveCustomEdit = useCallback((id: number, text: string) => {
+    setSections(prev => prev.map(s =>
+      s.id === id ? { ...s, resolution: "custom" as const, resolvedLines: text.split("\n") } : s
+    ));
+    setEditingConflictId(null);
+  }, []);
 
   const handleSaveAndResolve = useCallback(async () => {
     if (!selectedFile) return;
     setSaving(true); setError(null);
     try {
-      await window.electronAPI.conflict.saveMerged(selectedFile, getCenterText());
+      const finalContent = buildFinalContent(sections);
+      await window.electronAPI.conflict.saveMerged(selectedFile, finalContent);
       await window.electronAPI.conflict.resolve(selectedFile);
-      setResolvedFiles((prev) => new Set([...prev, selectedFile]));
-      const remaining = files.filter((f) => f.path !== selectedFile && !resolvedFiles.has(f.path));
+      setResolvedFiles(prev => new Set([...prev, selectedFile]));
+      const remaining = files.filter(f => f.path !== selectedFile && !resolvedFiles.has(f.path));
       if (remaining.length > 0) setSelectedFile(remaining[0].path);
-      else { setSelectedFile(null); setContent(null); }
+      else { setSelectedFile(null); setContent(null); setSections([]); }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setSaving(false); }
-  }, [selectedFile, getCenterText, files, resolvedFiles]);
-
-  const hasExternalTool = mergeTool.mergeToolName !== "" && mergeTool.mergeToolPath !== "";
+  }, [selectedFile, sections, files, resolvedFiles]);
 
   const handleLaunchExternalTool = useCallback(async (fileToResolve?: string) => {
     const target = fileToResolve || selectedFile;
@@ -220,40 +188,94 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       const result = await window.electronAPI.conflict.launchMergeTool(
         target, mergeTool.mergeToolPath, mergeTool.mergeToolArgs
       );
-      // Reload file content after tool exits
       const fc = await window.electronAPI.conflict.fileContent(target);
       setContent(fc);
-      setOursText(fc.ours || "");
-      setTheirsText(fc.theirs || "");
-      setCenterText(fc.merged || "");
-      // Auto-resolve if no conflict markers remain and tool exited successfully
+      const parsed = parseMergeSections(fc.merged || "");
+      setSections(parsed.map((s, i) => ({
+        id: i, type: s.type, common: s.common, ours: s.ours, theirs: s.theirs,
+        resolution: "unresolved" as const, resolvedLines: undefined,
+      })));
       if (result.exitCode === 0 && countConflictMarkers(fc.merged) === 0) {
         await window.electronAPI.conflict.resolve(target);
-        setResolvedFiles((prev) => new Set([...prev, target]));
-        const remaining = files.filter((f) => f.path !== target && !resolvedFiles.has(f.path));
-        if (remaining.length > 0) {
-          setSelectedFile(remaining[0].path);
-        } else {
-          setSelectedFile(null); setContent(null);
-        }
+        setResolvedFiles(prev => new Set([...prev, target]));
+        const remaining = files.filter(f => f.path !== target && !resolvedFiles.has(f.path));
+        if (remaining.length > 0) setSelectedFile(remaining[0].path);
+        else { setSelectedFile(null); setContent(null); setSections([]); }
+      }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setLaunchingTool(false); }
+  }, [selectedFile, hasExternalTool, mergeTool, files, resolvedFiles]);
+
+  const handleResolveWithAi = useCallback(async () => {
+    if (!selectedFile || aiLoading) return;
+    setAiLoading(true); setError(null);
+    aiRequestFileRef.current = selectedFile;
+    try {
+      const suggestion = await window.electronAPI.mcp.suggestConflictResolution(selectedFile);
+      if (aiRequestFileRef.current === selectedFile) {
+        setAiSuggestion({ suggestion, baseText: buildFinalContent(sections) });
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (aiRequestFileRef.current === selectedFile) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLaunchingTool(false);
+      if (aiRequestFileRef.current === selectedFile) setAiLoading(false);
     }
-  }, [selectedFile, hasExternalTool, mergeTool, setCenterText, files, resolvedFiles]);
+  }, [selectedFile, aiLoading, sections]);
 
-  const allFilesResolved = files.length > 0 && files.every((f) => resolvedFiles.has(f.path));
-  const unresolvedFileCount = files.filter((f) => !resolvedFiles.has(f.path)).length;
-  const hasConflictMarkers = conflictCount > 0;
+  const applyAiSuggestion = useCallback(() => {
+    if (!aiSuggestion) return;
+    const resolutions = extractAiResolutions(sections, aiSuggestion.suggestion);
+    const hasResolutions = conflictSections.some(s => resolutions.has(s.id));
+    if (hasResolutions) {
+      setSections(prev => prev.map(s => {
+        if (s.type !== "conflict") return s;
+        const resolved = resolutions.get(s.id);
+        if (resolved !== undefined) return { ...s, resolution: "custom" as const, resolvedLines: resolved };
+        return s;
+      }));
+    } else {
+      // Fallback: re-parse from AI text (AI fully rewrote the file)
+      const reparsed = parseMergeSections(aiSuggestion.suggestion);
+      setSections(reparsed.map((s, i) => ({
+        id: i, type: s.type, common: s.common, ours: s.ours, theirs: s.theirs,
+        resolution: "unresolved" as const, resolvedLines: undefined,
+      })));
+    }
+    setAiSuggestion(null);
+  }, [aiSuggestion, sections, conflictSections]);
+
+  const scrollToConflict = useCallback((direction: "next" | "prev") => {
+    const unresolved = conflictSections.filter(s => s.resolution === "unresolved");
+    if (unresolved.length === 0) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const containerMid = containerRect.top + containerRect.height / 2;
+    let currentIdx = -1;
+    for (let i = 0; i < unresolved.length; i++) {
+      const el = conflictRefs.current.get(unresolved[i].id);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= containerMid && rect.bottom >= containerMid) { currentIdx = i; break; }
+      }
+    }
+    const targetIdx = direction === "next"
+      ? (currentIdx < unresolved.length - 1 ? currentIdx + 1 : 0)
+      : (currentIdx > 0 ? currentIdx - 1 : unresolved.length - 1);
+    conflictRefs.current.get(unresolved[targetIdx].id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [conflictSections]);
+
+  const scrollToConflictById = useCallback((id: number) => {
+    conflictRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
+  // ═══════════════ Render ═══════════════
 
   if (!open) return null;
 
   const outerStyle: React.CSSProperties = mode === "window"
     ? { width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "var(--surface-0)" }
     : backdropStyle;
-
   const innerStyle: React.CSSProperties = mode === "window"
     ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
     : dialogStyle;
@@ -281,35 +303,28 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
 
           {/* Editor area */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            {/* External tool waiting state */}
             {selectedFile && launchingTool ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-                  Waiting for {mergeToolDisplayName(mergeTool)}...
-                </span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>Waiting for {mergeToolDisplayName(mergeTool)}...</span>
                 <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>{selectedFile}</span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                  Resolve the conflict in the external tool, then save and close it.
-                </span>
-                <button
-                  onClick={() => { setLaunchingTool(false); setUseInternalEditor(true); }}
-                  style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer", marginTop: 8 }}
-                >
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Resolve the conflict in the external tool, then save and close it.</span>
+                <button onClick={() => { setLaunchingTool(false); setUseInternalEditor(true); }}
+                  style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 11, cursor: "pointer", marginTop: 8 }}>
                   Use internal editor instead
                 </button>
               </div>
-            ) : selectedFile && content ? (
+            ) : selectedFile && content && sections.length > 0 ? (
               <>
                 {/* Toolbar */}
                 <div style={toolbarStyle}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span className="mono" style={{ fontSize: 11, color: "var(--text-secondary)" }}>{selectedFile}</span>
-                    {hasConflictMarkers ? (
+                    {unresolvedCount > 0 ? (
                       <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "var(--yellow)20", color: "var(--yellow)", fontWeight: 500 }}>
-                        {conflictCount} {conflictCount === 1 ? "conflict" : "conflicts"}
+                        {unresolvedCount} {unresolvedCount === 1 ? "conflict" : "conflicts"}
                       </span>
                     ) : (
                       <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "var(--green)20", color: "var(--green)", fontWeight: 500 }}>
@@ -318,32 +333,42 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     )}
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <NavBtn label="Prev conflict" icon="up" onClick={() => scrollToConflict("prev")} disabled={!hasConflictMarkers} />
-                    <NavBtn label="Next conflict" icon="down" onClick={() => scrollToConflict("next")} disabled={!hasConflictMarkers} />
-                    <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
+                    {/* Conflict navigation badges */}
+                    {conflictSections.length > 0 && (
+                      <div style={{ display: "flex", gap: 2, alignItems: "center", marginRight: 4 }}>
+                        {conflictSections.map((s, i) => (
+                          <button key={s.id} onClick={() => scrollToConflictById(s.id)}
+                            title={`Conflict ${i + 1}${s.resolution !== "unresolved" ? " (resolved)" : ""}`}
+                            style={{
+                              width: 18, height: 18, fontSize: 9, fontWeight: 600,
+                              border: `1px solid ${s.resolution === "unresolved" ? "var(--yellow)" : "var(--green)"}60`,
+                              borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                              background: s.resolution === "unresolved" ? "var(--yellow)15" : "var(--green)15",
+                              color: s.resolution === "unresolved" ? "var(--yellow)" : "var(--green)",
+                            }}>
+                            {i + 1}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <NavBtn label="Prev conflict" icon="up" onClick={() => scrollToConflict("prev")} disabled={unresolvedCount === 0} />
+                    <NavBtn label="Next conflict" icon="down" onClick={() => scrollToConflict("next")} disabled={unresolvedCount === 0} />
+                    <span style={separatorStyle} />
                     <QuickBtn label="Accept all LOCAL" color="var(--accent)" onClick={() => resolveAllAs("ours")} />
                     <QuickBtn label="Accept all REMOTE" color="var(--mauve)" onClick={() => resolveAllAs("theirs")} />
                     {hasExternalTool && (
                       <>
-                        <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
-                        <button
-                          onClick={() => handleLaunchExternalTool()}
-                          style={{
-                            padding: "2px 10px", fontSize: 10, fontWeight: 600,
-                            border: "1px solid var(--green)60", borderRadius: 3, cursor: "pointer",
-                            background: "var(--green)15", color: "var(--green)",
-                          }}
-                        >
+                        <span style={separatorStyle} />
+                        <button onClick={() => handleLaunchExternalTool()}
+                          style={{ padding: "2px 10px", fontSize: 10, fontWeight: 600, border: "1px solid var(--green)60", borderRadius: 3, cursor: "pointer", background: "var(--green)15", color: "var(--green)" }}>
                           Open in {mergeToolDisplayName(mergeTool)}
                         </button>
                       </>
                     )}
                     {aiConfigured && (
                       <>
-                        <span style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
-                        <button
-                          onClick={handleResolveWithAi}
-                          disabled={aiLoading || resolvedFiles.has(selectedFile!)}
+                        <span style={separatorStyle} />
+                        <button onClick={handleResolveWithAi} disabled={aiLoading || resolvedFiles.has(selectedFile!)}
                           style={{
                             padding: "2px 10px", fontSize: 10, fontWeight: 600,
                             border: "1px solid var(--mauve)60", borderRadius: 3,
@@ -351,8 +376,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                             background: "var(--mauve)15", color: "var(--mauve)",
                             opacity: aiLoading || resolvedFiles.has(selectedFile!) ? 0.5 : 1,
                             display: "flex", alignItems: "center", gap: 4,
-                          }}
-                        >
+                          }}>
                           {aiLoading ? (
                             <>
                               <svg width="10" height="10" viewBox="0 0 24 24" style={{ animation: "spin 1s linear infinite" }}>
@@ -360,9 +384,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                               </svg>
                               Resolving...
                             </>
-                          ) : (
-                            "Resolve with AI"
-                          )}
+                          ) : "Resolve with AI"}
                         </button>
                       </>
                     )}
@@ -385,60 +407,154 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                   </div>
                 </div>
 
-                {/* 3 textareas — center is uncontrolled for performance */}
-                <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-                  <textarea
-                    ref={leftRef}
-                    value={oursText}
-                    readOnly
-                    spellCheck={false}
-                    onScroll={() => handleScroll("left")}
-                    style={{ ...editorStyle, borderRight: "1px solid var(--border-subtle)", background: "var(--surface-0)" }}
-                  />
-                  <textarea
-                    ref={centerRef}
-                    defaultValue=""
-                    spellCheck={false}
-                    onScroll={() => handleScroll("center")}
-                    style={editorStyle}
-                  />
-                  <textarea
-                    ref={rightRef}
-                    value={theirsText}
-                    readOnly
-                    spellCheck={false}
-                    onScroll={() => handleScroll("right")}
-                    style={{ ...editorStyle, borderLeft: "1px solid var(--border-subtle)", background: "var(--surface-0)" }}
-                  />
+                {/* Section-based 3-column view */}
+                <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+                  <div ref={scrollContainerRef} style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
+                    {sections.map((section, sectionIdx) => {
+                      const ln = lineNumbers[sectionIdx];
+
+                      if (section.type === "common") {
+                        return (
+                          <div key={section.id} style={{ display: "flex" }}>
+                            <div style={{ flex: 1, borderRight: "1px solid var(--border-subtle)" }}>
+                              {(section.common || []).map((line, i) => (
+                                <LineRow key={i} lineNum={ln.leftStart + i} text={line} />
+                              ))}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              {(section.common || []).map((line, i) => (
+                                <LineRow key={i} lineNum={ln.centerStart + i} text={line} />
+                              ))}
+                            </div>
+                            <div style={{ flex: 1, borderLeft: "1px solid var(--border-subtle)" }}>
+                              {(section.common || []).map((line, i) => (
+                                <LineRow key={i} lineNum={ln.rightStart + i} text={line} />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // ── Conflict section ──
+                      const isResolved = section.resolution !== "unresolved";
+                      const isEditing = editingConflictId === section.id;
+
+                      return (
+                        <div key={section.id}
+                          ref={el => { conflictRefs.current.set(section.id, el); }}
+                          data-testid={`conflict-section-${section.id}`}
+                          style={{ display: "flex", borderTop: `2px solid ${isResolved ? "var(--green)" : "var(--yellow)"}40`, borderBottom: `2px solid ${isResolved ? "var(--green)" : "var(--yellow)"}40` }}>
+                          {/* Left: ours */}
+                          <div style={{ flex: 1, borderRight: "1px solid var(--border-subtle)", background: isResolved ? "var(--green)06" : "var(--accent)06" }}>
+                            {(section.ours || []).map((line, i) => (
+                              <LineRow key={i} lineNum={ln.leftStart + i} text={line} bg={isResolved ? "var(--green)10" : "var(--accent)12"} />
+                            ))}
+                            {(section.ours || []).length === 0 && <EmptyLine />}
+                          </div>
+
+                          {/* Center: resolution area */}
+                          <div style={{ flex: 1, background: isResolved ? "var(--green)04" : "var(--surface-1)" }}>
+                            {isEditing ? (
+                              <ConflictEditor
+                                initialText={section.resolvedLines ? section.resolvedLines.join("\n") : [...(section.ours || []), ...(section.theirs || [])].join("\n")}
+                                onSave={(text) => saveCustomEdit(section.id, text)}
+                                onCancel={() => setEditingConflictId(null)}
+                              />
+                            ) : isResolved ? (
+                              <div>
+                                <div style={resolvedHeaderStyle}>
+                                  <span style={{ fontSize: 10, fontWeight: 600, color: "var(--green)" }}>
+                                    ✓ Resolved ({section.resolution})
+                                  </span>
+                                  <div style={{ display: "flex", gap: 4 }}>
+                                    <button onClick={() => setEditingConflictId(section.id)}
+                                      style={{ ...tinyBtnStyle, color: "var(--text-muted)" }} title="Edit resolution">Edit</button>
+                                    <button onClick={() => unresolveConflict(section.id)}
+                                      style={{ ...tinyBtnStyle, color: "var(--text-muted)" }} title="Undo resolution">↩ Undo</button>
+                                  </div>
+                                </div>
+                                {(section.resolvedLines || []).map((line, i) => (
+                                  <LineRow key={i} lineNum={ln.centerStart + i} text={line} bg="var(--green)08" />
+                                ))}
+                                {(section.resolvedLines || []).length === 0 && <EmptyLine label="(empty — both sides removed)" />}
+                              </div>
+                            ) : (
+                              <div>
+                                {/* Per-conflict action bar */}
+                                <div style={conflictActionBarStyle}>
+                                  <ConflictPickBtn label="Accept Current" color="var(--accent)" onClick={() => resolveConflict(section.id, "ours")} />
+                                  <ConflictPickBtn label="Accept Incoming" color="var(--mauve)" onClick={() => resolveConflict(section.id, "theirs")} />
+                                  <ConflictPickBtn label="Accept Both" color="var(--green)" onClick={() => resolveConflict(section.id, "both")} />
+                                  <button onClick={() => setEditingConflictId(section.id)}
+                                    style={{ ...conflictPickBtnBase, border: "1px solid var(--text-muted)40", color: "var(--text-secondary)" }}>
+                                    Edit
+                                  </button>
+                                  {aiConfigured && (
+                                    <button onClick={handleResolveWithAi} disabled={aiLoading}
+                                      style={{ ...conflictPickBtnBase, border: "1px solid var(--mauve)40", color: "var(--mauve)", opacity: aiLoading ? 0.5 : 1 }}>
+                                      AI
+                                    </button>
+                                  )}
+                                </div>
+                                {/* Ours preview */}
+                                <div style={{ borderBottom: "1px dashed var(--border-subtle)" }}>
+                                  <div style={sectionLabelStyle("var(--accent)")}>Current (ours)</div>
+                                  {(section.ours || []).map((line, i) => (
+                                    <LineRow key={i} text={line} bg="var(--accent)08" />
+                                  ))}
+                                  {(section.ours || []).length === 0 && <EmptyLine />}
+                                </div>
+                                {/* Theirs preview */}
+                                <div>
+                                  <div style={sectionLabelStyle("var(--mauve)")}>Incoming (theirs)</div>
+                                  {(section.theirs || []).map((line, i) => (
+                                    <LineRow key={i} text={line} bg="var(--mauve)08" />
+                                  ))}
+                                  {(section.theirs || []).length === 0 && <EmptyLine />}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right: theirs */}
+                          <div style={{ flex: 1, borderLeft: "1px solid var(--border-subtle)", background: isResolved ? "var(--green)06" : "var(--mauve)06" }}>
+                            {(section.theirs || []).map((line, i) => (
+                              <LineRow key={i} lineNum={ln.rightStart + i} text={line} bg={isResolved ? "var(--green)10" : "var(--mauve)12"} />
+                            ))}
+                            {(section.theirs || []).length === 0 && <EmptyLine />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* AI suggestion overlay */}
                   {aiSuggestion !== null && selectedFile && (
                     <AiSuggestionOverlay
                       currentText={aiSuggestion.baseText}
                       suggestion={aiSuggestion.suggestion}
                       filePath={selectedFile}
-                      onApply={() => { setCenterText(aiSuggestion.suggestion); setAiSuggestion(null); }}
+                      onApply={applyAiSuggestion}
                       onDismiss={() => setAiSuggestion(null)}
                     />
                   )}
                 </div>
 
-                {/* Conflict action bar — resolve first remaining conflict */}
-                {hasConflictMarkers && (
-                  <div style={{ borderTop: "1px solid var(--border-subtle)", padding: "6px 12px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, fontSize: 11 }}>
-                    <span style={{ color: "var(--yellow)", fontWeight: 600 }}>Resolve next:</span>
-                    <PickBtn label="Use LOCAL →" color="var(--accent)" onClick={() => resolveConflict(0, "ours")} />
-                    <PickBtn label="← Use REMOTE" color="var(--mauve)" onClick={() => resolveConflict(0, "theirs")} />
-                    <PickBtn label="Both" color="var(--green)" onClick={() => resolveConflict(0, "both")} />
-                    <PickBtn label="None" color="var(--red)" onClick={() => resolveConflict(0, "none")} />
-                    <span style={{ color: "var(--text-muted)", marginLeft: "auto" }}>
-                      {conflictCount} remaining — or edit the MERGED text directly
-                    </span>
-                  </div>
-                )}
-
                 {/* File action bar */}
                 <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border-subtle)", display: "flex", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
-                  {hasConflictMarkers && <span style={{ fontSize: 11, color: "var(--yellow)", alignSelf: "center", marginRight: "auto" }}>Resolve all conflicts or edit markers manually, then mark as resolved</span>}
-                  <button onClick={() => setConflictCount(countConflictMarkers(getCenterText()))}
+                  {unresolvedCount > 0 && (
+                    <span style={{ fontSize: 11, color: "var(--yellow)", alignSelf: "center", marginRight: "auto" }}>
+                      Resolve all conflicts, then mark as resolved
+                    </span>
+                  )}
+                  <button onClick={() => {
+                    const rebuilt = buildFinalContent(sections);
+                    const reparsed = parseMergeSections(rebuilt);
+                    setSections(reparsed.map((s, i) => ({
+                      id: i, type: s.type, common: s.common, ours: s.ours, theirs: s.theirs,
+                      resolution: "unresolved" as const, resolvedLines: undefined,
+                    })));
+                  }}
                     style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
                     Recheck conflicts
                   </button>
@@ -514,17 +630,50 @@ const FileList: React.FC<{
 
 /* ═══════════════ Small Components ═══════════════ */
 
-const CenteredMsg: React.FC<{ text: string }> = ({ text }) => (
-  <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: 12 }}>{text}</div>
+const LineRow: React.FC<{ lineNum?: number; text: string; bg?: string }> = React.memo(({ lineNum, text, bg }) => (
+  <div style={{ display: "flex", minHeight: 20, lineHeight: "20px", background: bg || "transparent", fontFamily: "var(--font-mono, monospace)", fontSize: 12 }}>
+    <span style={{ width: 40, flexShrink: 0, textAlign: "right", paddingRight: 8, color: "var(--text-muted)", fontSize: 11, userSelect: "none", opacity: 0.6 }}>
+      {lineNum ?? ""}
+    </span>
+    <span style={{ flex: 1, whiteSpace: "pre", overflowX: "auto", paddingRight: 8, color: "var(--text-primary)" }}>{text}</span>
+  </div>
+));
+
+const EmptyLine: React.FC<{ label?: string }> = ({ label }) => (
+  <div style={{ minHeight: 20, lineHeight: "20px", paddingLeft: 48, fontSize: 11, color: "var(--text-muted)", fontStyle: "italic", opacity: 0.5 }}>
+    {label || "(empty)"}
+  </div>
 );
 
-const QuickBtn: React.FC<{ label: string; color: string; onClick: () => void }> = ({ label, color, onClick }) => (
-  <button onClick={onClick} style={{ padding: "2px 8px", fontSize: 10, fontWeight: 500, border: `1px solid ${color}40`, borderRadius: 3, cursor: "pointer", background: `${color}10`, color }}>{label}</button>
+const ConflictPickBtn: React.FC<{ label: string; color: string; onClick: () => void }> = ({ label, color, onClick }) => (
+  <button onClick={onClick} style={{ ...conflictPickBtnBase, border: `1px solid ${color}50`, background: `${color}10`, color }}>{label}</button>
 );
 
-const PickBtn: React.FC<{ label: string; color: string; onClick: () => void }> = ({ label, color, onClick }) => (
-  <button onClick={onClick} style={{ padding: "2px 6px", fontSize: 10, fontWeight: 600, border: `1px solid ${color}50`, borderRadius: 3, background: `${color}15`, color, cursor: "pointer" }}>{label}</button>
-);
+const ConflictEditor: React.FC<{
+  initialText: string;
+  onSave: (text: string) => void;
+  onCancel: () => void;
+}> = ({ initialText, onSave, onCancel }) => {
+  const [text, setText] = useState(initialText);
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "4px 8px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface-2)", borderBottom: "1px solid var(--border-subtle)" }}>
+        <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-secondary)" }}>Custom edit</span>
+        <div style={{ display: "flex", gap: 4 }}>
+          <button onClick={onCancel} style={{ ...conflictPickBtnBase, color: "var(--text-muted)", border: "1px solid var(--border)" }}>Cancel</button>
+          <button onClick={() => onSave(text)} style={{ ...conflictPickBtnBase, color: "var(--green)", border: "1px solid var(--green)60" }}>Done</button>
+        </div>
+      </div>
+      <textarea value={text} onChange={e => setText(e.target.value)} spellCheck={false} rows={Math.max(3, text.split("\n").length + 1)}
+        style={{
+          width: "100%", fontFamily: "var(--font-mono, monospace)", fontSize: 12, lineHeight: "20px",
+          padding: "4px 8px 4px 48px", margin: 0, background: "var(--surface-1)", color: "var(--text-primary)",
+          border: "none", outline: "2px solid var(--accent)40", resize: "vertical", whiteSpace: "pre", overflowWrap: "normal", boxSizing: "border-box",
+        }}
+      />
+    </div>
+  );
+};
 
 const NavBtn: React.FC<{ label: string; icon: "up" | "down"; onClick: () => void; disabled: boolean }> = ({ label, icon, onClick, disabled }) => (
   <button onClick={onClick} disabled={disabled} title={label} aria-label={label}
@@ -535,6 +684,72 @@ const NavBtn: React.FC<{ label: string; icon: "up" | "down"; onClick: () => void
   </button>
 );
 
+const QuickBtn: React.FC<{ label: string; color: string; onClick: () => void }> = ({ label, color, onClick }) => (
+  <button onClick={onClick} style={{ padding: "2px 8px", fontSize: 10, fontWeight: 500, border: `1px solid ${color}40`, borderRadius: 3, cursor: "pointer", background: `${color}10`, color }}>{label}</button>
+);
+
+const CenteredMsg: React.FC<{ text: string }> = ({ text }) => (
+  <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: 12 }}>{text}</div>
+);
+
+/* ═══════════════ AI Suggestion Overlay ═══════════════ */
+
+const AiSuggestionOverlay: React.FC<{
+  currentText: string;
+  suggestion: string;
+  filePath: string;
+  onApply: () => void;
+  onDismiss: () => void;
+}> = ({ currentText, suggestion, filePath, onApply, onDismiss }) => {
+  const diffLines = useMemo(() => computeLineDiff(currentText, suggestion), [currentText, suggestion]);
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0, zIndex: 10,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
+      display: "flex", flexDirection: "column",
+      animation: "fade-in 0.15s ease-out",
+    }}>
+      <div style={{
+        padding: "10px 16px", borderBottom: "1px solid var(--border-subtle)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "var(--surface-1)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mauve)" }}>AI Suggestion</span>
+          <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>{filePath}</span>
+        </div>
+      </div>
+      <div style={{
+        flex: 1, overflow: "auto", padding: "8px 0",
+        background: "var(--surface-0)",
+        fontFamily: "var(--font-mono, monospace)", fontSize: 12, lineHeight: "20px",
+      }}>
+        {diffLines.map((d, i) => (
+          <div key={i} style={{
+            padding: "0 12px 0 8px", minHeight: 20, display: "flex",
+            background: d.type === "added" ? "rgba(166,227,161,0.1)" : d.type === "removed" ? "rgba(243,139,168,0.1)" : "transparent",
+          }}>
+            <span style={{ width: 40, flexShrink: 0, textAlign: "right", paddingRight: 8, color: "var(--text-muted)", fontSize: 11, userSelect: "none" }}>{i + 1}</span>
+            <span style={{ color: d.type === "added" ? "var(--green)" : d.type === "removed" ? "var(--red)" : "var(--text-primary)" }}>
+              <span style={{ userSelect: "none", marginRight: 4 }}>{d.type === "added" ? "+" : d.type === "removed" ? "-" : " "}</span>
+              {d.line}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div style={{
+        padding: "10px 16px", borderTop: "1px solid var(--border-subtle)",
+        display: "flex", justifyContent: "flex-end", gap: 8,
+        background: "var(--surface-1)",
+      }}>
+        <button onClick={onDismiss} style={secondaryBtnStyle}>Dismiss</button>
+        <button onClick={onApply} style={{ ...primaryBtnStyle, background: "var(--mauve)" }}>Apply</button>
+      </div>
+    </div>
+  );
+};
+
 /* ═══════════════ Helpers ═══════════════ */
 
 function mergeToolDisplayName(tool: MergeToolSettings): string {
@@ -542,93 +757,24 @@ function mergeToolDisplayName(tool: MergeToolSettings): string {
   return tool.mergeToolName;
 }
 
-/* ═══════════════ Conflict Parsing ═══════════════ */
-
-interface ConflictPosition {
-  /** Byte offset of <<<<<<< in the string */
-  startOffset: number;
-  /** Byte offset right after >>>>>>> line (including newline) */
-  endOffset: number;
-  /** Our (LOCAL) content between <<<<<<< and ======= */
-  oursContent: string;
-  /** Their (REMOTE) content between ======= and >>>>>>> */
-  theirsContent: string;
-}
-
-/** Find all conflict marker positions in a string */
-/** Fast count of <<<<<<< markers — no parsing, just count */
 function countConflictMarkers(text: string): number {
-  let count = 0;
-  let idx = 0;
+  let count = 0, idx = 0;
   while ((idx = text.indexOf("<<<<<<<", idx)) !== -1) { count++; idx += 7; }
   return count;
 }
 
-function parseConflictPositions(text: string): ConflictPosition[] {
-  const results: ConflictPosition[] = [];
-  let searchFrom = 0;
+/* ═══════════════ Conflict Parsing ═══════════════ */
 
-  while (searchFrom < text.length) {
-    const startIdx = text.indexOf("<<<<<<<", searchFrom);
-    if (startIdx === -1) break;
-
-    // Find the ======= separator (skip optional ||||||| base section)
-    const sepIdx = text.indexOf("=======", startIdx);
-    if (sepIdx === -1) break;
-
-    // Find >>>>>>>
-    const endMarkerIdx = text.indexOf(">>>>>>>", sepIdx);
-    if (endMarkerIdx === -1) break;
-
-    // Find end of >>>>>>> line
-    const endOfLine = text.indexOf("\n", endMarkerIdx);
-    const endOffset = endOfLine === -1 ? text.length : endOfLine + 1;
-
-    // Find end of <<<<<<< line
-    const oursStartOffset = text.indexOf("\n", startIdx);
-    if (oursStartOffset === -1) break;
-
-    // Handle optional ||||||| base section: ours goes from after <<<<<<< to ||||||| or =======
-    const baseMarkerIdx = text.indexOf("|||||||", startIdx);
-    const oursEndOffset = (baseMarkerIdx !== -1 && baseMarkerIdx < sepIdx) ? baseMarkerIdx : sepIdx;
-
-    // Ours content: between <<<<<<< line and ======= (or |||||||)
-    let oursContent = text.substring(oursStartOffset + 1, oursEndOffset);
-    // Remove trailing newline before =======
-    if (oursContent.endsWith("\n")) oursContent = oursContent.slice(0, -1);
-
-    // Theirs content: between ======= line and >>>>>>>
-    const theirsStartOffset = text.indexOf("\n", sepIdx);
-    if (theirsStartOffset === -1) break;
-    let theirsContent = text.substring(theirsStartOffset + 1, endMarkerIdx);
-    if (theirsContent.endsWith("\n")) theirsContent = theirsContent.slice(0, -1);
-
-    results.push({ startOffset: startIdx, endOffset, oursContent, theirsContent });
-    searchFrom = endOffset;
-  }
-
-  return results;
+interface MergeSection {
+  type: "common" | "conflict";
+  common?: string[];
+  ours?: string[];
+  theirs?: string[];
+  resolution: string | null;
+  resolved?: string[];
 }
 
-/** Resolve all conflicts at once, picking ours or theirs */
-function resolveAllConflicts(text: string, pick: "ours" | "theirs"): string {
-  // Process from end to start so offsets remain valid
-  const conflicts = parseConflictPositions(text);
-  let result = text;
-  for (let i = conflicts.length - 1; i >= 0; i--) {
-    const c = conflicts[i];
-    let replacement = pick === "ours" ? c.oursContent : c.theirsContent;
-    // Preserve newline: the endOffset includes the \n after >>>>>>>
-    // so the replacement needs a trailing \n if there's content after it
-    if (replacement && c.endOffset < text.length) replacement += "\n";
-    result = result.substring(0, c.startOffset) + replacement + result.substring(c.endOffset);
-  }
-  return result;
-}
-
-// Keep the old name for test compatibility
-function parseMergeSections(content: string) {
-  // Used by tests — delegate to the simpler section parser
+function parseMergeSections(content: string): MergeSection[] {
   const lines = content.split("\n");
   const sections: MergeSection[] = [];
   let buf: string[] = [];
@@ -665,13 +811,106 @@ function buildMergedContent(sections: MergeSection[]): string {
   return out.join("\n");
 }
 
-interface MergeSection {
-  type: "common" | "conflict";
-  common?: string[];
-  ours?: string[];
-  theirs?: string[];
-  resolution: string | null;
-  resolved?: string[];
+/** Build final merged text from UI section state */
+function buildFinalContent(sections: ParsedSection[]): string {
+  const lines: string[] = [];
+  for (const s of sections) {
+    if (s.type === "common") {
+      lines.push(...(s.common || []));
+    } else if (s.resolution === "unresolved") {
+      lines.push("<<<<<<< HEAD");
+      lines.push(...(s.ours || []));
+      lines.push("=======");
+      lines.push(...(s.theirs || []));
+      lines.push(">>>>>>> incoming");
+    } else {
+      lines.push(...(s.resolvedLines || []));
+    }
+  }
+  return lines.join("\n");
+}
+
+/** Extract per-conflict AI resolutions using common sections as anchors */
+function extractAiResolutions(originalSections: ParsedSection[], aiText: string): Map<number, string[]> {
+  const result = new Map<number, string[]>();
+  const aiLines = aiText.split("\n");
+  let aiIdx = 0;
+
+  for (let sIdx = 0; sIdx < originalSections.length; sIdx++) {
+    const section = originalSections[sIdx];
+    if (section.type === "common") {
+      const commonLines = section.common || [];
+      for (let c = 0; c < commonLines.length && aiIdx < aiLines.length; c++) {
+        aiIdx++;
+      }
+    } else {
+      // Find next common section's first line as boundary
+      let boundaryLine: string | undefined;
+      for (let nIdx = sIdx + 1; nIdx < originalSections.length; nIdx++) {
+        if (originalSections[nIdx].type === "common" && (originalSections[nIdx].common || []).length > 0) {
+          boundaryLine = (originalSections[nIdx].common || [])[0];
+          break;
+        }
+      }
+      const resolved: string[] = [];
+      while (aiIdx < aiLines.length) {
+        if (boundaryLine !== undefined && aiLines[aiIdx] === boundaryLine) break;
+        resolved.push(aiLines[aiIdx]);
+        aiIdx++;
+      }
+      result.set(section.id, resolved);
+    }
+  }
+  return result;
+}
+
+/* ═══════════════ Raw text conflict resolution (backward compat) ═══════════════ */
+
+interface ConflictPosition {
+  startOffset: number;
+  endOffset: number;
+  oursContent: string;
+  theirsContent: string;
+}
+
+function parseConflictPositions(text: string): ConflictPosition[] {
+  const results: ConflictPosition[] = [];
+  let searchFrom = 0;
+  while (searchFrom < text.length) {
+    const startIdx = text.indexOf("<<<<<<<", searchFrom);
+    if (startIdx === -1) break;
+    const sepIdx = text.indexOf("=======", startIdx);
+    if (sepIdx === -1) break;
+    const endMarkerIdx = text.indexOf(">>>>>>>", sepIdx);
+    if (endMarkerIdx === -1) break;
+    const endOfLine = text.indexOf("\n", endMarkerIdx);
+    const endOffset = endOfLine === -1 ? text.length : endOfLine + 1;
+    const oursStartOffset = text.indexOf("\n", startIdx);
+    if (oursStartOffset === -1) break;
+    const baseMarkerIdx = text.indexOf("|||||||", startIdx);
+    const oursEndOffset = (baseMarkerIdx !== -1 && baseMarkerIdx < sepIdx) ? baseMarkerIdx : sepIdx;
+    let oursContent = text.substring(oursStartOffset + 1, oursEndOffset);
+    if (oursContent.endsWith("\n")) oursContent = oursContent.slice(0, -1);
+    const theirsStartOffset = text.indexOf("\n", sepIdx);
+    if (theirsStartOffset === -1) break;
+    let theirsContent = text.substring(theirsStartOffset + 1, endMarkerIdx);
+    if (theirsContent.endsWith("\n")) theirsContent = theirsContent.slice(0, -1);
+    results.push({ startOffset: startIdx, endOffset, oursContent, theirsContent });
+    searchFrom = endOffset;
+  }
+  return results;
+}
+
+function resolveAllConflicts(text: string, pick: "ours" | "theirs"): string {
+  const conflicts = parseConflictPositions(text);
+  let result = text;
+  for (let i = conflicts.length - 1; i >= 0; i--) {
+    const c = conflicts[i];
+    let replacement = pick === "ours" ? c.oursContent : c.theirsContent;
+    if (replacement && c.endOffset < text.length) replacement += "\n";
+    result = result.substring(0, c.startOffset) + replacement + result.substring(c.endOffset);
+  }
+  return result;
 }
 
 /* ═══════════════ Line Diff (LCS) ═══════════════ */
@@ -681,115 +920,29 @@ interface DiffLine {
   line: string;
 }
 
-/** LCS-based line diff — returns minimal edit sequence */
 function computeLineDiff(oldText: string, newText: string): DiffLine[] {
   const oldLines = oldText ? oldText.replace(/\n$/, "").split("\n") : [];
   const newLines = newText ? newText.replace(/\n$/, "").split("\n") : [];
-  const m = oldLines.length;
-  const n = newLines.length;
-
-  // Build LCS table
+  const m = oldLines.length, n = newLines.length;
   const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      dp[i][j] = oldLines[i - 1] === newLines[j - 1]
-        ? dp[i - 1][j - 1] + 1
-        : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      dp[i][j] = oldLines[i - 1] === newLines[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
     }
   }
-
-  // Backtrack to produce diff
   const result: DiffLine[] = [];
   let i = m, j = n;
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-      result.push({ type: "same", line: oldLines[i - 1] });
-      i--; j--;
+      result.push({ type: "same", line: oldLines[i - 1] }); i--; j--;
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      result.push({ type: "added", line: newLines[j - 1] });
-      j--;
+      result.push({ type: "added", line: newLines[j - 1] }); j--;
     } else {
-      result.push({ type: "removed", line: oldLines[i - 1] });
-      i--;
+      result.push({ type: "removed", line: oldLines[i - 1] }); i--;
     }
   }
-
   return result.reverse();
 }
-
-/* ═══════════════ AI Suggestion Overlay ═══════════════ */
-
-const AiSuggestionOverlay: React.FC<{
-  currentText: string;
-  suggestion: string;
-  filePath: string;
-  onApply: () => void;
-  onDismiss: () => void;
-}> = ({ currentText, suggestion, filePath, onApply, onDismiss }) => {
-  const diffLines = useMemo(() => computeLineDiff(currentText, suggestion), [currentText, suggestion]);
-
-  return (
-    <div style={{
-      position: "absolute", inset: 0, zIndex: 10,
-      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
-      display: "flex", flexDirection: "column",
-      animation: "fade-in 0.15s ease-out",
-    }}>
-      <div style={{
-        padding: "10px 16px", borderBottom: "1px solid var(--border-subtle)",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "var(--surface-1)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mauve)" }}>AI Suggestion</span>
-          <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>{filePath}</span>
-        </div>
-      </div>
-
-      <div style={{
-        flex: 1, overflow: "auto", padding: "8px 0",
-        background: "var(--surface-0)",
-        fontFamily: "var(--font-mono, monospace)", fontSize: 12, lineHeight: "20px",
-      }}>
-        {diffLines.map((d, i) => (
-          <div key={i} style={{
-            padding: "0 12px 0 8px", minHeight: 20,
-            display: "flex",
-            background: d.type === "added" ? "rgba(166,227,161,0.1)"
-              : d.type === "removed" ? "rgba(243,139,168,0.1)"
-              : "transparent",
-          }}>
-            <span style={{
-              width: 40, flexShrink: 0, textAlign: "right", paddingRight: 8,
-              color: "var(--text-muted)", fontSize: 11, userSelect: "none",
-            }}>
-              {i + 1}
-            </span>
-            <span style={{
-              color: d.type === "added" ? "var(--green)"
-                : d.type === "removed" ? "var(--red)"
-                : "var(--text-primary)",
-            }}>
-              <span style={{ userSelect: "none", marginRight: 4 }}>
-                {d.type === "added" ? "+" : d.type === "removed" ? "-" : " "}
-              </span>
-              {d.line}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{
-        padding: "10px 16px", borderTop: "1px solid var(--border-subtle)",
-        display: "flex", justifyContent: "flex-end", gap: 8,
-        background: "var(--surface-1)",
-      }}>
-        <button onClick={onDismiss} style={secondaryBtnStyle}>Dismiss</button>
-        <button onClick={onApply} style={{ ...primaryBtnStyle, background: "var(--mauve)" }}>Apply</button>
-      </div>
-    </div>
-  );
-};
 
 /* ═══════════════ Styles ═══════════════ */
 
@@ -828,16 +981,6 @@ const colHeaderStyle: React.CSSProperties = {
   display: "flex", gap: 6, alignItems: "center", background: "var(--surface-0)",
 };
 
-const editorStyle: React.CSSProperties = {
-  flex: 1, width: 0, // flex child
-  fontFamily: "var(--font-mono, monospace)", fontSize: 12, lineHeight: "20px",
-  padding: "4px 8px", margin: 0,
-  background: "var(--surface-1)", color: "var(--text-primary)",
-  border: "none", outline: "none", resize: "none",
-  whiteSpace: "pre", overflowWrap: "normal",
-  overflowX: "auto", overflowY: "auto",
-};
-
 const footerStyle: React.CSSProperties = {
   padding: "10px 16px", borderTop: "1px solid var(--border-subtle)",
   display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -854,6 +997,33 @@ const secondaryBtnStyle: React.CSSProperties = {
   background: "transparent", color: "var(--text-secondary)",
   fontSize: 12, fontWeight: 500, cursor: "pointer",
 };
+
+const separatorStyle: React.CSSProperties = {
+  width: 1, height: 16, background: "var(--border)", margin: "0 2px", display: "inline-block",
+};
+
+const conflictPickBtnBase: React.CSSProperties = {
+  padding: "2px 8px", fontSize: 10, fontWeight: 600, borderRadius: 3, cursor: "pointer", background: "transparent",
+};
+
+const conflictActionBarStyle: React.CSSProperties = {
+  padding: "4px 8px", display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center",
+  background: "var(--yellow)08", borderBottom: "1px solid var(--yellow)20",
+};
+
+const resolvedHeaderStyle: React.CSSProperties = {
+  padding: "2px 8px", display: "flex", alignItems: "center", justifyContent: "space-between",
+  background: "var(--green)10", borderBottom: "1px solid var(--green)20",
+};
+
+const tinyBtnStyle: React.CSSProperties = {
+  background: "none", border: "none", cursor: "pointer", fontSize: 10, padding: "1px 4px",
+};
+
+const sectionLabelStyle = (color: string): React.CSSProperties => ({
+  padding: "1px 8px", fontSize: 9, fontWeight: 600, color,
+  textTransform: "uppercase", letterSpacing: "0.05em", background: `${color}08`,
+});
 
 export { parseMergeSections, resolveAllConflicts, buildMergedContent, computeLineDiff };
 export type { MergeSection };
