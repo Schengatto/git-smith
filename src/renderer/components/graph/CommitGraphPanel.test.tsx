@@ -1,9 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import "@testing-library/jest-dom/vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import React from "react";
-import type { RefInfo, GraphRow, CommitInfo } from "../../../shared/git-types";
+import { describe, it, expect } from "vitest";
+import type { RefInfo } from "../../../shared/git-types";
 
 // Helper: simulate the remote-branch filtering logic used in commitContextItems
 function getDeleteableRemoteBranches(refs: RefInfo[], currentBranch: string): RefInfo[] {
