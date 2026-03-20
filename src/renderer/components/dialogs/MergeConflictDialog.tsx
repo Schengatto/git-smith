@@ -268,6 +268,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     const resolutions = extractAiResolutions(sections, aiSuggestion.suggestion);
     const hasResolutions = conflictSections.some(s => resolutions.has(s.id));
     if (hasResolutions) {
+      // Apply per-conflict resolutions (preserves ours/theirs for 3-panel view)
       setSections(prev => prev.map(s => {
         if (s.type !== "conflict") return s;
         const resolved = resolutions.get(s.id);
@@ -275,12 +276,52 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
         return s;
       }));
     } else {
-      // Fallback: re-parse from AI text (AI fully rewrote the file)
-      const reparsed = parseMergeSections(aiSuggestion.suggestion);
-      setSections(reparsed.map((s, i) => ({
-        id: i, type: s.type, common: s.common, ours: s.ours, theirs: s.theirs,
-        resolution: "unresolved" as const, resolvedLines: undefined,
-      })));
+      // Extraction failed — AI likely returned partial content or restructured the file.
+      // NEVER replace all sections (destroys ours/theirs context).
+      // Instead, try to apply the full AI text as resolution for ALL conflicts at once.
+      const aiLines = aiSuggestion.suggestion.split("\n");
+      // Safety: if AI text is much shorter than original, it's probably partial → don't apply
+      const originalLineCount = sections.reduce((n, s) => n + (s.type === "common" ? (s.common || []).length : (s.ours || []).length + (s.theirs || []).length), 0);
+      if (aiLines.length < originalLineCount * 0.3) {
+        setError("AI returned partial content — resolution not applied. Review the diff manually.");
+        setAiSuggestion(null);
+        return;
+      }
+      // Apply entire AI output: rebuild common sections from AI, resolve all conflicts
+      // by diffing AI output against the "all ours" version
+      const allOursLines: string[] = [];
+      for (const s of sections) {
+        if (s.type === "common") allOursLines.push(...(s.common || []));
+        else allOursLines.push(...(s.ours || []));
+      }
+      // Walk through: for each section, consume lines from AI output
+      let ai = 0;
+      setSections(prev => prev.map(s => {
+        if (s.type === "common") {
+          // Skip past common lines in AI (they should be the same)
+          const n = (s.common || []).length;
+          ai += n;
+          return s;
+        }
+        // Conflict: the AI replaced ours lines with its resolution
+        // Consume lines until we hit the next common section's content
+        const nextCommon = prev.find(ns => ns.id > s.id && ns.type === "common");
+        const nextFirstLines = nextCommon ? (nextCommon.common || []).slice(0, 3) : [];
+        const resolved: string[] = [];
+        while (ai < aiLines.length) {
+          if (nextFirstLines.length > 0 && aiLines[ai] === nextFirstLines[0]) {
+            // Verify it's really the start of the next common section
+            let match = true;
+            for (let m = 1; m < nextFirstLines.length && ai + m < aiLines.length; m++) {
+              if (aiLines[ai + m] !== nextFirstLines[m]) { match = false; break; }
+            }
+            if (match) break;
+          }
+          resolved.push(aiLines[ai]);
+          ai++;
+        }
+        return { ...s, resolution: "custom" as const, resolvedLines: resolved };
+      }));
     }
     setAiSuggestion(null);
   }, [aiSuggestion, sections, conflictSections]);
@@ -886,7 +927,8 @@ function buildFinalContent(sections: ParsedSection[]): string {
   return lines.join("\n");
 }
 
-/** Extract per-conflict AI resolutions using common sections as anchors */
+/** Extract per-conflict AI resolutions using common sections as anchors.
+ *  Uses multi-line boundary matching for robustness. */
 function extractAiResolutions(originalSections: ParsedSection[], aiText: string): Map<number, string[]> {
   const result = new Map<number, string[]>();
   const aiLines = aiText.split("\n");
@@ -896,28 +938,65 @@ function extractAiResolutions(originalSections: ParsedSection[], aiText: string)
     const section = originalSections[sIdx];
     if (section.type === "common") {
       const commonLines = section.common || [];
+      // Match common lines — verify each line matches before advancing
       for (let c = 0; c < commonLines.length && aiIdx < aiLines.length; c++) {
-        aiIdx++;
-      }
-    } else {
-      // Find next common section's first line as boundary
-      let boundaryLine: string | undefined;
-      for (let nIdx = sIdx + 1; nIdx < originalSections.length; nIdx++) {
-        if (originalSections[nIdx].type === "common" && (originalSections[nIdx].common || []).length > 0) {
-          boundaryLine = (originalSections[nIdx].common || [])[0];
-          break;
+        if (aiLines[aiIdx] === commonLines[c]) {
+          aiIdx++;
+        } else {
+          // Mismatch: AI modified a common line — try to re-sync
+          // Skip AI lines until we find the next expected common line
+          let found = false;
+          for (let scan = aiIdx; scan < Math.min(aiIdx + 5, aiLines.length); scan++) {
+            if (aiLines[scan] === commonLines[c]) {
+              aiIdx = scan + 1;
+              found = true;
+              break;
+            }
+          }
+          if (!found) aiIdx++; // give up on this line, advance
         }
       }
+    } else {
+      // Conflict: collect AI lines until next common section boundary
+      const nextCommonLines = findNextCommonLines(originalSections, sIdx);
       const resolved: string[] = [];
-      while (aiIdx < aiLines.length) {
-        if (boundaryLine !== undefined && aiLines[aiIdx] === boundaryLine) break;
-        resolved.push(aiLines[aiIdx]);
-        aiIdx++;
+
+      if (nextCommonLines.length > 0) {
+        const matchLen = Math.min(3, nextCommonLines.length);
+        while (aiIdx < aiLines.length) {
+          // Check if current position matches the start of next common section
+          let isMatch = true;
+          for (let m = 0; m < matchLen; m++) {
+            if (aiIdx + m >= aiLines.length || aiLines[aiIdx + m] !== nextCommonLines[m]) {
+              isMatch = false;
+              break;
+            }
+          }
+          if (isMatch) break;
+          resolved.push(aiLines[aiIdx]);
+          aiIdx++;
+        }
+      } else {
+        // Last conflict: collect all remaining lines
+        while (aiIdx < aiLines.length) {
+          resolved.push(aiLines[aiIdx]);
+          aiIdx++;
+        }
       }
       result.set(section.id, resolved);
     }
   }
   return result;
+}
+
+/** Find the first N lines of the next common section after sIdx */
+function findNextCommonLines(sections: ParsedSection[], afterIdx: number): string[] {
+  for (let i = afterIdx + 1; i < sections.length; i++) {
+    if (sections[i].type === "common" && (sections[i].common || []).length > 0) {
+      return (sections[i].common || []).slice(0, 3);
+    }
+  }
+  return [];
 }
 
 /* ═══════════════ Raw text conflict resolution (backward compat) ═══════════════ */
