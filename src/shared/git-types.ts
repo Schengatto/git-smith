@@ -304,6 +304,15 @@ export interface ChangelogGroup {
   entries: ChangelogEntry[];
 }
 
+export interface ReflogEntry {
+  hash: string;
+  abbreviatedHash: string;
+  selector: string;
+  action: string;
+  subject: string;
+  date: string;
+}
+
 export interface ChangelogData {
   from: string;
   to: string;

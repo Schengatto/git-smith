@@ -444,6 +444,11 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.MCP.REVIEW_COMMIT, hash),
   },
 
+  reflog: {
+    list: (maxCount?: number): Promise<import("../shared/git-types").ReflogEntry[]> =>
+      ipcRenderer.invoke(IPC.REFLOG.LIST, maxCount),
+  },
+
   changelog: {
     getTagsBefore: (hash: string): Promise<string[]> =>
       ipcRenderer.invoke(IPC.CHANGELOG.TAGS_BEFORE, hash),

@@ -1757,6 +1757,28 @@ export class GitService {
   // Stats methods
   // ---------------------------------------------------------------------------
 
+  async getReflog(maxCount = 100): Promise<import("../../shared/git-types").ReflogEntry[]> {
+    const git = this.ensureRepo();
+    return this.run("git reflog", [`-n ${maxCount}`], async () => {
+      const SEP = "‖";
+      const format = [`%H`, `%h`, `%gd`, `%gs`, `%s`, `%ci`].join(SEP);
+      const result = await git.raw([
+        "reflog",
+        `--format=${format}`,
+        `-n`,
+        String(maxCount),
+      ]);
+      if (!result.trim()) return [];
+      return result
+        .trim()
+        .split("\n")
+        .map((line) => {
+          const [hash, abbreviatedHash, selector, action, subject, date] = line.split(SEP);
+          return { hash, abbreviatedHash, selector, action, subject, date };
+        });
+    });
+  }
+
   async getCodebaseStats(): Promise<import("../../shared/codebase-stats-types").CodebaseStats> {
     const git = this.ensureRepo();
     return this.run("git ls-files (codebase stats)", [], async () => {

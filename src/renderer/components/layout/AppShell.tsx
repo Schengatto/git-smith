@@ -29,6 +29,8 @@ import { StaleBranchesDialog } from "../dialogs/StaleBranchesDialog";
 import { GitOperationLogDialog } from "../dialogs/GitOperationLogDialog";
 import { useGitOperationStore } from "../../store/git-operation-store";
 import { ConflictBanner } from "./ConflictBanner";
+import { CommandPalette } from "./CommandPalette";
+import { ReflogDialog } from "../dialogs/ReflogDialog";
 
 const components: Record<string, React.FC<IDockviewPanelProps>> = {
   sidebar: () => <Sidebar />,
@@ -55,6 +57,8 @@ export const AppShell: React.FC = () => {
   const dockviewApiRef = useRef<DockviewApi | null>(null);
   const layoutSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [reflogOpen, setReflogOpen] = useState(false);
 
   const saveLayout = useCallback(() => {
     const api = dockviewApiRef.current;
@@ -111,6 +115,11 @@ export const AppShell: React.FC = () => {
 
     // Global keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "P") {
+        e.preventDefault();
+        setCommandPaletteOpen((v) => !v);
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "o") {
         e.preventDefault();
         useRepoStore.getState().openRepoDialog();
@@ -122,6 +131,9 @@ export const AppShell: React.FC = () => {
     };
     window.addEventListener("keydown", handleKeyDown);
 
+    const handleOpenReflog = () => setReflogOpen(true);
+    window.addEventListener("command-palette:open-reflog", handleOpenReflog);
+
     return () => {
       unsub();
       unsubOutput();
@@ -129,6 +141,7 @@ export const AppShell: React.FC = () => {
       unsubRepoChanged();
       unsubDialogResult();
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("command-palette:open-reflog", handleOpenReflog);
       if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -364,6 +377,8 @@ export const AppShell: React.FC = () => {
       <AboutDialog open={aboutDialogOpen} onClose={closeAboutDialog} />
       <StaleBranchesDialog open={staleBranchesDialogOpen} onClose={closeStaleBranchesDialog} />
       <GitOperationLogDialog />
+      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      <ReflogDialog open={reflogOpen} onClose={() => setReflogOpen(false)} />
     </div>
   );
 };

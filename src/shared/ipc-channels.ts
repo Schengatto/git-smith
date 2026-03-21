@@ -205,6 +205,9 @@ export const IPC = {
     AUTHOR_DETAIL: "git:stats:author-detail",
     CODEBASE: "git:stats:codebase",
   },
+  REFLOG: {
+    LIST: "git:reflog:list",
+  },
   CHANGELOG: {
     TAGS_BEFORE: "git:changelog:tags-before",
     GENERATE: "git:changelog:generate",

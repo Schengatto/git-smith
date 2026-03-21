@@ -17,6 +17,7 @@ import { registerAccountHandlers } from "./git-account.ipc";
 import { registerDialogHandlers } from "./dialog.ipc";
 import { registerStatsHandlers } from "./stats.ipc";
 import { registerChangelogHandlers } from "./changelog.ipc";
+import { registerReflogHandlers } from "./git-reflog.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -38,4 +39,5 @@ export function registerAllHandlers() {
   registerDialogHandlers();
   registerStatsHandlers();
   registerChangelogHandlers();
+  registerReflogHandlers();
 }

@@ -28,6 +28,13 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 - Auto-fetch, auto-update, changelog dialog
 - Dialog child windows
 - Conflict banner (merge/rebase/cherry-pick in progress)
+- Cherry-pick dialog avanzato (selezione multipla, opzioni)
+- Revert commit (right-click context menu)
+- Search commits (full-text, autore, hash, pickaxe)
+- Diff side-by-side toggle (unified/split in DiffViewer)
+- Dark/Light theme toggle (toolbar)
+- **Command Palette** (Ctrl+Shift+P) — accesso rapido a tutte le azioni
+- **Git Reflog Viewer** — visualizza reflog con filtro e navigazione ai commit
 
 ---
 
@@ -35,45 +42,45 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 
 ### Categoria: Git Operations
 
-| # | Funzionalita | Descrizione | Complessita | Priorita |
-|---|-------------|-------------|-------------|----------|
-| 1 | **Cherry-pick dialog** | Dialog dedicato per cherry-pick con selezione multipla di commit, preview, opzioni (no-commit, mainline) | Media | Alta |
-| 2 | **Revert commit** | Right-click su commit -> Revert, con preview delle modifiche prima di confermare | Bassa | Alta |
-| 3 | **Squash commits** | Seleziona range di commit -> squash in uno solo con editor del messaggio combinato | Media | Media |
-| 4 | **Archive/Export** | Esporta un commit o branch come .zip/.tar.gz | Bassa | Bassa |
-| 5 | **Git Bisect UI** | Interfaccia grafica per `git bisect` (good/bad/skip) con evidenziazione nel grafo e progresso | Alta | Media |
-| 6 | **Worktrees** | Gestione worktree multiple: crea, lista, rimuovi, apri in nuova finestra | Media | Media |
-| 7 | **Submodules management** | Dialog per add/update/sync/deinit submodules (la sidebar li mostra gia) | Media | Bassa |
-| 8 | **Patches** | Crea/applica patch file (format-patch / am) con preview | Bassa | Bassa |
+| # | Funzionalita | Descrizione | Complessita | Priorita | Stato |
+|---|-------------|-------------|-------------|----------|-------|
+| 1 | ~~Cherry-pick dialog~~ | Dialog dedicato per cherry-pick con selezione multipla di commit, preview, opzioni (no-commit, mainline) | Media | Alta | ✅ Implementato |
+| 2 | ~~Revert commit~~ | Right-click su commit -> Revert, con preview delle modifiche prima di confermare | Bassa | Alta | ✅ Implementato |
+| 3 | **Squash commits** | Seleziona range di commit -> squash in uno solo con editor del messaggio combinato | Media | Media | |
+| 4 | **Archive/Export** | Esporta un commit o branch come .zip/.tar.gz | Bassa | Bassa | |
+| 5 | **Git Bisect UI** | Interfaccia grafica per `git bisect` (good/bad/skip) con evidenziazione nel grafo e progresso | Alta | Media | |
+| 6 | **Worktrees** | Gestione worktree multiple: crea, lista, rimuovi, apri in nuova finestra | Media | Media | |
+| 7 | **Submodules management** | Dialog per add/update/sync/deinit submodules (la sidebar li mostra gia) | Media | Bassa | |
+| 8 | **Patches** | Crea/applica patch file (format-patch / am) con preview | Bassa | Bassa | |
 
 ### Categoria: UI/UX
 
-| # | Funzionalita | Descrizione | Complessita | Priorita |
-|---|-------------|-------------|-------------|----------|
-| 9 | **File blame view** | Blame inline con annotazioni per riga, navigazione per commit, colori per eta | Alta | Alta |
-| 10 | **File history timeline** | Grafo dedicato per la storia di un singolo file con diff tra versioni | Media | Alta |
-| 11 | **Search commits** | Ricerca full-text nei messaggi di commit, autore, hash, contenuto diff (pickaxe) | Media | Alta |
-| 12 | **Diff side-by-side** | Toggle tra unified e split diff view | Media | Media |
-| 13 | **Syntax highlighting nel diff** | Highlight del codice sorgente nei diff viewer | Media | Media |
-| 14 | **Dark/Light theme toggle** | Switch rapido nella toolbar o shortcut | Bassa | Bassa |
-| 15 | **Keyboard shortcuts panel** | Dialog con tutti gli shortcut, configurabili dall'utente | Media | Bassa |
+| # | Funzionalita | Descrizione | Complessita | Priorita | Stato |
+|---|-------------|-------------|-------------|----------|-------|
+| 9 | **File blame view** | Blame inline con annotazioni per riga, navigazione per commit, colori per eta | Alta | Alta | |
+| 10 | **File history timeline** | Grafo dedicato per la storia di un singolo file con diff tra versioni | Media | Alta | |
+| 11 | ~~Search commits~~ | Ricerca full-text nei messaggi di commit, autore, hash, contenuto diff (pickaxe) | Media | Alta | ✅ Implementato |
+| 12 | ~~Diff side-by-side~~ | Toggle tra unified e split diff view | Media | Media | ✅ Implementato |
+| 13 | **Syntax highlighting nel diff** | Highlight del codice sorgente nei diff viewer | Media | Media | |
+| 14 | ~~Dark/Light theme toggle~~ | Switch rapido nella toolbar o shortcut | Bassa | Bassa | ✅ Implementato |
+| 15 | **Keyboard shortcuts panel** | Dialog con tutti gli shortcut, configurabili dall'utente | Media | Bassa | |
 
 ### Categoria: Collaboration & Integrations
 
-| # | Funzionalita | Descrizione | Complessita | Priorita |
-|---|-------------|-------------|-------------|----------|
-| 16 | **GitHub/GitLab PR integration** | Crea/visualizza Pull Request e Merge Request direttamente dall'app | Alta | Alta |
-| 17 | **Git LFS support** | Visualizza file LFS, track/untrack, info su storage | Media | Bassa |
-| 18 | **GPG commit signing** | Configurazione chiavi GPG, visualizzazione firma verificata sui commit | Media | Media |
+| # | Funzionalita | Descrizione | Complessita | Priorita | Stato |
+|---|-------------|-------------|-------------|----------|-------|
+| 16 | **GitHub/GitLab PR integration** | Crea/visualizza Pull Request e Merge Request direttamente dall'app | Alta | Alta | |
+| 17 | **Git LFS support** | Visualizza file LFS, track/untrack, info su storage | Media | Bassa | |
+| 18 | **GPG commit signing** | Configurazione chiavi GPG, visualizzazione firma verificata sui commit | Media | Media | |
 
 ### Categoria: Productivity
 
-| # | Funzionalita | Descrizione | Complessita | Priorita |
-|---|-------------|-------------|-------------|----------|
-| 19 | **Command palette** | Ctrl+Shift+P per accesso rapido a tutte le azioni (stile VS Code) | Media | Alta |
-| 20 | **Git reflog viewer** | Visualizza il reflog per recuperare commit persi o operazioni annullate | Bassa | Media |
-| 21 | **Git notes** | Aggiungere/visualizzare note ai commit (`git notes`) | Bassa | Bassa |
-| 22 | **Batch operations** | Fetch/pull su tutti i repo nei preferiti in un colpo solo, con report | Media | Media |
+| # | Funzionalita | Descrizione | Complessita | Priorita | Stato |
+|---|-------------|-------------|-------------|----------|-------|
+| 19 | ~~Command palette~~ | Ctrl+Shift+P per accesso rapido a tutte le azioni (stile VS Code) | Media | Alta | ✅ Implementato |
+| 20 | ~~Git reflog viewer~~ | Visualizza il reflog per recuperare commit persi o operazioni annullate | Bassa | Media | ✅ Implementato |
+| 21 | **Git notes** | Aggiungere/visualizzare note ai commit (`git notes`) | Bassa | Bassa | |
+| 22 | **Batch operations** | Fetch/pull su tutti i repo nei preferiti in un colpo solo, con report | Media | Media | |
 
 ---
 

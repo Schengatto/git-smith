@@ -345,11 +345,31 @@ export const MenuBar: React.FC<{
           disabled: !hasRepo,
           onClick: () => onOpenStaleBranches(),
         },
+        {
+          label: "Git reflog...",
+          disabled: !hasRepo,
+          onClick: () =>
+            window.dispatchEvent(new CustomEvent("command-palette:open-reflog")),
+        },
         { divider: true },
         {
           label: "Settings...",
           shortcut: "Ctrl+,",
           onClick: () => onOpenSettings(),
+        },
+        { divider: true },
+        {
+          label: "Command Palette",
+          shortcut: "Ctrl+Shift+P",
+          onClick: () =>
+            window.dispatchEvent(
+              new KeyboardEvent("keydown", {
+                key: "P",
+                ctrlKey: true,
+                shiftKey: true,
+                bubbles: true,
+              })
+            ),
         },
       ],
     },
