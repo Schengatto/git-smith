@@ -7,6 +7,10 @@ import { DropdownButton, DropdownEntry } from "./DropdownButton";
 import { CommitDialog } from "../commit/CommitDialog";
 import { RemoteDialog } from "../dialogs/RemoteDialog";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
+import { BisectDialog } from "../dialogs/BisectDialog";
+import { WorktreeDialog } from "../dialogs/WorktreeDialog";
+import { PatchApplyDialog } from "../dialogs/PatchDialog";
+import { KeyboardShortcutsDialog } from "../dialogs/KeyboardShortcutsDialog";
 import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 import { openDialogWindow } from "../../utils/open-dialog";
 
@@ -438,6 +442,10 @@ export const Toolbar: React.FC = () => {
   const { loadGraph } = useGraphStore();
   const [commitOpen, setCommitOpen] = useState(false);
   const [remotesOpen, setRemotesOpen] = useState(false);
+  const [bisectOpen, setBisectOpen] = useState(false);
+  const [worktreeOpen, setWorktreeOpen] = useState(false);
+  const [patchApplyOpen, setPatchApplyOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const changedCount = status
     ? (status.staged.length || 0) +
@@ -445,16 +453,41 @@ export const Toolbar: React.FC = () => {
       (status.untracked.length || 0)
     : 0;
 
-  // Ctrl+K to open commit dialog
+  // Ctrl+K to open commit dialog, ? for keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k" && repo) {
         e.preventDefault();
         setCommitOpen(true);
       }
+      // ? key (without modifiers, not in input)
+      if (e.key === "?" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT") {
+          e.preventDefault();
+          setShortcutsOpen(true);
+        }
+      }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+
+    // Command palette events
+    const onBisect = () => setBisectOpen(true);
+    const onWorktrees = () => setWorktreeOpen(true);
+    const onPatchApply = () => setPatchApplyOpen(true);
+    const onShortcuts = () => setShortcutsOpen(true);
+    window.addEventListener("command-palette:open-bisect", onBisect);
+    window.addEventListener("command-palette:open-worktrees", onWorktrees);
+    window.addEventListener("command-palette:open-patch-apply", onPatchApply);
+    window.addEventListener("command-palette:open-shortcuts", onShortcuts);
+
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("command-palette:open-bisect", onBisect);
+      window.removeEventListener("command-palette:open-worktrees", onWorktrees);
+      window.removeEventListener("command-palette:open-patch-apply", onPatchApply);
+      window.removeEventListener("command-palette:open-shortcuts", onShortcuts);
+    };
   }, [repo]);
 
   const handleRefresh = async () => {
@@ -615,6 +648,27 @@ export const Toolbar: React.FC = () => {
         await Promise.all([refreshInfo(), loadGraph()]);
       },
     },
+    { divider: true },
+    {
+      label: "Batch Fetch All Repos",
+      sublabel: "Fetch all recent repositories",
+      icon: <IconGlobe />,
+      onClick: async () => {
+        const repos = await window.electronAPI.repo.getRecent();
+        let fetched = 0;
+        for (const repoPath of repos) {
+          try {
+            await window.electronAPI.repo.open(repoPath);
+            await window.electronAPI.remote.fetchAll();
+            fetched++;
+          } catch { /* skip repos that fail */ }
+        }
+        // Re-open current repo
+        if (repo) await window.electronAPI.repo.open(repo.path);
+        await Promise.all([refreshInfo(), loadGraph()]);
+        alert(`Fetched ${fetched} of ${repos.length} repositories`);
+      },
+    },
   ];
 
   return (
@@ -720,10 +774,57 @@ export const Toolbar: React.FC = () => {
             style={{ width: 1, height: 18, background: "var(--border)" }}
           />
 
+          <button
+            onClick={() => setBisectOpen(true)}
+            className="toolbar-btn"
+            title="Git Bisect"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Bisect
+          </button>
+
+          <button
+            onClick={() => setWorktreeOpen(true)}
+            className="toolbar-btn"
+            title="Manage Worktrees"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="12" y1="11" x2="12" y2="17" /><line x1="9" y1="14" x2="15" y2="14" />
+            </svg>
+            Worktrees
+          </button>
+
+          <button
+            onClick={() => setPatchApplyOpen(true)}
+            className="toolbar-btn"
+            title="Apply Patch"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+            </svg>
+            Patch
+          </button>
+
+          <div
+            className="mx-1"
+            style={{ width: 1, height: 18, background: "var(--border)" }}
+          />
+
           <AccountSelector />
 
       <div className="flex-1" />
 
+      <button
+        onClick={() => setShortcutsOpen(true)}
+        className="toolbar-btn"
+        title="Keyboard Shortcuts (?)"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" /><line x1="6" y1="8" x2="6" y2="8" /><line x1="10" y1="8" x2="10" y2="8" /><line x1="14" y1="8" x2="14" y2="8" /><line x1="18" y1="8" x2="18" y2="8" /><line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+      </button>
       <button
         onClick={() => openDialogWindow({ dialog: "SettingsDialog" })}
         className="toolbar-btn"
@@ -738,6 +839,10 @@ export const Toolbar: React.FC = () => {
 
       <CommitDialog open={commitOpen} onClose={() => setCommitOpen(false)} />
       <RemoteDialog open={remotesOpen} onClose={() => setRemotesOpen(false)} />
+      <BisectDialog open={bisectOpen} onClose={() => setBisectOpen(false)} />
+      <WorktreeDialog open={worktreeOpen} onClose={() => setWorktreeOpen(false)} />
+      <PatchApplyDialog open={patchApplyOpen} onClose={() => setPatchApplyOpen(false)} />
+      <KeyboardShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <SetUpstreamDialog
         open={!!setUpstreamError}
         onClose={() => setSetUpstreamError(null)}

@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { html, Diff2HtmlConfig } from "diff2html";
+import React, { useState, useRef, useEffect } from "react";
+import { html } from "diff2html";
+import { Diff2HtmlUI } from "diff2html/lib/ui/js/diff2html-ui-slim";
+import { ColorSchemeType } from "diff2html/lib/types";
 import "diff2html/bundles/css/diff2html.min.css";
 
 type OutputFormat = "line-by-line" | "side-by-side";
@@ -18,22 +20,52 @@ export const DiffViewer: React.FC<Props> = ({
   showFormatToggle = true,
 }) => {
   const [format, setFormat] = useState<OutputFormat>(initialFormat);
+  const [syntaxHighlight, setSyntaxHighlight] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const diffHtml = useMemo(() => {
-    if (!rawDiff || rawDiff.startsWith("(")) return "";
-
-    const config: Diff2HtmlConfig = {
-      outputFormat: format,
-      drawFileList: false,
-      matching: "lines",
-    };
-
-    try {
-      return html(rawDiff, config);
-    } catch {
-      return "";
+  // Use Diff2HtmlUI for syntax highlighting, fall back to plain html() without
+  useEffect(() => {
+    if (!containerRef.current) return;
+    if (!rawDiff || rawDiff.startsWith("(")) {
+      containerRef.current.innerHTML = "";
+      return;
     }
-  }, [rawDiff, format]);
+
+    if (syntaxHighlight) {
+      try {
+        const diff2htmlUi = new Diff2HtmlUI(containerRef.current, rawDiff, {
+          outputFormat: format,
+          drawFileList: false,
+          matching: "lines",
+          highlight: true,
+          colorScheme: ColorSchemeType.DARK,
+        });
+        diff2htmlUi.draw();
+        diff2htmlUi.highlightCode();
+      } catch {
+        // Fallback to non-highlighted
+        try {
+          containerRef.current.innerHTML = html(rawDiff, {
+            outputFormat: format,
+            drawFileList: false,
+            matching: "lines",
+          });
+        } catch {
+          containerRef.current.innerHTML = "";
+        }
+      }
+    } else {
+      try {
+        containerRef.current.innerHTML = html(rawDiff, {
+          outputFormat: format,
+          drawFileList: false,
+          matching: "lines",
+        });
+      } catch {
+        containerRef.current.innerHTML = "";
+      }
+    }
+  }, [rawDiff, format, syntaxHighlight]);
 
   if (!rawDiff) {
     return (
@@ -47,14 +79,6 @@ export const DiffViewer: React.FC<Props> = ({
     return (
       <div className="empty-state" style={{ height: "100%" }}>
         <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{rawDiff}</span>
-      </div>
-    );
-  }
-
-  if (!diffHtml) {
-    return (
-      <div className="empty-state" style={{ height: "100%" }}>
-        <span>Could not parse diff</span>
       </div>
     );
   }
@@ -83,32 +107,59 @@ export const DiffViewer: React.FC<Props> = ({
           <span />
         )}
 
-        {showFormatToggle && (
-          <div
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Syntax highlight toggle */}
+          <button
+            onClick={() => setSyntaxHighlight((v) => !v)}
+            title={syntaxHighlight ? "Disable syntax highlighting" : "Enable syntax highlighting"}
             style={{
               display: "flex",
+              alignItems: "center",
+              gap: 3,
+              padding: "2px 8px",
+              fontSize: 10,
+              fontWeight: 500,
+              border: `1px solid ${syntaxHighlight ? "var(--accent)" : "var(--border)"}`,
               borderRadius: 4,
-              overflow: "hidden",
-              border: "1px solid var(--border)",
+              cursor: "pointer",
+              background: syntaxHighlight ? "var(--accent-dim)" : "transparent",
+              color: syntaxHighlight ? "var(--accent)" : "var(--text-muted)",
+              transition: "all 0.15s",
             }}
           >
-            <FormatBtn
-              active={format === "line-by-line"}
-              onClick={() => setFormat("line-by-line")}
-              label="Unified"
-            />
-            <FormatBtn
-              active={format === "side-by-side"}
-              onClick={() => setFormat("side-by-side")}
-              label="Split"
-            />
-          </div>
-        )}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+            Syntax
+          </button>
+
+          {showFormatToggle && (
+            <div
+              style={{
+                display: "flex",
+                borderRadius: 4,
+                overflow: "hidden",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <FormatBtn
+                active={format === "line-by-line"}
+                onClick={() => setFormat("line-by-line")}
+                label="Unified"
+              />
+              <FormatBtn
+                active={format === "side-by-side"}
+                onClick={() => setFormat("side-by-side")}
+                label="Split"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div
         className="diff2html-wrapper"
-        dangerouslySetInnerHTML={{ __html: diffHtml }}
+        ref={containerRef}
       />
     </div>
   );

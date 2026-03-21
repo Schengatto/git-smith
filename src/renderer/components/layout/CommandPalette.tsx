@@ -243,6 +243,44 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
         },
       },
 
+      // New tools
+      {
+        id: "tool:bisect",
+        label: "Git Bisect...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-bisect"));
+        },
+      },
+      {
+        id: "tool:worktrees",
+        label: "Manage Worktrees...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-worktrees"));
+        },
+      },
+      {
+        id: "tool:patch-apply",
+        label: "Apply Patch...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-patch-apply"));
+        },
+      },
+      {
+        id: "tool:shortcuts",
+        label: "Keyboard Shortcuts",
+        category: "Help",
+        shortcut: "?",
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-shortcuts"));
+        },
+      },
+
       // View
       {
         id: "view:toggle-theme",

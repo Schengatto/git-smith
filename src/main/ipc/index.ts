@@ -18,6 +18,12 @@ import { registerDialogHandlers } from "./dialog.ipc";
 import { registerStatsHandlers } from "./stats.ipc";
 import { registerChangelogHandlers } from "./changelog.ipc";
 import { registerReflogHandlers } from "./git-reflog.ipc";
+import { registerArchiveHandlers } from "./git-archive.ipc";
+import { registerBisectHandlers } from "./git-bisect.ipc";
+import { registerWorktreeHandlers } from "./git-worktree.ipc";
+import { registerPatchHandlers } from "./git-patch.ipc";
+import { registerNotesHandlers } from "./git-notes.ipc";
+import { registerGpgHandlers } from "./git-gpg.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -40,4 +46,10 @@ export function registerAllHandlers() {
   registerStatsHandlers();
   registerChangelogHandlers();
   registerReflogHandlers();
+  registerArchiveHandlers();
+  registerBisectHandlers();
+  registerWorktreeHandlers();
+  registerPatchHandlers();
+  registerNotesHandlers();
+  registerGpgHandlers();
 }

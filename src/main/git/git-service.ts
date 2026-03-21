@@ -2159,6 +2159,184 @@ export class GitService {
         };
       });
   }
+
+  // ─── GPG Signature Verification ─────────────────────────
+  async verifyCommitSignature(hash: string): Promise<{ signed: boolean; key?: string; status?: string; signer?: string }> {
+    const git = this.ensureRepo();
+    try {
+      const raw = await git.raw(["log", "-1", "--format=%G?%x00%GK%x00%GS%x00%GG", hash]);
+      const [status, key, signer] = raw.split("\0");
+      const signed = status === "G" || status === "U" || status === "E";
+      return {
+        signed,
+        key: key?.trim() || undefined,
+        status: status?.trim() || undefined,
+        signer: signer?.trim() || undefined,
+      };
+    } catch {
+      return { signed: false };
+    }
+  }
+
+  // ─── Archive/Export ──────────────────────────────────────
+  async archive(ref: string, outputPath: string, format: "zip" | "tar.gz"): Promise<void> {
+    const git = this.ensureRepo();
+    const args = ["archive", "--format", format === "tar.gz" ? "tar.gz" : "zip", "-o", outputPath, ref];
+    await this.run("git archive", args, () => git.raw(args));
+  }
+
+  // ─── Bisect ────────────────────────────────────────────
+  async bisectStart(bad?: string, good?: string): Promise<string> {
+    const git = this.ensureRepo();
+    const args = ["bisect", "start"];
+    if (bad) args.push(bad);
+    if (good) args.push(good);
+    return this.run("git bisect", ["start"], () => git.raw(args));
+  }
+
+  async bisectGood(ref?: string): Promise<string> {
+    const git = this.ensureRepo();
+    const args = ["bisect", "good"];
+    if (ref) args.push(ref);
+    return this.run("git bisect", ["good"], () => git.raw(args));
+  }
+
+  async bisectBad(ref?: string): Promise<string> {
+    const git = this.ensureRepo();
+    const args = ["bisect", "bad"];
+    if (ref) args.push(ref);
+    return this.run("git bisect", ["bad"], () => git.raw(args));
+  }
+
+  async bisectSkip(ref?: string): Promise<string> {
+    const git = this.ensureRepo();
+    const args = ["bisect", "skip"];
+    if (ref) args.push(ref);
+    return this.run("git bisect", ["skip"], () => git.raw(args));
+  }
+
+  async bisectReset(): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git bisect", ["reset"], () => git.raw(["bisect", "reset"]));
+  }
+
+  async bisectLog(): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git bisect", ["log"], () => git.raw(["bisect", "log"])).catch(() => "");
+  }
+
+  async bisectStatus(): Promise<{ active: boolean; good: string[]; bad: string[]; current?: string }> {
+    const git = this.ensureRepo();
+    try {
+      const log = await git.raw(["bisect", "log"]).catch(() => "");
+      if (!log.trim()) return { active: false, good: [], bad: [] };
+      const good: string[] = [];
+      const bad: string[] = [];
+      for (const line of log.split("\n")) {
+        const goodMatch = line.match(/# good: \[([0-9a-f]+)\]/);
+        const badMatch = line.match(/# bad: \[([0-9a-f]+)\]/);
+        if (goodMatch) good.push(goodMatch[1]);
+        if (badMatch) bad.push(badMatch[1]);
+      }
+      const headRaw = await git.raw(["rev-parse", "HEAD"]).catch(() => "");
+      return { active: true, good, bad, current: headRaw.trim() || undefined };
+    } catch {
+      return { active: false, good: [], bad: [] };
+    }
+  }
+
+  // ─── Worktrees ─────────────────────────────────────────
+  async worktreeList(): Promise<{ path: string; branch: string; head: string; isBare: boolean; isMain: boolean }[]> {
+    const git = this.ensureRepo();
+    return this.run("git worktree", ["list"], async () => {
+      const raw = await git.raw(["worktree", "list", "--porcelain"]);
+      const worktrees: { path: string; branch: string; head: string; isBare: boolean; isMain: boolean }[] = [];
+      let current: { path: string; branch: string; head: string; isBare: boolean; isMain: boolean } | null = null;
+      for (const line of raw.split("\n")) {
+        if (line.startsWith("worktree ")) {
+          if (current) worktrees.push(current);
+          current = { path: line.slice(9), branch: "", head: "", isBare: false, isMain: false };
+        } else if (current) {
+          if (line.startsWith("HEAD ")) current.head = line.slice(5);
+          else if (line.startsWith("branch ")) current.branch = line.slice(7).replace("refs/heads/", "");
+          else if (line === "bare") current.isBare = true;
+        }
+      }
+      if (current) worktrees.push(current);
+      if (worktrees.length > 0) worktrees[0].isMain = true;
+      return worktrees;
+    });
+  }
+
+  async worktreeAdd(path: string, branch?: string, createBranch?: boolean): Promise<void> {
+    const git = this.ensureRepo();
+    const args = ["worktree", "add"];
+    if (createBranch && branch) {
+      args.push("-b", branch, path);
+    } else {
+      args.push(path);
+      if (branch) args.push(branch);
+    }
+    await this.run("git worktree", ["add", path], () => git.raw(args));
+  }
+
+  async worktreeRemove(path: string, force?: boolean): Promise<void> {
+    const git = this.ensureRepo();
+    const args = ["worktree", "remove"];
+    if (force) args.push("--force");
+    args.push(path);
+    await this.run("git worktree", ["remove", path], () => git.raw(args));
+  }
+
+  // ─── Patches ───────────────────────────────────────────
+  async formatPatch(hashes: string[], outputDir: string): Promise<string[]> {
+    const git = this.ensureRepo();
+    return this.run("git format-patch", hashes, async () => {
+      const files: string[] = [];
+      for (const hash of hashes) {
+        const result = await git.raw(["format-patch", "-1", hash, "-o", outputDir]);
+        files.push(...result.trim().split("\n").filter(Boolean));
+      }
+      return files;
+    });
+  }
+
+  async applyPatch(patchPath: string, check?: boolean): Promise<string> {
+    const git = this.ensureRepo();
+    const args = ["apply"];
+    if (check) args.push("--check");
+    args.push(patchPath);
+    return this.run("git apply", [patchPath], () => git.raw(args));
+  }
+
+  async previewPatch(patchPath: string): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git apply", ["--stat", patchPath], () =>
+      git.raw(["apply", "--stat", patchPath])
+    );
+  }
+
+  // ─── Git Notes ─────────────────────────────────────────
+  async getNote(hash: string): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git notes", ["show", hash], () =>
+      git.raw(["notes", "show", hash])
+    ).catch(() => "");
+  }
+
+  async addNote(hash: string, message: string): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git notes", ["add", hash], () =>
+      git.raw(["notes", "add", "-f", "-m", message, hash])
+    );
+  }
+
+  async removeNote(hash: string): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git notes", ["remove", hash], () =>
+      git.raw(["notes", "remove", hash])
+    );
+  }
 }
 
 function parseRefs(refString: string): CommitInfo["refs"] {

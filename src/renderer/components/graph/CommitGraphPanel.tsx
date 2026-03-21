@@ -16,6 +16,9 @@ import { RebaseDialog } from "../dialogs/RebaseDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import type { GraphRow, BranchInfo, CommitInfo } from "../../../shared/git-types";
 import { AiReviewDialog } from "../ai/AiReviewDialog";
+import { ArchiveDialog } from "../dialogs/ArchiveDialog";
+import { PatchCreateDialog } from "../dialogs/PatchDialog";
+import { NotesDialog } from "../dialogs/NotesDialog";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
 const LANE_WIDTH = 16;
@@ -83,6 +86,9 @@ export const CommitGraphPanel: React.FC = () => {
   const [squashTarget, setSquashTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [compareTarget, setCompareTarget] = useState<{ commit1: CommitInfo; commit2: CommitInfo } | null>(null);
   const [aiReviewHash, setAiReviewHash] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<{ ref: string; label: string } | null>(null);
+  const [patchTarget, setPatchTarget] = useState<{ hashes: string[]; subjects: string[] } | null>(null);
+  const [notesTarget, setNotesTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -427,6 +433,19 @@ export const CommitGraphPanel: React.FC = () => {
       {
         label: `Copy Hash (${row.commit.abbreviatedHash})`,
         onClick: () => navigator.clipboard.writeText(row.commit.hash),
+      },
+      { divider: true },
+      {
+        label: "Archive / Export...",
+        onClick: () => setArchiveTarget({ ref: row.commit.hash, label: row.commit.abbreviatedHash }),
+      },
+      {
+        label: "Create Patch...",
+        onClick: () => setPatchTarget({ hashes: [row.commit.hash], subjects: [row.commit.subject] }),
+      },
+      {
+        label: "Git Notes...",
+        onClick: () => setNotesTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
       { divider: true },
       {
@@ -906,6 +925,33 @@ export const CommitGraphPanel: React.FC = () => {
         <AiReviewDialog
           hash={aiReviewHash}
           onClose={() => setAiReviewHash(null)}
+        />
+      )}
+
+      {archiveTarget && (
+        <ArchiveDialog
+          open={!!archiveTarget}
+          onClose={() => setArchiveTarget(null)}
+          ref_={archiveTarget.ref}
+          refLabel={archiveTarget.label}
+        />
+      )}
+
+      {patchTarget && (
+        <PatchCreateDialog
+          open={!!patchTarget}
+          onClose={() => setPatchTarget(null)}
+          hashes={patchTarget.hashes}
+          subjects={patchTarget.subjects}
+        />
+      )}
+
+      {notesTarget && (
+        <NotesDialog
+          open={!!notesTarget}
+          onClose={() => setNotesTarget(null)}
+          hash={notesTarget.hash}
+          subject={notesTarget.subject}
         />
       )}
 

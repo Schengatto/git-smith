@@ -327,3 +327,30 @@ export interface ChangelogData {
   totalCommits: number;
   authors: string[];
 }
+
+export interface WorktreeInfo {
+  path: string;
+  branch: string;
+  head: string;
+  isBare: boolean;
+  isMain: boolean;
+}
+
+export interface BisectStatus {
+  active: boolean;
+  good: string[];
+  bad: string[];
+  current?: string;
+  remaining?: number;
+  steps?: number;
+}
+
+export interface PatchCreateOptions {
+  hashes: string[];
+  outputDir: string;
+}
+
+export interface PatchApplyOptions {
+  patchPath: string;
+  check?: boolean;
+}

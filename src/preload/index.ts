@@ -454,6 +454,60 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.REFLOG.LIST, maxCount),
   },
 
+  archive: {
+    export: (ref: string, outputPath: string, format: "zip" | "tar.gz"): Promise<void> =>
+      ipcRenderer.invoke(IPC.ARCHIVE.EXPORT, ref, outputPath, format),
+  },
+
+  bisect: {
+    start: (bad?: string, good?: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.BISECT.START, bad, good),
+    good: (ref?: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.BISECT.GOOD, ref),
+    bad: (ref?: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.BISECT.BAD, ref),
+    skip: (ref?: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.BISECT.SKIP, ref),
+    reset: (): Promise<string> =>
+      ipcRenderer.invoke(IPC.BISECT.RESET),
+    log: (): Promise<string> =>
+      ipcRenderer.invoke(IPC.BISECT.LOG),
+    status: (): Promise<import("../shared/git-types").BisectStatus> =>
+      ipcRenderer.invoke(IPC.BISECT.STATUS),
+  },
+
+  worktree: {
+    list: (): Promise<import("../shared/git-types").WorktreeInfo[]> =>
+      ipcRenderer.invoke(IPC.WORKTREE.LIST),
+    add: (path: string, branch?: string, createBranch?: boolean): Promise<void> =>
+      ipcRenderer.invoke(IPC.WORKTREE.ADD, path, branch, createBranch),
+    remove: (path: string, force?: boolean): Promise<void> =>
+      ipcRenderer.invoke(IPC.WORKTREE.REMOVE, path, force),
+  },
+
+  patch: {
+    create: (hashes: string[], outputDir: string): Promise<string[]> =>
+      ipcRenderer.invoke(IPC.PATCH.CREATE, hashes, outputDir),
+    apply: (patchPath: string, check?: boolean): Promise<string> =>
+      ipcRenderer.invoke(IPC.PATCH.APPLY, patchPath, check),
+    preview: (patchPath: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.PATCH.PREVIEW, patchPath),
+  },
+
+  notes: {
+    get: (hash: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.NOTES.GET, hash),
+    add: (hash: string, message: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.NOTES.ADD, hash, message),
+    remove: (hash: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.NOTES.REMOVE, hash),
+  },
+
+  gpg: {
+    verify: (hash: string): Promise<{ signed: boolean; key?: string; status?: string; signer?: string }> =>
+      ipcRenderer.invoke(IPC.GPG.VERIFY, hash),
+  },
+
   changelog: {
     getTagsBefore: (hash: string): Promise<string[]> =>
       ipcRenderer.invoke(IPC.CHANGELOG.TAGS_BEFORE, hash),

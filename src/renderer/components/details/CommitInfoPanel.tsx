@@ -15,6 +15,8 @@ export const CommitInfoPanel: React.FC = () => {
   const { selectedCommit } = useGraphStore();
   const repo = useRepoStore((s) => s.repo);
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
+  const [gpgInfo, setGpgInfo] = useState<{ signed: boolean; key?: string; status?: string; signer?: string } | null>(null);
+  const [noteText, setNoteText] = useState<string>("");
 
   // Use selected commit or HEAD
   const effectiveHash = selectedCommit?.hash || repo?.headCommit || null;
@@ -22,12 +24,22 @@ export const CommitInfoPanel: React.FC = () => {
   useEffect(() => {
     if (!effectiveHash) {
       setInfo(null);
+      setGpgInfo(null);
+      setNoteText("");
       return;
     }
     window.electronAPI.log
       .fullInfo(effectiveHash)
       .then(setInfo)
       .catch(() => setInfo(null));
+    window.electronAPI.gpg
+      .verify(effectiveHash)
+      .then(setGpgInfo)
+      .catch(() => setGpgInfo(null));
+    window.electronAPI.notes
+      .get(effectiveHash)
+      .then(setNoteText)
+      .catch(() => setNoteText(""));
   }, [effectiveHash]);
 
   if (!effectiveHash) {
@@ -125,6 +137,59 @@ export const CommitInfoPanel: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* GPG Signature */}
+      {gpgInfo && gpgInfo.signed && (
+        <div
+          style={{
+            marginTop: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 8px",
+            borderRadius: 6,
+            background: gpgInfo.status === "G" ? "hsla(120, 50%, 50%, 0.1)" : "hsla(40, 50%, 50%, 0.1)",
+            border: `1px solid ${gpgInfo.status === "G" ? "hsla(120, 50%, 50%, 0.3)" : "hsla(40, 50%, 50%, 0.3)"}`,
+            fontSize: 11,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={gpgInfo.status === "G" ? "var(--green)" : "var(--yellow)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span style={{ color: gpgInfo.status === "G" ? "var(--green)" : "var(--yellow)" }}>
+            {gpgInfo.status === "G" ? "Verified" : "Signed"} signature
+          </span>
+          {gpgInfo.signer && (
+            <span style={{ color: "var(--text-muted)" }}>by {gpgInfo.signer}</span>
+          )}
+          {gpgInfo.key && (
+            <span className="mono" style={{ color: "var(--text-muted)", fontSize: 10 }}>
+              ({gpgInfo.key})
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Git Notes */}
+      {noteText && (
+        <div
+          style={{
+            marginTop: 8,
+            padding: "6px 10px",
+            borderRadius: 6,
+            background: "var(--surface-0)",
+            border: "1px solid var(--border-subtle)",
+            fontSize: 11,
+          }}
+        >
+          <div style={{ fontWeight: 600, color: "var(--text-muted)", marginBottom: 2, fontSize: 10 }}>
+            Note
+          </div>
+          <div style={{ color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}>
+            {noteText}
+          </div>
+        </div>
+      )}
 
       {/* Branches, Tags */}
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 3 }}>

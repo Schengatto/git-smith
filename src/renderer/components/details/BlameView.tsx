@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useGraphStore } from "../../store/graph-store";
 
 interface Props {
   open: boolean;
@@ -10,11 +11,11 @@ interface BlameLine {
   hash: string;
   author: string;
   date: string;
+  timestamp: number;
   lineNumber: number;
   content: string;
 }
 
-/** Parses `git blame --porcelain` output into structured blame lines with author and date. */
 function parsePorcelainBlame(raw: string): BlameLine[] {
   const lines: BlameLine[] = [];
   const rawLines = raw.split("\n");
@@ -22,24 +23,23 @@ function parsePorcelainBlame(raw: string): BlameLine[] {
   let currentHash = "";
   let currentAuthor = "";
   let currentDate = "";
+  let currentTimestamp = 0;
   let currentLineNo = 0;
 
   while (i < rawLines.length) {
     const line = rawLines[i];
-    // Header line: hash origLine finalLine [numLines]
     const headerMatch = line.match(/^([0-9a-f]{40}) \d+ (\d+)/);
     if (headerMatch) {
       currentHash = headerMatch[1];
       currentLineNo = parseInt(headerMatch[2]);
       i++;
-      // Read properties until content line (prefixed with \t)
       while (i < rawLines.length && !rawLines[i].startsWith("\t")) {
         const propLine = rawLines[i];
         if (propLine.startsWith("author ")) {
           currentAuthor = propLine.slice(7);
         } else if (propLine.startsWith("author-time ")) {
-          const ts = parseInt(propLine.slice(12));
-          currentDate = new Date(ts * 1000).toLocaleDateString(undefined, {
+          currentTimestamp = parseInt(propLine.slice(12));
+          currentDate = new Date(currentTimestamp * 1000).toLocaleDateString(undefined, {
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -47,12 +47,12 @@ function parsePorcelainBlame(raw: string): BlameLine[] {
         }
         i++;
       }
-      // Content line
       if (i < rawLines.length && rawLines[i].startsWith("\t")) {
         lines.push({
           hash: currentHash,
           author: currentAuthor,
           date: currentDate,
+          timestamp: currentTimestamp,
           lineNumber: currentLineNo,
           content: rawLines[i].slice(1),
         });
@@ -63,19 +63,23 @@ function parsePorcelainBlame(raw: string): BlameLine[] {
   return lines;
 }
 
-// Simple hash-to-color
-const BLAME_COLORS = [
-  "var(--surface-1)",
-  "var(--surface-2)",
-];
+function ageColor(timestamp: number, oldest: number, newest: number): string {
+  if (oldest === newest) return "var(--surface-1)";
+  const ratio = (timestamp - oldest) / (newest - oldest);
+  const hue = Math.round(ratio * 120); // 0=red (old) → 120=green (new)
+  return `hsla(${hue}, 50%, 50%, 0.08)`;
+}
 
 export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
   const [raw, setRaw] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedHash, setSelectedHash] = useState<string | null>(null);
+  const { selectCommit } = useGraphStore();
 
   useEffect(() => {
     if (!open || !filePath) return;
     setLoading(true);
+    setSelectedHash(null);
     window.electronAPI.blame
       .file(filePath)
       .then(setRaw)
@@ -85,21 +89,19 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
 
   const lines = useMemo(() => parsePorcelainBlame(raw), [raw]);
 
-  // Group consecutive lines by hash for striping
-  const hashColors = useMemo(() => {
-    const map = new Map<string, number>();
-    let colorIdx = 0;
-    let prevHash = "";
+  const { oldest, newest } = useMemo(() => {
+    let oldest = Infinity, newest = 0;
     for (const line of lines) {
-      if (line.hash !== prevHash) {
-        if (!map.has(line.hash)) {
-          map.set(line.hash, colorIdx++ % BLAME_COLORS.length);
-        }
-        prevHash = line.hash;
-      }
+      if (line.timestamp < oldest) oldest = line.timestamp;
+      if (line.timestamp > newest) newest = line.timestamp;
     }
-    return map;
+    return { oldest, newest };
   }, [lines]);
+
+  const handleNavigate = useCallback((hash: string) => {
+    selectCommit(hash);
+    onClose();
+  }, [selectCommit, onClose]);
 
   if (!open) return null;
 
@@ -120,10 +122,10 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
     >
       <div
         style={{
-          width: "85vw",
-          maxWidth: 950,
-          height: "75vh",
-          maxHeight: 650,
+          width: "90vw",
+          maxWidth: 1100,
+          height: "80vh",
+          maxHeight: 700,
           borderRadius: 12,
           background: "var(--surface-1)",
           border: "1px solid var(--border)",
@@ -151,18 +153,37 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
               Blame
             </span>
+            {!loading && lines.length > 0 && (
+              <span style={{
+                fontSize: 10,
+                color: "var(--text-muted)",
+                background: "var(--surface-0)",
+                padding: "1px 6px",
+                borderRadius: 8,
+              }}>
+                {lines.length} lines
+              </span>
+            )}
             <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>
               {filePath}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 4, borderRadius: 4, display: "flex" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--text-muted)" }}>
+              <span style={{ display: "inline-block", width: 12, height: 8, borderRadius: 2, background: "hsla(0, 50%, 50%, 0.2)" }} />
+              older
+              <span style={{ display: "inline-block", width: 12, height: 8, borderRadius: 2, background: "hsla(120, 50%, 50%, 0.2)", marginLeft: 4 }} />
+              newer
+            </div>
+            <button
+              onClick={onClose}
+              style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 4, borderRadius: 4, display: "flex" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -185,10 +206,18 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
                 {lines.map((line, i) => {
                   const showAnnotation =
                     i === 0 || lines[i - 1].hash !== line.hash;
-                  const bg = BLAME_COLORS[hashColors.get(line.hash) || 0];
+                  const bg = ageColor(line.timestamp, oldest, newest);
+                  const isSelected = line.hash === selectedHash;
 
                   return (
-                    <tr key={i} style={{ background: bg }}>
+                    <tr
+                      key={i}
+                      style={{
+                        background: isSelected ? "var(--accent-dim)" : bg,
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setSelectedHash(line.hash === selectedHash ? null : line.hash)}
+                    >
                       {/* Annotation */}
                       <td
                         style={{
@@ -197,20 +226,24 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
                           color: "var(--text-muted)",
                           borderRight: "1px solid var(--border-subtle)",
                           verticalAlign: "top",
-                          width: 200,
-                          minWidth: 200,
-                          maxWidth: 200,
+                          width: 240,
+                          minWidth: 240,
+                          maxWidth: 240,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                         }}
                       >
                         {showAnnotation && (
-                          <span>
-                            <span style={{ color: "var(--accent)" }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <span
+                              style={{ color: "var(--accent)", cursor: "pointer", textDecoration: "underline" }}
+                              onClick={(e) => { e.stopPropagation(); handleNavigate(line.hash); }}
+                              title="Show in graph"
+                            >
                               {line.hash.slice(0, 8)}
-                            </span>{" "}
-                            <span>{line.author}</span>{" "}
-                            <span style={{ color: "var(--text-muted)" }}>
+                            </span>
+                            <span>{line.author}</span>
+                            <span style={{ color: "var(--text-muted)", fontSize: 10 }}>
                               {line.date}
                             </span>
                           </span>

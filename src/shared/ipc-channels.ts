@@ -210,6 +210,36 @@ export const IPC = {
   REFLOG: {
     LIST: "git:reflog:list",
   },
+  ARCHIVE: {
+    EXPORT: "git:archive:export",
+  },
+  BISECT: {
+    START: "git:bisect:start",
+    GOOD: "git:bisect:good",
+    BAD: "git:bisect:bad",
+    SKIP: "git:bisect:skip",
+    RESET: "git:bisect:reset",
+    LOG: "git:bisect:log",
+    STATUS: "git:bisect:status",
+  },
+  WORKTREE: {
+    LIST: "git:worktree:list",
+    ADD: "git:worktree:add",
+    REMOVE: "git:worktree:remove",
+  },
+  PATCH: {
+    CREATE: "git:patch:create",
+    APPLY: "git:patch:apply",
+    PREVIEW: "git:patch:preview",
+  },
+  NOTES: {
+    GET: "git:notes:get",
+    ADD: "git:notes:add",
+    REMOVE: "git:notes:remove",
+  },
+  GPG: {
+    VERIFY: "git:gpg:verify",
+  },
   CHANGELOG: {
     TAGS_BEFORE: "git:changelog:tags-before",
     GENERATE: "git:changelog:generate",
