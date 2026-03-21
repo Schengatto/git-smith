@@ -35,6 +35,7 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 - Dark/Light theme toggle (toolbar)
 - **Command Palette** (Ctrl+Shift+P) — accesso rapido a tutte le azioni
 - **Git Reflog Viewer** — visualizza reflog con filtro e navigazione ai commit
+- **Squash Commits** — dialog per squash di range di commit con editor messaggio combinato
 
 ---
 
@@ -46,7 +47,7 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 |---|-------------|-------------|-------------|----------|-------|
 | 1 | ~~Cherry-pick dialog~~ | Dialog dedicato per cherry-pick con selezione multipla di commit, preview, opzioni (no-commit, mainline) | Media | Alta | ✅ Implementato |
 | 2 | ~~Revert commit~~ | Right-click su commit -> Revert, con preview delle modifiche prima di confermare | Bassa | Alta | ✅ Implementato |
-| 3 | **Squash commits** | Seleziona range di commit -> squash in uno solo con editor del messaggio combinato | Media | Media | |
+| 3 | ~~Squash commits~~ | Seleziona range di commit -> squash in uno solo con editor del messaggio combinato | Media | Media | ✅ Implementato |
 | 4 | **Archive/Export** | Esporta un commit o branch come .zip/.tar.gz | Bassa | Bassa | |
 | 5 | **Git Bisect UI** | Interfaccia grafica per `git bisect` (good/bad/skip) con evidenziazione nel grafo e progresso | Alta | Media | |
 | 6 | **Worktrees** | Gestione worktree multiple: crea, lista, rimuovi, apri in nuova finestra | Media | Media | |

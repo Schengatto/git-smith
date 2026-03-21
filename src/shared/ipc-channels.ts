@@ -70,6 +70,8 @@ export const IPC = {
     CHERRY_PICK_ABORT: "git:branch:cherry-pick-abort",
     CHERRY_PICK_CONTINUE: "git:branch:cherry-pick-continue",
     RESET: "git:branch:reset",
+    SQUASH_PREVIEW: "git:branch:squash-preview",
+    SQUASH_EXECUTE: "git:branch:squash-execute",
     STALE_REMOTE: "git:branch:stale-remote",
     REMOTE_COMMITS: "git:branch:remote-commits",
   },

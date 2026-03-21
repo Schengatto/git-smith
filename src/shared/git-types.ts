@@ -231,6 +231,13 @@ export interface RevertOptions {
   mainline?: number;
 }
 
+export interface SquashOptions {
+  /** Hash of the oldest commit in the squash range */
+  targetHash: string;
+  /** New commit message for the squashed commit */
+  message: string;
+}
+
 export interface SearchCommitsOptions {
   /** Search in commit messages */
   grep?: string;

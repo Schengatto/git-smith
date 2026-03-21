@@ -4,6 +4,7 @@ import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import { CherryPickDialog, CreateBranchDialog, RevertDialog } from "../dialogs/BranchDialogs";
+import { SquashDialog } from "../dialogs/SquashDialog";
 import { SearchCommitsDialog } from "../dialogs/SearchCommitsDialog";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
@@ -79,6 +80,7 @@ export const CommitGraphPanel: React.FC = () => {
   const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
+  const [squashTarget, setSquashTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [compareTarget, setCompareTarget] = useState<{ commit1: CommitInfo; commit2: CommitInfo } | null>(null);
   const [aiReviewHash, setAiReviewHash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -325,6 +327,11 @@ export const CommitGraphPanel: React.FC = () => {
         label: "Revert Commit",
         onClick: () =>
           setRevertTarget({ hash: row.commit.hash, subject: row.commit.subject, isMerge: isMergeCommit }),
+      },
+      {
+        label: "Squash Commits to Here...",
+        onClick: () =>
+          setSquashTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
       {
         label: "Create Branch Here",
@@ -792,6 +799,13 @@ export const CommitGraphPanel: React.FC = () => {
         commitHash={revertTarget?.hash || ""}
         commitSubject={revertTarget?.subject || ""}
         isMerge={revertTarget?.isMerge}
+      />
+
+      <SquashDialog
+        open={!!squashTarget}
+        onClose={() => setSquashTarget(null)}
+        targetHash={squashTarget?.hash || ""}
+        targetSubject={squashTarget?.subject || ""}
       />
 
       <SearchCommitsDialog

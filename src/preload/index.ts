@@ -16,6 +16,7 @@ import type {
   RebaseOptions,
   CherryPickOptions,
   RevertOptions,
+  SquashOptions,
   SearchCommitsOptions,
   ConflictFile,
   ConflictFileContent,
@@ -166,6 +167,10 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK_CONTINUE),
     reset: (hash: string, mode: "soft" | "mixed" | "hard"): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.RESET, hash, mode),
+    squashPreview: (targetHash: string): Promise<CommitInfo[]> =>
+      ipcRenderer.invoke(IPC.BRANCH.SQUASH_PREVIEW, targetHash),
+    squashExecute: (options: SquashOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.SQUASH_EXECUTE, options),
     staleRemote: (olderThanDays: number): Promise<StaleRemoteBranch[]> =>
       ipcRenderer.invoke(IPC.BRANCH.STALE_REMOTE, olderThanDays),
     remoteCommits: (remoteBranch: string, maxCount?: number): Promise<CommitInfo[]> =>

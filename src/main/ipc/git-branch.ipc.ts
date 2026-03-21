@@ -139,6 +139,17 @@ export function registerBranchHandlers() {
     }
   );
 
+  ipcMain.handle(IPC.BRANCH.SQUASH_PREVIEW, async (_event, targetHash: string) => {
+    return gitService.getSquashPreview(targetHash);
+  });
+
+  ipcMain.handle(
+    IPC.BRANCH.SQUASH_EXECUTE,
+    async (_event, options: import("../../shared/git-types").SquashOptions) => {
+      await gitService.squashCommits(options);
+    }
+  );
+
   ipcMain.handle(
     IPC.BRANCH.STALE_REMOTE,
     async (_event, olderThanDays: number) => {

@@ -929,6 +929,54 @@ export class GitService {
     await this.run("git revert", args.slice(1), () => git.raw(args));
   }
 
+  async getSquashPreview(targetHash: string): Promise<CommitInfo[]> {
+    const git = this.ensureRepo();
+    return this.run("git log", [`${targetHash}..HEAD`], async () => {
+      const RECORD_SEP = "%x1e";
+      const FIELD_SEP = "%x00";
+      const format = [
+        "%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D",
+      ].join(FIELD_SEP);
+
+      const result = await git.raw([
+        "log",
+        `--format=${RECORD_SEP}${format}`,
+        `${targetHash}..HEAD`,
+      ]);
+
+      if (!result.trim()) return [];
+
+      return result
+        .split("\x1e")
+        .filter((chunk) => chunk.trim())
+        .map((chunk) => {
+          const parts = chunk.trim().split("\0");
+          return {
+            hash: parts[0] || "",
+            abbreviatedHash: parts[1] || "",
+            subject: parts[2] || "",
+            body: "",
+            authorName: parts[3] || "",
+            authorEmail: parts[4] || "",
+            authorDate: parts[5] || "",
+            committerDate: parts[6] || "",
+            parentHashes: parts[7] ? parts[7].split(" ") : [],
+            refs: [],
+          };
+        });
+    });
+  }
+
+  async squashCommits(options: import("../../shared/git-types").SquashOptions): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git squash", [options.targetHash], async () => {
+      // Soft reset to the parent of the target commit, keeping all changes staged
+      await git.reset(["--soft", `${options.targetHash}~1`]);
+      // Create a new commit with the combined message
+      await git.commit(options.message);
+    });
+  }
+
   async getTags(): Promise<TagInfo[]> {
     const git = this.ensureRepo();
     return this.run("git tag", ["-l"], async () => {
