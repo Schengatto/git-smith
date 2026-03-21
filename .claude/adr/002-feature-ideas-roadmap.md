@@ -36,6 +36,7 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 - **Command Palette** (Ctrl+Shift+P) — accesso rapido a tutte le azioni
 - **Git Reflog Viewer** — visualizza reflog con filtro e navigazione ai commit
 - **Squash Commits** — dialog per squash di range di commit con editor messaggio combinato
+- **File History Timeline** — timeline visiva con dots, compare mode (diff tra due versioni), navigazione al commit nel grafo
 
 ---
 
@@ -59,7 +60,7 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 | # | Funzionalita | Descrizione | Complessita | Priorita | Stato |
 |---|-------------|-------------|-------------|----------|-------|
 | 9 | **File blame view** | Blame inline con annotazioni per riga, navigazione per commit, colori per eta | Alta | Alta | |
-| 10 | **File history timeline** | Grafo dedicato per la storia di un singolo file con diff tra versioni | Media | Alta | |
+| 10 | ~~File history timeline~~ | Grafo dedicato per la storia di un singolo file con diff tra versioni | Media | Alta | ✅ Implementato |
 | 11 | ~~Search commits~~ | Ricerca full-text nei messaggi di commit, autore, hash, contenuto diff (pickaxe) | Media | Alta | ✅ Implementato |
 | 12 | ~~Diff side-by-side~~ | Toggle tra unified e split diff view | Media | Media | ✅ Implementato |
 | 13 | **Syntax highlighting nel diff** | Highlight del codice sorgente nei diff viewer | Media | Media | |
