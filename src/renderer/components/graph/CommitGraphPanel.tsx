@@ -959,15 +959,27 @@ const GraphRowItem: React.FC<{
       className="flex items-center cursor-pointer"
       style={{
         height: ROW_HEIGHT,
-        background: selected ? "var(--accent-dim)" : "transparent",
-        borderLeft: selected ? "2px solid var(--accent)" : "2px solid transparent",
+        background: selected
+          ? "var(--accent-dim)"
+          : isHead
+          ? "color-mix(in srgb, var(--accent) 10%, transparent)"
+          : "transparent",
+        borderLeft: selected
+          ? "2px solid var(--accent)"
+          : isHead
+          ? "2px solid var(--accent)"
+          : "2px solid transparent",
         transition: "background 0.1s ease",
       }}
       onMouseEnter={(e) => {
-        if (!selected) e.currentTarget.style.background = "var(--surface-hover)";
+        if (!selected) e.currentTarget.style.background = isHead
+          ? "color-mix(in srgb, var(--accent) 16%, transparent)"
+          : "var(--surface-hover)";
       }}
       onMouseLeave={(e) => {
-        if (!selected) e.currentTarget.style.background = "transparent";
+        if (!selected) e.currentTarget.style.background = isHead
+          ? "color-mix(in srgb, var(--accent) 10%, transparent)"
+          : "transparent";
       }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
@@ -996,7 +1008,7 @@ const GraphRowItem: React.FC<{
             {ref.name}
           </span>
         ))}
-        <span className="truncate text-xs" style={{ color: "var(--text-primary)", fontWeight: isHead ? 700 : 400 }}>
+        <span className="truncate text-xs" style={{ color: isHead ? "var(--accent)" : "var(--text-primary)", fontWeight: isHead ? 700 : 400 }}>
           {commit.subject}
         </span>
       </div>

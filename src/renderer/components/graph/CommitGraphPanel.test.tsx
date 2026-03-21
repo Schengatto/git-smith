@@ -76,3 +76,70 @@ describe("CommitGraphPanel — Delete Remote Branch filtering", () => {
     expect(result2).toHaveLength(0);
   });
 });
+
+// ---------- HEAD row highlight styling logic ----------
+// These tests verify the inline-style derivation for the HEAD commit row,
+// mirroring the logic inside GraphRowItem without rendering the component.
+
+function rowBackground(selected: boolean, isHead: boolean): string {
+  return selected
+    ? "var(--accent-dim)"
+    : isHead
+    ? "color-mix(in srgb, var(--accent) 10%, transparent)"
+    : "transparent";
+}
+
+function rowBorderLeft(selected: boolean, isHead: boolean): string {
+  return selected
+    ? "2px solid var(--accent)"
+    : isHead
+    ? "2px solid var(--accent)"
+    : "2px solid transparent";
+}
+
+function subjectColor(isHead: boolean): string {
+  return isHead ? "var(--accent)" : "var(--text-primary)";
+}
+
+function subjectWeight(isHead: boolean): number {
+  return isHead ? 700 : 400;
+}
+
+describe("CommitGraphPanel — HEAD row highlight styles", () => {
+  it("applies accent background tint for HEAD row", () => {
+    expect(rowBackground(false, true)).toBe(
+      "color-mix(in srgb, var(--accent) 10%, transparent)"
+    );
+  });
+
+  it("uses transparent background for non-HEAD row", () => {
+    expect(rowBackground(false, false)).toBe("transparent");
+  });
+
+  it("selected background overrides HEAD tint", () => {
+    expect(rowBackground(true, true)).toBe("var(--accent-dim)");
+  });
+
+  it("applies accent left border for HEAD row", () => {
+    expect(rowBorderLeft(false, true)).toBe("2px solid var(--accent)");
+  });
+
+  it("uses transparent left border for non-HEAD row", () => {
+    expect(rowBorderLeft(false, false)).toBe("2px solid transparent");
+  });
+
+  it("selected left border is accent regardless of HEAD", () => {
+    expect(rowBorderLeft(true, false)).toBe("2px solid var(--accent)");
+    expect(rowBorderLeft(true, true)).toBe("2px solid var(--accent)");
+  });
+
+  it("HEAD commit subject uses accent color and bold", () => {
+    expect(subjectColor(true)).toBe("var(--accent)");
+    expect(subjectWeight(true)).toBe(700);
+  });
+
+  it("non-HEAD commit subject uses primary color and normal weight", () => {
+    expect(subjectColor(false)).toBe("var(--text-primary)");
+    expect(subjectWeight(false)).toBe(400);
+  });
+});
