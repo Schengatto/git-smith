@@ -218,7 +218,7 @@ export const HunkStagingView: React.FC<Props> = ({
               alignItems: "center",
               justifyContent: "space-between",
               padding: "4px 12px",
-              background: "rgba(137,180,250,0.06)",
+              background: "var(--info-bg)",
               borderBottom: "1px solid var(--border-subtle)",
             }}
           >
@@ -265,18 +265,18 @@ export const HunkStagingView: React.FC<Props> = ({
               let color = "var(--text-secondary)";
 
               if (isAdd) {
-                bg = "rgba(166,227,161,0.08)";
+                bg = "var(--green-dim)";
                 color = "var(--green)";
               } else if (isDel) {
-                bg = "rgba(243,139,168,0.08)";
+                bg = "var(--red-dim)";
                 color = "var(--red)";
               }
 
               if (isSelected) {
                 bg = isAdd
-                  ? "rgba(166,227,161,0.2)"
+                  ? "var(--diff-ins-bg)"
                   : isDel
-                  ? "rgba(243,139,168,0.2)"
+                  ? "var(--diff-del-bg)"
                   : bg;
               }
 

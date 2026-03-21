@@ -683,7 +683,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     Recheck conflicts
                   </button>
                   <button onClick={handleSaveAndResolve} disabled={saving}
-                    style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: saving ? "var(--surface-3)" : "var(--green)", color: saving ? "var(--text-muted)" : "var(--surface-0)", fontSize: 12, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>
+                    style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: saving ? "var(--surface-3)" : "var(--green)", color: saving ? "var(--text-muted)" : "var(--text-on-color)", fontSize: 12, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>
                     {saving ? "Saving..." : "Mark as resolved"}
                   </button>
                 </div>
@@ -1163,7 +1163,7 @@ const footerStyle: React.CSSProperties = {
 
 const primaryBtnStyle: React.CSSProperties = {
   padding: "7px 18px", borderRadius: 6, border: "none",
-  background: "var(--accent)", color: "var(--surface-0)",
+  background: "var(--accent)", color: "var(--text-on-color)",
   fontSize: 12, fontWeight: 600, cursor: "pointer",
 };
 

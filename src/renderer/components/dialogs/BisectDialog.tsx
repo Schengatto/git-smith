@@ -109,14 +109,14 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
               <button
                 className="toolbar-btn"
                 onClick={handleGood}
-                style={{ fontSize: 12, padding: "6px 14px", background: "var(--green)", color: "var(--base)" }}
+                style={{ fontSize: 12, padding: "6px 14px", background: "var(--green)", color: "var(--text-on-color)" }}
               >
                 Good
               </button>
               <button
                 className="toolbar-btn"
                 onClick={handleBad}
-                style={{ fontSize: 12, padding: "6px 14px", background: "var(--red)", color: "var(--base)" }}
+                style={{ fontSize: 12, padding: "6px 14px", background: "var(--red)", color: "var(--text-on-color)" }}
               >
                 Bad
               </button>
@@ -130,7 +130,7 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
               <button
                 className="toolbar-btn"
                 onClick={handleReset}
-                style={{ fontSize: 12, padding: "6px 14px", background: "var(--peach)", color: "var(--base)" }}
+                style={{ fontSize: 12, padding: "6px 14px", background: "var(--peach)", color: "var(--text-on-color)" }}
               >
                 Reset Bisect
               </button>

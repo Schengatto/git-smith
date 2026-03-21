@@ -183,7 +183,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
               onClick={handleModeToggle}
               style={{
                 background: mode === "compare" ? "var(--accent)" : "var(--surface-0)",
-                color: mode === "compare" ? "var(--base)" : "var(--text-secondary)",
+                color: mode === "compare" ? "var(--text-on-color)" : "var(--text-secondary)",
                 border: "1px solid var(--border)",
                 borderRadius: 6,
                 padding: "3px 10px",
@@ -335,7 +335,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                       justifyContent: "center",
                       fontSize: 9,
                       fontWeight: 700,
-                      color: "var(--base)",
+                      color: "var(--text-on-color)",
                       transition: "all 0.15s",
                     }}>
                       {label || ""}

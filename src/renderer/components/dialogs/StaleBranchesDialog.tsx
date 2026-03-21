@@ -244,7 +244,7 @@ export const StaleBranchesDialog: React.FC<Props> = ({ open, onClose }) => {
                       borderRadius: 4,
                       border: "none",
                       background: "var(--red)",
-                      color: "var(--surface-0)",
+                      color: "var(--text-on-color)",
                       fontSize: 11,
                       fontWeight: 600,
                       cursor: deleting === branch.name ? "not-allowed" : "pointer",

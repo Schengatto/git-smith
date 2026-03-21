@@ -314,7 +314,7 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
               borderRadius: 6,
               border: "none",
               background: "var(--accent)",
-              color: "var(--surface-0)",
+              color: "var(--text-on-color)",
               fontSize: 12,
               fontWeight: 600,
               cursor: "pointer",

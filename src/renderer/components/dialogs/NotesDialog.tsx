@@ -109,7 +109,7 @@ export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) =
           <button
             className="toolbar-btn"
             onClick={handleSave}
-            style={{ fontSize: 11, padding: "4px 12px", background: "var(--accent)", color: "var(--base)" }}
+            style={{ fontSize: 11, padding: "4px 12px", background: "var(--accent)", color: "var(--text-on-color)" }}
           >
             Save
           </button>

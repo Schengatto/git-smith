@@ -123,7 +123,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({ status }) => {
     borderRadius: 5,
     border: `1px solid ${accentVar}`,
     background: accentVar,
-    color: "var(--surface-0)",
+    color: "var(--text-on-color)",
     fontSize: 11,
     fontWeight: 600,
     cursor: "pointer",

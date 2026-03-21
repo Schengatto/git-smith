@@ -525,7 +525,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                 style={{
                   padding: "7px 16px", borderRadius: 6, border: "none",
                   background: files.length === 0 || loading ? "var(--surface-3)" : "var(--mauve)",
-                  color: files.length === 0 || loading ? "var(--text-muted)" : "#fff",
+                  color: files.length === 0 || loading ? "var(--text-muted)" : "var(--text-on-color)",
                   fontSize: 12, fontWeight: 600, cursor: files.length === 0 || loading ? "not-allowed" : "pointer",
                 }}
               >
@@ -539,7 +539,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                   style={{
                     padding: "7px 16px", borderRadius: 6, border: "none",
                     background: selectedStash === null || loading ? "var(--surface-3)" : "var(--green)",
-                    color: selectedStash === null || loading ? "var(--text-muted)" : "#fff",
+                    color: selectedStash === null || loading ? "var(--text-muted)" : "var(--text-on-color)",
                     fontSize: 12, fontWeight: 600, cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
                   }}
                 >

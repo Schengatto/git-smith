@@ -344,7 +344,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                   fontSize: 11,
                   padding: "5px 14px",
                   background: "var(--accent)",
-                  color: "var(--base)",
+                  color: "var(--text-on-color)",
                 }}
               >
                 {creating ? "Creating..." : `Create ${prLabel}`}

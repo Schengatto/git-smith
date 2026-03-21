@@ -313,7 +313,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                 disabled={!effectiveBase || loading}
                 style={{
                   background: "var(--blue)",
-                  color: "var(--surface-0)",
+                  color: "var(--text-on-color)",
                   border: "none",
                   borderRadius: 4,
                   padding: "5px 14px",

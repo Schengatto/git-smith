@@ -287,7 +287,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto, 
               style={{
                 padding: "7px 18px", borderRadius: 6, border: "none",
                 background: executing || entries.length === 0 ? "var(--surface-3)" : "var(--mauve)",
-                color: executing || entries.length === 0 ? "var(--text-muted)" : "var(--surface-0)",
+                color: executing || entries.length === 0 ? "var(--text-muted)" : "var(--text-on-color)",
                 fontSize: 12, fontWeight: 600,
                 cursor: executing || entries.length === 0 ? "not-allowed" : "pointer",
               }}

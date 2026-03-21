@@ -32,7 +32,7 @@ export const ConsolePanel: React.FC = () => {
             .getPropertyValue("--text-primary").trim() || "#cdd6f4",
           cursor: getComputedStyle(document.documentElement)
             .getPropertyValue("--accent").trim() || "#89b4fa",
-          selectionBackground: "rgba(137, 180, 250, 0.3)",
+          selectionBackground: getComputedStyle(document.documentElement).getPropertyValue("--selection-bg").trim() || "rgba(137, 180, 250, 0.3)",
         },
         cursorBlink: true,
         cursorStyle: "block",

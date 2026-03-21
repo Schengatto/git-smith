@@ -26,7 +26,7 @@ export const StatusBar: React.FC = () => {
         height: 24,
         background: repo ? "var(--accent)" : "var(--surface-1)",
         borderTop: repo ? "none" : "1px solid var(--border-subtle)",
-        color: repo ? "var(--surface-0)" : "var(--text-muted)",
+        color: repo ? "var(--text-on-color)" : "var(--text-muted)",
       }}
     >
       {!repo ? (
@@ -46,7 +46,7 @@ export const StatusBar: React.FC = () => {
                   width: 16,
                   height: 16,
                   fontSize: 10,
-                  background: "rgba(0,0,0,0.2)",
+                  background: "var(--overlay-dim)",
                 }}
               >
                 {changedCount}

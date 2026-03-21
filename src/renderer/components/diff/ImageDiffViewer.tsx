@@ -48,7 +48,7 @@ export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, file
                 border: "none",
                 cursor: "pointer",
                 background: mode === m ? "var(--accent)" : "transparent",
-                color: mode === m ? "var(--surface-0)" : "var(--text-muted)",
+                color: mode === m ? "var(--text-on-color)" : "var(--text-muted)",
                 textTransform: "capitalize",
               }}
             >

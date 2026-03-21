@@ -748,7 +748,7 @@ export const Toolbar: React.FC = () => {
                   lineHeight: "16px",
                   borderRadius: 8,
                   background: "var(--peach)",
-                  color: "var(--surface-0)",
+                  color: "var(--text-on-color)",
                   minWidth: 18,
                   textAlign: "center",
                   display: "inline-block",
@@ -1027,7 +1027,7 @@ const ForcePushConfirmDialog: React.FC<{
             disabled={loading}
             style={{
               padding: "8px 18px", borderRadius: 6, border: "none",
-              background: "var(--red)", color: "#fff", fontSize: 12, fontWeight: 600,
+              background: "var(--red)", color: "var(--text-on-color)", fontSize: 12, fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
             }}
           >

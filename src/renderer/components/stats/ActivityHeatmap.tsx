@@ -18,16 +18,11 @@ function cellOpacity(value: number, max: number): number {
   return value / max;
 }
 
-function hourlyColor(value: number, max: number): string {
+function heatmapColor(value: number, max: number): string {
   const opacity = cellOpacity(value, max);
   if (opacity === 0) return "var(--surface-2)";
-  return `rgba(147, 187, 255, ${(0.15 + opacity * 0.85).toFixed(3)})`;
-}
-
-function dailyColor(value: number, max: number): string {
-  const opacity = cellOpacity(value, max);
-  if (opacity === 0) return "var(--surface-2)";
-  return `rgba(147, 187, 255, ${(0.15 + opacity * 0.85).toFixed(3)})`;
+  const pct = Math.round((0.15 + opacity * 0.85) * 100);
+  return `color-mix(in srgb, var(--accent) ${pct}%, transparent)`;
 }
 
 export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
@@ -81,7 +76,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                   width: cellSize,
                   height: cellSize,
                   borderRadius: 3,
-                  backgroundColor: hourlyColor(val, maxHour),
+                  backgroundColor: heatmapColor(val, maxHour),
                   flexShrink: 0,
                   cursor: "default",
                 }}
@@ -164,7 +159,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                   width: cellSize + 10,
                   height: cellSize,
                   borderRadius: 3,
-                  backgroundColor: dailyColor(val, maxDay),
+                  backgroundColor: heatmapColor(val, maxDay),
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",

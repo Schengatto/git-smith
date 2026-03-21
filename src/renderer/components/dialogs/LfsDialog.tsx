@@ -104,7 +104,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
               className="toolbar-btn"
               onClick={handleInstall}
               disabled={!!actionInProgress}
-              style={{ fontSize: 12, padding: "6px 16px", background: "var(--accent)", color: "var(--base)" }}
+              style={{ fontSize: 12, padding: "6px 16px", background: "var(--accent)", color: "var(--text-on-color)" }}
             >
               Install Git LFS
             </button>

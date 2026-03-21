@@ -117,18 +117,18 @@ export const CodebaseStatsPanel: React.FC = () => {
         {stats.testRatio.sourceLines + stats.testRatio.testLines > 0 ? (
           <>
             <div style={{ display: "flex", borderRadius: "6px", height: "24px", overflow: "hidden" }}>
-              <div style={{ background: "#89b4fa", width: `${100 - stats.testRatio.percentage}%`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ color: "#1e1e2e", fontSize: "10px", fontWeight: "bold" }}>Source {(100 - stats.testRatio.percentage).toFixed(0)}%</span>
+              <div style={{ background: "var(--accent)", width: `${100 - stats.testRatio.percentage}%`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ color: "var(--text-on-color)", fontSize: "10px", fontWeight: "bold" }}>Source {(100 - stats.testRatio.percentage).toFixed(0)}%</span>
               </div>
-              <div style={{ background: "#a6e3a1", width: `${stats.testRatio.percentage}%`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ background: "var(--green)", width: `${stats.testRatio.percentage}%`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {stats.testRatio.percentage >= 10 && (
-                  <span style={{ color: "#1e1e2e", fontSize: "10px", fontWeight: "bold" }}>Test {stats.testRatio.percentage.toFixed(0)}%</span>
+                  <span style={{ color: "var(--text-on-color)", fontSize: "10px", fontWeight: "bold" }}>Test {stats.testRatio.percentage.toFixed(0)}%</span>
                 )}
               </div>
             </div>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "6px" }}>
-              <span style={{ color: "#a6e3a1" }}>{stats.testRatio.testLines.toLocaleString()}</span> lines of test code for{" "}
-              <span style={{ color: "#89b4fa" }}>{stats.testRatio.sourceLines.toLocaleString()}</span> lines of source code
+              <span style={{ color: "var(--green)" }}>{stats.testRatio.testLines.toLocaleString()}</span> lines of test code for{" "}
+              <span style={{ color: "var(--accent)" }}>{stats.testRatio.sourceLines.toLocaleString()}</span> lines of source code
               <span style={{ color: "var(--text-muted)" }}> — ratio 1:{stats.testRatio.ratio > 0 ? (1 / stats.testRatio.ratio).toFixed(1) : "∞"}</span>
             </div>
           </>

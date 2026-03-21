@@ -180,7 +180,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
               <button className="toolbar-btn" onClick={() => setShowAdd(false)} style={{ fontSize: 11, padding: "4px 12px" }}>
                 Cancel
               </button>
-              <button className="toolbar-btn" onClick={handleAdd} style={{ fontSize: 11, padding: "4px 12px", background: "var(--accent)", color: "var(--base)" }}>
+              <button className="toolbar-btn" onClick={handleAdd} style={{ fontSize: 11, padding: "4px 12px", background: "var(--accent)", color: "var(--text-on-color)" }}>
                 Add
               </button>
             </div>

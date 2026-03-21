@@ -92,7 +92,7 @@ export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
             borderRadius: 6,
             border: "none",
             background: hasInput ? "var(--accent)" : "var(--surface1)",
-            color: hasInput ? "var(--base)" : "var(--text-muted)",
+            color: hasInput ? "var(--text-on-color)" : "var(--text-muted)",
             cursor: hasInput ? "pointer" : "default",
             fontSize: 12,
             fontWeight: 600,

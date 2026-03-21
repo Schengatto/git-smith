@@ -152,7 +152,7 @@ export const DialogActions: React.FC<{
         borderRadius: 6,
         border: "none",
         background: disabled || loading ? "var(--surface-3)" : confirmColor,
-        color: disabled || loading ? "var(--text-muted)" : "var(--surface-0)",
+        color: disabled || loading ? "var(--text-muted)" : "var(--text-on-color)",
         fontSize: 12,
         fontWeight: 600,
         cursor: disabled || loading ? "not-allowed" : "pointer",

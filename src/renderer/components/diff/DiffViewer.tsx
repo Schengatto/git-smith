@@ -179,7 +179,7 @@ const FormatBtn: React.FC<{
       border: "none",
       cursor: "pointer",
       background: active ? "var(--accent)" : "transparent",
-      color: active ? "var(--surface-0)" : "var(--text-muted)",
+      color: active ? "var(--text-on-color)" : "var(--text-muted)",
       transition: "all 0.15s",
     }}
   >

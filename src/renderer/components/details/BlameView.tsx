@@ -170,9 +170,9 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--text-muted)" }}>
-              <span style={{ display: "inline-block", width: 12, height: 8, borderRadius: 2, background: "hsla(0, 50%, 50%, 0.2)" }} />
+              <span style={{ display: "inline-block", width: 12, height: 8, borderRadius: 2, background: "var(--red-dim)" }} />
               older
-              <span style={{ display: "inline-block", width: 12, height: 8, borderRadius: 2, background: "hsla(120, 50%, 50%, 0.2)", marginLeft: 4 }} />
+              <span style={{ display: "inline-block", width: 12, height: 8, borderRadius: 2, background: "var(--green-dim)", marginLeft: 4 }} />
               newer
             </div>
             <button

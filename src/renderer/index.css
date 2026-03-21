@@ -31,6 +31,10 @@
   --diff-del-bg: rgba(200, 50, 60, 0.22);
   --diff-del-bg-strong: rgba(200, 50, 60, 0.30);
   --diff-del-color: #ffe0e6;
+  --text-on-color: #1e1e2e;
+  --info-bg: rgba(137, 180, 250, 0.06);
+  --selection-bg: rgba(147, 187, 255, 0.3);
+  --overlay-dim: rgba(0, 0, 0, 0.2);
 }
 
 /* High-contrast light theme */
@@ -63,6 +67,10 @@
   --diff-del-bg: rgba(184, 10, 48, 0.12);
   --diff-del-bg-strong: rgba(184, 10, 48, 0.18);
   --diff-del-color: #b80a30;
+  --text-on-color: #ffffff;
+  --info-bg: rgba(20, 80, 216, 0.06);
+  --selection-bg: rgba(20, 80, 216, 0.2);
+  --overlay-dim: rgba(0, 0, 0, 0.12);
 }
 
 @layer base {

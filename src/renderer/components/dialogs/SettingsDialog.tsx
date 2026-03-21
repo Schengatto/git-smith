@@ -277,7 +277,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
               disabled={saving}
               style={{
                 padding: "7px 18px", borderRadius: 6, border: "none",
-                background: "var(--accent)", color: "var(--surface-0)", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                background: "var(--accent)", color: "var(--text-on-color)", fontSize: 12, fontWeight: 600, cursor: "pointer",
               }}
             >
               {saving ? "Saving..." : "Save Settings"}
@@ -585,7 +585,7 @@ const GitConfigTab: React.FC<{
                   background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12, width: 200, outline: "none",
                 }}
               />
-              <button onClick={saveEdit} style={{ padding: "4px 10px", borderRadius: 4, border: "none", background: "var(--accent)", color: "var(--surface-0)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={saveEdit} style={{ padding: "4px 10px", borderRadius: 4, border: "none", background: "var(--accent)", color: "var(--text-on-color)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
                 Save
               </button>
               <button onClick={() => setEditKey(null)} style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: 11, cursor: "pointer" }}>
@@ -623,7 +623,7 @@ const GitConfigTab: React.FC<{
                   background: "var(--surface-0)", color: "var(--text-primary)", fontSize: 12, width: 200, outline: "none",
                 }}
               />
-              <button onClick={saveEdit} style={{ padding: "4px 10px", borderRadius: 4, border: "none", background: "var(--accent)", color: "var(--surface-0)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={saveEdit} style={{ padding: "4px 10px", borderRadius: 4, border: "none", background: "var(--accent)", color: "var(--text-on-color)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
                 Save
               </button>
               <button onClick={() => setEditKey(null)} style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: 11, cursor: "pointer" }}>
@@ -682,7 +682,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void }> = (
   >
     <div
       style={{
-        width: 16, height: 16, borderRadius: "50%", background: "#fff",
+        width: 16, height: 16, borderRadius: "50%", background: "var(--text-on-color)",
         position: "absolute", top: 2,
         left: checked ? 18 : 2,
         transition: "left 0.2s",
@@ -1134,7 +1134,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               disabled={!form.label.trim() || !form.name.trim() || !form.email.trim()}
               style={{
                 padding: "5px 14px", borderRadius: 6, border: "none",
-                background: "var(--accent)", color: "var(--surface-0)", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                background: "var(--accent)", color: "var(--text-on-color)", fontSize: 12, fontWeight: 600, cursor: "pointer",
                 opacity: (!form.label.trim() || !form.name.trim() || !form.email.trim()) ? 0.5 : 1,
               }}
             >
@@ -1213,7 +1213,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   onClick={() => handleImportSshEntry(entry)}
                   style={{
                     padding: "3px 10px", borderRadius: 4, border: "none",
-                    background: "var(--accent)", color: "var(--surface-0)", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    background: "var(--accent)", color: "var(--text-on-color)", fontSize: 11, fontWeight: 600, cursor: "pointer",
                   }}
                 >
                   Import

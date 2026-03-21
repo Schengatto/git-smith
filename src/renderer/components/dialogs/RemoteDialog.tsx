@@ -166,7 +166,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
                 borderRadius: 6,
                 border: "none",
                 background: !newName.trim() || !newUrl.trim() ? "var(--surface-3)" : "var(--accent)",
-                color: !newName.trim() || !newUrl.trim() ? "var(--text-muted)" : "var(--surface-0)",
+                color: !newName.trim() || !newUrl.trim() ? "var(--text-muted)" : "var(--text-on-color)",
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: !newName.trim() || !newUrl.trim() ? "not-allowed" : "pointer",

@@ -1060,7 +1060,8 @@ const GraphRowItem: React.FC<{
 
     // Clean border
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = isHead ? "#ffffff" : "var(--surface-0)";
+    const surface0 = getComputedStyle(document.documentElement).getPropertyValue("--surface-0").trim();
+    ctx.strokeStyle = isHead ? getComputedStyle(document.documentElement).getPropertyValue("--text-on-color").trim() : surface0;
     ctx.lineWidth = isHead ? 2 : 1.5;
     ctx.beginPath();
     ctx.arc(dotX, midY, radius + 0.5, 0, Math.PI * 2);
@@ -1352,7 +1353,7 @@ const BranchFilterDropdown: React.FC<{
               borderRadius: 4,
               border: "1px solid var(--accent)",
               background: "var(--accent)",
-              color: "var(--base)",
+              color: "var(--text-on-color)",
               cursor: "pointer",
               fontWeight: 600,
             }}

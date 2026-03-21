@@ -173,7 +173,7 @@ export const StatsPanel: React.FC = () => {
                 backgroundColor:
                   timeframe === opt.value ? "var(--accent)" : "var(--surface-1)",
                 color:
-                  timeframe === opt.value ? "#fff" : "var(--text-secondary)",
+                  timeframe === opt.value ? "var(--text-on-color)" : "var(--text-secondary)",
                 cursor: "pointer",
                 fontWeight: timeframe === opt.value ? 600 : 400,
                 transition: "background-color 0.15s",
