@@ -168,7 +168,7 @@ describe("StashDialog", () => {
     // The close button is the one with the X icon inside the header
     const buttons = screen.getAllByRole("button");
     // Find the close button (first button in header area)
-    const closeBtn = buttons.find((b) => b.getAttribute("title") === null && b.closest("[style]"));
+    const _closeBtn = buttons.find((b) => b.getAttribute("title") === null && b.closest("[style]"));
     // Click the backdrop as alternative
     // Instead let's find it by querying all buttons
     fireEvent.click(buttons[0]); // The X close button is the first button

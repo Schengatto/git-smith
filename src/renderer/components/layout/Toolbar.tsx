@@ -308,11 +308,11 @@ const AccountSelector: React.FC = () => {
 
   useEffect(() => {
     loadAccounts();
-  }, []);
+  }, [loadAccounts]);
 
   useEffect(() => {
     if (repo?.path) loadCurrentAccount(repo.path);
-  }, [repo?.path]);
+  }, [repo?.path, loadCurrentAccount]);
 
   useEffect(() => {
     if (!open) return;

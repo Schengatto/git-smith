@@ -931,7 +931,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
   const [sshEntries, setSshEntries] = useState<SshHostEntry[] | null>(null);
   const [showSshImport, setShowSshImport] = useState(false);
 
-  useEffect(() => { if (mode === "overlay") { loadAccounts(); } }, []);
+  useEffect(() => { if (mode === "overlay") { loadAccounts(); } }, [mode, loadAccounts]);
 
   const handleLoadSshConfig = async () => {
     const entries = await window.electronAPI.account.parseSshConfig();

@@ -114,7 +114,7 @@ export const CommitGraphPanel: React.FC = () => {
       setPendingBranches(new Set(branchVisibility?.branches || []));
       setBranchSearch("");
     }
-  }, [branchDropdownOpen]);
+  }, [branchDropdownOpen, branchVisibility?.branches, branchVisibility?.mode]);
 
   // Close dropdown on click outside
   useEffect(() => {

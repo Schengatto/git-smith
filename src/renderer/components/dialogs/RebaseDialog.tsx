@@ -158,7 +158,7 @@ export const RebaseDialog: React.FC<Props> = ({
     }
   };
 
-  const handleContinue = async () => {
+  const _handleContinue = async () => {
     setLoading(true);
     setError(null);
     try {

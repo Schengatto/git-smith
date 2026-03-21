@@ -44,7 +44,7 @@ const components: Record<string, React.FC<IDockviewPanelProps>> = {
 };
 
 export const AppShell: React.FC = () => {
-  const { repo, loadRecentRepos, openRepoDialog, initRepo } = useRepoStore();
+  const { repo, loadRecentRepos } = useRepoStore();
   const status = useRepoStore((s) => s.status);
   const { addEntry } = useCommandLogStore();
   const {
@@ -164,6 +164,7 @@ export const AppShell: React.FC = () => {
       savedLayoutRef.current = null;
       setLayoutLoaded(true);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.path]);
 
   const resetLayout = useCallback(() => {

@@ -25,7 +25,7 @@ export const AiReviewDialog: React.FC<Props> = ({ hash, onClose }) => {
       });
 
     return () => { cancelled = true; };
-  }, [hash]);
+  }, [hash, reviewCommit]);
 
   return (
     <div

@@ -14,7 +14,7 @@ export const CodebaseStatsPanel: React.FC = () => {
   useEffect(() => {
     if (!repo) { reset(); return; }
     loadStats();
-  }, [repo?.path]);
+  }, [repo?.path, repo, reset, loadStats]);
 
   if (!repo) {
     return (
