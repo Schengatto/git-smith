@@ -11,6 +11,9 @@ import { BisectDialog } from "../dialogs/BisectDialog";
 import { WorktreeDialog } from "../dialogs/WorktreeDialog";
 import { PatchApplyDialog } from "../dialogs/PatchDialog";
 import { KeyboardShortcutsDialog } from "../dialogs/KeyboardShortcutsDialog";
+import { SubmoduleDialog } from "../dialogs/SubmoduleDialog";
+import { LfsDialog } from "../dialogs/LfsDialog";
+import { PrDialog } from "../dialogs/PrDialog";
 import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 import { openDialogWindow } from "../../utils/open-dialog";
 
@@ -446,6 +449,9 @@ export const Toolbar: React.FC = () => {
   const [worktreeOpen, setWorktreeOpen] = useState(false);
   const [patchApplyOpen, setPatchApplyOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [submodulesOpen, setSubmodulesOpen] = useState(false);
+  const [lfsOpen, setLfsOpen] = useState(false);
+  const [prOpen, setPrOpen] = useState(false);
 
   const changedCount = status
     ? (status.staged.length || 0) +
@@ -476,10 +482,16 @@ export const Toolbar: React.FC = () => {
     const onWorktrees = () => setWorktreeOpen(true);
     const onPatchApply = () => setPatchApplyOpen(true);
     const onShortcuts = () => setShortcutsOpen(true);
+    const onSubmodules = () => setSubmodulesOpen(true);
+    const onLfs = () => setLfsOpen(true);
+    const onPr = () => setPrOpen(true);
     window.addEventListener("command-palette:open-bisect", onBisect);
     window.addEventListener("command-palette:open-worktrees", onWorktrees);
     window.addEventListener("command-palette:open-patch-apply", onPatchApply);
     window.addEventListener("command-palette:open-shortcuts", onShortcuts);
+    window.addEventListener("command-palette:open-submodules", onSubmodules);
+    window.addEventListener("command-palette:open-lfs", onLfs);
+    window.addEventListener("command-palette:open-pr", onPr);
 
     return () => {
       window.removeEventListener("keydown", handler);
@@ -487,6 +499,9 @@ export const Toolbar: React.FC = () => {
       window.removeEventListener("command-palette:open-worktrees", onWorktrees);
       window.removeEventListener("command-palette:open-patch-apply", onPatchApply);
       window.removeEventListener("command-palette:open-shortcuts", onShortcuts);
+      window.removeEventListener("command-palette:open-submodules", onSubmodules);
+      window.removeEventListener("command-palette:open-lfs", onLfs);
+      window.removeEventListener("command-palette:open-pr", onPr);
     };
   }, [repo]);
 
@@ -812,6 +827,44 @@ export const Toolbar: React.FC = () => {
             style={{ width: 1, height: 18, background: "var(--border)" }}
           />
 
+          <button
+            onClick={() => setSubmodulesOpen(true)}
+            className="toolbar-btn"
+            title="Manage Submodules"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><rect x="7" y="7" width="10" height="10" rx="1" ry="1" />
+            </svg>
+            Submodules
+          </button>
+
+          <button
+            onClick={() => setLfsOpen(true)}
+            className="toolbar-btn"
+            title="Git LFS"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            LFS
+          </button>
+
+          <button
+            onClick={() => setPrOpen(true)}
+            className="toolbar-btn"
+            title="Pull Requests / Merge Requests"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 0 1 2 2v7" /><line x1="6" y1="9" x2="6" y2="21" />
+            </svg>
+            PRs
+          </button>
+
+          <div
+            className="mx-1"
+            style={{ width: 1, height: 18, background: "var(--border)" }}
+          />
+
           <AccountSelector />
 
       <div className="flex-1" />
@@ -843,6 +896,9 @@ export const Toolbar: React.FC = () => {
       <WorktreeDialog open={worktreeOpen} onClose={() => setWorktreeOpen(false)} />
       <PatchApplyDialog open={patchApplyOpen} onClose={() => setPatchApplyOpen(false)} />
       <KeyboardShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <SubmoduleDialog open={submodulesOpen} onClose={() => setSubmodulesOpen(false)} />
+      <LfsDialog open={lfsOpen} onClose={() => setLfsOpen(false)} />
+      <PrDialog open={prOpen} onClose={() => setPrOpen(false)} />
       <SetUpstreamDialog
         open={!!setUpstreamError}
         onClose={() => setSetUpstreamError(null)}

@@ -24,6 +24,8 @@ import { registerWorktreeHandlers } from "./git-worktree.ipc";
 import { registerPatchHandlers } from "./git-patch.ipc";
 import { registerNotesHandlers } from "./git-notes.ipc";
 import { registerGpgHandlers } from "./git-gpg.ipc";
+import { registerLfsHandlers } from "./git-lfs.ipc";
+import { registerPrHandlers } from "./git-pr.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -52,4 +54,6 @@ export function registerAllHandlers() {
   registerPatchHandlers();
   registerNotesHandlers();
   registerGpgHandlers();
+  registerLfsHandlers();
+  registerPrHandlers();
 }

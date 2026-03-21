@@ -123,6 +123,9 @@ export const IPC = {
     LIST: "git:submodule:list",
     ADD: "git:submodule:add",
     UPDATE: "git:submodule:update",
+    SYNC: "git:submodule:sync",
+    DEINIT: "git:submodule:deinit",
+    STATUS: "git:submodule:status",
   },
   SETTINGS: {
     GET: "git:settings:get",
@@ -239,6 +242,20 @@ export const IPC = {
   },
   GPG: {
     VERIFY: "git:gpg:verify",
+  },
+  LFS: {
+    STATUS: "git:lfs:status",
+    LIST_TRACKED: "git:lfs:list-tracked",
+    TRACK: "git:lfs:track",
+    UNTRACK: "git:lfs:untrack",
+    INFO: "git:lfs:info",
+    INSTALL: "git:lfs:install",
+  },
+  PR: {
+    LIST: "git:pr:list",
+    VIEW: "git:pr:view",
+    CREATE: "git:pr:create",
+    DETECT_PROVIDER: "git:pr:detect-provider",
   },
   CHANGELOG: {
     TAGS_BEFORE: "git:changelog:tags-before",

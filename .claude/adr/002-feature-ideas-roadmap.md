@@ -47,6 +47,9 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 - **GPG Commit Signing** — visualizzazione firma verificata (badge) nei dettagli commit
 - **Git Notes** — aggiungere/visualizzare/rimuovere note ai commit, visualizzazione nel pannello commit info
 - **Batch Operations** — fetch all su tutti i repo recenti in un colpo solo
+- **Submodules management** — dialog completo con add/update/sync/deinit, status dettagliato, context menu nella sidebar
+- **GitHub/GitLab PR integration** — list/view/create PR/MR tramite gh/glab CLI, rilevamento provider da remote URL
+- **Git LFS support** — status, track/untrack pattern, lista file LFS, install, info endpoint
 
 ---
 
@@ -62,7 +65,7 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 | 4 | ~~Archive/Export~~ | Esporta un commit o branch come .zip/.tar.gz | Bassa | Bassa | ✅ Implementato |
 | 5 | ~~Git Bisect UI~~ | Interfaccia grafica per `git bisect` (good/bad/skip) con evidenziazione nel grafo e progresso | Alta | Media | ✅ Implementato |
 | 6 | ~~Worktrees~~ | Gestione worktree multiple: crea, lista, rimuovi, apri in nuova finestra | Media | Media | ✅ Implementato |
-| 7 | **Submodules management** | Dialog per add/update/sync/deinit submodules (la sidebar li mostra gia) | Media | Bassa | |
+| 7 | ~~Submodules management~~ | Dialog per add/update/sync/deinit submodules (la sidebar li mostra gia) | Media | Bassa | ✅ Implementato |
 | 8 | ~~Patches~~ | Crea/applica patch file (format-patch / am) con preview | Bassa | Bassa | ✅ Implementato |
 
 ### Categoria: UI/UX
@@ -81,8 +84,8 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 
 | # | Funzionalita | Descrizione | Complessita | Priorita | Stato |
 |---|-------------|-------------|-------------|----------|-------|
-| 16 | **GitHub/GitLab PR integration** | Crea/visualizza Pull Request e Merge Request direttamente dall'app | Alta | Alta | |
-| 17 | **Git LFS support** | Visualizza file LFS, track/untrack, info su storage | Media | Bassa | |
+| 16 | ~~GitHub/GitLab PR integration~~ | Crea/visualizza Pull Request e Merge Request direttamente dall'app | Alta | Alta | ✅ Implementato |
+| 17 | ~~Git LFS support~~ | Visualizza file LFS, track/untrack, info su storage | Media | Bassa | ✅ Implementato |
 | 18 | ~~GPG commit signing~~ | Configurazione chiavi GPG, visualizzazione firma verificata sui commit | Media | Media | ✅ Implementato |
 
 ### Categoria: Productivity
@@ -104,7 +107,4 @@ Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, me
 
 ## Prossimi passi
 
-Le uniche funzionalita rimanenti sono:
-- **#7 Submodules management** (Media complessita, Bassa priorita)
-- **#16 GitHub/GitLab PR integration** (Alta complessita, Alta priorita)
-- **#17 Git LFS support** (Media complessita, Bassa priorita)
+Tutte le funzionalita previste in questo ADR sono state implementate. Non ci sono piu feature rimanenti.

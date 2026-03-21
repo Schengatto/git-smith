@@ -280,6 +280,33 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
           window.dispatchEvent(new CustomEvent("command-palette:open-shortcuts"));
         },
       },
+      {
+        id: "tool:submodules",
+        label: "Manage Submodules...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-submodules"));
+        },
+      },
+      {
+        id: "tool:lfs",
+        label: "Git LFS...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-lfs"));
+        },
+      },
+      {
+        id: "tool:pr",
+        label: "Pull Requests / Merge Requests...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => {
+          window.dispatchEvent(new CustomEvent("command-palette:open-pr"));
+        },
+      },
 
       // View
       {

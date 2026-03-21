@@ -2337,6 +2337,324 @@ export class GitService {
       git.raw(["notes", "remove", hash])
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Submodules (enhanced)
+  // ---------------------------------------------------------------------------
+
+  async submoduleSync(recursive = true): Promise<void> {
+    const git = this.ensureRepo();
+    const args = recursive ? ["sync", "--recursive"] : ["sync"];
+    await this.run("git submodule", args, () =>
+      git.raw(["submodule", ...args])
+    );
+  }
+
+  async submoduleDeinit(submodulePath: string, force = false): Promise<void> {
+    const git = this.ensureRepo();
+    const args = force ? ["deinit", "-f", submodulePath] : ["deinit", submodulePath];
+    await this.run("git submodule", args, () =>
+      git.raw(["submodule", ...args])
+    );
+  }
+
+  async getSubmoduleStatus(): Promise<{ name: string; path: string; url: string; hash: string; branch: string; status: string }[]> {
+    const git = this.ensureRepo();
+    return this.run("git submodule", ["status"], async () => {
+      const statusResult = await git.raw(["submodule", "status", "--recursive"]).catch(() => "");
+      if (!statusResult.trim()) return [];
+
+      // Parse .gitmodules for URLs and branches
+      const configResult = await git.raw(["config", "--file", ".gitmodules", "--list"]).catch(() => "");
+      const urlMap: Record<string, string> = {};
+      const branchMap: Record<string, string> = {};
+      for (const line of configResult.split("\n")) {
+        const urlMatch = line.match(/^submodule\.(.+?)\.url=(.+)$/);
+        if (urlMatch) urlMap[urlMatch[1]] = urlMatch[2];
+        const branchMatch = line.match(/^submodule\.(.+?)\.branch=(.+)$/);
+        if (branchMatch) branchMap[branchMatch[1]] = branchMatch[2];
+      }
+
+      return statusResult
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => {
+          const prefix = line.charAt(0);
+          const match = line.trim().match(/^[+ -U]?([0-9a-f]+)\s+(\S+)(?:\s+\((.+)\))?/);
+          if (!match) return null;
+          const subPath = match[2];
+          let statusLabel = "up-to-date";
+          if (prefix === "+") statusLabel = "modified";
+          else if (prefix === "-") statusLabel = "uninitialized";
+          else if (prefix === "U") statusLabel = "conflict";
+          return {
+            name: subPath,
+            path: subPath,
+            url: urlMap[subPath] || "",
+            hash: match[1],
+            branch: branchMap[subPath] || "",
+            status: statusLabel,
+          };
+        })
+        .filter(Boolean) as { name: string; path: string; url: string; hash: string; branch: string; status: string }[];
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Git LFS
+  // ---------------------------------------------------------------------------
+
+  async lfsInstall(): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git lfs", ["install"], () =>
+      git.raw(["lfs", "install"])
+    );
+  }
+
+  async lfsStatus(): Promise<{ installed: boolean; version: string; tracked: { pattern: string; filter: string }[]; files: { path: string; lfsOid: string; size: string }[] }> {
+    const git = this.ensureRepo();
+    return this.run("git lfs", ["status"], async () => {
+      // Check if LFS is installed
+      let version = "";
+      let installed = false;
+      try {
+        version = (await git.raw(["lfs", "version"])).trim();
+        installed = true;
+      } catch {
+        return { installed: false, version: "", tracked: [], files: [] };
+      }
+
+      // Get tracked patterns
+      const tracked: { pattern: string; filter: string }[] = [];
+      try {
+        const trackResult = await git.raw(["lfs", "track"]);
+        for (const line of trackResult.split("\n")) {
+          const m = line.match(/^\s+(\S+)\s+\((.+)\)/);
+          if (m) tracked.push({ pattern: m[1], filter: m[2] });
+        }
+      } catch { /* no tracked patterns */ }
+
+      // Get LFS files
+      const files: { path: string; lfsOid: string; size: string }[] = [];
+      try {
+        const lsResult = await git.raw(["lfs", "ls-files", "--long"]);
+        for (const line of lsResult.split("\n").filter(Boolean)) {
+          const m = line.match(/^([0-9a-f]+)\s+[-*]\s+(.+)/);
+          if (m) files.push({ path: m[2].trim(), lfsOid: m[1], size: "" });
+        }
+      } catch { /* no lfs files */ }
+
+      return { installed, version, tracked, files };
+    });
+  }
+
+  async lfsListTracked(): Promise<{ pattern: string; filter: string }[]> {
+    const git = this.ensureRepo();
+    return this.run("git lfs", ["track"], async () => {
+      const result = await git.raw(["lfs", "track"]);
+      const tracked: { pattern: string; filter: string }[] = [];
+      for (const line of result.split("\n")) {
+        const m = line.match(/^\s+(\S+)\s+\((.+)\)/);
+        if (m) tracked.push({ pattern: m[1], filter: m[2] });
+      }
+      return tracked;
+    });
+  }
+
+  async lfsTrack(pattern: string): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git lfs", ["track", pattern], () =>
+      git.raw(["lfs", "track", pattern])
+    );
+  }
+
+  async lfsUntrack(pattern: string): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git lfs", ["untrack", pattern], () =>
+      git.raw(["lfs", "untrack", pattern])
+    );
+  }
+
+  async lfsInfo(): Promise<{ storagePath: string; endpoint: string }> {
+    const git = this.ensureRepo();
+    return this.run("git lfs", ["env"], async () => {
+      const result = await git.raw(["lfs", "env"]);
+      let endpoint = "";
+      let storagePath = "";
+      for (const line of result.split("\n")) {
+        if (line.includes("Endpoint")) {
+          const m = line.match(/Endpoint[^=]+=\s*(.+)/);
+          if (m) endpoint = m[1].trim();
+        }
+        if (line.includes("LocalMediaDir")) {
+          const m = line.match(/LocalMediaDir[^=]+=\s*(.+)/);
+          if (m) storagePath = m[1].trim();
+        }
+      }
+      return { storagePath, endpoint };
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // PR Integration
+  // ---------------------------------------------------------------------------
+
+  async detectProvider(): Promise<{ provider: string; owner: string; repo: string; baseUrl: string }> {
+    const git = this.ensureRepo();
+    return this.run("git remote", ["get-url origin"], async () => {
+      const url = (await git.raw(["remote", "get-url", "origin"]).catch(() => "")).trim();
+      if (!url) return { provider: "unknown", owner: "", repo: "", baseUrl: "" };
+
+      // GitHub
+      let m = url.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
+      if (m) return { provider: "github", owner: m[1], repo: m[2], baseUrl: "https://github.com" };
+
+      // GitLab
+      m = url.match(/gitlab\.com[:/]([^/]+)\/([^/.]+)/);
+      if (m) return { provider: "gitlab", owner: m[1], repo: m[2], baseUrl: "https://gitlab.com" };
+
+      // Self-hosted detection (contains gitlab or github in hostname)
+      m = url.match(/(?:https?:\/\/|git@)([^:/]+)[:/]([^/]+)\/([^/.]+)/);
+      if (m) {
+        const host = m[1];
+        if (host.includes("gitlab")) return { provider: "gitlab", owner: m[2], repo: m[3], baseUrl: `https://${host}` };
+        if (host.includes("github")) return { provider: "github", owner: m[2], repo: m[3], baseUrl: `https://${host}` };
+      }
+
+      return { provider: "unknown", owner: "", repo: "", baseUrl: "" };
+    });
+  }
+
+  async listPrs(): Promise<{ number: number; title: string; state: string; author: string; url: string; createdAt: string; updatedAt: string; sourceBranch: string; targetBranch: string; labels: string[] }[]> {
+    this.ensureRepo();
+    return this.run("gh/glab", ["pr list"], async () => {
+      const detection = await this.detectProvider();
+
+      if (detection.provider === "github") {
+        try {
+          const { execSync } = await import("child_process");
+          const ghResult = execSync(
+            "gh pr list --json number,title,state,author,url,createdAt,updatedAt,headRefName,baseRefName,labels --limit 50",
+            { cwd: this.repoPath!, encoding: "utf8", timeout: 30000 }
+          );
+          const prs = JSON.parse(ghResult);
+          return prs.map((pr: Record<string, unknown>) => ({
+            number: pr.number,
+            title: pr.title,
+            state: (pr.state as string || "").toLowerCase(),
+            author: (pr.author as Record<string, string>)?.login || "",
+            url: pr.url,
+            createdAt: pr.createdAt,
+            updatedAt: pr.updatedAt,
+            sourceBranch: pr.headRefName,
+            targetBranch: pr.baseRefName,
+            labels: ((pr.labels as { name: string }[]) || []).map((l) => l.name),
+          }));
+        } catch {
+          return [];
+        }
+      }
+
+      if (detection.provider === "gitlab") {
+        try {
+          const { execSync } = await import("child_process");
+          const glabResult = execSync(
+            'glab mr list -F json --per-page 50 2>/dev/null || echo "[]"',
+            { cwd: this.repoPath!, encoding: "utf8", timeout: 30000 }
+          );
+          const mrs = JSON.parse(glabResult);
+          return mrs.map((mr: Record<string, unknown>) => ({
+            number: mr.iid,
+            title: mr.title,
+            state: (mr.state as string || "").toLowerCase(),
+            author: (mr.author as Record<string, string>)?.username || "",
+            url: mr.web_url,
+            createdAt: mr.created_at,
+            updatedAt: mr.updated_at,
+            sourceBranch: mr.source_branch,
+            targetBranch: mr.target_branch,
+            labels: (mr.labels as string[]) || [],
+          }));
+        } catch {
+          return [];
+        }
+      }
+
+      return [];
+    });
+  }
+
+  async viewPr(number: number): Promise<string> {
+    return this.run("gh/glab", ["pr view", String(number)], async () => {
+      const detection = await this.detectProvider();
+      const { execSync } = await import("child_process");
+
+      if (detection.provider === "github") {
+        try {
+          return execSync(`gh pr view ${number}`, {
+            cwd: this.repoPath!,
+            encoding: "utf8",
+            timeout: 30000,
+          });
+        } catch {
+          return "Failed to fetch PR details. Make sure 'gh' CLI is installed and authenticated.";
+        }
+      }
+
+      if (detection.provider === "gitlab") {
+        try {
+          return execSync(`glab mr view ${number}`, {
+            cwd: this.repoPath!,
+            encoding: "utf8",
+            timeout: 30000,
+          });
+        } catch {
+          return "Failed to fetch MR details. Make sure 'glab' CLI is installed and authenticated.";
+        }
+      }
+
+      return "Unknown provider. Cannot view PR/MR.";
+    });
+  }
+
+  async createPr(options: { title: string; body: string; targetBranch: string; sourceBranch: string; draft?: boolean }): Promise<string> {
+    return this.run("gh/glab", ["pr create"], async () => {
+      const detection = await this.detectProvider();
+      const { execSync } = await import("child_process");
+
+      if (detection.provider === "github") {
+        const args = ["gh", "pr", "create", "--title", JSON.stringify(options.title), "--body", JSON.stringify(options.body), "--base", options.targetBranch, "--head", options.sourceBranch];
+        if (options.draft) args.push("--draft");
+        try {
+          return execSync(args.join(" "), {
+            cwd: this.repoPath!,
+            encoding: "utf8",
+            timeout: 30000,
+          }).trim();
+        } catch (err) {
+          throw new Error(`Failed to create PR: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      if (detection.provider === "gitlab") {
+        const args = ["glab", "mr", "create", "--title", JSON.stringify(options.title), "--description", JSON.stringify(options.body), "--target-branch", options.targetBranch, "--source-branch", options.sourceBranch];
+        if (options.draft) args.push("--draft");
+        args.push("--yes");
+        try {
+          return execSync(args.join(" "), {
+            cwd: this.repoPath!,
+            encoding: "utf8",
+            timeout: 30000,
+          }).trim();
+        } catch (err) {
+          throw new Error(`Failed to create MR: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      throw new Error("Unknown provider. Cannot create PR/MR. Make sure 'gh' or 'glab' CLI is installed.");
+    });
+  }
 }
 
 function parseRefs(refString: string): CommitInfo["refs"] {

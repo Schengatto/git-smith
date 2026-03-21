@@ -12,13 +12,23 @@ const SHORTCUTS: ShortcutEntry[] = [
   { keys: "Ctrl+Shift+P", description: "Command Palette", category: "Navigation" },
   { keys: "Ctrl+F", description: "Search commits in graph", category: "Navigation" },
   { keys: "Escape", description: "Close dialog / Clear search", category: "Navigation" },
+  { keys: "?", description: "Keyboard Shortcuts", category: "Navigation" },
 
   // Git Operations
+  { keys: "Ctrl+K", description: "Open Commit Dialog", category: "Git Operations" },
   { keys: "Ctrl+Enter", description: "Commit (in commit dialog)", category: "Git Operations" },
   { keys: "Ctrl+Shift+K", description: "Push", category: "Git Operations" },
+  { keys: "F5", description: "Refresh", category: "Git Operations" },
 
   // View
   { keys: "Ctrl+Shift+D", description: "Toggle diff format (unified/split)", category: "View" },
+
+  // Tools
+  { keys: "Ctrl+Shift+P → Bisect", description: "Git Bisect", category: "Tools" },
+  { keys: "Ctrl+Shift+P → Worktrees", description: "Manage Worktrees", category: "Tools" },
+  { keys: "Ctrl+Shift+P → Submodules", description: "Manage Submodules", category: "Tools" },
+  { keys: "Ctrl+Shift+P → LFS", description: "Git LFS", category: "Tools" },
+  { keys: "Ctrl+Shift+P → PRs", description: "Pull Requests / Merge Requests", category: "Tools" },
 ];
 
 interface Props {

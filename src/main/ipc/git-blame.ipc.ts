@@ -22,4 +22,16 @@ export function registerBlameHandlers() {
   ipcMain.handle(IPC.SUBMODULE.UPDATE, async (_event, init?: boolean) => {
     await gitService.submoduleUpdate(init);
   });
+
+  ipcMain.handle(IPC.SUBMODULE.SYNC, async () => {
+    await gitService.submoduleSync();
+  });
+
+  ipcMain.handle(IPC.SUBMODULE.DEINIT, async (_event, submodulePath: string, force?: boolean) => {
+    await gitService.submoduleDeinit(submodulePath, force);
+  });
+
+  ipcMain.handle(IPC.SUBMODULE.STATUS, async () => {
+    return gitService.getSubmoduleStatus();
+  });
 }

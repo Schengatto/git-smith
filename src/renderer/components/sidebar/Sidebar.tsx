@@ -200,6 +200,18 @@ export const Sidebar: React.FC = () => {
   const submodulesSectionCtx = (e: React.MouseEvent) =>
     showSectionCtx(e, [
       { label: "Add Submodule...", onClick: () => setDialog({ type: "add-submodule" }) },
+      {
+        label: "Update All (init)",
+        onClick: async () => {
+          try { await window.electronAPI.submodule.update(true); loadData(); } catch {}
+        },
+      },
+      {
+        label: "Sync All",
+        onClick: async () => {
+          try { await window.electronAPI.submodule.sync(); loadData(); } catch {}
+        },
+      },
     ]);
 
   const stashesSectionCtx = (e: React.MouseEvent) =>

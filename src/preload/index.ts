@@ -282,6 +282,12 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.SUBMODULE.ADD, url, path),
     update: (init?: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.SUBMODULE.UPDATE, init),
+    sync: (): Promise<void> =>
+      ipcRenderer.invoke(IPC.SUBMODULE.SYNC),
+    deinit: (submodulePath: string, force?: boolean): Promise<void> =>
+      ipcRenderer.invoke(IPC.SUBMODULE.DEINIT, submodulePath, force),
+    status: (): Promise<import("../shared/git-types").SubmoduleDetailInfo[]> =>
+      ipcRenderer.invoke(IPC.SUBMODULE.STATUS),
   },
   settings: {
     get: (): Promise<Record<string, unknown>> =>
@@ -506,6 +512,32 @@ const electronAPI = {
   gpg: {
     verify: (hash: string): Promise<{ signed: boolean; key?: string; status?: string; signer?: string }> =>
       ipcRenderer.invoke(IPC.GPG.VERIFY, hash),
+  },
+
+  lfs: {
+    status: (): Promise<import("../shared/git-types").LfsStatus> =>
+      ipcRenderer.invoke(IPC.LFS.STATUS),
+    listTracked: (): Promise<import("../shared/git-types").LfsFileInfo[]> =>
+      ipcRenderer.invoke(IPC.LFS.LIST_TRACKED),
+    track: (pattern: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.LFS.TRACK, pattern),
+    untrack: (pattern: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.LFS.UNTRACK, pattern),
+    info: (): Promise<{ storagePath: string; endpoint: string }> =>
+      ipcRenderer.invoke(IPC.LFS.INFO),
+    install: (): Promise<string> =>
+      ipcRenderer.invoke(IPC.LFS.INSTALL),
+  },
+
+  pr: {
+    detectProvider: (): Promise<{ provider: string; owner: string; repo: string; baseUrl: string }> =>
+      ipcRenderer.invoke(IPC.PR.DETECT_PROVIDER),
+    list: (): Promise<import("../shared/git-types").PrInfo[]> =>
+      ipcRenderer.invoke(IPC.PR.LIST),
+    view: (number: number): Promise<string> =>
+      ipcRenderer.invoke(IPC.PR.VIEW, number),
+    create: (options: import("../shared/git-types").PrCreateOptions): Promise<string> =>
+      ipcRenderer.invoke(IPC.PR.CREATE, options),
   },
 
   changelog: {

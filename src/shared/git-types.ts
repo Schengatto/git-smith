@@ -354,3 +354,47 @@ export interface PatchApplyOptions {
   patchPath: string;
   check?: boolean;
 }
+
+export interface SubmoduleDetailInfo {
+  name: string;
+  path: string;
+  url: string;
+  hash: string;
+  branch: string;
+  status: "up-to-date" | "modified" | "uninitialized" | "conflict";
+}
+
+export interface LfsFileInfo {
+  pattern: string;
+  filter: string;
+}
+
+export interface LfsStatus {
+  installed: boolean;
+  version: string;
+  tracked: LfsFileInfo[];
+  files: { path: string; lfsOid: string; size: string }[];
+}
+
+export interface PrInfo {
+  number: number;
+  title: string;
+  state: string;
+  author: string;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+  sourceBranch: string;
+  targetBranch: string;
+  labels: string[];
+}
+
+export interface PrCreateOptions {
+  title: string;
+  body: string;
+  targetBranch: string;
+  sourceBranch: string;
+  draft?: boolean;
+}
+
+export type GitProvider = "github" | "gitlab" | "unknown";
