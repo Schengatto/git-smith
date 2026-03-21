@@ -14,6 +14,9 @@ import type {
   StaleRemoteBranch,
   MergeOptions,
   RebaseOptions,
+  CherryPickOptions,
+  RevertOptions,
+  SearchCommitsOptions,
   ConflictFile,
   ConflictFileContent,
   ChangelogData,
@@ -107,6 +110,8 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.LOG.FULL_INFO, hash),
     showFile: (hash: string, filePath: string): Promise<string> =>
       ipcRenderer.invoke(IPC.LOG.SHOW_FILE, hash, filePath),
+    search: (options: SearchCommitsOptions): Promise<CommitInfo[]> =>
+      ipcRenderer.invoke(IPC.LOG.SEARCH, options),
   },
   branch: {
     list: (): Promise<BranchInfo[]> => ipcRenderer.invoke(IPC.BRANCH.LIST),
@@ -147,6 +152,10 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.BRANCH.REBASE_IN_PROGRESS),
     cherryPick: (hash: string): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK, hash),
+    cherryPickWithOptions: (options: CherryPickOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.CHERRY_PICK_OPTIONS, options),
+    revert: (options: RevertOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC.BRANCH.REVERT, options),
     mergeAbort: (): Promise<void> =>
       ipcRenderer.invoke(IPC.BRANCH.MERGE_ABORT),
     mergeContinue: (): Promise<void> =>

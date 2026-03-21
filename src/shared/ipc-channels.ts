@@ -42,6 +42,7 @@ export const IPC = {
     DETAILS: "git:log:details",
     FULL_INFO: "git:log:full-info",
     SHOW_FILE: "git:log:show-file",
+    SEARCH: "git:log:search",
   },
   BRANCH: {
     LIST: "git:branch:list",
@@ -62,6 +63,8 @@ export const IPC = {
     REBASE_ABORT: "git:branch:rebase-abort",
     REBASE_IN_PROGRESS: "git:branch:rebase-in-progress",
     CHERRY_PICK: "git:branch:cherry-pick",
+    CHERRY_PICK_OPTIONS: "git:branch:cherry-pick-options",
+    REVERT: "git:branch:revert",
     MERGE_ABORT: "git:branch:merge-abort",
     MERGE_CONTINUE: "git:branch:merge-continue",
     CHERRY_PICK_ABORT: "git:branch:cherry-pick-abort",

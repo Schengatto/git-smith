@@ -213,6 +213,35 @@ export interface RebaseOptions {
   todoEntries?: { action: string; hash: string }[];
 }
 
+export interface CherryPickOptions {
+  /** Commit hash to cherry-pick */
+  hash: string;
+  /** Do not commit the result (leave it staged) */
+  noCommit?: boolean;
+  /** Parent number for merge commits (1 = first parent) */
+  mainline?: number;
+}
+
+export interface RevertOptions {
+  /** Commit hash to revert */
+  hash: string;
+  /** Do not commit the result (leave it staged) */
+  noCommit?: boolean;
+  /** Parent number for merge commits (1 = first parent) */
+  mainline?: number;
+}
+
+export interface SearchCommitsOptions {
+  /** Search in commit messages */
+  grep?: string;
+  /** Search by author name/email */
+  author?: string;
+  /** Search for code changes containing this string (pickaxe -S) */
+  code?: string;
+  /** Max number of results */
+  maxCount?: number;
+}
+
 export interface ConflictFile {
   path: string;
   /** "both-modified" | "added-by-us" | "added-by-them" | "deleted-by-us" | "deleted-by-them" | "both-added" | "both-deleted" */

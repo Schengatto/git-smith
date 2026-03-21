@@ -516,6 +516,49 @@ export class GitService {
     );
   }
 
+  async searchCommits(options: import("../../shared/git-types").SearchCommitsOptions): Promise<CommitInfo[]> {
+    const git = this.ensureRepo();
+    const maxCount = options.maxCount || 200;
+    const args = ["log", "--all", "--date-order", `--max-count=${maxCount}`];
+    if (options.grep) args.push(`--grep=${options.grep}`, "--regexp-ignore-case");
+    if (options.author) args.push(`--author=${options.author}`);
+    if (options.code) args.push(`-S${options.code}`);
+
+    const RECORD_SEP = "%x1e";
+    const FIELD_SEP = "%x00";
+    const format = [
+      "%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D", "%B",
+    ].join(FIELD_SEP);
+    args.push(`--format=${RECORD_SEP}${format}`);
+
+    return this.run("git log", args.slice(1), async () => {
+      const result = await git.raw(args);
+      if (!result.trim()) return [];
+      return result
+        .split("\x1e")
+        .filter((chunk) => chunk.trim())
+        .map((chunk) => {
+          const parts = chunk.trim().split("\0");
+          const body = (parts.slice(9).join("\0") || "").trim();
+          const subject = parts[2] || "";
+          const email = (parts[4] || "").trim().toLowerCase();
+          return {
+            hash: parts[0] || "",
+            abbreviatedHash: parts[1] || "",
+            subject,
+            body: body.startsWith(subject) ? body.slice(subject.length).trim() : body,
+            authorName: parts[3] || "",
+            authorEmail: parts[4] || "",
+            authorDate: parts[5] || "",
+            committerDate: parts[6] || "",
+            parentHashes: parts[7] ? parts[7].split(" ") : [],
+            refs: parseRefs(parts[8] || ""),
+            gravatarHash: email ? crypto.createHash("md5").update(email).digest("hex") : undefined,
+          };
+        });
+    });
+  }
+
   async getCommitDetails(hash: string): Promise<CommitInfo> {
     const git = this.ensureRepo();
     return this.run("git show", [hash, "--format=..."], async () => {
@@ -866,6 +909,24 @@ export class GitService {
     await this.run("git cherry-pick", [hash], () =>
       git.raw(["cherry-pick", hash])
     );
+  }
+
+  async cherryPickWithOptions(options: import("../../shared/git-types").CherryPickOptions): Promise<void> {
+    const git = this.ensureRepo();
+    const args = ["cherry-pick"];
+    if (options.noCommit) args.push("--no-commit");
+    if (options.mainline) args.push("-m", String(options.mainline));
+    args.push(options.hash);
+    await this.run("git cherry-pick", args.slice(1), () => git.raw(args));
+  }
+
+  async revertCommit(options: import("../../shared/git-types").RevertOptions): Promise<void> {
+    const git = this.ensureRepo();
+    const args = ["revert"];
+    if (options.noCommit) args.push("--no-commit");
+    if (options.mainline) args.push("-m", String(options.mainline));
+    args.push(options.hash);
+    await this.run("git revert", args.slice(1), () => git.raw(args));
   }
 
   async getTags(): Promise<TagInfo[]> {

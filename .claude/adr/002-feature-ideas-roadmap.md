@@ -1,0 +1,88 @@
+# ADR-002: Idee per funzionalita future
+
+**Data:** 2026-03-21
+**Stato:** Proposta
+**Contesto:** Raccolta di idee per nuove funzionalita da implementare in Git Expansion, ispirate a Git Extensions e strumenti simili
+
+---
+
+## Contesto
+
+Git Expansion ha gia implementato un ampio set di funzionalita (commit graph, merge/rebase/cherry-pick dialogs, conflict resolution, stash, branch management, AI integration, MCP, ecc.). Questo ADR raccoglie le idee per le prossime funzionalita, organizzate per categoria e priorita.
+
+## Funzionalita gia implementate (riferimento)
+
+- Commit graph con avatar, branch lines, HEAD highlight
+- CommitDialog con tree view, stage/unstage, template convenzionali
+- Merge, Rebase, Checkout dialog
+- Merge conflict resolver (interno + tool esterni)
+- Stash dialog
+- Clone dialog avanzato
+- Sidebar con branches, remotes, tags, submodules, stashes
+- Branch filter e visibility filter
+- Context menu (delete branch/tag, file history, blame, open, copy)
+- AI commit messages, conflict resolution, code review (MCP)
+- Git accounts multi-identita
+- Author Statistics e Codebase Statistics panel
+- Console panel (xterm.js)
+- Auto-fetch, auto-update, changelog dialog
+- Dialog child windows
+- Conflict banner (merge/rebase/cherry-pick in progress)
+
+---
+
+## Idee per nuove funzionalita
+
+### Categoria: Git Operations
+
+| # | Funzionalita | Descrizione | Complessita | Priorita |
+|---|-------------|-------------|-------------|----------|
+| 1 | **Cherry-pick dialog** | Dialog dedicato per cherry-pick con selezione multipla di commit, preview, opzioni (no-commit, mainline) | Media | Alta |
+| 2 | **Revert commit** | Right-click su commit -> Revert, con preview delle modifiche prima di confermare | Bassa | Alta |
+| 3 | **Squash commits** | Seleziona range di commit -> squash in uno solo con editor del messaggio combinato | Media | Media |
+| 4 | **Archive/Export** | Esporta un commit o branch come .zip/.tar.gz | Bassa | Bassa |
+| 5 | **Git Bisect UI** | Interfaccia grafica per `git bisect` (good/bad/skip) con evidenziazione nel grafo e progresso | Alta | Media |
+| 6 | **Worktrees** | Gestione worktree multiple: crea, lista, rimuovi, apri in nuova finestra | Media | Media |
+| 7 | **Submodules management** | Dialog per add/update/sync/deinit submodules (la sidebar li mostra gia) | Media | Bassa |
+| 8 | **Patches** | Crea/applica patch file (format-patch / am) con preview | Bassa | Bassa |
+
+### Categoria: UI/UX
+
+| # | Funzionalita | Descrizione | Complessita | Priorita |
+|---|-------------|-------------|-------------|----------|
+| 9 | **File blame view** | Blame inline con annotazioni per riga, navigazione per commit, colori per eta | Alta | Alta |
+| 10 | **File history timeline** | Grafo dedicato per la storia di un singolo file con diff tra versioni | Media | Alta |
+| 11 | **Search commits** | Ricerca full-text nei messaggi di commit, autore, hash, contenuto diff (pickaxe) | Media | Alta |
+| 12 | **Diff side-by-side** | Toggle tra unified e split diff view | Media | Media |
+| 13 | **Syntax highlighting nel diff** | Highlight del codice sorgente nei diff viewer | Media | Media |
+| 14 | **Dark/Light theme toggle** | Switch rapido nella toolbar o shortcut | Bassa | Bassa |
+| 15 | **Keyboard shortcuts panel** | Dialog con tutti gli shortcut, configurabili dall'utente | Media | Bassa |
+
+### Categoria: Collaboration & Integrations
+
+| # | Funzionalita | Descrizione | Complessita | Priorita |
+|---|-------------|-------------|-------------|----------|
+| 16 | **GitHub/GitLab PR integration** | Crea/visualizza Pull Request e Merge Request direttamente dall'app | Alta | Alta |
+| 17 | **Git LFS support** | Visualizza file LFS, track/untrack, info su storage | Media | Bassa |
+| 18 | **GPG commit signing** | Configurazione chiavi GPG, visualizzazione firma verificata sui commit | Media | Media |
+
+### Categoria: Productivity
+
+| # | Funzionalita | Descrizione | Complessita | Priorita |
+|---|-------------|-------------|-------------|----------|
+| 19 | **Command palette** | Ctrl+Shift+P per accesso rapido a tutte le azioni (stile VS Code) | Media | Alta |
+| 20 | **Git reflog viewer** | Visualizza il reflog per recuperare commit persi o operazioni annullate | Bassa | Media |
+| 21 | **Git notes** | Aggiungere/visualizzare note ai commit (`git notes`) | Bassa | Bassa |
+| 22 | **Batch operations** | Fetch/pull su tutti i repo nei preferiti in un colpo solo, con report | Media | Media |
+
+---
+
+## Criteri di priorita
+
+- **Alta**: Funzionalita presenti in Git Extensions che mancano, o richieste frequenti per un Git GUI
+- **Media**: Nice-to-have che migliorano significativamente l'esperienza
+- **Bassa**: Funzionalita di nicchia o con workaround disponibili
+
+## Prossimi passi
+
+Selezionare le funzionalita da implementare in base a priorita e creare design spec + plan nella cartella `docs/superpowers/` prima dell'implementazione.

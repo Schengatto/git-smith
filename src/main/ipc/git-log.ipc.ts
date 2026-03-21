@@ -32,4 +32,11 @@ export function registerLogHandlers() {
   ipcMain.handle(IPC.LOG.SHOW_FILE, async (_event, hash: string, filePath: string) => {
     return gitService.showFile(hash, filePath);
   });
+
+  ipcMain.handle(
+    IPC.LOG.SEARCH,
+    async (_event, options: import("../../shared/git-types").SearchCommitsOptions) => {
+      return gitService.searchCommits(options);
+    }
+  );
 }

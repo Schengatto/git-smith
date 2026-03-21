@@ -102,6 +102,20 @@ export function registerBranchHandlers() {
     await gitService.cherryPick(hash);
   });
 
+  ipcMain.handle(
+    IPC.BRANCH.CHERRY_PICK_OPTIONS,
+    async (_event, options: import("../../shared/git-types").CherryPickOptions) => {
+      await gitService.cherryPickWithOptions(options);
+    }
+  );
+
+  ipcMain.handle(
+    IPC.BRANCH.REVERT,
+    async (_event, options: import("../../shared/git-types").RevertOptions) => {
+      await gitService.revertCommit(options);
+    }
+  );
+
   ipcMain.handle(IPC.BRANCH.MERGE_ABORT, async () => {
     await gitService.mergeAbort();
   });

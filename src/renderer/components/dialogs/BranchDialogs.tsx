@@ -290,25 +290,34 @@ export const RebaseBranchDialog: React.FC<BaseProps & { onto: string }> = ({
   );
 };
 
-export const CherryPickDialog: React.FC<BaseProps & { commitHash: string; commitSubject: string }> = ({
+export const CherryPickDialog: React.FC<BaseProps & { commitHash: string; commitSubject: string; isMerge?: boolean }> = ({
   open,
   onClose,
   commitHash,
   commitSubject,
+  isMerge,
 }) => {
+  const [noCommit, setNoCommit] = useState(false);
+  const [mainline, setMainline] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
 
   useEffect(() => {
-    if (open) { setError(null); }
+    if (open) { setError(null); setNoCommit(false); setMainline(1); }
   }, [open]);
 
   const handleCherryPick = async () => {
     setLoading(true);
     setError(null);
     try {
-      await runGitOperation("Cherry Pick", () => window.electronAPI.branch.cherryPick(commitHash));
+      await runGitOperation("Cherry Pick", () =>
+        window.electronAPI.branch.cherryPickWithOptions({
+          hash: commitHash,
+          noCommit: noCommit || undefined,
+          mainline: isMerge ? mainline : undefined,
+        })
+      );
       await refresh();
       onClose();
     } catch (err: unknown) {
@@ -330,12 +339,128 @@ export const CherryPickDialog: React.FC<BaseProps & { commitHash: string; commit
       <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 12 }}>
         {commitSubject}
       </div>
+      <DialogCheckbox label="No commit (stage changes only)" checked={noCommit} onChange={setNoCommit} />
+      {isMerge && (
+        <div style={{ marginTop: 8, marginBottom: 8 }}>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 8 }}>
+            Parent number (mainline):
+            <select
+              value={mainline}
+              onChange={(e) => setMainline(Number(e.target.value))}
+              style={{
+                background: "var(--input-bg)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border)",
+                borderRadius: 4,
+                padding: "2px 6px",
+                fontSize: 12,
+              }}
+            >
+              <option value={1}>1 (first parent)</option>
+              <option value={2}>2 (second parent)</option>
+            </select>
+          </label>
+          <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>
+            This is a merge commit. Select which parent to diff against.
+          </div>
+        </div>
+      )}
       <DialogError error={error} />
       <DialogActions
         onCancel={onClose}
         onConfirm={handleCherryPick}
         confirmLabel="Cherry Pick"
         confirmColor="var(--mauve)"
+        loading={loading}
+      />
+    </ModalDialog>
+  );
+};
+
+export const RevertDialog: React.FC<BaseProps & { commitHash: string; commitSubject: string; isMerge?: boolean }> = ({
+  open,
+  onClose,
+  commitHash,
+  commitSubject,
+  isMerge,
+}) => {
+  const [noCommit, setNoCommit] = useState(false);
+  const [mainline, setMainline] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const refresh = useRefreshAfter();
+
+  useEffect(() => {
+    if (open) { setError(null); setNoCommit(false); setMainline(1); }
+  }, [open]);
+
+  const handleRevert = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await runGitOperation("Revert", () =>
+        window.electronAPI.branch.revert({
+          hash: commitHash,
+          noCommit: noCommit || undefined,
+          mainline: isMerge ? mainline : undefined,
+        })
+      );
+      await refresh();
+      onClose();
+    } catch (err: unknown) {
+      if (err instanceof GitOperationCancelledError) return;
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ModalDialog open={open} title="Revert Commit" onClose={onClose}>
+      <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 4 }}>
+        Revert commit:
+      </div>
+      <div className="mono" style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4 }}>
+        {commitHash.slice(0, 10)}
+      </div>
+      <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 12 }}>
+        {commitSubject}
+      </div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
+        This will create a new commit that undoes the changes from the selected commit.
+      </div>
+      <DialogCheckbox label="No commit (stage changes only)" checked={noCommit} onChange={setNoCommit} />
+      {isMerge && (
+        <div style={{ marginTop: 8, marginBottom: 8 }}>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 8 }}>
+            Parent number (mainline):
+            <select
+              value={mainline}
+              onChange={(e) => setMainline(Number(e.target.value))}
+              style={{
+                background: "var(--input-bg)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border)",
+                borderRadius: 4,
+                padding: "2px 6px",
+                fontSize: 12,
+              }}
+            >
+              <option value={1}>1 (first parent)</option>
+              <option value={2}>2 (second parent)</option>
+            </select>
+          </label>
+          <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>
+            This is a merge commit. Select which parent to diff against.
+          </div>
+        </div>
+      )}
+      <DialogError error={error} />
+      <DialogActions
+        onCancel={onClose}
+        onConfirm={handleRevert}
+        confirmLabel="Revert"
+        confirmColor="var(--peach)"
         loading={loading}
       />
     </ModalDialog>

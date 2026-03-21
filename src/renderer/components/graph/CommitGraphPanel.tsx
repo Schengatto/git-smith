@@ -3,7 +3,8 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
-import { CherryPickDialog, CreateBranchDialog } from "../dialogs/BranchDialogs";
+import { CherryPickDialog, CreateBranchDialog, RevertDialog } from "../dialogs/BranchDialogs";
+import { SearchCommitsDialog } from "../dialogs/SearchCommitsDialog";
 import { ResetDialog } from "../dialogs/ResetDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { CommitCompareDialog } from "../dialogs/CommitCompareDialog";
@@ -65,7 +66,9 @@ export const CommitGraphPanel: React.FC = () => {
   }, [repo?.headCommit]);
 
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; row: GraphRow } | null>(null);
-  const [cherryPickTarget, setCherryPickTarget] = useState<{ hash: string; subject: string } | null>(null);
+  const [cherryPickTarget, setCherryPickTarget] = useState<{ hash: string; subject: string; isMerge?: boolean } | null>(null);
+  const [revertTarget, setRevertTarget] = useState<{ hash: string; subject: string; isMerge?: boolean } | null>(null);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [createBranchFrom, setCreateBranchFrom] = useState<string | null>(null);
   const [resetTarget, setResetTarget] = useState<{ hash: string; subject: string } | null>(null);
   const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
@@ -310,11 +313,18 @@ export const CommitGraphPanel: React.FC = () => {
       });
     }
 
+    const isMergeCommit = row.commit.parentHashes.length > 1;
+
     items.push(
       {
         label: "Cherry Pick",
         onClick: () =>
-          setCherryPickTarget({ hash: row.commit.hash, subject: row.commit.subject }),
+          setCherryPickTarget({ hash: row.commit.hash, subject: row.commit.subject, isMerge: isMergeCommit }),
+      },
+      {
+        label: "Revert Commit",
+        onClick: () =>
+          setRevertTarget({ hash: row.commit.hash, subject: row.commit.subject, isMerge: isMergeCommit }),
       },
       {
         label: "Create Branch Here",
@@ -649,6 +659,37 @@ export const CommitGraphPanel: React.FC = () => {
           </svg>
           Go to HEAD
         </button>
+
+        {/* Advanced search */}
+        <button
+          onClick={() => setSearchDialogOpen(true)}
+          title="Search commits (message, author, code)"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            padding: "2px 8px",
+            borderRadius: 4,
+            border: "1px solid var(--border)",
+            background: "var(--surface-1)",
+            color: "var(--text-secondary)",
+            fontSize: 11,
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--surface-hover)";
+            e.currentTarget.style.color = "var(--text-primary)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--surface-1)";
+            e.currentTarget.style.color = "var(--text-secondary)";
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Search
+        </button>
       </div>
 
       {/* Search bar */}
@@ -742,6 +783,20 @@ export const CommitGraphPanel: React.FC = () => {
         onClose={() => setCherryPickTarget(null)}
         commitHash={cherryPickTarget?.hash || ""}
         commitSubject={cherryPickTarget?.subject || ""}
+        isMerge={cherryPickTarget?.isMerge}
+      />
+
+      <RevertDialog
+        open={!!revertTarget}
+        onClose={() => setRevertTarget(null)}
+        commitHash={revertTarget?.hash || ""}
+        commitSubject={revertTarget?.subject || ""}
+        isMerge={revertTarget?.isMerge}
+      />
+
+      <SearchCommitsDialog
+        open={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
       />
 
       <CreateBranchDialog
