@@ -142,11 +142,11 @@ describe("parseSshConfig", () => {
 
     const entries = parseSshConfig();
     expect(entries).toHaveLength(2);
-    expect(entries[0].host).toBe("github-work");
-    expect(entries[0].hostName).toBe("github.com");
-    expect(entries[0].user).toBe("git");
-    expect(entries[0].identityFile?.replace(/\\/g, "/")).toBe(path.join(tmpDir, ".ssh", "id_work").replace(/\\/g, "/"));
-    expect(entries[1].host).toBe("github-personal");
+    expect(entries[0]!.host).toBe("github-work");
+    expect(entries[0]!.hostName).toBe("github.com");
+    expect(entries[0]!.user).toBe("git");
+    expect(entries[0]!.identityFile?.replace(/\\/g, "/")).toBe(path.join(tmpDir, ".ssh", "id_work").replace(/\\/g, "/"));
+    expect(entries[1]!.host).toBe("github-personal");
   });
 
   it("skips wildcard entries and entries without IdentityFile", () => {
@@ -164,7 +164,7 @@ describe("parseSshConfig", () => {
 
     const entries = parseSshConfig();
     expect(entries).toHaveLength(1);
-    expect(entries[0].host).toBe("with-key");
+    expect(entries[0]!.host).toBe("with-key");
   });
 
   it("handles comments and blank lines", () => {
@@ -179,6 +179,6 @@ describe("parseSshConfig", () => {
 
     const entries = parseSshConfig();
     expect(entries).toHaveLength(1);
-    expect(entries[0].host).toBe("myserver");
+    expect(entries[0]!.host).toBe("myserver");
   });
 });

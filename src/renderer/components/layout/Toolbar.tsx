@@ -208,6 +208,7 @@ const RepoSelector: React.FC = () => {
               onClick={(e) => { e.stopPropagation(); setOpen(false); closeRepo(); }}
               style={{ border: "none", background: "transparent", color: "var(--text-muted)", cursor: "pointer", padding: 4, borderRadius: 4 }}
               title="Close repository"
+              aria-label="Close repository"
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
             >
@@ -873,6 +874,7 @@ export const Toolbar: React.FC = () => {
         onClick={() => setShortcutsOpen(true)}
         className="toolbar-btn"
         title="Keyboard Shortcuts (?)"
+        aria-label="Keyboard Shortcuts"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2" /><line x1="6" y1="8" x2="6" y2="8" /><line x1="10" y1="8" x2="10" y2="8" /><line x1="14" y1="8" x2="14" y2="8" /><line x1="18" y1="8" x2="18" y2="8" /><line x1="8" y1="12" x2="16" y2="12" />
@@ -882,6 +884,7 @@ export const Toolbar: React.FC = () => {
         onClick={() => openDialogWindow({ dialog: "SettingsDialog" })}
         className="toolbar-btn"
         title="Settings"
+        aria-label="Settings"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" />
@@ -932,6 +935,7 @@ const ThemeToggle: React.FC = () => {
       onClick={toggleTheme}
       className="toolbar-btn"
       title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
     >
       {theme === "dark" ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -97,10 +97,10 @@ function parseSubject(subject: string): {
     return { type: "other", breaking: false, description: subject };
   }
   return {
-    type: match[1],
+    type: match[1]!,
     scope: match[2] ? match[2].slice(1, -1) : undefined,
     breaking: match[3] === "!",
-    description: match[4],
+    description: match[4]!,
   };
 }
 

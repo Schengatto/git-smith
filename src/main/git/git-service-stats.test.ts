@@ -56,13 +56,13 @@ describe("GitService.getLeaderboard", () => {
     );
     const result = await service.getLeaderboard("all");
     expect(result).toHaveLength(1);
-    expect(result[0].authorName).toBe("Alice");
-    expect(result[0].authorEmail).toBe("alice@example.com");
-    expect(result[0].commits).toBe(1);
-    expect(result[0].linesAdded).toBe(50);
-    expect(result[0].linesRemoved).toBe(10);
-    expect(result[0].rank).toBe(1);
-    expect(result[0].gravatarHash).toMatch(/^[a-f0-9]{32}$/);
+    expect(result[0]!.authorName).toBe("Alice");
+    expect(result[0]!.authorEmail).toBe("alice@example.com");
+    expect(result[0]!.commits).toBe(1);
+    expect(result[0]!.linesAdded).toBe(50);
+    expect(result[0]!.linesRemoved).toBe(10);
+    expect(result[0]!.rank).toBe(1);
+    expect(result[0]!.gravatarHash).toMatch(/^[a-f0-9]{32}$/);
   });
 
   it("aggregates multiple commits from the same author", async () => {
@@ -74,9 +74,9 @@ describe("GitService.getLeaderboard", () => {
     );
     const result = await service.getLeaderboard("all");
     expect(result).toHaveLength(1);
-    expect(result[0].commits).toBe(2);
-    expect(result[0].linesAdded).toBe(50);
-    expect(result[0].linesRemoved).toBe(10);
+    expect(result[0]!.commits).toBe(2);
+    expect(result[0]!.linesAdded).toBe(50);
+    expect(result[0]!.linesRemoved).toBe(10);
   });
 
   it("sorts by commits descending and assigns ranks", async () => {
@@ -88,31 +88,31 @@ describe("GitService.getLeaderboard", () => {
       ])
     );
     const result = await service.getLeaderboard("all");
-    expect(result[0].authorName).toBe("Alice");
-    expect(result[0].rank).toBe(1);
-    expect(result[0].commits).toBe(2);
-    expect(result[1].authorName).toBe("Bob");
-    expect(result[1].rank).toBe(2);
+    expect(result[0]!.authorName).toBe("Alice");
+    expect(result[0]!.rank).toBe(1);
+    expect(result[0]!.commits).toBe(2);
+    expect(result[1]!.authorName).toBe("Bob");
+    expect(result[1]!.rank).toBe(2);
   });
 
   it("passes --since flag for week timeframe", async () => {
     mockRaw.mockResolvedValueOnce("");
     await service.getLeaderboard("week");
-    const callArgs = mockRaw.mock.calls[0][0] as string[];
+    const callArgs = mockRaw.mock.calls[0]![0] as string[];
     expect(callArgs.some((a) => a.startsWith("--since="))).toBe(true);
   });
 
   it("passes --since flag for month timeframe", async () => {
     mockRaw.mockResolvedValueOnce("");
     await service.getLeaderboard("month");
-    const callArgs = mockRaw.mock.calls[0][0] as string[];
+    const callArgs = mockRaw.mock.calls[0]![0] as string[];
     expect(callArgs.some((a) => a.startsWith("--since="))).toBe(true);
   });
 
   it("does not pass --since flag for all timeframe", async () => {
     mockRaw.mockResolvedValueOnce("");
     await service.getLeaderboard("all");
-    const callArgs = mockRaw.mock.calls[0][0] as string[];
+    const callArgs = mockRaw.mock.calls[0]![0] as string[];
     expect(callArgs.some((a) => a.startsWith("--since="))).toBe(false);
   });
 
@@ -126,7 +126,7 @@ describe("GitService.getLeaderboard", () => {
       ])
     );
     const result = await service.getLeaderboard("all");
-    expect(result[0].longestStreak).toBe(3);
+    expect(result[0]!.longestStreak).toBe(3);
   });
 
   it("calculates longest streak correctly with a gap", async () => {
@@ -140,7 +140,7 @@ describe("GitService.getLeaderboard", () => {
       ])
     );
     const result = await service.getLeaderboard("all");
-    expect(result[0].longestStreak).toBe(2);
+    expect(result[0]!.longestStreak).toBe(2);
   });
 
   it("records firstCommitDate and lastCommitDate correctly", async () => {
@@ -151,8 +151,8 @@ describe("GitService.getLeaderboard", () => {
       ])
     );
     const result = await service.getLeaderboard("all");
-    expect(result[0].firstCommitDate).toBe("2026-01-01T10:00:00+00:00");
-    expect(result[0].lastCommitDate).toBe("2026-03-15T10:00:00+00:00");
+    expect(result[0]!.firstCommitDate).toBe("2026-01-01T10:00:00+00:00");
+    expect(result[0]!.lastCommitDate).toBe("2026-03-15T10:00:00+00:00");
   });
 
   it("handles commits with no stat line (e.g. merge commits)", async () => {
@@ -160,8 +160,8 @@ describe("GitService.getLeaderboard", () => {
     mockRaw.mockResolvedValueOnce(output);
     const result = await service.getLeaderboard("all");
     expect(result).toHaveLength(1);
-    expect(result[0].linesAdded).toBe(0);
-    expect(result[0].linesRemoved).toBe(0);
+    expect(result[0]!.linesAdded).toBe(0);
+    expect(result[0]!.linesRemoved).toBe(0);
   });
 });
 
@@ -269,7 +269,7 @@ describe("GitService.getAuthorDetail", () => {
   it("passes --author= with email and filters by exact email in post-processing", async () => {
     mockRaw.mockResolvedValueOnce("");
     await service.getAuthorDetail("alice@example.com", "all");
-    const callArgs = mockRaw.mock.calls[0][0] as string[];
+    const callArgs = mockRaw.mock.calls[0]![0] as string[];
     const authorArg = callArgs.find((a) => a.startsWith("--author="));
     expect(authorArg).toBe("--author=alice@example.com");
   });

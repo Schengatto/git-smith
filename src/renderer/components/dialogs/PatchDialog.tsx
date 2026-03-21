@@ -45,7 +45,7 @@ export const PatchCreateDialog: React.FC<CreateProps> = ({ open, onClose, hashes
         }}>
           {subjects.map((s, i) => (
             <div key={hashes[i]} style={{ fontSize: 11, color: "var(--text-primary)", padding: "2px 0" }}>
-              <span className="mono" style={{ color: "var(--accent)" }}>{hashes[i].slice(0, 7)}</span>{" "}
+              <span className="mono" style={{ color: "var(--accent)" }}>{hashes[i]!.slice(0, 7)}</span>{" "}
               {s}
             </div>
           ))}

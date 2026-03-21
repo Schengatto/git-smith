@@ -92,8 +92,8 @@ export function parseSshConfig(): SshHostEntry[] {
     const match = line.match(/^(\S+)\s+(.+)$/);
     if (!match) continue;
 
-    const key = match[1].toLowerCase();
-    const value = match[2].trim();
+    const key = match[1]!.toLowerCase();
+    const value = match[2]!.trim();
 
     if (key === "host") {
       // Skip wildcard-only entries

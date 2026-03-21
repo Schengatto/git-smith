@@ -23,7 +23,7 @@ export function parseHunks(rawDiff: string): { header: string[]; hunks: Hunk[] }
   let currentHunk: Hunk | null = null;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i]!;
     if (line.startsWith("@@")) {
       if (currentHunk) hunks.push(currentHunk);
       currentHunk = { header: line, lines: [], startIndex: i };
@@ -72,14 +72,13 @@ export function buildPatch(
     let lastLineEmitted = false;
 
     for (let i = 0; i < hunk.lines.length; i++) {
-      const line = hunk.lines[i];
+      const line = hunk.lines[i]!;
       if (line.startsWith("+")) {
         if (selectedLineIndices.has(i)) {
           newLines.push(line);
           newCount++;
           lastLineEmitted = true;
         } else if (isReverse) {
-          // Convert unselected add to context for reverse apply
           newLines.push(" " + line.slice(1));
           oldCount++;
           newCount++;
@@ -93,7 +92,6 @@ export function buildPatch(
           oldCount++;
           lastLineEmitted = true;
         } else if (!isReverse) {
-          // Convert unselected remove to context for forward apply
           newLines.push(" " + line.slice(1));
           oldCount++;
           newCount++;
@@ -109,7 +107,6 @@ export function buildPatch(
           newLines.push(line);
         }
       } else {
-        // Context line
         newLines.push(line);
         oldCount++;
         newCount++;
@@ -119,8 +116,8 @@ export function buildPatch(
 
     // Parse original header for start line
     const match = hunk.header.match(/@@ -(\d+),?\d* \+(\d+),?\d* @@/);
-    const oldStart = match ? parseInt(match[1]) : 1;
-    const newStart = match ? parseInt(match[2]) : 1;
+    const oldStart = match ? parseInt(match[1]!) : 1;
+    const newStart = match ? parseInt(match[2]!) : 1;
     const newHeader = `@@ -${oldStart},${oldCount} +${newStart},${newCount} @@`;
     hunkLines = [newHeader, ...newLines];
   }
@@ -156,14 +153,10 @@ export const HunkStagingView: React.FC<Props> = ({
   };
 
   const handleStageHunk = (hunkIdx: number) => {
-    const hunk = hunks[hunkIdx];
+    const hunk = hunks[hunkIdx]!;
     const selected = selectedLines[hunkIdx];
     let sel = selected && selected.size > 0 ? selected : undefined;
 
-    // When unstaging: if all + lines in the hunk are selected, unstage the
-    // whole hunk instead of building a partial patch.  A partial reverse patch
-    // that contains only + lines (oldCount=0) is invalid for git apply --reverse
-    // and this also matches VS Code behaviour (unstaging every changed line = unstage file).
     if (isStaged && sel) {
       const plusIndices = hunk.lines.reduce<number[]>((acc, l, i) => {
         if (l.startsWith("+")) acc.push(i);

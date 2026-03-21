@@ -14,12 +14,13 @@ import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { MergeDialog } from "../dialogs/MergeDialog";
 import { RebaseDialog } from "../dialogs/RebaseDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
-import type { GraphRow, BranchInfo, CommitInfo } from "../../../shared/git-types";
+import type { GraphRow, BranchInfo } from "../../../shared/git-types";
 import { AiReviewDialog } from "../ai/AiReviewDialog";
 import { ArchiveDialog } from "../dialogs/ArchiveDialog";
 import { PatchCreateDialog } from "../dialogs/PatchDialog";
 import { NotesDialog } from "../dialogs/NotesDialog";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
+import { useGraphDialogs } from "./useGraphDialogs";
 
 const LANE_WIDTH = 16;
 const ROW_HEIGHT = 30;
@@ -55,6 +56,7 @@ export const CommitGraphPanel: React.FC = () => {
       await loadGraph();
     };
     init();
+    // Only re-init when repo path changes; store actions are stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.path]);
 
@@ -66,29 +68,33 @@ export const CommitGraphPanel: React.FC = () => {
       loadGraph();
     }
     prevHeadRef.current = repo.headCommit;
+    // Only track HEAD changes; loadGraph is a stable store action
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.headCommit]);
 
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; row: GraphRow } | null>(null);
-  const [cherryPickTarget, setCherryPickTarget] = useState<{ hash: string; subject: string; isMerge?: boolean } | null>(null);
-  const [revertTarget, setRevertTarget] = useState<{ hash: string; subject: string; isMerge?: boolean } | null>(null);
-  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  const [createBranchFrom, setCreateBranchFrom] = useState<string | null>(null);
-  const [resetTarget, setResetTarget] = useState<{ hash: string; subject: string } | null>(null);
-  const [tagTarget, setTagTarget] = useState<{ hash: string; subject: string } | null>(null);
-  const [deleteBranchTarget, setDeleteBranchTarget] = useState<string | null>(null);
-  const [deleteRemoteBranchTarget, setDeleteRemoteBranchTarget] = useState<string | null>(null);
-  const [deleteTagTarget, setDeleteTagTarget] = useState<string | null>(null);
-  const [deleteTagRemote, setDeleteTagRemote] = useState(false);
-  const [checkoutTarget, setCheckoutTarget] = useState<{ refs: import("../../../shared/git-types").RefInfo[]; hash: string; subject: string } | null>(null);
-  const [mergeTarget, setMergeTarget] = useState<string | null>(null);
-  const [rebaseTarget, setRebaseTarget] = useState<{ onto: string; interactive?: boolean } | null>(null);
-  const [squashTarget, setSquashTarget] = useState<{ hash: string; subject: string } | null>(null);
-  const [compareTarget, setCompareTarget] = useState<{ commit1: CommitInfo; commit2: CommitInfo } | null>(null);
-  const [aiReviewHash, setAiReviewHash] = useState<string | null>(null);
-  const [archiveTarget, setArchiveTarget] = useState<{ ref: string; label: string } | null>(null);
-  const [patchTarget, setPatchTarget] = useState<{ hashes: string[]; subjects: string[] } | null>(null);
-  const [notesTarget, setNotesTarget] = useState<{ hash: string; subject: string } | null>(null);
+  const dialogs = useGraphDialogs();
+  const {
+    cherryPickTarget, setCherryPickTarget,
+    revertTarget, setRevertTarget,
+    searchDialogOpen, setSearchDialogOpen,
+    createBranchFrom, setCreateBranchFrom,
+    resetTarget, setResetTarget,
+    tagTarget, setTagTarget,
+    deleteBranchTarget, setDeleteBranchTarget,
+    deleteRemoteBranchTarget, setDeleteRemoteBranchTarget,
+    deleteTagTarget, setDeleteTagTarget,
+    deleteTagRemote, setDeleteTagRemote,
+    checkoutTarget, setCheckoutTarget,
+    mergeTarget, setMergeTarget,
+    rebaseTarget, setRebaseTarget,
+    squashTarget, setSquashTarget,
+    compareTarget, setCompareTarget,
+    aiReviewHash, setAiReviewHash,
+    archiveTarget, setArchiveTarget,
+    patchTarget, setPatchTarget,
+    notesTarget, setNotesTarget,
+  } = dialogs;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
@@ -248,7 +254,7 @@ export const CommitGraphPanel: React.FC = () => {
     if (checkableBranches.length > 0) {
       items.push({
         label: checkableBranches.length === 1
-          ? `Checkout "${checkableBranches[0].name}"`
+          ? `Checkout "${checkableBranches[0]!.name}"`
           : "Checkout...",
         onClick: () =>
           setCheckoutTarget({
@@ -557,6 +563,7 @@ export const CommitGraphPanel: React.FC = () => {
               <button
                 onClick={clearBranchVisibility}
                 title="Clear branch filter"
+                aria-label="Clear branch filter"
                 style={{
                   background: "none",
                   border: "none",
@@ -618,6 +625,7 @@ export const CommitGraphPanel: React.FC = () => {
                     alignItems: "center",
                   }}
                   title="Clear filter"
+                  aria-label="Clear filter"
                 >
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -778,17 +786,20 @@ export const CommitGraphPanel: React.FC = () => {
         <Virtuoso
           ref={virtuosoRef}
           totalCount={filteredRows.length}
-          itemContent={(index) => (
+          itemContent={(index) => {
+            const row = filteredRows[index]!;
+            return (
             <GraphRowItem
-              row={filteredRows[index]}
+              row={row}
               graphWidth={maxGraphWidth}
-              selected={selectedCommit?.hash === filteredRows[index].commit.hash}
-              isHead={filteredRows[index].commit.hash === repo.headCommit}
-              onClick={() => selectCommit(filteredRows[index].commit.hash)}
-              onDoubleClick={() => openDialogWindow({ dialog: "CommitInfoWindow", data: { commitHash: filteredRows[index].commit.hash } })}
-              onContextMenu={(e) => handleContextMenu(e, filteredRows[index])}
+              selected={selectedCommit?.hash === row.commit.hash}
+              isHead={row.commit.hash === repo.headCommit}
+              onClick={() => selectCommit(row.commit.hash)}
+              onDoubleClick={() => openDialogWindow({ dialog: "CommitInfoWindow", data: { commitHash: row.commit.hash } })}
+              onContextMenu={(e) => handleContextMenu(e, row)}
             />
-          )}
+            );
+          }}
           endReached={!searchQuery ? handleEndReached : undefined}
           style={{ height: "100%" }}
           fixedItemHeight={ROW_HEIGHT}
@@ -1016,7 +1027,7 @@ const GraphRowItem: React.FC<{
     for (const edge of row.edges) {
       const fromX = edge.fromLane * LANE_WIDTH + LANE_WIDTH / 2;
       const toX = edge.toLane * LANE_WIDTH + LANE_WIDTH / 2;
-      ctx.strokeStyle = LANE_PALETTE[edge.color % LANE_PALETTE.length];
+      ctx.strokeStyle = LANE_PALETTE[edge.color % LANE_PALETTE.length] as string;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
 
@@ -1047,7 +1058,7 @@ const GraphRowItem: React.FC<{
     const dotX = row.laneIndex * LANE_WIDTH + LANE_WIDTH / 2;
     const colorIdx =
       row.edges.find((e) => e.fromLane === row.laneIndex)?.color ?? 0;
-    const color = LANE_PALETTE[colorIdx % LANE_PALETTE.length];
+    const color = LANE_PALETTE[colorIdx % LANE_PALETTE.length] as string;
     const radius = isHead ? DOT_RADIUS + 1.5 : DOT_RADIUS;
 
     // Glow

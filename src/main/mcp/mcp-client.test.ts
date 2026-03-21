@@ -192,7 +192,7 @@ describe("McpAiClient", () => {
     const result = await client.suggestConflictResolution("ours", "theirs", "base", "file.ts");
     expect(result).toBe("merged content");
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
     expect(body.messages[0].content).toContain("file.ts");
     expect(body.messages[0].content).toContain("OURS");
     expect(body.messages[0].content).toContain("THEIRS");
@@ -211,7 +211,7 @@ describe("McpAiClient", () => {
     ]);
     expect(result).toBe("review text");
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
     expect(body.messages[0].content).toContain("abc123");
   });
 });

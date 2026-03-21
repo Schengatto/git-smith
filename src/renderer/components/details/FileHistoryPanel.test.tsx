@@ -189,7 +189,7 @@ describe("FileHistoryPanel", () => {
     });
 
     const navButtons = screen.getAllByTitle("Show in graph");
-    fireEvent.click(navButtons[0]);
+    fireEvent.click(navButtons[0]!);
 
     expect(selectCommitMock).toHaveBeenCalledWith("aaa111full");
     expect(defaultProps.onClose).toHaveBeenCalled();

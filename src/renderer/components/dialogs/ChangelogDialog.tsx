@@ -33,7 +33,7 @@ export const ChangelogDialog: React.FC<Props> = ({
       .getTagsBefore(commitHash)
       .then((result) => {
         setTags(result);
-        if (result.length > 0) setSelectedBase(result[0]);
+        if (result.length > 0) setSelectedBase(result[0]!);
         else setSelectedBase("__custom__");
       })
       .catch(() => {

@@ -91,11 +91,11 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const flatItems = useMemo((): FlatItem[] => {
     const items: FlatItem[] = [];
     for (let si = 0; si < sections.length; si++) {
-      const s = sections[si];
-      const ln = lineNumbers[si];
+      const s = sections[si]!;
+      const ln = lineNumbers[si]!;
       if (s.type === "common") {
         for (let i = 0; i < (s.common || []).length; i++) {
-          items.push({ kind: "common", text: (s.common || [])[i], leftLn: ln.leftStart + i, centerLn: ln.centerStart + i, rightLn: ln.rightStart + i });
+          items.push({ kind: "common", text: (s.common || [])[i]!, leftLn: ln.leftStart + i, centerLn: ln.centerStart + i, rightLn: ln.rightStart + i });
         }
       } else {
         items.push({ kind: "conflict", sectionIdx: si });
@@ -108,7 +108,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
   const flatIndexToConflictId = useMemo(() => {
     const map = new Map<number, number>();
     flatItems.forEach((item, idx) => {
-      if (item.kind === "conflict") map.set(idx, sections[item.sectionIdx].id);
+      if (item.kind === "conflict") map.set(idx, sections[item.sectionIdx]!.id);
     });
     return map;
   }, [flatItems, sections]);
@@ -141,7 +141,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       setAiConfigured(!!aiSettings.aiProvider && aiSettings.aiProvider !== "none" && !!aiSettings.aiApiKey);
     }).catch(() => {});
     window.electronAPI.conflict.list()
-      .then((cf) => { setFiles(cf); if (cf.length > 0) setSelectedFile(cf[0].path); })
+      .then((cf) => { setFiles(cf); if (cf.length > 0) setSelectedFile(cf[0]!.path); })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   }, [open]);
@@ -169,6 +169,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
+  // Reload file content when selected file or editor mode changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFile, useInternalEditor]);
 
@@ -215,7 +216,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
       await window.electronAPI.conflict.resolve(selectedFile);
       setResolvedFiles(prev => new Set([...prev, selectedFile]));
       const remaining = files.filter(f => f.path !== selectedFile && !resolvedFiles.has(f.path));
-      if (remaining.length > 0) setSelectedFile(remaining[0].path);
+      if (remaining.length > 0) setSelectedFile(remaining[0]!.path);
       else { setSelectedFile(null); setContent(null); setSections([]); }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setSaving(false); }
@@ -240,7 +241,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
         await window.electronAPI.conflict.resolve(target);
         setResolvedFiles(prev => new Set([...prev, target]));
         const remaining = files.filter(f => f.path !== target && !resolvedFiles.has(f.path));
-        if (remaining.length > 0) setSelectedFile(remaining[0].path);
+        if (remaining.length > 0) setSelectedFile(remaining[0]!.path);
         else { setSelectedFile(null); setContent(null); setSections([]); }
       }
     } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); }
@@ -336,15 +337,14 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
         const nextFirstLines = nextCommon ? (nextCommon.common || []).slice(0, 3) : [];
         const resolved: string[] = [];
         while (ai < aiLines.length) {
-          if (nextFirstLines.length > 0 && aiLines[ai] === nextFirstLines[0]) {
-            // Verify it's really the start of the next common section
+          if (nextFirstLines.length > 0 && aiLines[ai] === nextFirstLines[0]!) {
             let match = true;
             for (let m = 1; m < nextFirstLines.length && ai + m < aiLines.length; m++) {
               if (aiLines[ai + m] !== nextFirstLines[m]) { match = false; break; }
             }
             if (match) break;
           }
-          resolved.push(aiLines[ai]);
+          resolved.push(aiLines[ai]!);
           ai++;
         }
         return { ...s, resolution: "custom" as const, resolvedLines: resolved };
@@ -367,7 +367,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     // Use the first visible conflict ref to determine current position
     let currentIdx = -1;
     for (let i = 0; i < unresolved.length; i++) {
-      const el = conflictRefs.current.get(unresolved[i].id);
+      const el = conflictRefs.current.get(unresolved[i]!.id);
       if (el) {
         const rect = el.getBoundingClientRect();
         if (rect.top >= 0 && rect.top < window.innerHeight) { currentIdx = i; break; }
@@ -376,7 +376,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
     const targetIdx = direction === "next"
       ? (currentIdx < unresolved.length - 1 ? currentIdx + 1 : 0)
       : (currentIdx > 0 ? currentIdx - 1 : unresolved.length - 1);
-    const flatIdx = findFlatIndexForSection(unresolved[targetIdx].id);
+    const flatIdx = findFlatIndexForSection(unresolved[targetIdx]!.id);
     if (flatIdx >= 0) scrollContainerRef.current.scrollToIndex({ index: flatIdx, align: "center", behavior: "smooth" });
   }, [conflictSections, findFlatIndexForSection]);
 
@@ -541,7 +541,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                     overscan={200}
                     rangeChanged={handleVisibleRangeChanged}
                     itemContent={(index) => {
-                      const item = flatItems[index];
+                      const item = flatItems[index]!;
                       if (item.kind === "common") {
                         return (
                           <div style={{ display: "flex" }}>
@@ -558,8 +558,8 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                         );
                       }
                       // ── Conflict section (rendered as single variable-height item) ──
-                      const section = sections[item.sectionIdx];
-                      const ln = lineNumbers[item.sectionIdx];
+                      const section = sections[item.sectionIdx]!;
+                      const ln = lineNumbers[item.sectionIdx]!;
                       const isResolved = section.resolution !== "unresolved";
                       const isEditing = editingConflictId === section.id;
                       return (
@@ -570,7 +570,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                           {/* Left: ours */}
                           <div style={{ flex: 1, borderRight: "1px solid var(--border-subtle)", background: isResolved ? "var(--green)06" : "var(--accent)06" }}>
                             {(section.ours || []).map((line, i) => (
-                              <LineRow key={i} lineNum={ln.leftStart + i} text={line} bg={isResolved ? "var(--green)10" : "var(--accent)12"} />
+                              <LineRow key={`ours-${ln.leftStart + i}`} lineNum={ln.leftStart + i} text={line} bg={isResolved ? "var(--green)10" : "var(--accent)12"} />
                             ))}
                             {(section.ours || []).length === 0 && <EmptyLine />}
                           </div>
@@ -596,7 +596,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                   </div>
                                 </div>
                                 {(section.resolvedLines || []).map((line, i) => (
-                                  <LineRow key={i} lineNum={ln.centerStart + i} text={line} bg="var(--green)08" />
+                                  <LineRow key={`resolved-${ln.centerStart + i}`} lineNum={ln.centerStart + i} text={line} bg="var(--green)08" />
                                 ))}
                                 {(section.resolvedLines || []).length === 0 && <EmptyLine label="(empty — both sides removed)" />}
                               </div>
@@ -623,7 +623,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                     <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4, opacity: 0.7 }}>(ours)</span>
                                   </div>
                                   {(section.ours || []).map((line, i) => (
-                                    <LineRow key={i} text={line} bg="var(--accent)12" />
+                                    <LineRow key={`pick-ours-${i}`} text={line} bg="var(--accent)12" />
                                   ))}
                                   {(section.ours || []).length === 0 && <EmptyLine />}
                                 </div>
@@ -633,7 +633,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                                     <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4, opacity: 0.7 }}>(theirs)</span>
                                   </div>
                                   {(section.theirs || []).map((line, i) => (
-                                    <LineRow key={i} text={line} bg="var(--mauve)12" />
+                                    <LineRow key={`pick-theirs-${i}`} text={line} bg="var(--mauve)12" />
                                   ))}
                                   {(section.theirs || []).length === 0 && <EmptyLine />}
                                 </div>
@@ -643,7 +643,7 @@ export const MergeConflictDialog: React.FC<Props> = ({ open, onClose, onResolved
                           {/* Right: theirs */}
                           <div style={{ flex: 1, borderLeft: "1px solid var(--border-subtle)", background: isResolved ? "var(--green)06" : "var(--mauve)06" }}>
                             {(section.theirs || []).map((line, i) => (
-                              <LineRow key={i} lineNum={ln.rightStart + i} text={line} bg={isResolved ? "var(--green)10" : "var(--mauve)12"} />
+                              <LineRow key={`theirs-${ln.rightStart + i}`} lineNum={ln.rightStart + i} text={line} bg={isResolved ? "var(--green)10" : "var(--mauve)12"} />
                             ))}
                             {(section.theirs || []).length === 0 && <EmptyLine />}
                           </div>
@@ -858,7 +858,7 @@ const AiSuggestionOverlay: React.FC<{
           </div>
         )}
         {diffLines ? diffLines.map((d, i) => (
-          <div key={i} style={{
+          <div key={`diff-${i}`} style={{
             padding: "0 12px 0 8px", minHeight: 20, display: "flex",
             background: d.type === "added" ? "rgba(166,227,161,0.1)" : d.type === "removed" ? "rgba(243,139,168,0.1)" : "transparent",
           }}>
@@ -869,7 +869,7 @@ const AiSuggestionOverlay: React.FC<{
             </span>
           </div>
         )) : suggestionLines?.map((line, i) => (
-          <div key={i} style={{ padding: "0 12px 0 8px", minHeight: 20, display: "flex" }}>
+          <div key={`suggest-${i}`} style={{ padding: "0 12px 0 8px", minHeight: 20, display: "flex" }}>
             <span style={{ width: 40, flexShrink: 0, textAlign: "right", paddingRight: 8, color: "var(--text-muted)", fontSize: 11, userSelect: "none" }}>{i + 1}</span>
             <span style={{ color: "var(--text-primary)" }}>{line}</span>
           </div>
@@ -918,21 +918,21 @@ function parseMergeSections(content: string): MergeSection[] {
   const flush = () => { if (buf.length > 0) { sections.push({ type: "common", common: [...buf], resolution: null }); buf = []; } };
   let i = 0;
   while (i < lines.length) {
-    if (lines[i].startsWith("<<<<<<<")) {
+    if (lines[i]!.startsWith("<<<<<<<")) {
       flush();
       const ours: string[] = [], theirs: string[] = [];
       let phase: "ours" | "base" | "theirs" = "ours";
       i++;
       while (i < lines.length) {
-        if (lines[i].startsWith("|||||||")) { phase = "base"; i++; continue; }
-        if (lines[i].startsWith("=======")) { phase = "theirs"; i++; continue; }
-        if (lines[i].startsWith(">>>>>>>")) { i++; break; }
-        if (phase === "ours") ours.push(lines[i]);
-        else if (phase === "theirs") theirs.push(lines[i]);
+        if (lines[i]!.startsWith("|||||||")) { phase = "base"; i++; continue; }
+        if (lines[i]!.startsWith("=======")) { phase = "theirs"; i++; continue; }
+        if (lines[i]!.startsWith(">>>>>>>")) { i++; break; }
+        if (phase === "ours") ours.push(lines[i]!);
+        else if (phase === "theirs") theirs.push(lines[i]!);
         i++;
       }
       sections.push({ type: "conflict", ours, theirs, resolution: null });
-    } else { buf.push(lines[i]); i++; }
+    } else { buf.push(lines[i]!); i++; }
   }
   flush();
   return sections;
@@ -975,7 +975,7 @@ function extractAiResolutions(originalSections: ParsedSection[], aiText: string)
   let aiIdx = 0;
 
   for (let sIdx = 0; sIdx < originalSections.length; sIdx++) {
-    const section = originalSections[sIdx];
+    const section = originalSections[sIdx]!;
     if (section.type === "common") {
       const commonLines = section.common || [];
       // Match common lines — verify each line matches before advancing
@@ -1013,13 +1013,12 @@ function extractAiResolutions(originalSections: ParsedSection[], aiText: string)
             }
           }
           if (isMatch) break;
-          resolved.push(aiLines[aiIdx]);
+          resolved.push(aiLines[aiIdx]!);
           aiIdx++;
         }
       } else {
-        // Last conflict: collect all remaining lines
         while (aiIdx < aiLines.length) {
-          resolved.push(aiLines[aiIdx]);
+          resolved.push(aiLines[aiIdx]!);
           aiIdx++;
         }
       }
@@ -1032,8 +1031,8 @@ function extractAiResolutions(originalSections: ParsedSection[], aiText: string)
 /** Find the first N lines of the next common section after sIdx */
 function findNextCommonLines(sections: ParsedSection[], afterIdx: number): string[] {
   for (let i = afterIdx + 1; i < sections.length; i++) {
-    if (sections[i].type === "common" && (sections[i].common || []).length > 0) {
-      return (sections[i].common || []).slice(0, 3);
+    if (sections[i]!.type === "common" && (sections[i]!.common || []).length > 0) {
+      return (sections[i]!.common || []).slice(0, 3);
     }
   }
   return [];
@@ -1080,7 +1079,7 @@ function resolveAllConflicts(text: string, pick: "ours" | "theirs"): string {
   const conflicts = parseConflictPositions(text);
   let result = text;
   for (let i = conflicts.length - 1; i >= 0; i--) {
-    const c = conflicts[i];
+    const c = conflicts[i]!;
     let replacement = pick === "ours" ? c.oursContent : c.theirsContent;
     if (replacement && c.endOffset < text.length) replacement += "\n";
     result = result.substring(0, c.startOffset) + replacement + result.substring(c.endOffset);
@@ -1102,18 +1101,18 @@ function computeLineDiff(oldText: string, newText: string): DiffLine[] {
   const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      dp[i][j] = oldLines[i - 1] === newLines[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      dp[i]![j] = oldLines[i - 1] === newLines[j - 1] ? dp[i - 1]![j - 1]! + 1 : Math.max(dp[i - 1]![j]!, dp[i]![j - 1]!);
     }
   }
   const result: DiffLine[] = [];
   let i = m, j = n;
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-      result.push({ type: "same", line: oldLines[i - 1] }); i--; j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      result.push({ type: "added", line: newLines[j - 1] }); j--;
+      result.push({ type: "same", line: oldLines[i - 1]! }); i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i]![j - 1]! >= dp[i - 1]![j]!)) {
+      result.push({ type: "added", line: newLines[j - 1]! }); j--;
     } else {
-      result.push({ type: "removed", line: oldLines[i - 1] }); i--;
+      result.push({ type: "removed", line: oldLines[i - 1]! }); i--;
     }
   }
   return result.reverse();

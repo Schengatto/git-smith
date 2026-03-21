@@ -54,10 +54,11 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
         setAllBranches(branches);
         if (!preselectedBranch && branches.length > 0) {
           const nonCurrent = branches.find((b) => !b.current);
-          setSelectedBranch(nonCurrent?.name || branches[0].name);
+          setSelectedBranch(nonCurrent?.name || branches[0]!.name);
         }
       });
     }
+    // Only run when dialog opens/closes; loads branch list on open
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

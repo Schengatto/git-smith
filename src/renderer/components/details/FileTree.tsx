@@ -27,7 +27,7 @@ function buildTree(files: CommitFileInfo[]): TreeNode[] {
     let current = root;
 
     for (let i = 0; i < parts.length; i++) {
-      const name = parts[i];
+      const name = parts[i]!;
       const isLast = i === parts.length - 1;
       const childPath = parts.slice(0, i + 1).join("/");
 
@@ -59,15 +59,15 @@ function buildTree(files: CommitFileInfo[]): TreeNode[] {
   // Collapse single-child directories
   const collapse = (nodes: TreeNode[]): TreeNode[] => {
     return nodes.map((node) => {
-      if (node.isDir && node.children.length === 1 && node.children[0].isDir) {
-        const child = node.children[0];
+      if (node.isDir && node.children.length === 1 && node.children[0]!.isDir) {
+        const child = node.children[0]!;
         return {
           ...child,
           name: `${node.name}/${child.name}`,
           children: collapse(child.children),
-        };
+        } as TreeNode;
       }
-      return { ...node, children: collapse(node.children) };
+      return { ...node, children: collapse(node.children) } as TreeNode;
     });
   };
 

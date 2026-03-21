@@ -576,14 +576,14 @@ export class GitService {
       const parts = result.trim().split("\0");
       const detailEmail = (parts[5] || "").trim().toLowerCase();
       return {
-        hash: parts[0],
-        abbreviatedHash: parts[1],
-        subject: parts[2],
-        body: parts[3],
-        authorName: parts[4],
-        authorEmail: parts[5],
-        authorDate: parts[6],
-        committerDate: parts[7],
+        hash: parts[0]!,
+        abbreviatedHash: parts[1]!,
+        subject: parts[2]!,
+        body: parts[3]!,
+        authorName: parts[4]!,
+        authorEmail: parts[5]!,
+        authorDate: parts[6]!,
+        committerDate: parts[7]!,
         parentHashes: parts[8] ? parts[8].split(" ") : [],
         refs: parseRefs(parts[9] || ""),
         gravatarHash: detailEmail ? crypto.createHash("md5").update(detailEmail).digest("hex") : undefined,
@@ -683,8 +683,8 @@ export class GitService {
         // Parse ahead/behind from label like "[origin/main: ahead 2, behind 1]"
         const aheadMatch = info.label?.match(/ahead (\d+)/);
         const behindMatch = info.label?.match(/behind (\d+)/);
-        if (aheadMatch) ahead = parseInt(aheadMatch[1]);
-        if (behindMatch) behind = parseInt(behindMatch[1]);
+        if (aheadMatch) ahead = parseInt(aheadMatch[1]!);
+        if (behindMatch) behind = parseInt(behindMatch[1]!);
 
         return {
           name,
@@ -1284,6 +1284,25 @@ export class GitService {
     const { spawn } = await import("child_process");
     const os = await import("os");
 
+    if (!toolPath || !path.isAbsolute(toolPath)) {
+      throw new Error("Merge tool path must be an absolute path to an executable");
+    }
+    try {
+      fs.accessSync(toolPath, fs.constants.X_OK);
+    } catch {
+      throw new Error(`Merge tool not found or not executable: ${toolPath}`);
+    }
+
+    const allowedPlaceholders = /^[\w\s"'\-/\\.=:$]*$/;
+    const strippedArgs = toolArgs
+      .replace(/\$BASE/g, "")
+      .replace(/\$LOCAL/g, "")
+      .replace(/\$REMOTE/g, "")
+      .replace(/\$MERGED/g, "");
+    if (!allowedPlaceholders.test(strippedArgs)) {
+      throw new Error("Merge tool arguments contain invalid characters");
+    }
+
     const repoPath = this.repoPath!;
     const content = await this.getConflictFileContent(filePath);
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "git-expansion-merge-"));
@@ -1620,8 +1639,8 @@ export class GitService {
       const statusMap = new Map<string, string>();
       for (const line of statusResult.trim().split("\n").filter(Boolean)) {
         const parts = line.split("\t");
-        const statusChar = parts[0][0];
-        const filePath = parts[parts.length - 1];
+        const statusChar = parts[0]![0]!;
+        const filePath = parts[parts.length - 1]!;
         statusMap.set(filePath, statusChar);
       }
 
@@ -1631,8 +1650,8 @@ export class GitService {
         .filter(Boolean)
         .map((line) => {
           const parts = line.split("\t");
-          const additions = parseInt(parts[0]) || 0;
-          const deletions = parseInt(parts[1]) || 0;
+          const additions = parseInt(parts[0]!) || 0;
+          const deletions = parseInt(parts[1]!) || 0;
           const filePath = parts[2] || "";
           const s = statusMap.get(filePath) || "M";
           const statusLookup: Record<string, CommitFileInfo["status"]> = {
@@ -1672,7 +1691,7 @@ export class GitService {
         const [fullName, dateStr, hash, subject, author] = line.split("\t");
         if (!fullName || fullName.endsWith("/HEAD")) continue;
 
-        const commitDate = new Date(dateStr);
+        const commitDate = new Date(dateStr!);
         if (commitDate >= cutoff) continue;
 
         // Split "origin/branch-name" into remote and branch
@@ -1684,8 +1703,8 @@ export class GitService {
           name: fullName,
           remote,
           branchName,
-          lastCommitHash: hash,
-          lastCommitDate: dateStr,
+          lastCommitHash: hash!,
+          lastCommitDate: dateStr!,
           lastCommitSubject: subject || "",
           lastCommitAuthor: author || "",
         });
@@ -1708,14 +1727,14 @@ export class GitService {
       return raw.trim().split("\n").map((line) => {
         const parts = line.split("\x00");
         return {
-          hash: parts[0],
-          abbreviatedHash: parts[1],
-          subject: parts[2],
-          body: parts[3],
-          authorName: parts[4],
-          authorEmail: parts[5],
-          authorDate: parts[6],
-          committerDate: parts[7],
+          hash: parts[0]!,
+          abbreviatedHash: parts[1]!,
+          subject: parts[2]!,
+          body: parts[3]!,
+          authorName: parts[4]!,
+          authorEmail: parts[5]!,
+          authorDate: parts[6]!,
+          committerDate: parts[7]!,
           parentHashes: parts[8] ? parts[8].split(" ") : [],
           refs: parseRefs(parts[9] || ""),
         };
@@ -1762,8 +1781,8 @@ export class GitService {
       const statusMap = new Map<string, string>();
       for (const line of nameStatusResult.trim().split("\n").filter(Boolean)) {
         const parts = line.split("\t");
-        const statusChar = parts[0][0];
-        const filePath = parts[parts.length - 1];
+        const statusChar = parts[0]![0]!;
+        const filePath = parts[parts.length - 1]!;
         statusMap.set(filePath, statusChar);
       }
 
@@ -1773,8 +1792,8 @@ export class GitService {
         .filter(Boolean)
         .map((line) => {
           const parts = line.split("\t");
-          const additions = parseInt(parts[0]) || 0;
-          const deletions = parseInt(parts[1]) || 0;
+          const additions = parseInt(parts[0]!) || 0;
+          const deletions = parseInt(parts[1]!) || 0;
           const filePath = parts[2] || "";
           const s = statusMap.get(filePath) || "M";
           const statusLookup: Record<string, CommitFileInfo["status"]> = {
@@ -1822,7 +1841,7 @@ export class GitService {
         .split("\n")
         .map((line) => {
           const [hash, abbreviatedHash, selector, action, subject, date] = line.split(SEP);
-          return { hash, abbreviatedHash, selector, action, subject, date };
+          return { hash: hash!, abbreviatedHash: abbreviatedHash!, selector: selector!, action: action!, subject: subject!, date: date! };
         });
     });
   }
@@ -1881,11 +1900,11 @@ export class GitService {
         let added = 0;
         let removed = 0;
         for (let i = 4; i < lines.length; i++) {
-          const line = lines[i].trim();
+          const line = lines[i]!.trim();
           const insMatch = line.match(/(\d+)\s+insertion/);
           const delMatch = line.match(/(\d+)\s+deletion/);
-          if (insMatch) added += parseInt(insMatch[1]);
-          if (delMatch) removed += parseInt(delMatch[1]);
+          if (insMatch) added += parseInt(insMatch[1]!);
+          if (delMatch) removed += parseInt(delMatch[1]!);
         }
 
         const entry = authorMap.get(authorEmail);
@@ -2019,13 +2038,13 @@ export class GitService {
         let commitAdded = 0;
         let commitRemoved = 0;
         for (let i = 3; i < lines.length; i++) {
-          const line = lines[i].trim();
+          const line = lines[i]!.trim();
           if (!line) continue;
           const parts = line.split("\t");
           if (parts.length < 3) continue;
-          const added = parseInt(parts[0]) || 0;
-          const removed = parseInt(parts[1]) || 0;
-          const filePath = parts[2].trim();
+          const added = parseInt(parts[0]!) || 0;
+          const removed = parseInt(parts[1]!) || 0;
+          const filePath = parts[2]!.trim();
           if (!filePath) continue;
           commitAdded += added;
           commitRemoved += removed;
@@ -2148,7 +2167,7 @@ export class GitService {
       .map((record) => {
         const fields = record.split(FIELD_SEP);
         return {
-          hash: fields[0].trim(),
+          hash: fields[0]!.trim(),
           abbreviatedHash: fields[1]?.trim() || "",
           subject: fields[2]?.trim() || "",
           description: fields[3]?.trim() || "",
@@ -2235,8 +2254,8 @@ export class GitService {
       for (const line of log.split("\n")) {
         const goodMatch = line.match(/# good: \[([0-9a-f]+)\]/);
         const badMatch = line.match(/# bad: \[([0-9a-f]+)\]/);
-        if (goodMatch) good.push(goodMatch[1]);
-        if (badMatch) bad.push(badMatch[1]);
+        if (goodMatch) good.push(goodMatch[1]!);
+        if (badMatch) bad.push(badMatch[1]!);
       }
       const headRaw = await git.raw(["rev-parse", "HEAD"]).catch(() => "");
       return { active: true, good, bad, current: headRaw.trim() || undefined };
@@ -2263,7 +2282,7 @@ export class GitService {
         }
       }
       if (current) worktrees.push(current);
-      if (worktrees.length > 0) worktrees[0].isMain = true;
+      if (worktrees.length > 0) worktrees[0]!.isMain = true;
       return worktrees;
     });
   }
@@ -2370,9 +2389,9 @@ export class GitService {
       const branchMap: Record<string, string> = {};
       for (const line of configResult.split("\n")) {
         const urlMatch = line.match(/^submodule\.(.+?)\.url=(.+)$/);
-        if (urlMatch) urlMap[urlMatch[1]] = urlMatch[2];
+        if (urlMatch) urlMap[urlMatch[1]!] = urlMatch[2]!;
         const branchMatch = line.match(/^submodule\.(.+?)\.branch=(.+)$/);
-        if (branchMatch) branchMap[branchMatch[1]] = branchMatch[2];
+        if (branchMatch) branchMap[branchMatch[1]!] = branchMatch[2]!;
       }
 
       return statusResult
@@ -2383,7 +2402,7 @@ export class GitService {
           const prefix = line.charAt(0);
           const match = line.trim().match(/^[+ -U]?([0-9a-f]+)\s+(\S+)(?:\s+\((.+)\))?/);
           if (!match) return null;
-          const subPath = match[2];
+          const subPath = match[2]!;
           let statusLabel = "up-to-date";
           if (prefix === "+") statusLabel = "modified";
           else if (prefix === "-") statusLabel = "uninitialized";
@@ -2392,7 +2411,7 @@ export class GitService {
             name: subPath,
             path: subPath,
             url: urlMap[subPath] || "",
-            hash: match[1],
+            hash: match[1]!,
             branch: branchMap[subPath] || "",
             status: statusLabel,
           };
@@ -2431,7 +2450,7 @@ export class GitService {
         const trackResult = await git.raw(["lfs", "track"]);
         for (const line of trackResult.split("\n")) {
           const m = line.match(/^\s+(\S+)\s+\((.+)\)/);
-          if (m) tracked.push({ pattern: m[1], filter: m[2] });
+          if (m) tracked.push({ pattern: m[1]!, filter: m[2]! });
         }
       } catch { /* no tracked patterns */ }
 
@@ -2441,7 +2460,7 @@ export class GitService {
         const lsResult = await git.raw(["lfs", "ls-files", "--long"]);
         for (const line of lsResult.split("\n").filter(Boolean)) {
           const m = line.match(/^([0-9a-f]+)\s+[-*]\s+(.+)/);
-          if (m) files.push({ path: m[2].trim(), lfsOid: m[1], size: "" });
+          if (m) files.push({ path: m[2]!.trim(), lfsOid: m[1]!, size: "" });
         }
       } catch { /* no lfs files */ }
 
@@ -2456,7 +2475,7 @@ export class GitService {
       const tracked: { pattern: string; filter: string }[] = [];
       for (const line of result.split("\n")) {
         const m = line.match(/^\s+(\S+)\s+\((.+)\)/);
-        if (m) tracked.push({ pattern: m[1], filter: m[2] });
+        if (m) tracked.push({ pattern: m[1]!, filter: m[2]! });
       }
       return tracked;
     });
@@ -2485,11 +2504,11 @@ export class GitService {
       for (const line of result.split("\n")) {
         if (line.includes("Endpoint")) {
           const m = line.match(/Endpoint[^=]+=\s*(.+)/);
-          if (m) endpoint = m[1].trim();
+          if (m) endpoint = m[1]!.trim();
         }
         if (line.includes("LocalMediaDir")) {
           const m = line.match(/LocalMediaDir[^=]+=\s*(.+)/);
-          if (m) storagePath = m[1].trim();
+          if (m) storagePath = m[1]!.trim();
         }
       }
       return { storagePath, endpoint };
@@ -2508,18 +2527,18 @@ export class GitService {
 
       // GitHub
       let m = url.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
-      if (m) return { provider: "github", owner: m[1], repo: m[2], baseUrl: "https://github.com" };
+      if (m) return { provider: "github", owner: m[1]!, repo: m[2]!, baseUrl: "https://github.com" };
 
       // GitLab
       m = url.match(/gitlab\.com[:/]([^/]+)\/([^/.]+)/);
-      if (m) return { provider: "gitlab", owner: m[1], repo: m[2], baseUrl: "https://gitlab.com" };
+      if (m) return { provider: "gitlab", owner: m[1]!, repo: m[2]!, baseUrl: "https://gitlab.com" };
 
       // Self-hosted detection (contains gitlab or github in hostname)
       m = url.match(/(?:https?:\/\/|git@)([^:/]+)[:/]([^/]+)\/([^/.]+)/);
       if (m) {
-        const host = m[1];
-        if (host.includes("gitlab")) return { provider: "gitlab", owner: m[2], repo: m[3], baseUrl: `https://${host}` };
-        if (host.includes("github")) return { provider: "github", owner: m[2], repo: m[3], baseUrl: `https://${host}` };
+        const host = m[1]!;
+        if (host.includes("gitlab")) return { provider: "gitlab", owner: m[2]!, repo: m[3]!, baseUrl: `https://${host}` };
+        if (host.includes("github")) return { provider: "github", owner: m[2]!, repo: m[3]!, baseUrl: `https://${host}` };
       }
 
       return { provider: "unknown", owner: "", repo: "", baseUrl: "" };

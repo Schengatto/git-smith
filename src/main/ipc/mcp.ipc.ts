@@ -57,8 +57,8 @@ export function registerMcpHandlers() {
         commitHashes.map((h) => gitService.getCommitDetails(h))
       );
       // Get diff of all commits combined
-      const firstHash = commitHashes[commitHashes.length - 1];
-      const lastHash = commitHashes[0];
+      const firstHash = commitHashes[commitHashes.length - 1]!;
+      const lastHash = commitHashes[0]!;
       const diff =
         commitHashes.length === 1
           ? await gitService.getCommitDiff(firstHash)

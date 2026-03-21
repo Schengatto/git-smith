@@ -175,7 +175,7 @@ describe("getCodebaseStats", () => {
 
     const stats = await getCodebaseStats(mockGit);
 
-    expect(stats.byLanguage[0].language).toBe("Python");
-    expect(stats.byLanguage[1].language).toBe("TypeScript");
+    expect(stats.byLanguage[0]!.language).toBe("Python");
+    expect(stats.byLanguage[1]!.language).toBe("TypeScript");
   });
 });

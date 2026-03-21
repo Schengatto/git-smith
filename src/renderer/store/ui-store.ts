@@ -3,6 +3,14 @@ import { create } from "zustand";
 type Theme = "dark" | "light";
 type Panel = "sidebar" | "graph" | "details" | "commandLog";
 
+export interface ToastMessage {
+  id: number;
+  text: string;
+  type: "error" | "info";
+}
+
+let toastId = 0;
+
 interface UIState {
   theme: Theme;
   visiblePanels: Set<Panel>;
@@ -27,6 +35,10 @@ interface UIState {
   closeAboutDialog: () => void;
   openStaleBranchesDialog: () => void;
   closeStaleBranchesDialog: () => void;
+
+  toasts: ToastMessage[];
+  showToast: (text: string, type?: "error" | "info") => void;
+  dismissToast: (id: number) => void;
 }
 
 // Read persisted theme
@@ -90,4 +102,14 @@ export const useUIStore = create<UIState>((set, get) => ({
   closeAboutDialog: () => set({ aboutDialogOpen: false }),
   openStaleBranchesDialog: () => set({ staleBranchesDialogOpen: true }),
   closeStaleBranchesDialog: () => set({ staleBranchesDialogOpen: false }),
+
+  toasts: [],
+  showToast: (text, type = "error") => {
+    const id = ++toastId;
+    set((s) => ({ toasts: [...s.toasts, { id, text, type }] }));
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    }, 5000);
+  },
+  dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));

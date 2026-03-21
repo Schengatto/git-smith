@@ -57,15 +57,16 @@ export const CheckoutDialog: React.FC<Props> = ({
         setSelectedBranch(branchName!);
       } else if (localBranches.length > 0) {
         setBranchType("local");
-        setSelectedBranch(localBranches[0].name);
+        setSelectedBranch(localBranches[0]!.name);
       } else if (remoteBranches.length > 0) {
         setBranchType("remote");
-        setSelectedBranch(remoteBranches[0].name);
+        setSelectedBranch(remoteBranches[0]!.name);
       } else {
         setCheckoutDetached(true);
         setSelectedBranch("");
       }
     }
+  // Only run when dialog opens/closes; initializes branch selection on open
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -77,7 +78,7 @@ export const CheckoutDialog: React.FC<Props> = ({
     setCheckoutDetached(false);
     const list = type === "local" ? localBranches : remoteBranches;
     if (list.length > 0) {
-      setSelectedBranch(list[0].name);
+      setSelectedBranch(list[0]!.name);
     } else {
       setSelectedBranch("");
     }

@@ -42,7 +42,7 @@ export const SetUpstreamDialog: React.FC<Props> = ({
         return;
       }
       setRemotes(names);
-      setSelectedRemote(names.includes(suggestedRemote) ? suggestedRemote : names[0]);
+      setSelectedRemote(names.includes(suggestedRemote) ? suggestedRemote : names[0]!);
     }).catch(() => {
       setRemotesError("Failed to load remotes.");
       setRemotes([]);

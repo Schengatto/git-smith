@@ -23,8 +23,8 @@ describe("parseHunks", () => {
       "+++ b/file.txt",
     ]);
     expect(hunks).toHaveLength(1);
-    expect(hunks[0].header).toBe("@@ -1,3 +1,3 @@");
-    expect(hunks[0].lines).toEqual([" line1", "-old", "+new", " line3"]);
+    expect(hunks[0]!.header).toBe("@@ -1,3 +1,3 @@");
+    expect(hunks[0]!.lines).toEqual([" line1", "-old", "+new", " line3"]);
   });
 
   it("strips trailing empty strings from hunk lines (split artifact)", () => {
@@ -44,7 +44,7 @@ describe("parseHunks", () => {
     const { hunks } = parseHunks(diff);
     expect(hunks).toHaveLength(1);
     // The trailing "" should be stripped
-    expect(hunks[0].lines).toEqual([
+    expect(hunks[0]!.lines).toEqual([
       "-Hello from Branch B",
       "+Hello from Branch A",
       "\\ No newline at end of file",
@@ -227,7 +227,7 @@ describe("buildPatch", () => {
 
       const { header, hunks } = parseHunks(rawDiff);
       // Select only the - line (index 0) for reverse unstage
-      const patch = buildPatch(header, hunks[0], new Set([0]), true);
+      const patch = buildPatch(header, hunks[0]!, new Set([0]), true);
       // Must be @@ -1,2 +1,1 @@ — NOT @@ -1,3 +1,2 @@ (which was the bug)
       expect(patch).toMatch(/@@ -1,2 \+1,1 @@/);
       expect(patch).toContain("-Hello from Branch B");

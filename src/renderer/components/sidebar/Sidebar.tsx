@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
+import { useUIStore } from "../../store/ui-store";
 import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
 import {
   CreateBranchDialog,
@@ -99,6 +100,7 @@ type CtxMenu =
 export const Sidebar: React.FC = () => {
   const { repo } = useRepoStore();
   const { loadGraph } = useGraphStore();
+  const showToast = useUIStore((s) => s.showToast);
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [tags, setTags] = useState<TagInfo[]>([]);
   const [submodules, setSubmodules] = useState<SubmoduleInfo[]>([]);
@@ -115,6 +117,7 @@ export const Sidebar: React.FC = () => {
   const [deleteTagRemote, setDeleteTagRemote] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<CtxMenu>(null);
 
+  // Reload sidebar data when repo or branch changes; loadData is local and stable
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!repo) return;
@@ -134,7 +137,9 @@ export const Sidebar: React.FC = () => {
       setTags(tagList);
       setSubmodules(submoduleList);
       setStashes(stashList);
-    } catch {}
+    } catch (err: unknown) {
+      showToast(`Failed to load sidebar data: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const toggleSection = (section: keyof typeof expandedSections) => {

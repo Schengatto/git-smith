@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { IPC } from "../shared/ipc-channels";
+import type { AppSettings } from "../shared/settings-types";
 import type {
   RepoInfo,
   GitStatus,
@@ -290,9 +291,9 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.SUBMODULE.STATUS),
   },
   settings: {
-    get: (): Promise<Record<string, unknown>> =>
+    get: (): Promise<AppSettings> =>
       ipcRenderer.invoke(IPC.SETTINGS.GET),
-    update: (partial: Record<string, unknown>): Promise<Record<string, unknown>> =>
+    update: (partial: Partial<AppSettings>): Promise<AppSettings> =>
       ipcRenderer.invoke(IPC.SETTINGS.UPDATE, partial),
     getAutoFetch: (): Promise<number> =>
       ipcRenderer.invoke(IPC.SETTINGS.GET_AUTO_FETCH),
@@ -401,8 +402,8 @@ const electronAPI = {
     },
     menuOpenRepo: (callback: () => void) => {
       const handler = () => callback();
-      ipcRenderer.on("menu:open-repo", handler);
-      return () => ipcRenderer.removeListener("menu:open-repo", handler);
+      ipcRenderer.on(IPC.MENU.OPEN_REPO, handler);
+      return () => ipcRenderer.removeListener(IPC.MENU.OPEN_REPO, handler);
     },
     scanProgress: (
       callback: (progress: {

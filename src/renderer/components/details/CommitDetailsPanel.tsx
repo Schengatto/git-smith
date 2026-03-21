@@ -269,7 +269,7 @@ function buildSimpleTree(paths: string[]): SimpleTreeNode[] {
     let current = root;
 
     for (let i = 0; i < parts.length; i++) {
-      const name = parts[i];
+      const name = parts[i]!;
       const isLast = i === parts.length - 1;
       const childPath = parts.slice(0, i + 1).join("/");
 
@@ -294,15 +294,15 @@ function buildSimpleTree(paths: string[]): SimpleTreeNode[] {
   // Collapse single-child directories
   const collapse = (nodes: SimpleTreeNode[]): SimpleTreeNode[] => {
     return nodes.map((node) => {
-      if (node.isDir && node.children.length === 1 && node.children[0].isDir) {
-        const child = node.children[0];
+      if (node.isDir && node.children.length === 1 && node.children[0]!.isDir) {
+        const child = node.children[0]!;
         return {
           ...child,
           name: `${node.name}/${child.name}`,
           children: collapse(child.children),
-        };
+        } as SimpleTreeNode;
       }
-      return { ...node, children: collapse(node.children) };
+      return { ...node, children: collapse(node.children) } as SimpleTreeNode;
     });
   };
 

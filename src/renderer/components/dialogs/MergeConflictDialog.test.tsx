@@ -318,7 +318,7 @@ describe("MergeConflictDialog", () => {
 
     // Find the Edit button in the conflict action bar (exact match)
     const editBtns = screen.getAllByText("Edit");
-    fireEvent.click(editBtns[0]);
+    fireEvent.click(editBtns[0]!);
 
     await waitFor(() => {
       expect(screen.getByText("Custom edit")).toBeInTheDocument();
@@ -335,7 +335,7 @@ describe("MergeConflictDialog", () => {
     });
 
     const editBtns = screen.getAllByText("Edit");
-    fireEvent.click(editBtns[0]);
+    fireEvent.click(editBtns[0]!);
 
     await waitFor(() => {
       expect(screen.getByText("Done")).toBeInTheDocument();
@@ -358,36 +358,36 @@ describe("parseMergeSections", () => {
     const content = "before\n<<<<<<< HEAD\nours line\n=======\ntheirs line\n>>>>>>> branch\nafter";
     const sections = parseMergeSections(content);
     expect(sections).toHaveLength(3);
-    expect(sections[0].type).toBe("common");
-    expect(sections[0].common).toEqual(["before"]);
-    expect(sections[1].type).toBe("conflict");
-    expect(sections[1].ours).toEqual(["ours line"]);
-    expect(sections[1].theirs).toEqual(["theirs line"]);
-    expect(sections[2].type).toBe("common");
-    expect(sections[2].common).toEqual(["after"]);
+    expect(sections[0]!.type).toBe("common");
+    expect(sections[0]!.common).toEqual(["before"]);
+    expect(sections[1]!.type).toBe("conflict");
+    expect(sections[1]!.ours).toEqual(["ours line"]);
+    expect(sections[1]!.theirs).toEqual(["theirs line"]);
+    expect(sections[2]!.type).toBe("common");
+    expect(sections[2]!.common).toEqual(["after"]);
   });
 
   it("parses diff3 format with base section", () => {
     const content = "<<<<<<< HEAD\nours\n||||||| merged common ancestors\nbase\n=======\ntheirs\n>>>>>>> branch";
     const sections = parseMergeSections(content);
     expect(sections).toHaveLength(1);
-    expect(sections[0].ours).toEqual(["ours"]);
-    expect(sections[0].theirs).toEqual(["theirs"]);
+    expect(sections[0]!.ours).toEqual(["ours"]);
+    expect(sections[0]!.theirs).toEqual(["theirs"]);
   });
 
   it("parses multiple conflict sections", () => {
     const content = "<<<<<<< HEAD\nours1\n=======\ntheirs1\n>>>>>>> branch\nmiddle\n<<<<<<< HEAD\nours2\n=======\ntheirs2\n>>>>>>> branch";
     const sections = parseMergeSections(content);
     expect(sections).toHaveLength(3);
-    expect(sections[0].type).toBe("conflict");
-    expect(sections[1].type).toBe("common");
-    expect(sections[2].type).toBe("conflict");
+    expect(sections[0]!.type).toBe("conflict");
+    expect(sections[1]!.type).toBe("common");
+    expect(sections[2]!.type).toBe("conflict");
   });
 
   it("returns single common section for non-conflicting content", () => {
     const sections = parseMergeSections("no conflicts here");
     expect(sections).toHaveLength(1);
-    expect(sections[0].type).toBe("common");
+    expect(sections[0]!.type).toBe("common");
   });
 });
 

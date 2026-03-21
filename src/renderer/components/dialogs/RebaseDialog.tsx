@@ -91,6 +91,7 @@ export const RebaseDialog: React.FC<Props> = ({
         setRebaseInProgress(inProgress);
       });
     }
+    // Only run when dialog opens/closes; branch data loads on open
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -115,7 +116,7 @@ export const RebaseDialog: React.FC<Props> = ({
   const setAction = useCallback((index: number, action: RebaseAction) => {
     setEntries((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], action };
+      next[index] = { ...next[index]!, action };
       return next;
     });
   }, []);

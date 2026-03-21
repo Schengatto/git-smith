@@ -50,7 +50,7 @@ export function registerRepoHandlers() {
       title: "Open Git Repository",
     });
     if (result.canceled || result.filePaths.length === 0) return null;
-    const path = result.filePaths[0];
+    const path = result.filePaths[0]!;
     const info = await gitService.openRepo(path);
     addRecentRepo(path);
     setLastOpenedRepo(path);
@@ -66,7 +66,7 @@ export function registerRepoHandlers() {
       title: "Select folder for new repository",
     });
     if (result.canceled || result.filePaths.length === 0) return null;
-    const path = result.filePaths[0];
+    const path = result.filePaths[0]!;
     const info = await gitService.initRepo(path);
     addRecentRepo(path);
     setLastOpenedRepo(path);

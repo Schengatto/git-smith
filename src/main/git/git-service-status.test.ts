@@ -121,7 +121,7 @@ describe("GitService.getStatus", () => {
     expect(result.untracked).toEqual(["new.ts"]);
     expect(result.mergeInProgress).toBe(true);
     expect(result.conflicted).toHaveLength(1);
-    expect(result.conflicted[0].path).toBe("conflict.txt");
+    expect(result.conflicted[0]!.path).toBe("conflict.txt");
   });
 
   it("returns empty conflicted when merge in progress but no conflicted files", async () => {

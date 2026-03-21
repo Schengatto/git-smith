@@ -55,6 +55,7 @@ export const ModalDialog: React.FC<Props> = ({ open, title, onClose, children, w
           </span>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             style={{
               background: "none",
               border: "none",

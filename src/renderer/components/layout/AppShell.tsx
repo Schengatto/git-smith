@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useUIStore } from "../../store/ui-store";
+import { setAppLanguage } from "../../i18n";
 import {
   DockviewReact,
   DockviewReadyEvent,
@@ -78,6 +79,12 @@ export const AppShell: React.FC = () => {
     loadRecentRepos();
     setInitializing(false);
 
+    window.electronAPI.settings.get().then((s) => {
+      if (s.language && s.language !== "en") {
+        setAppLanguage(s.language);
+      }
+    });
+
     const unsub = window.electronAPI.on.commandLog((entry) => {
       addEntry(entry);
       useGitOperationStore.getState().addEntry(entry);
@@ -144,6 +151,7 @@ export const AppShell: React.FC = () => {
       window.removeEventListener("command-palette:open-reflog", handleOpenReflog);
       if (layoutSaveTimerRef.current) clearTimeout(layoutSaveTimerRef.current);
     };
+    // Mount-only: registers IPC listeners and global keyboard shortcuts
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -164,6 +172,7 @@ export const AppShell: React.FC = () => {
       savedLayoutRef.current = null;
       setLayoutLoaded(true);
     });
+    // Only re-run when the repo path changes, not on every repo object update
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.path]);
 

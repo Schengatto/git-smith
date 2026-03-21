@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogInput, DialogError } from "./ModalDialog";
+import { useUIStore } from "../../store/ui-store";
 import type { RemoteInfo } from "../../../shared/git-types";
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
+  const showToast = useUIStore((s) => s.showToast);
   const [remotes, setRemotes] = useState<RemoteInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [addMode, setAddMode] = useState(false);
@@ -19,7 +21,9 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
     try {
       const list = await window.electronAPI.remote.list();
       setRemotes(list);
-    } catch {}
+    } catch (err: unknown) {
+      showToast(`Failed to load remotes: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   useEffect(() => {
@@ -28,6 +32,8 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
       setAddMode(false);
       setError(null);
     }
+    // Only run when dialog opens/closes; loadRemotes is a local function
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const handleAdd = async () => {

@@ -189,6 +189,9 @@ export const IPC = {
     GET_VERSION: "app:get-version",
     UPDATE_STATUS: "app:update-status",
   },
+  MENU: {
+    OPEN_REPO: "menu:open-repo",
+  },
   // Events pushed from main → renderer
   EVENTS: {
     COMMAND_LOG: "git:event:command-log",

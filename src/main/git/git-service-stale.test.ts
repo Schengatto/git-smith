@@ -42,10 +42,10 @@ describe("GitService.getStaleRemoteBranches", () => {
 
     const result = await service.getStaleRemoteBranches(30);
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("origin/old-branch");
-    expect(result[0].remote).toBe("origin");
-    expect(result[0].branchName).toBe("old-branch");
-    expect(result[0].lastCommitAuthor).toBe("Alice");
+    expect(result[0]!.name).toBe("origin/old-branch");
+    expect(result[0]!.remote).toBe("origin");
+    expect(result[0]!.branchName).toBe("old-branch");
+    expect(result[0]!.lastCommitAuthor).toBe("Alice");
   });
 
   it("skips HEAD references", async () => {
@@ -58,7 +58,7 @@ describe("GitService.getStaleRemoteBranches", () => {
 
     const result = await service.getStaleRemoteBranches(30);
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("origin/stale");
+    expect(result[0]!.name).toBe("origin/stale");
   });
 
   it("parses multi-segment remote names correctly", async () => {
@@ -70,8 +70,8 @@ describe("GitService.getStaleRemoteBranches", () => {
 
     const result = await service.getStaleRemoteBranches(30);
     expect(result).toHaveLength(1);
-    expect(result[0].remote).toBe("upstream");
-    expect(result[0].branchName).toBe("feature/deep-path");
+    expect(result[0]!.remote).toBe("upstream");
+    expect(result[0]!.branchName).toBe("feature/deep-path");
   });
 });
 
@@ -110,9 +110,9 @@ describe("GitService.getRemoteBranchCommits", () => {
     const result = await service.getRemoteBranchCommits("origin/branch", 10);
 
     expect(result).toHaveLength(1);
-    expect(result[0].hash).toBe("abc123full");
-    expect(result[0].subject).toBe("test commit");
-    expect(result[0].authorName).toBe("Alice");
+    expect(result[0]!.hash).toBe("abc123full");
+    expect(result[0]!.subject).toBe("test commit");
+    expect(result[0]!.authorName).toBe("Alice");
 
     // Check that the git command includes max-count
     expect(mockRaw).toHaveBeenCalledWith(

@@ -168,9 +168,9 @@ const MenuItemRow: React.FC<{
         <div style={submenuContainerStyle}>
           {item.children!.map((child, i) =>
             "divider" in child && child.divider ? (
-              <div key={i} style={dividerStyle} />
+              <div key={`divider-${i}`} style={dividerStyle} />
             ) : (
-              <MenuItemRow key={i} item={child as MenuItemDef} onClose={onClose} />
+              <MenuItemRow key={(child as MenuItemDef).label} item={child as MenuItemDef} onClose={onClose} />
             )
           )}
         </div>
@@ -190,9 +190,9 @@ const MenuDropdown: React.FC<{
   <div style={dropdownStyle}>
     {items.map((item, i) =>
       "divider" in item && item.divider ? (
-        <div key={i} style={dividerStyle} />
+        <div key={`divider-${i}`} style={dividerStyle} />
       ) : (
-        <MenuItemRow key={i} item={item as MenuItemDef} onClose={onClose} />
+        <MenuItemRow key={(item as MenuItemDef).label} item={item as MenuItemDef} onClose={onClose} />
       )
     )}
   </div>

@@ -94,7 +94,7 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
     } else {
       // First parent continues in same lane
       activeLanes[laneIndex] = {
-        commitHash: parents[0],
+        commitHash: parents[0]!,
         colorIndex,
       };
       // Branch tips use "start" (line from dot downward); others use "straight" (full top-to-bottom)
@@ -107,7 +107,7 @@ export function buildGraph(commits: CommitInfo[]): GraphRow[] {
 
       // Additional parents (merge)
       for (let p = 1; p < parents.length; p++) {
-        const parentHash = parents[p];
+        const parentHash = parents[p]!;
         const existingLane = findLane(parentHash);
 
         if (existingLane >= 0) {

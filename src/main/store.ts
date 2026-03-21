@@ -1,38 +1,29 @@
-import { app } from "electron";
+import { app, safeStorage } from "electron";
 import path from "path";
 import fs from "fs";
 import { GitAccount } from "../shared/git-types";
+import type { AppSettings } from "../shared/settings-types";
 
-export interface AppSettings {
-  // General
-  theme: "dark" | "light";
-  language: string;
-  // Fetch
-  autoFetchEnabled: boolean;
-  autoFetchInterval: number; // seconds
-  fetchPruneOnAuto: boolean;
-  // Commit
-  defaultCommitTemplate: string;
-  signCommits: boolean;
-  // Diff
-  diffContextLines: number;
-  preferSideBySideDiff: boolean;
-  // Graph
-  graphMaxInitialLoad: number;
-  showRemoteBranchesInGraph: boolean;
-  // Merge Tool
-  mergeToolName: string; // preset name or "custom"
-  mergeToolPath: string; // executable path
-  mergeToolArgs: string; // argument pattern with $BASE $LOCAL $REMOTE $MERGED placeholders
-  // Advanced
-  maxConcurrentGitProcesses: number;
-  gitBinaryPath: string; // custom git binary path, empty = use system PATH
-  // AI / MCP
-  aiProvider: "none" | "anthropic" | "openai" | "gemini" | "custom-mcp";
-  aiApiKey: string;
-  aiModel: string;
-  aiBaseUrl: string;
-  mcpServerEnabled: boolean;
+export type { AppSettings } from "../shared/settings-types";
+
+function encryptApiKey(key: string): string {
+  if (!key) return key;
+  try {
+    if (!safeStorage.isEncryptionAvailable()) return key;
+    return safeStorage.encryptString(key).toString("base64");
+  } catch {
+    return key;
+  }
+}
+
+function decryptApiKey(stored: string): string {
+  if (!stored) return stored;
+  try {
+    if (!safeStorage.isEncryptionAvailable()) return stored;
+    return safeStorage.decryptString(Buffer.from(stored, "base64"));
+  } catch {
+    return stored;
+  }
 }
 
 export interface RepoCategory {
@@ -105,27 +96,58 @@ function getStorePath(): string {
   return path.join(app.getPath("userData"), "config.json");
 }
 
+let cachedStore: AppStoreSchema | null = null;
+let writePending = false;
+let writeTimer: ReturnType<typeof setTimeout> | null = null;
+
 function readStore(): AppStoreSchema {
+  if (cachedStore) return cachedStore;
   try {
     const raw = fs.readFileSync(getStorePath(), "utf-8");
     const parsed = JSON.parse(raw);
-    return {
-      ...defaults,
-      ...parsed,
-      settings: { ...defaultSettings, ...parsed.settings },
-    };
+    const settings = { ...defaultSettings, ...parsed.settings };
+    if (settings.aiApiKey) {
+      settings.aiApiKey = decryptApiKey(settings.aiApiKey);
+    }
+    const store: AppStoreSchema = { ...defaults, ...parsed, settings };
+    cachedStore = store;
+    return store;
   } catch {
-    return { ...defaults, settings: { ...defaultSettings } };
+    const store: AppStoreSchema = { ...defaults, settings: { ...defaultSettings } };
+    cachedStore = store;
+    return store;
   }
 }
 
-function writeStore(data: AppStoreSchema): void {
+function flushStore(): void {
+  if (!writePending || !cachedStore) return;
+  if (writeTimer) {
+    clearTimeout(writeTimer);
+    writeTimer = null;
+  }
   try {
     const dir = path.dirname(getStorePath());
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(getStorePath(), JSON.stringify(data, null, 2));
+    const toWrite = {
+      ...cachedStore,
+      settings: {
+        ...cachedStore.settings,
+        aiApiKey: encryptApiKey(cachedStore.settings.aiApiKey),
+      },
+    };
+    fs.writeFileSync(getStorePath(), JSON.stringify(toWrite, null, 2));
+    writePending = false;
   } catch {}
 }
+
+function writeStore(data: AppStoreSchema): void {
+  cachedStore = data;
+  writePending = true;
+  if (writeTimer) clearTimeout(writeTimer);
+  writeTimer = setTimeout(flushStore, 500);
+}
+
+try { app.on("before-quit", flushStore); } catch { /* app not ready in test env */ }
 
 export function getRecentRepos(): string[] {
   return readStore().recentRepos;
@@ -357,7 +379,7 @@ export function updateGitAccount(id: string, partial: Partial<GitAccount>): void
   const store = readStore();
   const idx = store.gitAccounts.findIndex((a) => a.id === id);
   if (idx >= 0) {
-    store.gitAccounts[idx] = { ...store.gitAccounts[idx], ...partial, id };
+    store.gitAccounts[idx] = { ...store.gitAccounts[idx]!, ...partial, id };
     writeStore(store);
   }
 }

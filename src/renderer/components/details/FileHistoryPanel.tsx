@@ -203,6 +203,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
             </button>
             <button
               onClick={onClose}
+              aria-label="Close file history"
               style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 4, borderRadius: 4, display: "flex" }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

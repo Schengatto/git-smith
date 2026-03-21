@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
+import { useUIStore } from "../../store/ui-store";
 import { HunkStagingView } from "./HunkStagingView";
 import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
@@ -39,7 +40,7 @@ function buildTree(files: ChangedFile[]): TreeNode[] {
     let current = root;
 
     for (let i = 0; i < parts.length; i++) {
-      const name = parts[i];
+      const name = parts[i]!;
       const partPath = parts.slice(0, i + 1).join("/");
       const isFile = i === parts.length - 1;
 
@@ -74,6 +75,7 @@ function sortTree(nodes: TreeNode[]): TreeNode[] {
 export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   const { repo, refreshStatus, refreshInfo } = useRepoStore();
   const { loadGraph } = useGraphStore();
+  const showToast = useUIStore((s) => s.showToast);
 
   const [files, setFiles] = useState<ChangedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -127,7 +129,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setMergeInProgress(status.mergeInProgress);
       setConflictedFiles(status.conflicted);
       setSelectedFile((prev) => {
-        if (!prev && all.length > 0) return all[0].path;
+        if (!prev && all.length > 0) return all[0]!.path;
         return prev;
       });
     } catch {
@@ -218,7 +220,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setMergeInProgress(status.mergeInProgress);
       setConflictedFiles(status.conflicted);
       setSelectedUnstaged(new Set());
-    } catch {}
+    } catch (err: unknown) {
+      showToast(`Stage failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const unstageFiles = async (paths: string[]) => {
@@ -226,7 +230,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       const status = await window.electronAPI.status.unstage(paths);
       setFiles(statusToFiles(status));
       setSelectedStaged(new Set());
-    } catch {}
+    } catch (err: unknown) {
+      showToast(`Unstage failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const stageAll = async () => {
@@ -236,7 +242,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       const status = await window.electronAPI.status.stage(allPaths);
       setFiles(statusToFiles(status));
       setSelectedUnstaged(new Set());
-    } catch {}
+    } catch (err: unknown) {
+      showToast(`Stage all failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const unstageAll = async () => {
@@ -246,7 +254,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       const status = await window.electronAPI.status.unstage(allPaths);
       setFiles(statusToFiles(status));
       setSelectedStaged(new Set());
-    } catch {}
+    } catch (err: unknown) {
+      showToast(`Unstage all failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const handleDiscard = async (paths: string[]) => {

@@ -24,8 +24,8 @@ describe("parseChangelog", () => {
     const feats = result.groups.find((g) => g.label === "Features");
     expect(feats).toBeDefined();
     expect(feats!.entries).toHaveLength(1);
-    expect(feats!.entries[0].description).toBe("add changelog dialog");
-    expect(feats!.entries[0].type).toBe("feat");
+    expect(feats!.entries[0]!.description).toBe("add changelog dialog");
+    expect(feats!.entries[0]!.type).toBe("feat");
   });
 
   it("groups fix commits under Bug Fixes", () => {
@@ -35,7 +35,7 @@ describe("parseChangelog", () => {
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
     const fixes = result.groups.find((g) => g.label === "Bug Fixes");
     expect(fixes).toBeDefined();
-    expect(fixes!.entries[0].description).toBe("broken graph lines");
+    expect(fixes!.entries[0]!.description).toBe("broken graph lines");
   });
 
   it("extracts scope from conventional commit", () => {
@@ -44,8 +44,8 @@ describe("parseChangelog", () => {
     ];
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
     const feats = result.groups.find((g) => g.label === "Features");
-    expect(feats!.entries[0].scope).toBe("auth");
-    expect(feats!.entries[0].description).toBe("add login flow");
+    expect(feats!.entries[0]!.scope).toBe("auth");
+    expect(feats!.entries[0]!.description).toBe("add login flow");
   });
 
   it("detects breaking change via ! suffix", () => {
@@ -55,7 +55,7 @@ describe("parseChangelog", () => {
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
     const breaking = result.groups.find((g) => g.label === "Breaking Changes");
     expect(breaking).toBeDefined();
-    expect(breaking!.entries[0].breaking).toBe(true);
+    expect(breaking!.entries[0]!.breaking).toBe(true);
   });
 
   it("detects breaking change via BREAKING CHANGE in body", () => {
@@ -65,7 +65,7 @@ describe("parseChangelog", () => {
         description: "BREAKING CHANGE: session tokens no longer stored",
       }),
     ];
-    entries[0].description = "BREAKING CHANGE: session tokens no longer stored";
+    entries[0]!.description = "BREAKING CHANGE: session tokens no longer stored";
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
     const breaking = result.groups.find((g) => g.label === "Breaking Changes");
     expect(breaking).toBeDefined();
@@ -78,7 +78,7 @@ describe("parseChangelog", () => {
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
     const other = result.groups.find((g) => g.label === "Other");
     expect(other).toBeDefined();
-    expect(other!.entries[0].description).toBe("update readme");
+    expect(other!.entries[0]!.description).toBe("update readme");
   });
 
   it("groups chore, build, ci under Maintenance", () => {
@@ -124,7 +124,7 @@ describe("parseChangelog", () => {
       makeEntry({ subject: "fix!: breaking fix" }),
     ];
     const result = parseChangelog(entries, "v1.0.0", "abc1234");
-    expect(result.groups[0].label).toBe("Breaking Changes");
+    expect(result.groups[0]!.label).toBe("Breaking Changes");
   });
 
   it("does not duplicate breaking commits in their type group", () => {
@@ -137,6 +137,6 @@ describe("parseChangelog", () => {
     const feats = result.groups.find((g) => g.label === "Features");
     expect(breaking!.entries).toHaveLength(1);
     expect(feats!.entries).toHaveLength(1);
-    expect(feats!.entries[0].description).toBe("add new API");
+    expect(feats!.entries[0]!.description).toBe("add new API");
   });
 });

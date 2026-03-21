@@ -2,31 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useUIStore } from "../../store/ui-store";
 import { useAccountStore } from "../../store/account-store";
 import type { GitAccount, SshHostEntry } from "../../../shared/git-types";
+import type { AppSettings } from "../../../shared/settings-types";
 
 type Tab = "general" | "accounts" | "git" | "fetch" | "commit" | "diff" | "mergetool" | "advanced" | "ai";
-
-interface AppSettings {
-  theme: string;
-  autoFetchEnabled: boolean;
-  autoFetchInterval: number;
-  fetchPruneOnAuto: boolean;
-  defaultCommitTemplate: string;
-  signCommits: boolean;
-  diffContextLines: number;
-  preferSideBySideDiff: boolean;
-  graphMaxInitialLoad: number;
-  showRemoteBranchesInGraph: boolean;
-  mergeToolName: string;
-  mergeToolPath: string;
-  mergeToolArgs: string;
-  maxConcurrentGitProcesses: number;
-  gitBinaryPath: string;
-  aiProvider: string;
-  aiApiKey: string;
-  aiModel: string;
-  aiBaseUrl: string;
-  mcpServerEnabled: boolean;
-}
 
 interface GitConfig {
   "user.name": string;
@@ -74,7 +52,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
 
   const loadSettings = async () => {
     const s = await window.electronAPI.settings.get();
-    setSettings(s as unknown as AppSettings);
+    setSettings(s);
   };
 
   const loadGitConfig = async () => {
@@ -105,7 +83,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
     if (!settings) return;
     setSaving(true);
     try {
-      await window.electronAPI.settings.update(settings as unknown as Record<string, unknown>);
+      await window.electronAPI.settings.update(settings);
       // Apply theme
       useUIStore.getState().setTheme(settings.theme as "dark" | "light");
       setDirty(false);
@@ -313,7 +291,7 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ s
             { value: "dark", label: "Dark (Catppuccin Mocha)" },
             { value: "light", label: "Light (Catppuccin Latte)" },
           ]}
-          onChange={(v) => onChange("theme", v)}
+          onChange={(v) => onChange("theme", v as "dark" | "light")}
         />
       </SettingRow>
       <SectionTitle>Git</SectionTitle>
@@ -840,7 +818,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
         <Select
           value={settings.aiProvider}
           options={providerOptions}
-          onChange={(v) => onChange("aiProvider", v)}
+          onChange={(v) => onChange("aiProvider", v as "none" | "anthropic" | "openai" | "gemini" | "custom-mcp")}
         />
       </SettingRow>
 
@@ -864,7 +842,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
             <SettingRow label="Model" description="AI model to use for generation">
               <Select
                 value={settings.aiModel || modelOptions[settings.aiProvider]?.[0]?.value || ""}
-                options={modelOptions[settings.aiProvider]}
+                options={modelOptions[settings.aiProvider] ?? []}
                 onChange={(v) => onChange("aiModel", v)}
               />
             </SettingRow>

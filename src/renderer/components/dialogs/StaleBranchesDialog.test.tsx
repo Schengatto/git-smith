@@ -130,7 +130,7 @@ describe("StaleBranchesDialog", () => {
 
     // Click first Delete button
     const deleteButtons = screen.getAllByText("Delete");
-    fireEvent.click(deleteButtons[0]);
+    fireEvent.click(deleteButtons[0]!);
 
     // Should show Confirm button, not call deleteRemote yet
     expect(deleteRemoteMock).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe("StaleBranchesDialog", () => {
 
     // Click Delete
     const deleteButtons = screen.getAllByText("Delete");
-    fireEvent.click(deleteButtons[0]);
+    fireEvent.click(deleteButtons[0]!);
 
     // Click Confirm
     fireEvent.click(screen.getByText("Confirm"));

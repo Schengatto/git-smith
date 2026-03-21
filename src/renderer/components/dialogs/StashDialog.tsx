@@ -81,7 +81,7 @@ function buildTree(files: ChangedFile[]): TreeNode[] {
     const parts = file.path.split("/");
     let current = root;
     for (let i = 0; i < parts.length; i++) {
-      const name = parts[i];
+      const name = parts[i]!;
       const partPath = parts.slice(0, i + 1).join("/");
       const isFile = i === parts.length - 1;
       let node = current.find((n) => n.name === name);

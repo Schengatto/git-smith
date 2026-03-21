@@ -171,7 +171,7 @@ describe("StashDialog", () => {
     const _closeBtn = buttons.find((b) => b.getAttribute("title") === null && b.closest("[style]"));
     // Click the backdrop as alternative
     // Instead let's find it by querying all buttons
-    fireEvent.click(buttons[0]); // The X close button is the first button
+    fireEvent.click(buttons[0]!); // The X close button is the first button
     expect(onClose).toHaveBeenCalled();
   });
 

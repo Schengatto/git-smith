@@ -30,7 +30,7 @@ describe("CommitGraphPanel — Delete Remote Branch filtering", () => {
     ];
     const result = getDeleteableRemoteBranches(refs, "main");
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("origin/feature-x");
+    expect(result[0]!.name).toBe("origin/feature-x");
   });
 
   it("excludes current branch tracking from any remote", () => {
@@ -51,7 +51,7 @@ describe("CommitGraphPanel — Delete Remote Branch filtering", () => {
     ];
     const result = getDeleteableRemoteBranches(refs, "main");
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("origin/feature-x");
+    expect(result[0]!.name).toBe("origin/feature-x");
   });
 
   it("returns empty when there are no remote refs", () => {

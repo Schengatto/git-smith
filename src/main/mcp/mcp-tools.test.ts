@@ -125,8 +125,8 @@ describe("MCP Tools Registration", () => {
     const tool = server.registeredTools.get("repo_info")!;
     const result = await (tool.handler as () => Promise<{ content: { type: string; text: string }[] }>)();
     expect(mockGit.getRepoInfo).toHaveBeenCalled();
-    expect(result.content[0].type).toBe("text");
-    expect(JSON.parse(result.content[0].text)).toHaveProperty("currentBranch", "main");
+    expect(result.content[0]!.type).toBe("text");
+    expect(JSON.parse(result.content[0]!.text)).toHaveProperty("currentBranch", "main");
   });
 
   it("status tool calls getStatus", async () => {
@@ -151,7 +151,7 @@ describe("MCP Tools Registration", () => {
       paths: ["src/a.ts", "src/b.ts"],
     });
     expect(mockGit.stage).toHaveBeenCalledWith(["src/a.ts", "src/b.ts"]);
-    expect(result.content[0].text).toContain("2 file(s)");
+    expect(result.content[0]!.text).toContain("2 file(s)");
   });
 
   it("commit tool calls commit with message", async () => {
@@ -160,7 +160,7 @@ describe("MCP Tools Registration", () => {
       message: "feat: add something",
     });
     expect(mockGit.commit).toHaveBeenCalledWith("feat: add something");
-    expect(result.content[0].text).toContain("abc123");
+    expect(result.content[0]!.text).toContain("abc123");
   });
 
   it("diff_staged calls getDiff with staged=true", async () => {

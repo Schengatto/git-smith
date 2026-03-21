@@ -13,7 +13,7 @@ function getRepoArg(): string {
   const args = process.argv.slice(2);
   const repoIdx = args.indexOf("--repo");
   if (repoIdx !== -1 && args[repoIdx + 1]) {
-    return args[repoIdx + 1];
+    return args[repoIdx + 1]!;
   }
   // Fallback: first non-flag argument
   for (const arg of args) {

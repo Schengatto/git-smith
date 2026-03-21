@@ -84,7 +84,7 @@ describe("Git Accounts store", () => {
     deleteGitAccount("test-acc-1");
     const accounts = getGitAccounts();
     expect(accounts).toHaveLength(1);
-    expect(accounts[0].id).toBe("test-acc-2");
+    expect(accounts[0]!.id).toBe("test-acc-2");
   });
 
   it("cleans up repo mappings when account is deleted", () => {

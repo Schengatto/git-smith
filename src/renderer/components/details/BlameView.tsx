@@ -27,14 +27,14 @@ function parsePorcelainBlame(raw: string): BlameLine[] {
   let currentLineNo = 0;
 
   while (i < rawLines.length) {
-    const line = rawLines[i];
+    const line = rawLines[i]!;
     const headerMatch = line.match(/^([0-9a-f]{40}) \d+ (\d+)/);
     if (headerMatch) {
-      currentHash = headerMatch[1];
-      currentLineNo = parseInt(headerMatch[2]);
+      currentHash = headerMatch[1]!;
+      currentLineNo = parseInt(headerMatch[2]!);
       i++;
-      while (i < rawLines.length && !rawLines[i].startsWith("\t")) {
-        const propLine = rawLines[i];
+      while (i < rawLines.length && !rawLines[i]!.startsWith("\t")) {
+        const propLine = rawLines[i]!;
         if (propLine.startsWith("author ")) {
           currentAuthor = propLine.slice(7);
         } else if (propLine.startsWith("author-time ")) {
@@ -47,14 +47,14 @@ function parsePorcelainBlame(raw: string): BlameLine[] {
         }
         i++;
       }
-      if (i < rawLines.length && rawLines[i].startsWith("\t")) {
+      if (i < rawLines.length && rawLines[i]!.startsWith("\t")) {
         lines.push({
           hash: currentHash,
           author: currentAuthor,
           date: currentDate,
           timestamp: currentTimestamp,
           lineNumber: currentLineNo,
-          content: rawLines[i].slice(1),
+          content: rawLines[i]!.slice(1),
         });
       }
     }
@@ -205,13 +205,13 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
               <tbody>
                 {lines.map((line, i) => {
                   const showAnnotation =
-                    i === 0 || lines[i - 1].hash !== line.hash;
+                    i === 0 || lines[i - 1]!.hash !== line.hash;
                   const bg = ageColor(line.timestamp, oldest, newest);
                   const isSelected = line.hash === selectedHash;
 
                   return (
                     <tr
-                      key={i}
+                      key={line.lineNumber}
                       style={{
                         background: isSelected ? "var(--accent-dim)" : bg,
                         cursor: "pointer",

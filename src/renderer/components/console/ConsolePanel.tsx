@@ -102,6 +102,7 @@ export const ConsolePanel: React.FC = () => {
       window.electronAPI.terminal.kill();
       term?.dispose();
     };
+    // Re-create terminal only when repo path changes; refs are stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.path]);
 

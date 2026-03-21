@@ -2,6 +2,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { DialogRouter } from "./components/DialogRouter";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import "./i18n";
 import "dockview/dist/styles/dockview.css";
 import "./index.css";
 
@@ -25,13 +27,17 @@ const root = createRoot(document.getElementById("root")!);
 if (dialogName) {
   root.render(
     <React.StrictMode>
-      <DialogRouter dialog={dialogName} />
+      <ErrorBoundary>
+        <DialogRouter dialog={dialogName} />
+      </ErrorBoundary>
     </React.StrictMode>
   );
 } else {
   root.render(
     <React.StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }

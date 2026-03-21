@@ -58,7 +58,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto, 
   const setAction = (index: number, action: RebaseAction) => {
     setEntries((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], action };
+      next[index] = { ...next[index]!, action };
       return next;
     });
   };
@@ -68,7 +68,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto, 
     setEntries((prev) => {
       const next = [...prev];
       const [item] = next.splice(from, 1);
-      next.splice(to, 0, item);
+      next.splice(to, 0, item!);
       return next;
     });
     setSelectedIndex(to);
@@ -109,6 +109,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({ open, onClose, onto, 
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+    // Keyboard handler depends on current selection and entries state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectedIndex, entries]);
 

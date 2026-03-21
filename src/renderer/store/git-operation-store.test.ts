@@ -65,7 +65,7 @@ describe("Git Operation Store", () => {
     const entry = makeEntry("cmd-1");
     useGitOperationStore.getState().addEntry(entry);
     expect(useGitOperationStore.getState().entries).toHaveLength(1);
-    expect(useGitOperationStore.getState().entries[0].id).toBe("cmd-1");
+    expect(useGitOperationStore.getState().entries[0]!.id).toBe("cmd-1");
   });
 
   it("addEntry() updates existing entry by id", () => {
@@ -73,7 +73,7 @@ describe("Git Operation Store", () => {
     useGitOperationStore.getState().addEntry(makeEntry("cmd-1"));
     useGitOperationStore.getState().addEntry(makeEntry("cmd-1", 0));
     expect(useGitOperationStore.getState().entries).toHaveLength(1);
-    expect(useGitOperationStore.getState().entries[0].exitCode).toBe(0);
+    expect(useGitOperationStore.getState().entries[0]!.exitCode).toBe(0);
   });
 
   it("addEntry() ignores entries when dialog is closed", () => {
@@ -190,7 +190,7 @@ describe("Git Operation Store", () => {
     useGitOperationStore.getState().start("Commit");
     useGitOperationStore.getState().addOutputLine({ id: "cmd-1", stream: "stderr", text: "Running pre-commit hook..." });
     expect(useGitOperationStore.getState().outputLines).toHaveLength(1);
-    expect(useGitOperationStore.getState().outputLines[0].text).toBe("Running pre-commit hook...");
+    expect(useGitOperationStore.getState().outputLines[0]!.text).toBe("Running pre-commit hook...");
   });
 
   it("addOutputLine() ignores lines when dialog is closed", () => {

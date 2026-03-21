@@ -39,6 +39,7 @@ export const StatsPanel: React.FC = () => {
   useEffect(() => {
     if (!repo) return;
     loadLeaderboard(timeframe);
+    // Only reload when repo or timeframe changes; store actions are stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.path, timeframe]);
 
@@ -49,6 +50,7 @@ export const StatsPanel: React.FC = () => {
       loadLeaderboard(useStatsStore.getState().timeframe);
     });
     return () => { cleanup(); };
+    // Mount-only: registers event listener
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
