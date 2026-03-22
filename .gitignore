@@ -34,9 +34,6 @@ playwright-report/
 *.log
 npm-debug.log*
 
-# Generated PDF manual
-USER_MANUAL.pdf
-
 # Packaging
 *.dmg
 *.AppImage

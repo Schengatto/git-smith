@@ -54,9 +54,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Generate USER_MANUAL.pdf
-        run: node scripts/generate-manual-pdf.mjs
-
       - name: Build distributables
         run: npm run make
 
