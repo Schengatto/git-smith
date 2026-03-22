@@ -1,5 +1,5 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
-import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+import { MakerWix } from "@electron-forge/maker-wix";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
@@ -31,9 +31,13 @@ const config: ForgeConfig = {
     onlyModules: [],
   },
   makers: [
-    new MakerSquirrel({
-      name: "gitsmith",
-      setupExe: "GitSmith-Setup.exe",
+    new MakerWix({
+      name: "GitSmith",
+      manufacturer: "GitSmith",
+      exe: "gitsmith",
+      ui: {
+        chooseDirectory: true,
+      },
     }),
     new MakerZIP({}, ["darwin"]),
     new MakerDeb({
@@ -108,10 +112,10 @@ const config: ForgeConfig = {
 
         if (!ymlName) continue;
 
-        // Find the primary distributable artifact (exe, zip, deb)
+        // Find the primary distributable artifact (msi, zip, deb, rpm)
         const artifact = result.artifacts.find(
           (a) =>
-            a.endsWith(".exe") ||
+            a.endsWith(".msi") ||
             a.endsWith(".zip") ||
             a.endsWith(".deb") ||
             a.endsWith(".rpm")
