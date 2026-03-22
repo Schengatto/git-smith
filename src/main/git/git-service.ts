@@ -99,7 +99,6 @@ export class GitService {
     "git push",
     "git pull",
     "git fetch",
-    "git commit",
     "git rebase",
     "git merge",
     "git stash",
