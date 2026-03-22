@@ -20,19 +20,47 @@ type ChangedFile = {
 type ShowMode = "working" | "stash";
 
 const IconClose = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
 const IconFolder = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
   </svg>
 );
 
 const IconFile = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
   </svg>
@@ -40,8 +68,14 @@ const IconFile = () => (
 
 const IconChevron = ({ expanded }: { expanded: boolean }) => (
   <svg
-    width="10" height="10" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    width="10"
+    height="10"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
     style={{ transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.1s" }}
   >
     <polyline points="9 6 15 12 9 18" />
@@ -50,21 +84,31 @@ const IconChevron = ({ expanded }: { expanded: boolean }) => (
 
 function statusColor(status: string): string {
   switch (status) {
-    case "added": return "var(--green)";
-    case "modified": return "var(--yellow)";
-    case "deleted": return "var(--red)";
-    case "renamed": return "var(--blue)";
-    default: return "var(--text-muted)";
+    case "added":
+      return "var(--green)";
+    case "modified":
+      return "var(--yellow)";
+    case "deleted":
+      return "var(--red)";
+    case "renamed":
+      return "var(--blue)";
+    default:
+      return "var(--text-muted)";
   }
 }
 
 function statusLabel(status: string): string {
   switch (status) {
-    case "added": return "A";
-    case "modified": return "M";
-    case "deleted": return "D";
-    case "renamed": return "R";
-    default: return "?";
+    case "added":
+      return "A";
+    case "modified":
+      return "M";
+    case "deleted":
+      return "D";
+    case "renamed":
+      return "R";
+    default:
+      return "?";
   }
 }
 
@@ -96,13 +140,15 @@ function buildTree(files: ChangedFile[]): TreeNode[] {
 }
 
 function sortTree(nodes: TreeNode[]): TreeNode[] {
-  return nodes.sort((a, b) => {
-    const aIsDir = a.children.length > 0 && !a.file;
-    const bIsDir = b.children.length > 0 && !b.file;
-    if (aIsDir && !bIsDir) return -1;
-    if (!aIsDir && bIsDir) return 1;
-    return a.name.localeCompare(b.name);
-  }).map((n) => ({ ...n, children: sortTree(n.children) }));
+  return nodes
+    .sort((a, b) => {
+      const aIsDir = a.children.length > 0 && !a.file;
+      const bIsDir = b.children.length > 0 && !b.file;
+      if (aIsDir && !bIsDir) return -1;
+      if (!aIsDir && bIsDir) return 1;
+      return a.name.localeCompare(b.name);
+    })
+    .map((n) => ({ ...n, children: sortTree(n.children) }));
 }
 
 export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }) => {
@@ -128,16 +174,21 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
       const all: ChangedFile[] = [];
       for (const f of status.staged) all.push({ ...f, staged: true });
       for (const f of status.unstaged) all.push({ ...f, staged: false });
-      for (const p of status.untracked) all.push({ path: p, status: "added", staged: false, isUntracked: true });
+      for (const p of status.untracked)
+        all.push({ path: p, status: "added", staged: false, isUntracked: true });
       setFiles(all);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const loadStashes = useCallback(async () => {
     try {
       const list = await window.electronAPI.stash.list();
       setStashes(list);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
@@ -166,18 +217,16 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
   };
 
   const afterStashAction = async () => {
-    const promises: Promise<unknown>[] = [loadWorkingChanges(), loadStashes()];
-    if (mode === "overlay") {
-      promises.push(refreshStatus(), loadGraph());
-    }
-    await Promise.all(promises);
+    await Promise.all([loadWorkingChanges(), loadStashes(), refreshStatus(), loadGraph()]);
   };
 
   const handleStashAll = async () => {
     setLoading(true);
     setError(null);
     try {
-      await runGitOperation("Stash", () => window.electronAPI.stash.create(message || undefined, { keepIndex, includeUntracked }));
+      await runGitOperation("Stash", () =>
+        window.electronAPI.stash.create(message || undefined, { keepIndex, includeUntracked })
+      );
       await afterStashAction();
       setMessage("");
       setDiff("");
@@ -196,11 +245,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
     setError(null);
     try {
       await window.electronAPI.stash.drop(selectedStash);
-      const dropPromises: Promise<unknown>[] = [loadStashes()];
-      if (mode === "overlay") {
-        dropPromises.push(loadGraph());
-      }
-      await Promise.all(dropPromises);
+      await Promise.all([loadStashes(), loadGraph()]);
       setSelectedStash(null);
     } catch (err) {
       if (err instanceof GitOperationCancelledError) return;
@@ -248,9 +293,14 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
           <div
             onClick={() => toggleDir(node.path)}
             style={{
-              display: "flex", alignItems: "center", gap: 4,
-              paddingLeft: depth * 16 + 4, paddingRight: 8,
-              height: 24, cursor: "pointer", fontSize: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              paddingLeft: depth * 16 + 4,
+              paddingRight: 8,
+              height: 24,
+              cursor: "pointer",
+              fontSize: 12,
               color: "var(--text-secondary)",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-3)")}
@@ -272,75 +322,132 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
         key={node.path}
         onClick={() => handleSelectFile(file)}
         style={{
-          display: "flex", alignItems: "center", gap: 4,
-          paddingLeft: depth * 16 + 4, paddingRight: 8,
-          height: 24, cursor: "pointer", fontSize: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          paddingLeft: depth * 16 + 4,
+          paddingRight: 8,
+          height: 24,
+          cursor: "pointer",
+          fontSize: 12,
           background: selected ? "var(--surface-3)" : "transparent",
           color: selected ? "var(--text-primary)" : "var(--text-secondary)",
         }}
-        onMouseEnter={(e) => { if (!selected) e.currentTarget.style.background = "var(--surface-2)"; }}
-        onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = "transparent"; }}
+        onMouseEnter={(e) => {
+          if (!selected) e.currentTarget.style.background = "var(--surface-2)";
+        }}
+        onMouseLeave={(e) => {
+          if (!selected) e.currentTarget.style.background = "transparent";
+        }}
       >
         <span style={{ width: 10 }} />
         <IconFile />
-        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span
+          style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
           {node.name}
         </span>
-        <span style={{
-          fontSize: 10, fontWeight: 700, color: statusColor(file.status),
-          minWidth: 14, textAlign: "center",
-        }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: statusColor(file.status),
+            minWidth: 14,
+            textAlign: "center",
+          }}
+        >
           {file.isUntracked ? "?" : statusLabel(file.status)}
         </span>
       </div>
     );
   };
 
-  const outerStyle: React.CSSProperties = mode === "window"
-    ? { width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "var(--surface-0)" }
-    : {
-        position: "fixed", inset: 0, zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)",
-        animation: "fade-in 0.12s ease-out",
-      };
+  const outerStyle: React.CSSProperties =
+    mode === "window"
+      ? {
+          width: "100%",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--surface-0)",
+        }
+      : {
+          position: "fixed",
+          inset: 0,
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(0,0,0,0.5)",
+          backdropFilter: "blur(2px)",
+          animation: "fade-in 0.12s ease-out",
+        };
 
-  const innerStyle: React.CSSProperties = mode === "window"
-    ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
-    : {
-        width: 820, height: 560,
-        borderRadius: 12, overflow: "hidden",
-        background: "var(--surface-0)",
-        border: "1px solid var(--border)",
-        boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
-        animation: "modal-in 0.15s ease-out",
-        display: "flex", flexDirection: "column",
-      };
+  const innerStyle: React.CSSProperties =
+    mode === "window"
+      ? { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }
+      : {
+          width: 820,
+          height: 560,
+          borderRadius: 12,
+          overflow: "hidden",
+          background: "var(--surface-0)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
+          animation: "modal-in 0.15s ease-out",
+          display: "flex",
+          flexDirection: "column",
+        };
 
   return (
     <div
       style={outerStyle}
-      onClick={mode === "overlay" ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}
+      onClick={
+        mode === "overlay"
+          ? (e) => {
+              if (e.target === e.currentTarget) onClose();
+            }
+          : undefined
+      }
     >
       <div style={innerStyle}>
         {/* Header */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 16px",
-          background: "var(--surface-1)",
-          borderBottom: "1px solid var(--border-subtle)",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "10px 16px",
+            background: "var(--surface-1)",
+            borderBottom: "1px solid var(--border-subtle)",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mauve)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--mauve)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
             </svg>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>Stash</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+              Stash
+            </span>
           </div>
           <button
             onClick={onClose}
             style={{
-              border: "none", background: "transparent", color: "var(--text-muted)",
-              cursor: "pointer", padding: 4, borderRadius: 4,
+              border: "none",
+              background: "transparent",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              padding: 4,
+              borderRadius: 4,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
@@ -350,22 +457,33 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
         </div>
 
         {/* Show mode selector */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          padding: "8px 16px",
-          background: "var(--surface-1)",
-          borderBottom: "1px solid var(--border-subtle)",
-          fontSize: 12,
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 16px",
+            background: "var(--surface-1)",
+            borderBottom: "1px solid var(--border-subtle)",
+            fontSize: 12,
+          }}
+        >
           <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>Show:</span>
           <select
             value={showMode}
-            onChange={(e) => { setShowMode(e.target.value as ShowMode); setDiff(""); setError(null); }}
+            onChange={(e) => {
+              setShowMode(e.target.value as ShowMode);
+              setDiff("");
+              setError(null);
+            }}
             style={{
-              padding: "3px 8px", borderRadius: 4,
+              padding: "3px 8px",
+              borderRadius: 4,
               border: "1px solid var(--border)",
-              background: "var(--surface-2)", color: "var(--text-primary)",
-              fontSize: 12, cursor: "pointer",
+              background: "var(--surface-2)",
+              color: "var(--text-primary)",
+              fontSize: 12,
+              cursor: "pointer",
             }}
           >
             <option value="working">Current working directory changes</option>
@@ -376,79 +494,131 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
         {/* Main content */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           {/* Left: file tree or stash list */}
-          <div style={{
-            width: 300, minWidth: 200,
-            display: "flex", flexDirection: "column",
-            borderRight: "1px solid var(--border-subtle)",
-            background: "var(--surface-0)",
-          }}>
-            <div style={{
-              padding: "6px 12px", fontSize: 10, fontWeight: 600,
-              color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px",
-              borderBottom: "1px solid var(--border-subtle)",
-              background: "var(--surface-1)",
-            }}>
+          <div
+            style={{
+              width: 300,
+              minWidth: 200,
+              display: "flex",
+              flexDirection: "column",
+              borderRight: "1px solid var(--border-subtle)",
+              background: "var(--surface-0)",
+            }}
+          >
+            <div
+              style={{
+                padding: "6px 12px",
+                fontSize: 10,
+                fontWeight: 600,
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                borderBottom: "1px solid var(--border-subtle)",
+                background: "var(--surface-1)",
+              }}
+            >
               {showMode === "working"
                 ? `Working directory (${files.length} file${files.length !== 1 ? "s" : ""})`
-                : `Stashes (${stashes.length})`
-              }
+                : `Stashes (${stashes.length})`}
             </div>
             <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
               {showMode === "working" ? (
                 files.length === 0 ? (
-                  <div style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <div
+                    style={{
+                      padding: 16,
+                      fontSize: 12,
+                      color: "var(--text-muted)",
+                      fontStyle: "italic",
+                    }}
+                  >
                     No changes in working directory.
                   </div>
                 ) : (
                   tree.map((node) => renderTreeNode(node, 0))
                 )
+              ) : stashes.length === 0 ? (
+                <div
+                  style={{
+                    padding: 16,
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  There are no stashes.
+                </div>
               ) : (
-                stashes.length === 0 ? (
-                  <div style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", fontStyle: "italic" }}>
-                    There are no stashes.
-                  </div>
-                ) : (
-                  stashes.map((s) => (
-                    <div
-                      key={s.index}
-                      onClick={() => setSelectedStash(s.index)}
+                stashes.map((s) => (
+                  <div
+                    key={s.index}
+                    onClick={() => setSelectedStash(s.index)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      fontSize: 12,
+                      background: selectedStash === s.index ? "var(--surface-3)" : "transparent",
+                      color:
+                        selectedStash === s.index ? "var(--text-primary)" : "var(--text-secondary)",
+                      borderBottom: "1px solid var(--border-subtle)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedStash !== s.index)
+                        e.currentTarget.style.background = "var(--surface-2)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedStash !== s.index)
+                        e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <span style={{ fontWeight: 600 }}>stash@{"{" + s.index + "}"}</span>
+                    <span
                       style={{
-                        display: "flex", flexDirection: "column", gap: 2,
-                        padding: "6px 12px", cursor: "pointer", fontSize: 12,
-                        background: selectedStash === s.index ? "var(--surface-3)" : "transparent",
-                        color: selectedStash === s.index ? "var(--text-primary)" : "var(--text-secondary)",
-                        borderBottom: "1px solid var(--border-subtle)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
-                      onMouseEnter={(e) => { if (selectedStash !== s.index) e.currentTarget.style.background = "var(--surface-2)"; }}
-                      onMouseLeave={(e) => { if (selectedStash !== s.index) e.currentTarget.style.background = "transparent"; }}
                     >
-                      <span style={{ fontWeight: 600 }}>stash@{"{" + s.index + "}"}</span>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {s.message}
-                      </span>
-                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{s.date}</span>
-                    </div>
-                  ))
-                )
+                      {s.message}
+                    </span>
+                    <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{s.date}</span>
+                  </div>
+                ))
               )}
             </div>
           </div>
 
           {/* Right: diff viewer */}
-          <div style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            background: "var(--surface-0)", overflow: "hidden",
-          }}>
-            <div style={{
-              flex: 1, overflowY: "auto", overflowX: "auto",
-              fontFamily: "var(--font-mono, 'Cascadia Code', 'Fira Code', monospace)",
-              fontSize: 12, lineHeight: 1.5,
-              padding: diff ? 0 : 16,
-            }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              background: "var(--surface-0)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                overflowX: "auto",
+                fontFamily: "var(--font-mono, 'Cascadia Code', 'Fira Code', monospace)",
+                fontSize: 12,
+                lineHeight: 1.5,
+                padding: diff ? 0 : 16,
+              }}
+            >
               {diff ? (
                 <DiffView diff={diff} />
               ) : (
-                <span style={{ color: "var(--text-muted)", fontStyle: "italic", fontFamily: "inherit" }}>
+                <span
+                  style={{ color: "var(--text-muted)", fontStyle: "italic", fontFamily: "inherit" }}
+                >
                   {showMode === "working"
                     ? "Select a file to view its diff"
                     : "Select a stash from the list"}
@@ -459,15 +629,21 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
         </div>
 
         {/* Bottom: message + options + buttons */}
-        <div style={{
-          borderTop: "1px solid var(--border-subtle)",
-          background: "var(--surface-1)",
-          padding: "10px 16px",
-          display: "flex", flexDirection: "column", gap: 8,
-        }}>
+        <div
+          style={{
+            borderTop: "1px solid var(--border-subtle)",
+            background: "var(--surface-1)",
+            padding: "10px 16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
           {/* Message input */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>Message:</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>
+              Message:
+            </label>
             <input
               type="text"
               value={message}
@@ -475,20 +651,34 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
               placeholder={showMode === "working" ? "Optional stash message..." : ""}
               disabled={showMode !== "working"}
               style={{
-                padding: "6px 10px", borderRadius: 6,
+                padding: "6px 10px",
+                borderRadius: 6,
                 border: "1px solid var(--border)",
-                background: "var(--surface-0)", color: "var(--text-primary)",
-                fontSize: 12, outline: "none",
+                background: "var(--surface-0)",
+                color: "var(--text-primary)",
+                fontSize: 12,
+                outline: "none",
               }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "var(--mauve)")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-              onKeyDown={(e) => { if (e.key === "Enter" && showMode === "working" && files.length > 0) handleStashAll(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && showMode === "working" && files.length > 0)
+                  handleStashAll();
+              }}
             />
           </div>
 
           {/* Options row */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 12 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", color: "var(--text-secondary)" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={keepIndex}
@@ -498,7 +688,15 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
               />
               Keep index
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", color: "var(--text-secondary)" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={includeUntracked}
@@ -511,9 +709,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
           </div>
 
           {error && (
-            <div style={{ fontSize: 11, color: "var(--red)", padding: "4px 0" }}>
-              {error}
-            </div>
+            <div style={{ fontSize: 11, color: "var(--red)", padding: "4px 0" }}>{error}</div>
           )}
 
           {/* Action buttons */}
@@ -523,10 +719,15 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                 onClick={handleStashAll}
                 disabled={loading || files.length === 0}
                 style={{
-                  padding: "7px 16px", borderRadius: 6, border: "none",
+                  padding: "7px 16px",
+                  borderRadius: 6,
+                  border: "none",
                   background: files.length === 0 || loading ? "var(--surface-3)" : "var(--mauve)",
-                  color: files.length === 0 || loading ? "var(--text-muted)" : "var(--text-on-color)",
-                  fontSize: 12, fontWeight: 600, cursor: files.length === 0 || loading ? "not-allowed" : "pointer",
+                  color:
+                    files.length === 0 || loading ? "var(--text-muted)" : "var(--text-on-color)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: files.length === 0 || loading ? "not-allowed" : "pointer",
                 }}
               >
                 {loading ? "Stashing..." : "Stash all changes"}
@@ -537,10 +738,18 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                   onClick={handleApplyStash}
                   disabled={loading || selectedStash === null}
                   style={{
-                    padding: "7px 16px", borderRadius: 6, border: "none",
-                    background: selectedStash === null || loading ? "var(--surface-3)" : "var(--green)",
-                    color: selectedStash === null || loading ? "var(--text-muted)" : "var(--text-on-color)",
-                    fontSize: 12, fontWeight: 600, cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
+                    padding: "7px 16px",
+                    borderRadius: 6,
+                    border: "none",
+                    background:
+                      selectedStash === null || loading ? "var(--surface-3)" : "var(--green)",
+                    color:
+                      selectedStash === null || loading
+                        ? "var(--text-muted)"
+                        : "var(--text-on-color)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
                   }}
                 >
                   Apply Selected Stash
@@ -549,11 +758,14 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                   onClick={handleDropStash}
                   disabled={loading || selectedStash === null}
                   style={{
-                    padding: "7px 16px", borderRadius: 6,
+                    padding: "7px 16px",
+                    borderRadius: 6,
                     border: "1px solid var(--border)",
                     background: "transparent",
                     color: selectedStash === null || loading ? "var(--text-muted)" : "var(--red)",
-                    fontSize: 12, fontWeight: 600, cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
                   }}
                 >
                   Drop Selected Stash

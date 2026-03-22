@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
+import { useRepoStore } from "../../store/repo-store";
+import { useGraphStore } from "../../store/graph-store";
 
 interface SubmoduleInfo {
   name: string;
@@ -16,6 +18,8 @@ interface Props {
 }
 
 export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { refreshStatus } = useRepoStore();
+  const { loadGraph } = useGraphStore();
   const [submodules, setSubmodules] = useState<SubmoduleInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +47,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     try {
       await window.electronAPI.submodule.update(init);
-      await loadSubmodules();
+      await Promise.all([loadSubmodules(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -56,7 +60,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     try {
       await window.electronAPI.submodule.sync();
-      await loadSubmodules();
+      await Promise.all([loadSubmodules(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -69,7 +73,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
     setError(null);
     try {
       await window.electronAPI.submodule.deinit(subPath, true);
-      await loadSubmodules();
+      await Promise.all([loadSubmodules(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -79,11 +83,16 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case "up-to-date": return "var(--green)";
-      case "modified": return "var(--peach)";
-      case "uninitialized": return "var(--text-muted)";
-      case "conflict": return "var(--red)";
-      default: return "var(--text-muted)";
+      case "up-to-date":
+        return "var(--green)";
+      case "modified":
+        return "var(--peach)";
+      case "uninitialized":
+        return "var(--text-muted)";
+      case "conflict":
+        return "var(--red)";
+      default:
+        return "var(--text-muted)";
     }
   };
 
@@ -134,15 +143,27 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
 
         {/* Submodule list */}
         {loading ? (
-          <div style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}>
+          <div
+            style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}
+          >
             Loading...
           </div>
         ) : submodules.length === 0 ? (
-          <div style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}>
+          <div
+            style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}
+          >
             No submodules found
           </div>
         ) : (
-          <div style={{ maxHeight: 300, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+          <div
+            style={{
+              maxHeight: 300,
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
             {submodules.map((sub) => (
               <div
                 key={sub.path}
@@ -159,7 +180,9 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontWeight: 500, color: "var(--text-primary)" }}>{sub.path}</span>
+                    <span style={{ fontWeight: 500, color: "var(--text-primary)" }}>
+                      {sub.path}
+                    </span>
                     <span
                       style={{
                         fontSize: 9,
@@ -205,11 +228,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
         <DialogError error={error} />
       </div>
 
-      <DialogActions
-        onCancel={onClose}
-        onConfirm={onClose}
-        confirmLabel="Close"
-      />
+      <DialogActions onCancel={onClose} onConfirm={onClose} confirmLabel="Close" />
     </ModalDialog>
   );
 };

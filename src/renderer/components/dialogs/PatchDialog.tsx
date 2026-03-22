@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ModalDialog, DialogActions } from "./ModalDialog";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 import { useRepoStore } from "../../store/repo-store";
+import { useGraphStore } from "../../store/graph-store";
 
 interface CreateProps {
   open: boolean;
@@ -17,7 +18,9 @@ export const PatchCreateDialog: React.FC<CreateProps> = ({ open, onClose, hashes
   const handleCreate = async () => {
     setError("");
     setSuccess("");
-    const dir = await window.electronAPI.repo.browseDirectory("Select output directory for patches");
+    const dir = await window.electronAPI.repo.browseDirectory(
+      "Select output directory for patches"
+    );
     if (!dir) return;
     try {
       const files = await runGitOperation("format-patch", () =>
@@ -36,16 +39,23 @@ export const PatchCreateDialog: React.FC<CreateProps> = ({ open, onClose, hashes
         <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
           Create patch file(s) for {hashes.length} commit(s):
         </div>
-        <div style={{
-          maxHeight: 150,
-          overflow: "auto",
-          background: "var(--surface-0)",
-          borderRadius: 6,
-          padding: "6px 10px",
-        }}>
+        <div
+          style={{
+            maxHeight: 150,
+            overflow: "auto",
+            background: "var(--surface-0)",
+            borderRadius: 6,
+            padding: "6px 10px",
+          }}
+        >
           {subjects.map((s, i) => (
-            <div key={hashes[i]} style={{ fontSize: 11, color: "var(--text-primary)", padding: "2px 0" }}>
-              <span className="mono" style={{ color: "var(--accent)" }}>{hashes[i]!.slice(0, 7)}</span>{" "}
+            <div
+              key={hashes[i]}
+              style={{ fontSize: 11, color: "var(--text-primary)", padding: "2px 0" }}
+            >
+              <span className="mono" style={{ color: "var(--accent)" }}>
+                {hashes[i]!.slice(0, 7)}
+              </span>{" "}
               {s}
             </div>
           ))}
@@ -68,6 +78,7 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
   const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
   const { refreshStatus } = useRepoStore();
+  const { loadGraph } = useGraphStore();
 
   const handleBrowse = async () => {
     const file = await window.electronAPI.repo.browseFile("Select patch file");
@@ -84,13 +95,14 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
   };
 
   const handleApply = async () => {
-    if (!patchPath) { setError("Select a patch file"); return; }
+    if (!patchPath) {
+      setError("Select a patch file");
+      return;
+    }
     setError("");
     try {
-      await runGitOperation("apply", () =>
-        window.electronAPI.patch.apply(patchPath)
-      );
-      await refreshStatus();
+      await runGitOperation("apply", () => window.electronAPI.patch.apply(patchPath));
+      await Promise.all([refreshStatus(), loadGraph()]);
       onClose();
     } catch (err: unknown) {
       if (err instanceof GitOperationCancelledError) return;
@@ -117,22 +129,29 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
               color: "var(--text-primary)",
             }}
           />
-          <button className="toolbar-btn" onClick={handleBrowse} style={{ fontSize: 11, padding: "5px 12px" }}>
+          <button
+            className="toolbar-btn"
+            onClick={handleBrowse}
+            style={{ fontSize: 11, padding: "5px 12px" }}
+          >
             Browse
           </button>
         </div>
 
         {preview && (
-          <div className="mono" style={{
-            fontSize: 10,
-            color: "var(--text-secondary)",
-            background: "var(--surface-0)",
-            padding: "6px 10px",
-            borderRadius: 6,
-            whiteSpace: "pre-wrap",
-            maxHeight: 150,
-            overflow: "auto",
-          }}>
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              color: "var(--text-secondary)",
+              background: "var(--surface-0)",
+              padding: "6px 10px",
+              borderRadius: 6,
+              whiteSpace: "pre-wrap",
+              maxHeight: 150,
+              overflow: "auto",
+            }}
+          >
             {preview}
           </div>
         )}

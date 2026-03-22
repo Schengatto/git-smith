@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ModalDialog, DialogInput } from "./ModalDialog";
 import type { WorktreeInfo } from "../../../shared/git-types";
+import { useRepoStore } from "../../store/repo-store";
+import { useGraphStore } from "../../store/graph-store";
 
 interface Props {
   open: boolean;
@@ -8,6 +10,8 @@ interface Props {
 }
 
 export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { refreshInfo, refreshStatus } = useRepoStore();
+  const { loadGraph } = useGraphStore();
   const [worktrees, setWorktrees] = useState<WorktreeInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -36,7 +40,10 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [open, refresh]);
 
   const handleAdd = async () => {
-    if (!newPath.trim()) { setError("Path is required"); return; }
+    if (!newPath.trim()) {
+      setError("Path is required");
+      return;
+    }
     setError("");
     try {
       await window.electronAPI.worktree.add(
@@ -48,7 +55,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
       setNewBranch("");
       setCreateBranch(false);
       setShowAdd(false);
-      await refresh();
+      await Promise.all([refresh(), refreshInfo(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -58,7 +65,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
     setError("");
     try {
       await window.electronAPI.worktree.remove(path);
-      await refresh();
+      await Promise.all([refresh(), refreshInfo(), refreshStatus(), loadGraph()]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -77,13 +84,17 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
     <ModalDialog open={open} title="Worktrees" onClose={onClose} width={520}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         {loading && (
-          <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}>
+          <div
+            style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}
+          >
             Loading...
           </div>
         )}
 
         {!loading && worktrees.length === 0 && (
-          <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}>
+          <div
+            style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}
+          >
             No worktrees found
           </div>
         )}
@@ -104,9 +115,20 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
                 {wt.branch || "(detached)"}
-                {wt.isMain && <span style={{ fontSize: 10, color: "var(--accent)", marginLeft: 6 }}>main</span>}
+                {wt.isMain && (
+                  <span style={{ fontSize: 10, color: "var(--accent)", marginLeft: 6 }}>main</span>
+                )}
               </div>
-              <div className="mono" style={{ fontSize: 10, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-muted)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {wt.path}
               </div>
               {wt.head && (
@@ -140,15 +162,17 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
 
         {/* Add worktree form */}
         {showAdd ? (
-          <div style={{
-            padding: "10px 12px",
-            borderRadius: 6,
-            background: "var(--surface-0)",
-            border: "1px solid var(--border)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}>
+          <div
+            style={{
+              padding: "10px 12px",
+              borderRadius: 6,
+              background: "var(--surface-0)",
+              border: "1px solid var(--border)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
             <div style={{ display: "flex", gap: 4, alignItems: "flex-end" }}>
               <div style={{ flex: 1 }}>
                 <DialogInput
@@ -158,7 +182,11 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
                   placeholder="/path/to/worktree"
                 />
               </div>
-              <button className="toolbar-btn" onClick={handleBrowse} style={{ fontSize: 11, padding: "5px 10px", marginBottom: 2 }}>
+              <button
+                className="toolbar-btn"
+                onClick={handleBrowse}
+                style={{ fontSize: 11, padding: "5px 10px", marginBottom: 2 }}
+              >
                 Browse
               </button>
             </div>
@@ -168,7 +196,16 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
               onChange={(e) => setNewBranch(e.target.value)}
               placeholder="branch-name (optional)"
             />
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--text-secondary)", cursor: "pointer" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 11,
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={createBranch}
@@ -177,10 +214,23 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
               Create new branch
             </label>
             <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-              <button className="toolbar-btn" onClick={() => setShowAdd(false)} style={{ fontSize: 11, padding: "4px 12px" }}>
+              <button
+                className="toolbar-btn"
+                onClick={() => setShowAdd(false)}
+                style={{ fontSize: 11, padding: "4px 12px" }}
+              >
                 Cancel
               </button>
-              <button className="toolbar-btn" onClick={handleAdd} style={{ fontSize: 11, padding: "4px 12px", background: "var(--accent)", color: "var(--text-on-color)" }}>
+              <button
+                className="toolbar-btn"
+                onClick={handleAdd}
+                style={{
+                  fontSize: 11,
+                  padding: "4px 12px",
+                  background: "var(--accent)",
+                  color: "var(--text-on-color)",
+                }}
+              >
                 Add
               </button>
             </div>
@@ -201,7 +251,11 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 0" }}>
-        <button className="toolbar-btn" onClick={onClose} style={{ fontSize: 12, padding: "6px 14px" }}>
+        <button
+          className="toolbar-btn"
+          onClick={onClose}
+          style={{ fontSize: 12, padding: "6px 14px" }}
+        >
           Close
         </button>
       </div>
