@@ -45,3 +45,4 @@ USER_MANUAL.pdf
 *.exe
 *.snap
 
+.claude/
