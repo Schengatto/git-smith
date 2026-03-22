@@ -1,0 +1,126 @@
+{
+  "name": "gitsmith",
+  "version": "0.4.0",
+  "description": "Cross-platform Git GUI — inspired by GitExtensions",
+  "license": "MIT",
+  "author": "Schengatto",
+  "main": ".vite/build/main.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "git",
+    "gui",
+    "electron",
+    "version-control",
+    "desktop"
+  ],
+  "homepage": "https://github.com/Schengatto/git-smith#readme",
+  "bugs": {
+    "url": "https://github.com/Schengatto/git-smith/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Schengatto/git-smith.git"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "build": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Schengatto",
+        "repo": "gitsmith"
+      }
+    ]
+  },
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "type-check": "tsc --noEmit",
+    "quality": "npm run type-check && npm run lint && npm test",
+    "generate-test-repo": "bash scripts/generate-test-repo.sh",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:patch": "standard-version --release-as patch",
+    "release:first": "standard-version --first-release",
+    "generate-manual-pdf": "node scripts/generate-manual-pdf.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "20.4.4",
+    "@commitlint/config-conventional": "20.4.4",
+    "@electron-forge/cli": "7.11.1",
+    "@electron-forge/maker-deb": "7.11.1",
+    "@electron-forge/maker-rpm": "7.11.1",
+    "@electron-forge/maker-wix": "^7.11.1",
+    "@electron-forge/maker-zip": "7.11.1",
+    "@electron-forge/plugin-vite": "7.11.1",
+    "@electron-forge/publisher-github": "7.11.1",
+    "@playwright/test": "1.58.2",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@typescript-eslint/eslint-plugin": "8.19.1",
+    "@typescript-eslint/parser": "8.19.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "autoprefixer": "10.4.20",
+    "electron": "41.0.2",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "7.37.4",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "husky": "9.1.7",
+    "jsdom": "25.0.1",
+    "lint-staged": "^16.4.0",
+    "md-to-pdf": "^5.2.5",
+    "playwright": "1.58.2",
+    "postcss": "8.4.49",
+    "prettier": "^3.4.2",
+    "sharp": "0.34.5",
+    "standard-version": "9.5.0",
+    "tailwindcss": "3.4.17",
+    "typescript": "5.7.3",
+    "vite": "8.0.0",
+    "vitest": "4.1.0"
+  },
+  "overrides": {
+    "tar": "7.5.11",
+    "tmp": "0.2.4",
+    "@tootallnate/once": "3.0.1",
+    "yauzl": "3.2.1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.27.1",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/xterm": "6.0.0",
+    "diff2html": "3.4.56",
+    "dockview": "4.3.1",
+    "electron-squirrel-startup": "1.0.1",
+    "electron-updater": "6.8.3",
+    "i18next": "25.2.1",
+    "node-pty": "1.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-i18next": "15.5.1",
+    "react-virtuoso": "4.12.3",
+    "simple-git": "3.33.0",
+    "zustand": "5.0.3"
+  }
+}

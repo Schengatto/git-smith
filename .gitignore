@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+.vite/
+*.tsbuildinfo
+
+# Superpowers brainstorm artifacts
+.superpowers/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test
+coverage/
+test-results/
+playwright-report/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Generated PDF manual
+USER_MANUAL.pdf
+
+# Packaging
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.exe
+*.snap
+
+.claude/
+CLAUDE.md

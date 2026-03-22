@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "GitSmith",
+    "reload": "Reload",
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred."
+  },
+  "sidebar": {
+    "branches": "Branches",
+    "tags": "Tags",
+    "submodules": "Submodules",
+    "stashes": "Stashes",
+    "search": "Search..."
+  },
+  "commit": {
+    "stage": "Stage",
+    "unstage": "Unstage",
+    "stageAll": "Stage All",
+    "unstageAll": "Unstage All",
+    "commit": "Commit",
+    "amend": "Amend",
+    "message": "Commit message...",
+    "push": "Push"
+  },
+  "toolbar": {
+    "fetch": "Fetch",
+    "pull": "Pull",
+    "push": "Push",
+    "commit": "Commit",
+    "stash": "Stash",
+    "branch": "Branch",
+    "merge": "Merge",
+    "rebase": "Rebase",
+    "settings": "Settings"
+  },
+  "dialogs": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "ok": "OK",
+    "confirm": "Confirm",
+    "delete": "Delete"
+  },
+  "errors": {
+    "stageFailed": "Stage failed",
+    "unstageFailed": "Unstage failed",
+    "loadFailed": "Failed to load data",
+    "remoteLoadFailed": "Failed to load remotes",
+    "sidebarLoadFailed": "Failed to load sidebar data"
+  }
+}

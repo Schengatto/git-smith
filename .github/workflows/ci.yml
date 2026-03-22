@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage
+
+  # E2E tests are disabled until Playwright adds Electron 41 support.
+  # Electron 41 (Node.js 24) breaks Playwright's -r loader because
+  # require('electron') is not available in preload module context.
+  # Tracking: https://github.com/microsoft/playwright/issues
+  # To run locally once supported:
+  #   node scripts/patch-playwright-electron.js
+  #   xvfb-run npx playwright test
+  #
+  # e2e:
+  #   name: E2E Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22
+  #         cache: npm
+  #     - run: npm ci
+  #     - name: Patch Playwright for Electron compat
+  #       run: node scripts/patch-playwright-electron.js
+  #     - name: Run E2E tests
+  #       run: xvfb-run --auto-servernum npx playwright test
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: npm audit (production)
+        run: npm audit --omit=dev --audit-level=high
