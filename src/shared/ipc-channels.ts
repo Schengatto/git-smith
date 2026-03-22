@@ -186,6 +186,7 @@ export const IPC = {
     GENERATE_COMMIT_MESSAGE: "mcp:ai:generate-commit-message",
     SUGGEST_CONFLICT_RESOLUTION: "mcp:ai:suggest-conflict-resolution",
     GENERATE_PR_DESCRIPTION: "mcp:ai:generate-pr-description",
+    GENERATE_PR_TITLE: "mcp:ai:generate-pr-title",
     REVIEW_COMMIT: "mcp:ai:review-commit",
   },
   APP: {
@@ -264,6 +265,7 @@ export const IPC = {
     VIEW: "git:pr:view",
     CREATE: "git:pr:create",
     DETECT_PROVIDER: "git:pr:detect-provider",
+    GET_TEMPLATE: "git:pr:get-template",
   },
   CHANGELOG: {
     TAGS_BEFORE: "git:changelog:tags-before",
