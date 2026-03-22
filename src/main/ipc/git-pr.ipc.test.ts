@@ -8,6 +8,7 @@ const mockDetectProvider = vi.fn();
 const mockListPrs = vi.fn();
 const mockViewPr = vi.fn();
 const mockCreatePr = vi.fn();
+const mockGetPrTemplate = vi.fn();
 
 vi.mock("../git/git-service", () => ({
   gitService: {
@@ -15,6 +16,7 @@ vi.mock("../git/git-service", () => ({
     listPrs: (...args: unknown[]) => mockListPrs(...args),
     viewPr: (...args: unknown[]) => mockViewPr(...args),
     createPr: (...args: unknown[]) => mockCreatePr(...args),
+    getPrTemplate: (...args: unknown[]) => mockGetPrTemplate(...args),
   },
 }));
 
@@ -37,10 +39,16 @@ describe("PR IPC handlers", () => {
     expect(channels).toContain(IPC.PR.LIST);
     expect(channels).toContain(IPC.PR.VIEW);
     expect(channels).toContain(IPC.PR.CREATE);
+    expect(channels).toContain(IPC.PR.GET_TEMPLATE);
   });
 
   it("PR.DETECT_PROVIDER delegates to gitService.detectProvider", async () => {
-    const mockResult = { provider: "github", owner: "user", repo: "repo", baseUrl: "https://github.com" };
+    const mockResult = {
+      provider: "github",
+      owner: "user",
+      repo: "repo",
+      baseUrl: "https://github.com",
+    };
     mockDetectProvider.mockResolvedValueOnce(mockResult);
     registerPrHandlers();
 
@@ -74,5 +82,28 @@ describe("PR IPC handlers", () => {
     const result = await handler({}, options);
     expect(mockCreatePr).toHaveBeenCalledWith(options);
     expect(result).toBe("https://github.com/user/repo/pull/1");
+  });
+
+  it("PR.GET_TEMPLATE delegates to gitService.getPrTemplate", async () => {
+    mockGetPrTemplate.mockResolvedValueOnce("## Summary\n\n## Changes\n");
+    registerPrHandlers();
+
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.PR.GET_TEMPLATE);
+    const handler = call![1];
+
+    const result = await handler({});
+    expect(mockGetPrTemplate).toHaveBeenCalled();
+    expect(result).toBe("## Summary\n\n## Changes\n");
+  });
+
+  it("PR.GET_TEMPLATE returns null when no template found", async () => {
+    mockGetPrTemplate.mockResolvedValueOnce(null);
+    registerPrHandlers();
+
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.PR.GET_TEMPLATE);
+    const handler = call![1];
+
+    const result = await handler({});
+    expect(result).toBeNull();
   });
 });

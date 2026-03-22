@@ -32,14 +32,28 @@ describe("McpAiClient", () => {
   it("throws when provider is none", async () => {
     vi.mocked(getSettings).mockReturnValue({ ...mockSettings, aiProvider: "none" } as never);
     await expect(
-      client.generateCommitMessage("diff", { staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null })
+      client.generateCommitMessage("diff", {
+        staged: [],
+        unstaged: [],
+        untracked: [],
+        mergeInProgress: false,
+        conflicted: [],
+        operationInProgress: null,
+      })
     ).rejects.toThrow("No AI provider configured");
   });
 
   it("throws when API key is missing", async () => {
     vi.mocked(getSettings).mockReturnValue({ ...mockSettings, aiApiKey: "" } as never);
     await expect(
-      client.generateCommitMessage("diff", { staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null })
+      client.generateCommitMessage("diff", {
+        staged: [],
+        unstaged: [],
+        untracked: [],
+        mergeInProgress: false,
+        conflicted: [],
+        operationInProgress: null,
+      })
     ).rejects.toThrow("API key not configured");
   });
 
@@ -86,7 +100,12 @@ describe("McpAiClient", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     const result = await client.generateCommitMessage("diff", {
-      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
+      staged: [],
+      unstaged: [],
+      untracked: [],
+      mergeInProgress: false,
+      conflicted: [],
+      operationInProgress: null,
     });
 
     expect(result).toBe("fix: bug");
@@ -115,7 +134,12 @@ describe("McpAiClient", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     await client.generateCommitMessage("diff", {
-      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
+      staged: [],
+      unstaged: [],
+      untracked: [],
+      mergeInProgress: false,
+      conflicted: [],
+      operationInProgress: null,
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -132,12 +156,18 @@ describe("McpAiClient", () => {
     } as never);
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ candidates: [{ content: { parts: [{ text: "feat: new thing" }] } }] }),
+      json: () =>
+        Promise.resolve({ candidates: [{ content: { parts: [{ text: "feat: new thing" }] } }] }),
     });
     vi.stubGlobal("fetch", mockFetch);
 
     const result = await client.generateCommitMessage("diff", {
-      staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
+      staged: [],
+      unstaged: [],
+      untracked: [],
+      mergeInProgress: false,
+      conflicted: [],
+      operationInProgress: null,
     });
 
     expect(result).toBe("feat: new thing");
@@ -153,30 +183,46 @@ describe("McpAiClient", () => {
       aiProvider: "gemini",
       aiModel: "gemini-2.5-flash",
     } as never);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 403,
-      text: () => Promise.resolve("Forbidden"),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        text: () => Promise.resolve("Forbidden"),
+      })
+    );
 
     await expect(
       client.generateCommitMessage("diff", {
-        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
+        staged: [],
+        unstaged: [],
+        untracked: [],
+        mergeInProgress: false,
+        conflicted: [],
+        operationInProgress: null,
       })
     ).rejects.toThrow("Gemini API error (403)");
   });
 
   it("handles Anthropic API errors", async () => {
     vi.mocked(getSettings).mockReturnValue(mockSettings as never);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      text: () => Promise.resolve("Unauthorized"),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        text: () => Promise.resolve("Unauthorized"),
+      })
+    );
 
     await expect(
       client.generateCommitMessage("diff", {
-        staged: [], unstaged: [], untracked: [], mergeInProgress: false, conflicted: [], operationInProgress: null,
+        staged: [],
+        unstaged: [],
+        untracked: [],
+        mergeInProgress: false,
+        conflicted: [],
+        operationInProgress: null,
       })
     ).rejects.toThrow("Anthropic API error (401)");
   });
@@ -196,6 +242,103 @@ describe("McpAiClient", () => {
     expect(body.messages[0].content).toContain("file.ts");
     expect(body.messages[0].content).toContain("OURS");
     expect(body.messages[0].content).toContain("THEIRS");
+  });
+
+  it("generatePrTitle calls AI with commits and diff", async () => {
+    vi.mocked(getSettings).mockReturnValue(mockSettings as never);
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ content: [{ text: "Add user authentication" }] }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await client.generatePrTitle(
+      [
+        {
+          hash: "abc",
+          abbreviatedHash: "abc",
+          subject: "feat: add auth",
+          body: "",
+          authorName: "",
+          authorEmail: "",
+          authorDate: "",
+          committerDate: "",
+          parentHashes: [],
+          refs: [],
+        },
+      ],
+      "diff content"
+    );
+    expect(result).toBe("Add user authentication");
+
+    const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
+    expect(body.messages[0].content).toContain("feat: add auth");
+  });
+
+  it("generatePrDescription includes template when provided", async () => {
+    vi.mocked(getSettings).mockReturnValue(mockSettings as never);
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ content: [{ text: "filled template" }] }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const template = "## What\n\n## Why\n";
+    const result = await client.generatePrDescription(
+      [
+        {
+          hash: "abc",
+          abbreviatedHash: "abc",
+          subject: "fix: bug",
+          body: "",
+          authorName: "",
+          authorEmail: "",
+          authorDate: "",
+          committerDate: "",
+          parentHashes: [],
+          refs: [],
+        },
+      ],
+      "diff",
+      template
+    );
+    expect(result).toBe("filled template");
+
+    const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
+    expect(body.messages[0].content).toContain("## What");
+    expect(body.messages[0].content).toContain("PR template");
+  });
+
+  it("generatePrDescription uses default format without template", async () => {
+    vi.mocked(getSettings).mockReturnValue(mockSettings as never);
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ content: [{ text: "default desc" }] }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await client.generatePrDescription(
+      [
+        {
+          hash: "abc",
+          abbreviatedHash: "abc",
+          subject: "fix: bug",
+          body: "",
+          authorName: "",
+          authorEmail: "",
+          authorDate: "",
+          committerDate: "",
+          parentHashes: [],
+          refs: [],
+        },
+      ],
+      "diff"
+    );
+    expect(result).toBe("default desc");
+
+    const body = JSON.parse(mockFetch.mock.calls[0]![1].body);
+    expect(body.messages[0].content).toContain("## Summary");
+    expect(body.messages[0].content).toContain("## Test plan");
   });
 
   it("reviewCommit calls AI with hash and diff", async () => {

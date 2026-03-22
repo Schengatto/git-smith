@@ -37,46 +37,37 @@ export function registerMcpHandlers() {
     return aiClient.generateCommitMessage(diff, status);
   });
 
+  ipcMain.handle(IPC.MCP.SUGGEST_CONFLICT_RESOLUTION, async (_event, filePath: string) => {
+    const content = await gitService.getConflictFileContent(filePath);
+    return aiClient.suggestConflictResolution(content.ours, content.theirs, content.base, filePath);
+  });
+
   ipcMain.handle(
-    IPC.MCP.SUGGEST_CONFLICT_RESOLUTION,
-    async (_event, filePath: string) => {
-      const content = await gitService.getConflictFileContent(filePath);
-      return aiClient.suggestConflictResolution(
-        content.ours,
-        content.theirs,
-        content.base,
-        filePath
-      );
+    IPC.MCP.GENERATE_PR_TITLE,
+    async (_event, sourceBranch: string, targetBranch: string) => {
+      const commits = await gitService.logRange(targetBranch, sourceBranch);
+      const diff = await gitService
+        .getRangeFileDiff(targetBranch, sourceBranch, "")
+        .catch(() => "");
+      return aiClient.generatePrTitle(commits, diff);
     }
   );
 
   ipcMain.handle(
     IPC.MCP.GENERATE_PR_DESCRIPTION,
-    async (_event, commitHashes: string[]) => {
-      const commits = await Promise.all(
-        commitHashes.map((h) => gitService.getCommitDetails(h))
-      );
-      // Get diff of all commits combined
-      const firstHash = commitHashes[commitHashes.length - 1]!;
-      const lastHash = commitHashes[0]!;
-      const diff =
-        commitHashes.length === 1
-          ? await gitService.getCommitDiff(firstHash)
-          : await gitService.getRangeFileDiff(
-              `${firstHash}~1`,
-              lastHash,
-              ""
-            ).catch(() => "");
-      return aiClient.generatePrDescription(commits, diff);
+    async (_event, sourceBranch: string, targetBranch: string) => {
+      const commits = await gitService.logRange(targetBranch, sourceBranch);
+      const diff = await gitService
+        .getRangeFileDiff(targetBranch, sourceBranch, "")
+        .catch(() => "");
+      const template = await gitService.getPrTemplate();
+      return aiClient.generatePrDescription(commits, diff, template);
     }
   );
 
-  ipcMain.handle(
-    IPC.MCP.REVIEW_COMMIT,
-    async (_event, hash: string) => {
-      const diff = await gitService.getCommitDiff(hash);
-      const files = await gitService.getCommitFiles(hash);
-      return aiClient.reviewCommit(hash, diff, files);
-    }
-  );
+  ipcMain.handle(IPC.MCP.REVIEW_COMMIT, async (_event, hash: string) => {
+    const diff = await gitService.getCommitDiff(hash);
+    const files = await gitService.getCommitFiles(hash);
+    return aiClient.reviewCommit(hash, diff, files);
+  });
 }

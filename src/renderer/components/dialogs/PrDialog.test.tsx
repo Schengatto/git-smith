@@ -10,12 +10,22 @@ const mockListPrs = vi.fn();
 const mockViewPr = vi.fn();
 const mockCreatePr = vi.fn();
 const mockOpenExternal = vi.fn();
+const mockGeneratePrTitle = vi.fn();
+const mockGeneratePrDescription = vi.fn();
 
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: (selector?: (s: unknown) => unknown) => {
     const state = { repo: { path: "/test", currentBranch: "feature-branch" } };
     return selector ? selector(state) : state;
   },
+}));
+
+vi.mock("../../store/mcp-store", () => ({
+  useMcpStore: () => ({
+    generating: false,
+    generatePrTitle: mockGeneratePrTitle,
+    generatePrDescription: mockGeneratePrDescription,
+  }),
 }));
 
 beforeEach(() => {
@@ -144,9 +154,7 @@ describe("PrDialog", () => {
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText("Pull Request title...")).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText("Description (optional)...")
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Description (optional)...")).toBeInTheDocument();
       expect(screen.getByText("Create as draft")).toBeInTheDocument();
     });
   });
@@ -427,9 +435,7 @@ describe("PrDialog", () => {
 
     fireEvent.click(screen.getByText(/List \(/));
     await waitFor(() => {
-      expect(
-        screen.queryByPlaceholderText("Pull Request title...")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText("Pull Request title...")).not.toBeInTheDocument();
       expect(screen.getByText("No Pull Requests found")).toBeInTheDocument();
     });
   });
@@ -478,9 +484,7 @@ describe("PrDialog", () => {
     });
 
     await waitFor(() => {
-      expect(mockOpenExternal).toHaveBeenCalledWith(
-        "https://github.com/user/test/pull/99"
-      );
+      expect(mockOpenExternal).toHaveBeenCalledWith("https://github.com/user/test/pull/99");
     });
   });
 
@@ -509,6 +513,77 @@ describe("PrDialog", () => {
 
     await waitFor(() => {
       expect(screen.getByText("closed")).toBeInTheDocument();
+    });
+  });
+
+  it("shows AI Generate button in create tab", async () => {
+    mockDetectProvider.mockResolvedValueOnce({
+      provider: "github",
+      owner: "user",
+      repo: "test",
+      baseUrl: "https://github.com",
+    });
+    mockListPrs.mockResolvedValueOnce([]);
+    render(<PrDialog {...defaultProps} />);
+
+    await waitFor(() => screen.getByText("Create New"));
+    fireEvent.click(screen.getByText("Create New"));
+
+    await waitFor(() => {
+      expect(screen.getByText("AI Generate")).toBeInTheDocument();
+    });
+  });
+
+  it("populates title and body when AI Generate is clicked", async () => {
+    mockDetectProvider.mockResolvedValueOnce({
+      provider: "github",
+      owner: "user",
+      repo: "test",
+      baseUrl: "https://github.com",
+    });
+    mockListPrs.mockResolvedValueOnce([]);
+    mockGeneratePrTitle.mockResolvedValueOnce("AI generated title");
+    mockGeneratePrDescription.mockResolvedValueOnce("AI generated body");
+    render(<PrDialog {...defaultProps} />);
+
+    await waitFor(() => screen.getByText("Create New"));
+    fireEvent.click(screen.getByText("Create New"));
+
+    await waitFor(() => screen.getByText("AI Generate"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("AI Generate"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("AI generated title")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("AI generated body")).toBeInTheDocument();
+    });
+    expect(mockGeneratePrTitle).toHaveBeenCalledWith("feature-branch", "main");
+    expect(mockGeneratePrDescription).toHaveBeenCalledWith("feature-branch", "main");
+  });
+
+  it("shows error when AI generation fails", async () => {
+    mockDetectProvider.mockResolvedValueOnce({
+      provider: "github",
+      owner: "user",
+      repo: "test",
+      baseUrl: "https://github.com",
+    });
+    mockListPrs.mockResolvedValueOnce([]);
+    mockGeneratePrTitle.mockRejectedValueOnce(new Error("No AI provider configured"));
+    mockGeneratePrDescription.mockRejectedValueOnce(new Error("No AI provider configured"));
+    render(<PrDialog {...defaultProps} />);
+
+    await waitFor(() => screen.getByText("Create New"));
+    fireEvent.click(screen.getByText("Create New"));
+
+    await waitFor(() => screen.getByText("AI Generate"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("AI Generate"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("No AI provider configured")).toBeInTheDocument();
     });
   });
 

@@ -3161,6 +3161,29 @@ export class GitService {
       );
     });
   }
+
+  async getPrTemplate(): Promise<string | null> {
+    if (!this.repoPath) return null;
+    const { readFile } = await import("fs/promises");
+    const { join } = await import("path");
+    const candidates = [
+      ".github/pull_request_template.md",
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      "docs/pull_request_template.md",
+      "pull_request_template.md",
+      "PULL_REQUEST_TEMPLATE.md",
+      ".gitlab/merge_request_templates/Default.md",
+    ];
+    for (const candidate of candidates) {
+      try {
+        const content = await readFile(join(this.repoPath, candidate), "utf8");
+        return content;
+      } catch {
+        // file not found, try next
+      }
+    }
+    return null;
+  }
 }
 
 function parseRefs(refString: string): CommitInfo["refs"] {

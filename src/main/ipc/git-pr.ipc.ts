@@ -15,7 +15,23 @@ export function registerPrHandlers() {
     return gitService.viewPr(number);
   });
 
-  ipcMain.handle(IPC.PR.CREATE, async (_event, options: { title: string; body: string; targetBranch: string; sourceBranch: string; draft?: boolean }) => {
-    return gitService.createPr(options);
+  ipcMain.handle(
+    IPC.PR.CREATE,
+    async (
+      _event,
+      options: {
+        title: string;
+        body: string;
+        targetBranch: string;
+        sourceBranch: string;
+        draft?: boolean;
+      }
+    ) => {
+      return gitService.createPr(options);
+    }
+  );
+
+  ipcMain.handle(IPC.PR.GET_TEMPLATE, async () => {
+    return gitService.getPrTemplate();
   });
 }

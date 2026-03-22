@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ModalDialog, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
+import { useMcpStore } from "../../store/mcp-store";
 
 interface PrInfo {
   number: number;
@@ -24,9 +25,15 @@ type Tab = "list" | "create";
 
 export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
   const { repo } = useRepoStore();
+  const { generating, generatePrTitle, generatePrDescription } = useMcpStore();
   const [tab, setTab] = useState<Tab>("list");
   const [prs, setPrs] = useState<PrInfo[]>([]);
-  const [provider, setProvider] = useState<{ provider: string; owner: string; repo: string; baseUrl: string } | null>(null);
+  const [provider, setProvider] = useState<{
+    provider: string;
+    owner: string;
+    repo: string;
+    baseUrl: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPr, setSelectedPr] = useState<PrInfo | null>(null);
@@ -38,6 +45,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
   const [targetBranch, setTargetBranch] = useState("main");
   const [draft, setDraft] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -96,7 +104,11 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
       setTab("list");
       await loadData();
       if (result) {
-        try { window.electronAPI.repo.openExternal(result); } catch { /* ignore */ }
+        try {
+          window.electronAPI.repo.openExternal(result);
+        } catch {
+          /* ignore */
+        }
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
@@ -105,7 +117,27 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   };
 
-  const providerLabel = provider?.provider === "github" ? "GitHub" : provider?.provider === "gitlab" ? "GitLab" : "Unknown";
+  const handleAiGenerate = async () => {
+    setAiError(null);
+    const source = repo?.currentBranch || "HEAD";
+    try {
+      const [aiTitle, aiBody] = await Promise.all([
+        generatePrTitle(source, targetBranch),
+        generatePrDescription(source, targetBranch),
+      ]);
+      setTitle(aiTitle);
+      setBody(aiBody);
+    } catch (err: unknown) {
+      setAiError(err instanceof Error ? err.message : "AI generation failed");
+    }
+  };
+
+  const providerLabel =
+    provider?.provider === "github"
+      ? "GitHub"
+      : provider?.provider === "gitlab"
+        ? "GitLab"
+        : "Unknown";
   const prLabel = provider?.provider === "gitlab" ? "Merge Request" : "Pull Request";
 
   const stateColor = (state: string) => {
@@ -120,14 +152,18 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         {provider?.provider === "unknown" && !loading && (
           <div style={{ fontSize: 12, color: "var(--peach)", padding: "8px 0" }}>
-            Could not detect GitHub or GitLab from remote URL. Make sure &apos;gh&apos; or &apos;glab&apos; CLI is installed.
+            Could not detect GitHub or GitLab from remote URL. Make sure &apos;gh&apos; or
+            &apos;glab&apos; CLI is installed.
           </div>
         )}
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border-subtle)" }}>
           <button
-            onClick={() => { setTab("list"); setSelectedPr(null); }}
+            onClick={() => {
+              setTab("list");
+              setSelectedPr(null);
+            }}
             style={{
               padding: "6px 14px",
               fontSize: 11,
@@ -161,7 +197,14 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
         {tab === "list" && (
           <>
             {loading ? (
-              <div style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                  padding: 16,
+                  textAlign: "center",
+                }}
+              >
                 Loading...
               </div>
             ) : selectedPr ? (
@@ -202,11 +245,26 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                 </button>
               </div>
             ) : prs.length === 0 ? (
-              <div style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                  padding: 16,
+                  textAlign: "center",
+                }}
+              >
                 No {prLabel}s found
               </div>
             ) : (
-              <div style={{ maxHeight: 350, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+              <div
+                style={{
+                  maxHeight: 350,
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                }}
+              >
                 {prs.map((pr) => (
                   <div
                     key={pr.number}
@@ -225,13 +283,32 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                     onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "var(--surface-0)")}
                   >
-                    <span style={{ fontWeight: 600, color: "var(--text-muted)", flexShrink: 0 }}>#{pr.number}</span>
+                    <span style={{ fontWeight: 600, color: "var(--text-muted)", flexShrink: 0 }}>
+                      #{pr.number}
+                    </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div
+                        style={{
+                          color: "var(--text-primary)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {pr.title}
                       </div>
-                      <div style={{ fontSize: 10, color: "var(--text-muted)", display: "flex", gap: 8, marginTop: 1 }}>
-                        <span>{pr.sourceBranch} → {pr.targetBranch}</span>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          gap: 8,
+                          marginTop: 1,
+                        }}
+                      >
+                        <span>
+                          {pr.sourceBranch} → {pr.targetBranch}
+                        </span>
                         <span>{pr.author}</span>
                       </div>
                     </div>
@@ -277,10 +354,13 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
         {tab === "create" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-              Source: <span style={{ color: "var(--accent)" }}>{repo?.currentBranch || "HEAD"}</span>
+              Source:{" "}
+              <span style={{ color: "var(--accent)" }}>{repo?.currentBranch || "HEAD"}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <label style={{ fontSize: 11, color: "var(--text-secondary)", flexShrink: 0 }}>Target:</label>
+              <label style={{ fontSize: 11, color: "var(--text-secondary)", flexShrink: 0 }}>
+                Target:
+              </label>
               <input
                 value={targetBranch}
                 onChange={(e) => setTargetBranch(e.target.value)}
@@ -295,6 +375,41 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                 }}
               />
             </div>
+            <button
+              onClick={handleAiGenerate}
+              disabled={generating}
+              title={aiError || "Generate title and description with AI"}
+              style={{
+                padding: "4px 10px",
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+                background: generating ? "var(--surface-2)" : "var(--surface-0)",
+                color: aiError ? "var(--red)" : "var(--text-secondary)",
+                fontSize: 11,
+                cursor: generating ? "wait" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                alignSelf: "flex-start",
+              }}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              {generating ? "Generating..." : "AI Generate"}
+            </button>
+            {aiError && <div style={{ fontSize: 11, color: "var(--red)" }}>{aiError}</div>}
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -324,7 +439,16 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                 resize: "vertical",
               }}
             />
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-secondary)", cursor: "pointer" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12,
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+              }}
+            >
               <input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} />
               Create as draft
             </label>

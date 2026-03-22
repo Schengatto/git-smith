@@ -56,22 +56,42 @@ Rules:
   }
 
   /**
-   * Generate a PR description from commits and diff.
+   * Generate a PR title from commits.
    */
-  async generatePrDescription(commits: CommitInfo[], diff: string): Promise<string> {
-    const commitLog = commits
-      .map((c) => `- ${c.abbreviatedHash} ${c.subject}`)
-      .join("\n");
+  async generatePrTitle(commits: CommitInfo[], diff: string): Promise<string> {
+    const commitLog = commits.map((c) => `- ${c.abbreviatedHash} ${c.subject}`).join("\n");
 
-    const prompt = `You are a PR description generator. Generate a clear, structured PR description.
+    const prompt = `You are a PR title generator. Generate a concise, descriptive pull request title.
 
 Commits:
 ${commitLog}
 
 Diff summary (truncated):
-${diff.slice(0, 6000)}
+${diff.slice(0, 4000)}
 
-Format:
+Rules:
+- Max 72 characters
+- Be specific about what the PR does
+- Do not use conventional commit prefixes unless it's a single-commit PR
+- Output ONLY the title, no explanation`;
+
+    return this.callAi(prompt);
+  }
+
+  /**
+   * Generate a PR description from commits and diff.
+   * If a PR template is provided, the AI will fill it in instead of using a default format.
+   */
+  async generatePrDescription(
+    commits: CommitInfo[],
+    diff: string,
+    template?: string | null
+  ): Promise<string> {
+    const commitLog = commits.map((c) => `- ${c.abbreviatedHash} ${c.subject}`).join("\n");
+
+    const templateInstruction = template
+      ? `Use the following PR template and fill in each section based on the changes:\n\n${template}`
+      : `Format:
 ## Summary
 <1-3 bullet points>
 
@@ -81,17 +101,27 @@ Format:
 ## Test plan
 <suggested testing steps>`;
 
+    const prompt = `You are a PR description generator. Generate a clear, structured PR description.
+
+Commits:
+${commitLog}
+
+Diff summary (truncated):
+${diff.slice(0, 6000)}
+
+${templateInstruction}
+
+Rules:
+- Output ONLY the PR description content, no extra explanation
+- Be specific and concise`;
+
     return this.callAi(prompt);
   }
 
   /**
    * Review a commit's changes.
    */
-  async reviewCommit(
-    hash: string,
-    diff: string,
-    files: CommitFileInfo[]
-  ): Promise<string> {
+  async reviewCommit(hash: string, diff: string, files: CommitFileInfo[]): Promise<string> {
     const fileList = files
       .map((f) => `${f.status}: ${f.path} (+${f.additions}/-${f.deletions})`)
       .join("\n");
@@ -127,9 +157,18 @@ Be concise and actionable.`;
     }
 
     if (settings.aiProvider === "anthropic") {
-      return this.callAnthropic(prompt, settings.aiApiKey, settings.aiModel || "claude-sonnet-4-20250514");
+      return this.callAnthropic(
+        prompt,
+        settings.aiApiKey,
+        settings.aiModel || "claude-sonnet-4-20250514"
+      );
     } else if (settings.aiProvider === "openai") {
-      return this.callOpenAi(prompt, settings.aiApiKey, settings.aiModel || "gpt-4o", settings.aiBaseUrl);
+      return this.callOpenAi(
+        prompt,
+        settings.aiApiKey,
+        settings.aiModel || "gpt-4o",
+        settings.aiBaseUrl
+      );
     } else if (settings.aiProvider === "gemini") {
       return this.callGemini(prompt, settings.aiApiKey, settings.aiModel || "gemini-2.5-flash");
     } else if (settings.aiProvider === "custom-mcp") {

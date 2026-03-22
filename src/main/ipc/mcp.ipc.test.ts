@@ -12,6 +12,8 @@ const mockGetCommitDetails = vi.fn();
 const mockGetCommitDiff = vi.fn();
 const mockGetCommitFiles = vi.fn();
 const mockGetRangeFileDiff = vi.fn();
+const mockLogRange = vi.fn();
+const mockGetPrTemplate = vi.fn();
 
 vi.mock("../git/git-service", () => ({
   gitService: {
@@ -23,6 +25,8 @@ vi.mock("../git/git-service", () => ({
     getCommitDiff: (...args: unknown[]) => mockGetCommitDiff(...args),
     getCommitFiles: (...args: unknown[]) => mockGetCommitFiles(...args),
     getRangeFileDiff: (...args: unknown[]) => mockGetRangeFileDiff(...args),
+    logRange: (...args: unknown[]) => mockLogRange(...args),
+    getPrTemplate: (...args: unknown[]) => mockGetPrTemplate(...args),
   },
 }));
 
@@ -40,6 +44,7 @@ vi.mock("../mcp/mcp-server", () => ({
 
 const mockGenerateCommitMessage = vi.fn();
 const mockSuggestConflictResolution = vi.fn();
+const mockGeneratePrTitle = vi.fn();
 const mockGeneratePrDescription = vi.fn();
 const mockReviewCommit = vi.fn();
 
@@ -50,6 +55,9 @@ vi.mock("../mcp/mcp-client", () => ({
     }
     suggestConflictResolution(...args: unknown[]) {
       return mockSuggestConflictResolution(...args);
+    }
+    generatePrTitle(...args: unknown[]) {
+      return mockGeneratePrTitle(...args);
     }
     generatePrDescription(...args: unknown[]) {
       return mockGeneratePrDescription(...args);
@@ -85,6 +93,7 @@ describe("mcp IPC handlers", () => {
     expect(channels).toContain(IPC.MCP.SERVER_STATUS);
     expect(channels).toContain(IPC.MCP.GENERATE_COMMIT_MESSAGE);
     expect(channels).toContain(IPC.MCP.SUGGEST_CONFLICT_RESOLUTION);
+    expect(channels).toContain(IPC.MCP.GENERATE_PR_TITLE);
     expect(channels).toContain(IPC.MCP.GENERATE_PR_DESCRIPTION);
     expect(channels).toContain(IPC.MCP.REVIEW_COMMIT);
   });
@@ -134,10 +143,7 @@ describe("mcp IPC handlers", () => {
     const suggestion = "merged content";
     mockGetConflictFileContent.mockResolvedValueOnce(content);
     mockSuggestConflictResolution.mockResolvedValueOnce(suggestion);
-    const result = await getHandler(IPC.MCP.SUGGEST_CONFLICT_RESOLUTION)(
-      {},
-      "src/conflict.ts"
-    );
+    const result = await getHandler(IPC.MCP.SUGGEST_CONFLICT_RESOLUTION)({}, "src/conflict.ts");
     expect(mockGetConflictFileContent).toHaveBeenCalledWith("src/conflict.ts");
     expect(mockSuggestConflictResolution).toHaveBeenCalledWith(
       content.ours,
@@ -148,17 +154,34 @@ describe("mcp IPC handlers", () => {
     expect(result).toBe(suggestion);
   });
 
-  it("MCP.GENERATE_PR_DESCRIPTION with single commit calls getCommitDiff", async () => {
-    const details = { hash: "abc123", message: "feat: x" };
+  it("MCP.GENERATE_PR_TITLE calls logRange, getRangeFileDiff and AI client", async () => {
+    const commits = [{ hash: "abc", abbreviatedHash: "abc", subject: "feat: x" }];
     const diff = "diff content";
+    const title = "Add feature X";
+    mockLogRange.mockResolvedValueOnce(commits);
+    mockGetRangeFileDiff.mockResolvedValueOnce(diff);
+    mockGeneratePrTitle.mockResolvedValueOnce(title);
+    const result = await getHandler(IPC.MCP.GENERATE_PR_TITLE)({}, "feature-branch", "main");
+    expect(mockLogRange).toHaveBeenCalledWith("main", "feature-branch");
+    expect(mockGetRangeFileDiff).toHaveBeenCalledWith("main", "feature-branch", "");
+    expect(mockGeneratePrTitle).toHaveBeenCalledWith(commits, diff);
+    expect(result).toBe(title);
+  });
+
+  it("MCP.GENERATE_PR_DESCRIPTION calls logRange, getRangeFileDiff, getPrTemplate and AI client", async () => {
+    const commits = [{ hash: "abc", abbreviatedHash: "abc", subject: "feat: x" }];
+    const diff = "diff content";
+    const template = "## Summary\n\n## Changes\n";
     const description = "PR description";
-    mockGetCommitDetails.mockResolvedValueOnce(details);
-    mockGetCommitDiff.mockResolvedValueOnce(diff);
+    mockLogRange.mockResolvedValueOnce(commits);
+    mockGetRangeFileDiff.mockResolvedValueOnce(diff);
+    mockGetPrTemplate.mockResolvedValueOnce(template);
     mockGeneratePrDescription.mockResolvedValueOnce(description);
-    const result = await getHandler(IPC.MCP.GENERATE_PR_DESCRIPTION)({}, ["abc123"]);
-    expect(mockGetCommitDetails).toHaveBeenCalledWith("abc123");
-    expect(mockGetCommitDiff).toHaveBeenCalledWith("abc123");
-    expect(mockGeneratePrDescription).toHaveBeenCalledWith([details], diff);
+    const result = await getHandler(IPC.MCP.GENERATE_PR_DESCRIPTION)({}, "feature-branch", "main");
+    expect(mockLogRange).toHaveBeenCalledWith("main", "feature-branch");
+    expect(mockGetRangeFileDiff).toHaveBeenCalledWith("main", "feature-branch", "");
+    expect(mockGetPrTemplate).toHaveBeenCalled();
+    expect(mockGeneratePrDescription).toHaveBeenCalledWith(commits, diff, template);
     expect(result).toBe(description);
   });
 
