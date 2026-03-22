@@ -4,7 +4,7 @@
 
 set -e
 
-TARGET="${1:-/tmp/git-expansion-test-repo}"
+TARGET="${1:-/tmp/gitsmith-test-repo}"
 
 rm -rf "$TARGET"
 mkdir -p "$TARGET"

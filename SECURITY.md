@@ -11,7 +11,7 @@
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
-2. Send a detailed report to the maintainers via [GitHub Security Advisories](https://github.com/Schengatto/git-expansion/security/advisories/new)
+2. Send a detailed report to the maintainers via [GitHub Security Advisories](https://github.com/Schengatto/gitsmith/security/advisories/new)
 3. Include steps to reproduce the vulnerability
 4. Allow reasonable time for a fix before public disclosure
 
@@ -19,7 +19,7 @@ We will acknowledge receipt within 48 hours and aim to release a fix within 7 da
 
 ## Security Considerations
 
-Git Expansion is a desktop application that executes git commands on the user's local system. Key security measures:
+GitSmith is a desktop application that executes git commands on the user's local system. Key security measures:
 
 - **Context isolation** is enabled — the renderer process cannot access Node.js APIs directly
 - **Node integration** is disabled in the renderer

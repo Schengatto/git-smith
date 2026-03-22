@@ -20,8 +20,7 @@ let mockRepoState = {
 
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: Object.assign(
-    (selector?: (s: unknown) => unknown) =>
-      selector ? selector(mockRepoState) : mockRepoState,
+    (selector?: (s: unknown) => unknown) => (selector ? selector(mockRepoState) : mockRepoState),
     {
       getState: () => ({
         repo: null,
@@ -68,8 +67,7 @@ beforeEach(() => {
     repoCategories: {},
     openRepo: mockOpenRepo,
   };
-  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI =
-    mockElectronAPI;
+  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI = mockElectronAPI;
 });
 
 describe("MenuBar", () => {
@@ -97,14 +95,14 @@ describe("MenuBar", () => {
   it("opens Help menu and shows About item", () => {
     render(<MenuBar {...defaultProps} />);
     fireEvent.mouseDown(screen.getByText("Help"));
-    expect(screen.getByText("About Git Expansion")).toBeInTheDocument();
+    expect(screen.getByText("About GitSmith")).toBeInTheDocument();
     expect(screen.getByText("User manual")).toBeInTheDocument();
   });
 
-  it("calls onOpenAbout when 'About Git Expansion' is clicked", () => {
+  it("calls onOpenAbout when 'About GitSmith' is clicked", () => {
     render(<MenuBar {...defaultProps} />);
     fireEvent.mouseDown(screen.getByText("Help"));
-    fireEvent.click(screen.getByText("About Git Expansion"));
+    fireEvent.click(screen.getByText("About GitSmith"));
     expect(defaultProps.onOpenAbout).toHaveBeenCalledTimes(1);
   });
 
@@ -142,7 +140,7 @@ describe("MenuBar", () => {
     expect(screen.getByText("Open repository...")).toBeInTheDocument();
     fireEvent.mouseEnter(screen.getByText("Help"));
     expect(screen.queryByText("Open repository...")).not.toBeInTheDocument();
-    expect(screen.getByText("About Git Expansion")).toBeInTheDocument();
+    expect(screen.getByText("About GitSmith")).toBeInTheDocument();
   });
 
   /* ---- Start menu handlers ---- */
@@ -259,9 +257,7 @@ describe("MenuBar", () => {
   it("shows tools that require repo as disabled when no repo is open", () => {
     render(<MenuBar {...defaultProps} />);
     fireEvent.mouseDown(screen.getByText("Tools"));
-    const staleBranchesBtn = screen
-      .getByText("Stale remote branches...")
-      .closest("button");
+    const staleBranchesBtn = screen.getByText("Stale remote branches...").closest("button");
     expect(staleBranchesBtn).toBeDisabled();
   });
 
@@ -366,7 +362,7 @@ describe("MenuBar", () => {
     fireEvent.mouseDown(screen.getByText("Help"));
     fireEvent.click(screen.getByText("Report an issue"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-expansion/issues"
+      "https://github.com/Schengatto/gitsmith/issues"
     );
   });
 

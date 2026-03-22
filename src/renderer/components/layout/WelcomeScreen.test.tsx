@@ -61,8 +61,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockRecentRepos = [];
   mockRepoCategories = {};
-  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI =
-    mockElectronAPI;
+  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI = mockElectronAPI;
 });
 
 describe("WelcomeScreen", () => {
@@ -182,9 +181,9 @@ describe("WelcomeScreen", () => {
     expect(screen.getByText("Ctrl+N")).toBeInTheDocument();
   });
 
-  it("shows the Git Expansion branding text", () => {
+  it("shows the GitSmith branding text", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText("Git Expansion")).toBeInTheDocument();
+    expect(screen.getByText("GitSmith")).toBeInTheDocument();
   });
 
   it("shows the Contribute section with Develop, Donate, Issues links", () => {
@@ -198,7 +197,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     fireEvent.click(screen.getByText("Develop"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-expansion"
+      "https://github.com/Schengatto/gitsmith"
     );
   });
 
@@ -206,7 +205,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     fireEvent.click(screen.getByText("Issues"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-expansion/issues"
+      "https://github.com/Schengatto/gitsmith/issues"
     );
   });
 
@@ -240,8 +239,7 @@ describe("WelcomeScreen", () => {
     // "Recent repositories" is the DOM text (CSS applies uppercase visually only)
     const sectionText = screen.getByText("Recent repositories");
     // Walk up to find the click-handler div
-    const toggleDiv =
-      sectionText.closest("div[style*='flex']") ?? sectionText.parentElement!;
+    const toggleDiv = sectionText.closest("div[style*='flex']") ?? sectionText.parentElement!;
     fireEvent.click(toggleDiv!);
     // After collapse, the repo item should disappear
     expect(screen.queryByText("my-app")).not.toBeInTheDocument();
@@ -363,10 +361,7 @@ describe("WelcomeScreen", () => {
   });
 
   it("multiple repos in different categories show their sections", () => {
-    mockRecentRepos = [
-      "/home/user/projects/work-app",
-      "/home/user/projects/personal-app",
-    ];
+    mockRecentRepos = ["/home/user/projects/work-app", "/home/user/projects/personal-app"];
     mockRepoCategories = {
       "/home/user/projects/work-app": "Work",
       "/home/user/projects/personal-app": "Personal",
@@ -462,8 +457,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     expect(screen.getByText("work-app")).toBeInTheDocument();
     const sectionText = screen.getByText("Work");
-    const toggleDiv =
-      sectionText.closest("div[style*='flex']") ?? sectionText.parentElement!;
+    const toggleDiv = sectionText.closest("div[style*='flex']") ?? sectionText.parentElement!;
     fireEvent.click(toggleDiv);
     expect(screen.queryByText("work-app")).not.toBeInTheDocument();
   });
@@ -490,9 +484,7 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const repoItem = screen
-      .getByText("work-app")
-      .closest("div[style*='cursor: pointer']");
+    const repoItem = screen.getByText("work-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
     expect(screen.getByText("Remove from category")).toBeInTheDocument();
   });
@@ -501,15 +493,10 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const repoItem = screen
-      .getByText("work-app")
-      .closest("div[style*='cursor: pointer']");
+    const repoItem = screen.getByText("work-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
     fireEvent.click(screen.getByText("Remove from category"));
-    expect(mockSetRepoCategory).toHaveBeenCalledWith(
-      "/home/user/projects/work-app",
-      null
-    );
+    expect(mockSetRepoCategory).toHaveBeenCalledWith("/home/user/projects/work-app", null);
   });
 
   it("shows 'Create, open, or clone a repository to get started' hint in empty state", () => {

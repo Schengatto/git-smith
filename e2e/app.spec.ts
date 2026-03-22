@@ -5,7 +5,7 @@ import { execSync } from "child_process";
 
 let app: ElectronApplication;
 let page: Page;
-const TEST_REPO = "/tmp/git-expansion-test-repo";
+const TEST_REPO = "/tmp/gitsmith-test-repo";
 
 /**
  * Open a test repository by:
@@ -25,7 +25,7 @@ async function openTestRepo(page: Page, repoPath: string) {
   await page.waitForTimeout(1500);
 
   // Click the test repo in the welcome screen to open it via the Zustand store
-  const repoEntry = page.locator(`text=git-expansion-test-repo`).first();
+  const repoEntry = page.locator(`text=gitsmith-test-repo`).first();
   await repoEntry.click();
 
   // Wait for repo to fully load (toolbar, sidebar, graph)
@@ -62,11 +62,11 @@ test.describe.serial("Welcome screen", () => {
 
   test("window opens with correct title", async () => {
     const title = await page.title();
-    expect(title).toBe("Git Expansion");
+    expect(title).toBe("GitSmith");
   });
 
   test("welcome screen shows app heading", async () => {
-    const heading = page.locator("text=Git Expansion");
+    const heading = page.locator("text=GitSmith");
     await expect(heading.first()).toBeVisible();
   });
 
@@ -188,7 +188,7 @@ test.describe.serial("Repository operations", () => {
 
   test("repo selector shows repo name", async () => {
     await expect(
-      page.locator("button", { hasText: "git-expansion-test-repo" })
+      page.locator("button", { hasText: "gitsmith-test-repo" })
     ).toBeVisible();
   });
 });
@@ -405,7 +405,7 @@ test.describe.serial("Close and reopen repository", () => {
 
   test("close repository via repo selector", async () => {
     // Open repo selector dropdown
-    const repoBtn = page.locator("button", { hasText: "git-expansion-test-repo" });
+    const repoBtn = page.locator("button", { hasText: "gitsmith-test-repo" });
     await repoBtn.click();
     await page.waitForTimeout(500);
 
@@ -420,7 +420,7 @@ test.describe.serial("Close and reopen repository", () => {
 
   test("reopen repository from welcome screen", async () => {
     // Click on the test repo in recent repos
-    const repoEntry = page.locator("text=git-expansion-test-repo").first();
+    const repoEntry = page.locator("text=gitsmith-test-repo").first();
     await repoEntry.click();
     await page.waitForTimeout(3000);
 

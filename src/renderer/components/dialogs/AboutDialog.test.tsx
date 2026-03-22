@@ -10,7 +10,9 @@ const openExternalMock = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (window as unknown as { electronAPI: { repo: { openExternal: typeof openExternalMock } } }).electronAPI = {
+  (
+    window as unknown as { electronAPI: { repo: { openExternal: typeof openExternalMock } } }
+  ).electronAPI = {
     repo: { openExternal: openExternalMock },
   };
 });
@@ -23,7 +25,7 @@ describe("AboutDialog", () => {
 
   it("shows app name and description when open", () => {
     render(<AboutDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Git Expansion")).toBeInTheDocument();
+    expect(screen.getByText("GitSmith")).toBeInTheDocument();
     expect(
       screen.getByText("A cross-platform Git GUI desktop application inspired by Git Extensions.")
     ).toBeInTheDocument();

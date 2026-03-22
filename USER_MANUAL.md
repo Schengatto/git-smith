@@ -1,10 +1,10 @@
-# Git Expansion - User Manual
+# GitSmith - User Manual
 
 > **Version:** 0.4.0
 > **License:** MIT
 > **Platforms:** Windows, Linux (DEB/RPM)
 
-Git Expansion is a cross-platform Git GUI desktop app inspired by [Git Extensions](https://gitextensions.github.io/), built with Electron, React, and TypeScript. It provides a modern interface with Catppuccin theming for managing Git repositories visually and comprehensively.
+GitSmith is a cross-platform Git GUI desktop app inspired by [Git Extensions](https://gitextensions.github.io/), built with Electron, React, and TypeScript. It provides a modern interface with Catppuccin theming for managing Git repositories visually and comprehensively.
 
 ---
 
@@ -115,7 +115,7 @@ Git Expansion is a cross-platform Git GUI desktop app inspired by [Git Extension
 
 ### Install from Release
 
-Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/git-expansion/releases) page:
+Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/gitsmith/releases) page:
 
 - **Windows:** Squirrel installer (`.exe`) or ZIP archive
 - **Linux:** `.deb` package (Debian/Ubuntu) or `.rpm` package (Fedora/RHEL)
@@ -123,8 +123,8 @@ Download the appropriate installer from the [GitHub Releases](https://github.com
 ### Build from Source
 
 ```bash
-git clone https://github.com/Schengatto/git-expansion.git
-cd git-expansion
+git clone https://github.com/Schengatto/gitsmith.git
+cd gitsmith
 npm install
 npm start          # Launch in development mode
 npm run make       # Create distributable packages
@@ -134,7 +134,7 @@ npm run make       # Create distributable packages
 
 ## 2. First Launch
 
-On first launch, Git Expansion shows a **welcome screen** with:
+On first launch, GitSmith shows a **welcome screen** with:
 
 - **Quick actions:** Create, Open, Clone, or Scan for repositories
 - **Recent repositories:** List of recently opened repositories (initially empty)
@@ -182,7 +182,7 @@ The top menu bar provides four main menus:
 | User manual | Open the online documentation (GitHub wiki) |
 | Report an issue | Open the bug report page on GitHub |
 | Check for updates... | Check for available updates |
-| About Git Expansion | Show version, license, and information |
+| About GitSmith | Show version, license, and information |
 
 ### 3.2 Toolbar
 
@@ -334,7 +334,7 @@ Available buttons:
 
 1. Click **Start > Create new repository...** or press the **Init** button in the toolbar
 2. Select the directory where you want to create the repository
-3. Git Expansion will run `git init` in the chosen directory
+3. GitSmith will run `git init` in the chosen directory
 4. The new repository will be opened automatically
 
 ### 4.2 Open a Repository
@@ -602,7 +602,7 @@ This is useful for cleaning up a series of small, incremental commits into a sin
 
 ## 12. Conflict Resolution
 
-When an operation generates conflicts, Git Expansion offers three resolution methods:
+When an operation generates conflicts, GitSmith offers three resolution methods:
 
 ### 12.1 Built-in 3-Way Editor
 
@@ -624,7 +624,7 @@ The file list on the left shows the conflict count and resolution status for eac
 
 ### 12.2 External Merge Tool
 
-Git Expansion supports external merge tools:
+GitSmith supports external merge tools:
 - **KDiff3**
 - **Meld**
 - **Beyond Compare**
@@ -918,7 +918,7 @@ Notes are useful for adding review comments, deployment metadata, or other annot
 
 ## 26. Pull Request Integration
 
-Git Expansion integrates with popular Git hosting providers for pull request management:
+GitSmith integrates with popular Git hosting providers for pull request management:
 
 ### Supported Providers
 - **GitHub**
@@ -959,7 +959,7 @@ The dialog can also be opened as a separate window.
 
 ## 28. Integrated Console
 
-Git Expansion includes a built-in terminal (similar to the Console in Git Extensions):
+GitSmith includes a built-in terminal (similar to the Console in Git Extensions):
 
 - **Shell:** Automatically detects the system shell (bash/zsh on Linux, cmd/PowerShell on Windows)
 - **Font:** Cascadia Code (fallback: Consolas, Courier New)
@@ -1025,7 +1025,7 @@ The **Codebase Statistics** panel analyzes the repository's code:
 
 ## 31. Git Accounts
 
-Git Expansion supports managing multiple Git identities:
+GitSmith supports managing multiple Git identities:
 
 ### Account Configuration
 In **Settings > Accounts**:
@@ -1043,7 +1043,7 @@ In **Settings > Accounts**:
 - Changing the account automatically updates `user.name` and `user.email` in the local repo config
 
 ### SSH Import
-Git Expansion can parse the `~/.ssh/config` file to import existing SSH configurations.
+GitSmith can parse the `~/.ssh/config` file to import existing SSH configurations.
 
 ---
 
@@ -1126,7 +1126,7 @@ Direct editing of Git configuration keys:
 
 ### 33.2 MCP Server
 
-Git Expansion includes a **built-in MCP server** that exposes 50+ Git operations as tools for external AI assistants:
+GitSmith includes a **built-in MCP server** that exposes 50+ Git operations as tools for external AI assistants:
 
 - Read operations: status, log, diff, blame, branch list, etc.
 - Write operations: commit, checkout, merge, push, etc.
@@ -1149,7 +1149,7 @@ When an AI provider is configured, the following features become available:
 
 ## 34. Automatic Updates
 
-Git Expansion supports automatic updates via GitHub Releases:
+GitSmith supports automatic updates via GitHub Releases:
 
 1. **Manual check:** Menu **Help > Check for updates...**
 2. **Automatic notification:** The application periodically checks for new versions
@@ -1207,7 +1207,7 @@ The update is downloaded in the background and installed on restart.
 
 ## 36. Themes
 
-Git Expansion offers two themes based on the **Catppuccin** palette:
+GitSmith offers two themes based on the **Catppuccin** palette:
 
 ### Dark Theme (Catppuccin Mocha)
 - Dark background with light text
@@ -1255,7 +1255,7 @@ If the layout becomes problematic: **Dashboard > Reset layout** restores the def
 
 ## 38. Internationalization
 
-Git Expansion supports multiple languages via the internationalization (i18n) system:
+GitSmith supports multiple languages via the internationalization (i18n) system:
 
 - Change the language from **Settings > General > Language**
 - All UI elements, menus, dialogs, and messages are translated
@@ -1281,6 +1281,6 @@ Make sure Git is updated (2.30+). Press `F5` to refresh the repository status.
 
 ---
 
-*Git Expansion is open-source software released under the MIT license.*
-*Repository: https://github.com/Schengatto/git-expansion*
-*Report bugs: https://github.com/Schengatto/git-expansion/issues*
+*GitSmith is open-source software released under the MIT license.*
+*Repository: https://github.com/Schengatto/gitsmith*
+*Report bugs: https://github.com/Schengatto/gitsmith/issues*

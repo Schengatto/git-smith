@@ -53,7 +53,7 @@ describe("ui-store — theme", () => {
   });
 
   it("initial theme is dark when localStorage has no value", () => {
-    mockStorage["git-expansion-theme"] = "";
+    mockStorage["gitsmith-theme"] = "";
     useUIStore.setState({ theme: "dark" });
     expect(useUIStore.getState().theme).toBe("dark");
   });

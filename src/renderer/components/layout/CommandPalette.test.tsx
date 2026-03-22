@@ -133,8 +133,7 @@ const mockElectronAPI = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockHasRepo = true;
-  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI =
-    mockElectronAPI;
+  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI = mockElectronAPI;
 });
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -257,9 +256,7 @@ describe("CommandPalette", () => {
     const input = getInput();
     // Initially index 0 is selected. After one ArrowDown, index 1 should be.
     fireEvent.keyDown(input, { key: "ArrowDown" });
-    const buttons = screen
-      .getAllByRole("button")
-      .filter((b) => !b.textContent?.includes("ESC"));
+    const buttons = screen.getAllByRole("button").filter((b) => !b.textContent?.includes("ESC"));
     // Second button (index 1) should now have the accent-dim background
     expect(buttons[1]).toHaveStyle("background: var(--accent-dim)");
   });
@@ -268,9 +265,7 @@ describe("CommandPalette", () => {
     renderOpen();
     const input = getInput();
     fireEvent.keyDown(input, { key: "ArrowUp" });
-    const buttons = screen
-      .getAllByRole("button")
-      .filter((b) => !b.textContent?.includes("ESC"));
+    const buttons = screen.getAllByRole("button").filter((b) => !b.textContent?.includes("ESC"));
     // Index 0 should still be selected
     expect(buttons[0]).toHaveStyle("background: var(--accent-dim)");
   });
@@ -280,9 +275,7 @@ describe("CommandPalette", () => {
     const input = getInput();
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "ArrowUp" });
-    const buttons = screen
-      .getAllByRole("button")
-      .filter((b) => !b.textContent?.includes("ESC"));
+    const buttons = screen.getAllByRole("button").filter((b) => !b.textContent?.includes("ESC"));
     expect(buttons[0]).toHaveStyle("background: var(--accent-dim)");
   });
 
@@ -293,9 +286,7 @@ describe("CommandPalette", () => {
     for (let i = 0; i < 100; i++) {
       fireEvent.keyDown(input, { key: "ArrowDown" });
     }
-    const buttons = screen
-      .getAllByRole("button")
-      .filter((b) => !b.textContent?.includes("ESC"));
+    const buttons = screen.getAllByRole("button").filter((b) => !b.textContent?.includes("ESC"));
     // Last button should be selected
     const last = buttons[buttons.length - 1];
     expect(last).toHaveStyle("background: var(--accent-dim)");
@@ -313,9 +304,7 @@ describe("CommandPalette", () => {
 
   it("mouseEnter updates the selected index", () => {
     renderOpen();
-    const buttons = screen
-      .getAllByRole("button")
-      .filter((b) => !b.textContent?.includes("ESC"));
+    const buttons = screen.getAllByRole("button").filter((b) => !b.textContent?.includes("ESC"));
     // Hover over the third button
     fireEvent.mouseEnter(buttons[2]!);
     expect(buttons[2]).toHaveStyle("background: var(--accent-dim)");
@@ -419,7 +408,7 @@ describe("CommandPalette", () => {
   it("shows Help category commands", () => {
     renderOpen();
     expect(screen.getByText("Keyboard Shortcuts")).toBeInTheDocument();
-    expect(screen.getByText("About Git Expansion")).toBeInTheDocument();
+    expect(screen.getByText("About GitSmith")).toBeInTheDocument();
   });
 
   it("shows Settings category commands", () => {
@@ -496,11 +485,11 @@ describe("CommandPalette", () => {
     vi.useRealTimers();
   });
 
-  it("clicking 'About Git Expansion' calls openAboutDialog", () => {
+  it("clicking 'About GitSmith' calls openAboutDialog", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "About" } });
-    fireEvent.click(screen.getByText("About Git Expansion").closest("button")!);
+    fireEvent.click(screen.getByText("About GitSmith").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenAboutDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -628,9 +617,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-pr", listener);
     fireEvent.change(getInput(), { target: { value: "Pull Requests" } });
-    fireEvent.click(
-      screen.getByText("Pull Requests / Merge Requests...").closest("button")!
-    );
+    fireEvent.click(screen.getByText("Pull Requests / Merge Requests...").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -727,9 +714,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Branch Commit Range" } });
-    fireEvent.click(
-      screen.getByText("Branch Commit Range Compare...").closest("button")!
-    );
+    fireEvent.click(screen.getByText("Branch Commit Range Compare...").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenBranchCompareDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -806,9 +791,7 @@ describe("CommandPalette", () => {
     fireEvent.keyDown(getInput(), { key: "ArrowDown" });
     rerender(<CommandPalette open={false} onClose={vi.fn()} />);
     rerender(<CommandPalette open={true} onClose={vi.fn()} />);
-    const buttons = screen
-      .getAllByRole("button")
-      .filter((b) => !b.textContent?.includes("ESC"));
+    const buttons = screen.getAllByRole("button").filter((b) => !b.textContent?.includes("ESC"));
     expect(buttons[0]).toHaveStyle("background: var(--accent-dim)");
   });
 });

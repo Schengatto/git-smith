@@ -1,6 +1,6 @@
 # Roadmap
 
-This document outlines the planned direction for Git Expansion. Priorities may shift based on community feedback.
+This document outlines the planned direction for GitSmith. Priorities may shift based on community feedback.
 
 ## v0.5 — Stability & Polish
 
@@ -33,4 +33,4 @@ This document outlines the planned direction for Git Expansion. Priorities may s
 
 ## Community Contributions
 
-We welcome contributions! Check the [issues](https://github.com/Schengatto/git-expansion/issues) page for `good first issue` and `help wanted` labels.
+We welcome contributions! Check the [issues](https://github.com/Schengatto/gitsmith/issues) page for `good first issue` and `help wanted` labels.

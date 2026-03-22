@@ -31,7 +31,7 @@ If applicable, add screenshots to help explain the problem.
 ## Environment
 
 - **OS**: [e.g. Ubuntu 24.04, Windows 11, macOS 15]
-- **Git Expansion version**: [e.g. 0.1.0]
+- **GitSmith version**: [e.g. 0.1.0]
 - **Git version**: [output of `git --version`]
 - **Node.js version**: [output of `node --version`]
 

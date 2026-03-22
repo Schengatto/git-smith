@@ -1,13 +1,13 @@
-# Git Expansion
+# GitSmith
 
-[![CI](https://github.com/Schengatto/git-expansion/actions/workflows/ci.yml/badge.svg)](https://github.com/Schengatto/git-expansion/actions/workflows/ci.yml)
+[![CI](https://github.com/Schengatto/gitsmith/actions/workflows/ci.yml/badge.svg)](https://github.com/Schengatto/gitsmith/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Cross-platform Git GUI inspired by [GitExtensions](https://gitextensions.github.io/), built with **Electron**, **React**, and **TypeScript**.
 
 <p align="center">
-  <img src="assets/icon.png" alt="Git Expansion" width="128" />
+  <img src="assets/icon.png" alt="GitSmith" width="128" />
 </p>
 
 ## Features
@@ -57,8 +57,8 @@ Cross-platform Git GUI inspired by [GitExtensions](https://gitextensions.github.
 ### Install & Run
 
 ```bash
-git clone https://github.com/Schengatto/git-expansion.git
-cd git-expansion
+git clone https://github.com/Schengatto/gitsmith.git
+cd gitsmith
 npm install
 npm start
 ```
