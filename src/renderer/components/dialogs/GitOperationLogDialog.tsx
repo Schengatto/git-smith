@@ -212,7 +212,7 @@ export const GitOperationLogDialog: React.FC = () => {
                 overflow: "auto",
               }}
             >
-              {error}
+              {stripAnsi(error)}
             </div>
           </div>
         )}
@@ -298,6 +298,12 @@ export const GitOperationLogDialog: React.FC = () => {
   );
 };
 
+/* ---------- Helpers ---------- */
+
+// eslint-disable-next-line no-control-regex
+const ANSI_RE = /\x1b\[[0-9;]*[A-Za-z]|\x1b\].*?(?:\x07|\x1b\\)/g;
+const stripAnsi = (text: string): string => text.replace(ANSI_RE, "");
+
 /* ---------- Sub-components ---------- */
 
 const LogEntryBlock: React.FC<{ entry: CommandLogEntry; outputLines: OutputLine[] }> = ({
@@ -341,7 +347,7 @@ const LogEntryBlock: React.FC<{ entry: CommandLogEntry; outputLines: OutputLine[
                 wordBreak: "break-word",
               }}
             >
-              {line.text}
+              {stripAnsi(line.text)}
             </div>
           ))}
         </div>
@@ -358,7 +364,7 @@ const LogEntryBlock: React.FC<{ entry: CommandLogEntry; outputLines: OutputLine[
             wordBreak: "break-word",
           }}
         >
-          {entry.error}
+          {stripAnsi(entry.error)}
         </div>
       )}
     </div>
