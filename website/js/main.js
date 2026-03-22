@@ -1,3 +1,23 @@
+// Theme toggle — switches CSS variables + screenshot
+const themeToggle = document.querySelector(".theme-toggle");
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const isLight = document.documentElement.dataset.theme === "light";
+    const newTheme = isLight ? "dark" : "light";
+    document.documentElement.dataset.theme = isLight ? "" : "light";
+    if (isLight) {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    // Switch screenshot
+    document.querySelectorAll(".screenshot-img").forEach((img) => {
+      img.classList.toggle("active", img.dataset.theme === newTheme);
+    });
+  });
+}
+
 // Scroll fade-in animation
 const observer = new IntersectionObserver(
   (entries) => {
@@ -25,30 +45,10 @@ if (hamburger && nav) {
     );
   });
 
-  // Close menu on nav link click
   nav.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => {
       nav.classList.remove("open");
       hamburger.setAttribute("aria-expanded", "false");
     });
-  });
-}
-
-// Screenshot dark/light toggle
-document.querySelectorAll(".toggle-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const theme = btn.dataset.theme;
-    document.querySelectorAll(".toggle-btn").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".screenshot-img").forEach((img) => img.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelector(`.screenshot-img[data-theme="${theme}"]`)?.classList.add("active");
-  });
-});
-
-// Smooth active header on scroll
-const header = document.querySelector(".header");
-if (header) {
-  window.addEventListener("scroll", () => {
-    header.classList.toggle("scrolled", window.scrollY > 10);
   });
 }
