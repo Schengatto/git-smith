@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitSmith — A Git GUI crafted for developers</title>
+  <meta name="description" content="GitSmith is a free, open-source, cross-platform Git GUI desktop app. Visual commit graph, interactive rebase, side-by-side diffs, and more.">
+  <meta property="og:title" content="GitSmith — A Git GUI crafted for developers">
+  <meta property="og:description" content="Free, open-source, cross-platform Git GUI. Visual commit graph, interactive rebase, diffs, and more.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="images/icons/icon-32.png" type="image/png">
+  <link rel="icon" href="images/icons/icon-64.png" type="image/png" sizes="64x64">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ─── Header ─── -->
+  <header class="header">
+    <div class="container">
+      <a href="#" class="header-logo">
+        <img src="images/icons/icon-64.png" alt="GitSmith logo" width="32" height="32">
+        GitSmith
+      </a>
+      <nav class="nav" role="navigation">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/Schengatto/git-expansion" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Hero ─── -->
+  <section class="hero">
+    <div class="container">
+      <span class="hero-badge">Open Source &middot; MIT License</span>
+      <h1>A Git GUI<br><span class="gradient">crafted for developers</span></h1>
+      <p class="hero-subtitle">
+        GitSmith is a free, cross-platform Git client that helps you visualize, manage, and master your repositories with ease.
+      </p>
+      <div class="hero-actions">
+        <a href="#download" class="btn btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+        <a href="https://github.com/Schengatto/git-expansion" target="_blank" rel="noopener" class="btn btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+      <div class="hero-screenshot fade-in">
+        <div class="screenshot-toggle">
+          <button class="toggle-btn active" data-theme="dark">Dark</button>
+          <button class="toggle-btn" data-theme="light">Light</button>
+        </div>
+        <img src="images/screenshots/dark.png"
+             alt="GitSmith main interface — dark theme"
+             class="screenshot-img active"
+             data-theme="dark">
+        <img src="images/screenshots/light.png"
+             alt="GitSmith main interface — light theme"
+             class="screenshot-img"
+             data-theme="light">
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Features ─── -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header fade-in">
+        <h2>Everything you need, nothing you don't</h2>
+        <p>Powerful Git features with a clean, intuitive interface</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+          </div>
+          <h3>Visual Commit Graph</h3>
+          <p>Navigate your entire history with a beautiful, interactive commit graph. Branches, merges, and tags at a glance.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
+          </div>
+          <h3>Side-by-Side Diff</h3>
+          <p>Review changes with syntax-highlighted, side-by-side or unified diffs. Stage individual hunks with precision.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--mauve">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </div>
+          <h3>Interactive Rebase</h3>
+          <p>Reorder, squash, edit, and drop commits with an intuitive drag-and-drop interactive rebase interface.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--peach">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+          </div>
+          <h3>Branch Management</h3>
+          <p>Create, checkout, merge, rename, and delete branches effortlessly. Full support for remote tracking branches.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--yellow">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          </div>
+          <h3>Stash Management</h3>
+          <p>Save, browse, apply, and pop your stashes. Never lose work-in-progress changes again.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--red">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Merge Conflict Resolution</h3>
+          <p>Resolve conflicts with a built-in merge editor. Visual indicators show conflicting sections clearly.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          </div>
+          <h3>Git LFS Support</h3>
+          <p>Manage large files seamlessly with built-in Git LFS support. Track, fetch, and prune LFS objects.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--mauve">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><command/><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+          </div>
+          <h3>Command Palette & Shortcuts</h3>
+          <p>Access any action instantly with the command palette. Fully customizable keyboard shortcuts for power users.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4c0 2 2 3 2 6h4c0-3 2-4 2-6a4 4 0 0 0-4-4z"/><rect x="9" y="14" width="6" height="4" rx="1"/><line x1="10" y1="21" x2="14" y2="21"/></svg>
+          </div>
+          <h3>AI Commit Messages</h3>
+          <p>Generate meaningful commit messages with AI assistance. Review and edit before committing.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--peach">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <h3>Multi-language</h3>
+          <p>Use GitSmith in your preferred language. Built-in i18n support with community translations.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--yellow">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <h3>Worktree Management</h3>
+          <p>Work on multiple branches simultaneously with Git worktrees. Create, switch, and remove worktrees from the UI.</p>
+        </div>
+
+        <div class="feature-card fade-in">
+          <div class="feature-icon feature-icon--red">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <h3>Integrated Terminal</h3>
+          <p>Drop into a full terminal without leaving GitSmith. Run any command right next to your commit graph.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Download ─── -->
+  <section id="download" class="download">
+    <div class="container">
+      <div class="section-header fade-in">
+        <h2>Download GitSmith</h2>
+        <p>Free and open source. Available for all major platforms.</p>
+      </div>
+      <div class="download-cards fade-in">
+
+        <div class="download-card">
+          <div class="os-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M22.379 23.546a11.808 11.808 0 0 1-1.702 2.442c-.903 1.082-1.643 1.832-2.212 2.248-.884.685-1.832 1.035-2.848 1.056-.729 0-1.608-.208-2.631-.628-1.028-.418-1.973-.626-2.835-.626-.903 0-1.872.208-2.907.626-1.038.42-1.875.639-2.517.663-.974.044-1.945-.318-2.916-1.091-.617-.459-1.389-1.245-2.313-2.36-.992-1.199-1.808-2.59-2.448-4.178C.677 19.864.357 18.073.357 16.34c0-1.977.427-3.68 1.283-5.1a7.508 7.508 0 0 1 2.68-2.717 7.204 7.204 0 0 1 3.622-1.024c.774 0 1.79.24 3.053.71 1.258.473 2.066.712 2.42.712.264 0 1.16-.28 2.681-.839 1.437-.518 2.65-.733 3.645-.648 2.694.218 4.718 1.28 6.063 3.196-2.41 1.46-3.6 3.507-3.572 6.133.025 2.044.763 3.745 2.21 5.094.657.623 1.392 1.105 2.208 1.449-.177.514-.364 1.006-.562 1.479zM17.287 1.09c0 1.603-.585 3.1-1.75 4.483-1.406 1.644-3.107 2.594-4.953 2.444a4.979 4.979 0 0 1-.037-.607c0-1.539.67-3.185 1.858-4.532.594-.683 1.35-1.25 2.268-1.703.916-.447 1.782-.694 2.598-.74.025.22.037.44.037.655z" transform="scale(.75) translate(0 -1)"/></svg>
+          </div>
+          <h3>macOS</h3>
+          <p>macOS 11+ (Intel & Apple Silicon)</p>
+          <a href="https://github.com/Schengatto/git-expansion/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">Download .zip</a>
+        </div>
+
+        <div class="download-card">
+          <div class="os-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+          </div>
+          <h3>Windows</h3>
+          <p>Windows 10+ (x64)</p>
+          <a href="https://github.com/Schengatto/git-expansion/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">Download .exe</a>
+        </div>
+
+        <div class="download-card">
+          <div class="os-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12.504 0c-.155 0-.311.001-.465.003-.653.014-1.303.07-1.937.191a7.127 7.127 0 0 0-1.818.63 7.658 7.658 0 0 0-1.553 1.04 7.6 7.6 0 0 0-1.207 1.396c-.344.492-.636 1.022-.871 1.593-.236.572-.415 1.18-.535 1.824a10.4 10.4 0 0 0-.168 1.896c-.001.33.008.66.029.99H2.7a.7.7 0 0 0-.7.7v2a.7.7 0 0 0 .7.7h1.192c-.011.24-.017.48-.017.72 0 .257.006.513.019.77H2.7a.7.7 0 0 0-.7.7v2a.7.7 0 0 0 .7.7h1.401c.201 1.378.64 2.643 1.29 3.744.654 1.105 1.52 2.043 2.574 2.79 1.055.748 2.299 1.304 3.702 1.653A16.06 16.06 0 0 0 16 24.02V20h-2.021c-.463 0-.913-.044-1.343-.127a5.885 5.885 0 0 1-1.186-.38 4.62 4.62 0 0 1-1.035-.637 4.218 4.218 0 0 1-.835-.896c-.232-.34-.416-.719-.547-1.136a5.357 5.357 0 0 1-.22-1.198h5.188a.7.7 0 0 0 .7-.7v-2a.7.7 0 0 0-.7-.7H8.733a10.023 10.023 0 0 1-.019-.77c0-.24.006-.48.017-.72h5.271a.7.7 0 0 0 .7-.7v-2a.7.7 0 0 0-.7-.7H8.879a7.96 7.96 0 0 1 .305-1.413c.157-.438.363-.846.618-1.222.256-.377.559-.718.907-1.02a4.95 4.95 0 0 1 1.138-.766 5.41 5.41 0 0 1 1.325-.464c.472-.11.975-.167 1.508-.167h1.342V2.001h-1.342c-.497 0-.99.025-1.476.075A9.528 9.528 0 0 0 12.504 0zM19 6h2.7a.7.7 0 0 1 .7.7v2a.7.7 0 0 1-.7.7H19V6zm0 5.455h2.7a.7.7 0 0 1 .7.7v2a.7.7 0 0 1-.7.7H19v-3.4zM19 17h2.7a.7.7 0 0 1 .7.7v2a.7.7 0 0 1-.7.7H19V17z"/></svg>
+          </div>
+          <h3>Linux</h3>
+          <p>DEB, RPM, and AppImage</p>
+          <a href="https://github.com/Schengatto/git-expansion/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">Download .deb</a>
+        </div>
+
+      </div>
+      <p class="download-note fade-in">
+        All downloads available on <a href="https://github.com/Schengatto/git-expansion/releases" target="_blank" rel="noopener">GitHub Releases</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-left">
+        &copy; 2026 GitSmith &middot; MIT License
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Schengatto/git-expansion" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Schengatto/git-expansion/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/Schengatto/git-expansion/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
