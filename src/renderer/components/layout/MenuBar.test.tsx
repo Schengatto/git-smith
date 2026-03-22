@@ -362,7 +362,7 @@ describe("MenuBar", () => {
     fireEvent.mouseDown(screen.getByText("Help"));
     fireEvent.click(screen.getByText("Report an issue"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/gitsmith/issues"
+      "https://github.com/Schengatto/git-smith/issues"
     );
   });
 

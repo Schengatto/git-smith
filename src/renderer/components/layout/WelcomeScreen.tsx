@@ -792,7 +792,7 @@ export const WelcomeScreen: React.FC = () => {
                 {
                   icon: <CodeIcon size={13} />,
                   label: "Develop",
-                  url: "https://github.com/Schengatto/gitsmith",
+                  url: "https://github.com/Schengatto/git-smith",
                 },
                 {
                   icon: <HeartIcon size={13} />,
@@ -802,7 +802,7 @@ export const WelcomeScreen: React.FC = () => {
                 {
                   icon: <BugIcon size={13} />,
                   label: "Issues",
-                  url: "https://github.com/Schengatto/gitsmith/issues",
+                  url: "https://github.com/Schengatto/git-smith/issues",
                 },
               ] as const
             ).map((item) => (

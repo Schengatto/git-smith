@@ -33,4 +33,4 @@ This document outlines the planned direction for GitSmith. Priorities may shift 
 
 ## Community Contributions
 
-We welcome contributions! Check the [issues](https://github.com/Schengatto/gitsmith/issues) page for `good first issue` and `help wanted` labels.
+We welcome contributions! Check the [issues](https://github.com/Schengatto/git-smith/issues) page for `good first issue` and `help wanted` labels.

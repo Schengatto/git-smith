@@ -467,7 +467,7 @@ export const MenuBar: React.FC<{
         {
           label: "Report an issue",
           onClick: () =>
-            window.electronAPI.repo.openExternal("https://github.com/Schengatto/gitsmith/issues"),
+            window.electronAPI.repo.openExternal("https://github.com/Schengatto/git-smith/issues"),
         },
         {
           label: "Check for updates...",

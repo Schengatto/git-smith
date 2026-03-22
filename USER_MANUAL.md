@@ -115,7 +115,7 @@ GitSmith is a cross-platform Git GUI desktop app inspired by [Git Extensions](ht
 
 ### Install from Release
 
-Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/gitsmith/releases) page:
+Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/git-smith/releases) page:
 
 - **Windows:** Squirrel installer (`.exe`) or ZIP archive
 - **Linux:** `.deb` package (Debian/Ubuntu) or `.rpm` package (Fedora/RHEL)
@@ -123,7 +123,7 @@ Download the appropriate installer from the [GitHub Releases](https://github.com
 ### Build from Source
 
 ```bash
-git clone https://github.com/Schengatto/gitsmith.git
+git clone https://github.com/Schengatto/git-smith.git
 cd gitsmith
 npm install
 npm start          # Launch in development mode
@@ -1282,5 +1282,5 @@ Make sure Git is updated (2.30+). Press `F5` to refresh the repository status.
 ---
 
 *GitSmith is open-source software released under the MIT license.*
-*Repository: https://github.com/Schengatto/gitsmith*
-*Report bugs: https://github.com/Schengatto/gitsmith/issues*
+*Repository: https://github.com/Schengatto/git-smith*
+*Report bugs: https://github.com/Schengatto/git-smith/issues*
