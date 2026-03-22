@@ -78,7 +78,7 @@
     "electron": "41.0.2",
     "eslint": "8.57.1",
     "eslint-plugin-react": "7.37.4",
-    "eslint-plugin-react-hooks": "5.1.0",
+    "eslint-plugin-react-hooks": "7.0.1",
     "husky": "9.1.7",
     "jsdom": "25.0.1",
     "lint-staged": "^16.4.0",
