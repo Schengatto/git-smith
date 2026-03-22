@@ -61,6 +61,8 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
 
   const loadSettings = async () => {
     const s = await window.electronAPI.settings.get();
+    // Sync theme with the currently active UI theme
+    s.theme = useUIStore.getState().theme;
     setSettings(s);
   };
 

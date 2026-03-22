@@ -108,11 +108,13 @@ export const useUIStore = create<UIState>((set, get) => ({
     const next = get().theme === "dark" ? "light" : "dark";
     applyTheme(next);
     set({ theme: next });
+    window.electronAPI?.settings.update({ theme: next }).catch(() => {});
   },
 
   setTheme: (theme: Theme) => {
     applyTheme(theme);
     set({ theme });
+    window.electronAPI?.settings.update({ theme }).catch(() => {});
   },
 
   togglePanel: (panel: Panel) =>

@@ -6,6 +6,12 @@ const mockStorage: Record<string, string> = {};
 vi.stubGlobal("document", {
   documentElement: { setAttribute: vi.fn() },
 });
+vi.stubGlobal("window", {
+  ...globalThis.window,
+  electronAPI: {
+    settings: { update: vi.fn().mockResolvedValue({}) },
+  },
+});
 vi.stubGlobal("localStorage", {
   getItem: (key: string) => mockStorage[key] ?? null,
   setItem: (key: string, value: string) => {
