@@ -42,7 +42,7 @@
   <section class="hero">
     <div class="container">
       <span class="hero-badge">Open Source &middot; MIT License</span>
-      <h1>A Git GUI<br><span class="gradient">crafted for developers</span></h1>
+      <h1>The Git GUI<br><span class="gradient">Crafted for Developers</span></h1>
       <p class="hero-subtitle">
         GitSmith is a free, cross-platform Git client that helps you visualize, manage, and master your repositories with ease.
       </p>
@@ -69,111 +69,174 @@
     </div>
   </section>
 
-  <!-- ─── Features ─── -->
+  <!-- ─── Features Showcase ─── -->
   <section id="features" class="features">
     <div class="container">
       <div class="section-header fade-in">
         <h2>Everything you need, nothing you don't</h2>
         <p>Powerful Git features with a clean, intuitive interface</p>
       </div>
-      <div class="features-grid">
 
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--accent">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
-          </div>
+      <!-- Showcase 1: Commit Graph — text left, visual right -->
+      <div class="showcase fade-in">
+        <div class="showcase-text">
+          <div class="showcase-label showcase-label--accent">Core</div>
           <h3>Visual Commit Graph</h3>
-          <p>Navigate your entire history with a beautiful, interactive commit graph. Branches, merges, and tags at a glance.</p>
+          <p>Navigate your entire repository history with an interactive, color-coded commit graph. See branches, merges, tags, and remote tracking — all at a glance. Click any commit to inspect its details, diff, and changed files.</p>
         </div>
+        <div class="showcase-visual showcase-visual--accent">
+          <svg viewBox="0 0 400 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="80" y1="30" x2="80" y2="200" stroke="var(--green)" stroke-width="2.5"/>
+            <line x1="160" y1="60" x2="160" y2="140" stroke="var(--accent)" stroke-width="2.5"/>
+            <line x1="240" y1="90" x2="240" y2="170" stroke="var(--mauve)" stroke-width="2.5"/>
+            <path d="M80 70 Q120 70 160 60" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5"/>
+            <path d="M160 140 Q120 150 80 160" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5"/>
+            <path d="M80 100 Q160 100 240 90" stroke="var(--mauve)" stroke-width="2" stroke-dasharray="5"/>
+            <circle cx="80" cy="30" r="7" fill="var(--green)"/>
+            <circle cx="80" cy="70" r="7" fill="var(--green)"/>
+            <circle cx="80" cy="100" r="7" fill="var(--green)"/>
+            <circle cx="80" cy="130" r="7" fill="var(--green)"/>
+            <circle cx="80" cy="160" r="7" fill="var(--green)"/>
+            <circle cx="80" cy="200" r="7" fill="var(--green)"/>
+            <circle cx="160" cy="60" r="7" fill="var(--accent)"/>
+            <circle cx="160" cy="100" r="7" fill="var(--accent)"/>
+            <circle cx="160" cy="140" r="7" fill="var(--accent)"/>
+            <circle cx="240" cy="90" r="7" fill="var(--mauve)"/>
+            <circle cx="240" cy="130" r="7" fill="var(--mauve)"/>
+            <circle cx="240" cy="170" r="7" fill="var(--mauve)"/>
+            <rect x="92" y="22" rx="8" width="46" height="17" fill="var(--green)" opacity="0.2"/>
+            <text x="115" y="35" fill="var(--green)" font-size="10" text-anchor="middle" font-family="sans-serif" font-weight="600">main</text>
+            <rect x="172" y="52" rx="8" width="72" height="17" fill="var(--accent)" opacity="0.2"/>
+            <text x="208" y="65" fill="var(--accent)" font-size="10" text-anchor="middle" font-family="sans-serif" font-weight="600">feature/auth</text>
+            <rect x="252" y="82" rx="8" width="56" height="17" fill="var(--mauve)" opacity="0.2"/>
+            <text x="280" y="95" fill="var(--mauve)" font-size="10" text-anchor="middle" font-family="sans-serif" font-weight="600">develop</text>
+            <rect x="92" y="192" rx="8" width="44" height="17" fill="var(--yellow)" opacity="0.2"/>
+            <text x="114" y="205" fill="var(--yellow)" font-size="10" text-anchor="middle" font-family="sans-serif" font-weight="600">v0.4.0</text>
+          </svg>
+        </div>
+      </div>
 
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--green">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
-          </div>
+      <!-- Showcase 2: Diff — visual left, text right -->
+      <div class="showcase showcase--reverse fade-in">
+        <div class="showcase-text">
+          <div class="showcase-label showcase-label--green">Review</div>
           <h3>Side-by-Side Diff</h3>
-          <p>Review changes with syntax-highlighted, side-by-side or unified diffs. Stage individual hunks with precision.</p>
+          <p>Review every change with syntax-highlighted diffs — side-by-side or unified. Stage individual lines and hunks with surgical precision. Inline hunk staging lets you commit exactly what you need.</p>
         </div>
+        <div class="showcase-visual showcase-visual--green">
+          <svg viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="185" height="180" rx="6" fill="var(--surface-2)" stroke="var(--border-subtle)" stroke-width="1"/>
+            <rect x="205" y="10" width="185" height="180" rx="6" fill="var(--surface-2)" stroke="var(--border-subtle)" stroke-width="1"/>
+            <text x="20" y="30" fill="var(--text-muted)" font-size="10" font-family="monospace">1</text>
+            <text x="40" y="30" fill="var(--text-secondary)" font-size="10" font-family="monospace">import { app } from</text>
+            <text x="215" y="30" fill="var(--text-muted)" font-size="10" font-family="monospace">1</text>
+            <text x="235" y="30" fill="var(--text-secondary)" font-size="10" font-family="monospace">import { app } from</text>
+            <text x="20" y="50" fill="var(--text-muted)" font-size="10" font-family="monospace">2</text>
+            <text x="40" y="50" fill="var(--text-secondary)" font-size="10" font-family="monospace">import path from</text>
+            <text x="215" y="50" fill="var(--text-muted)" font-size="10" font-family="monospace">2</text>
+            <text x="235" y="50" fill="var(--text-secondary)" font-size="10" font-family="monospace">import path from</text>
+            <rect x="10" y="57" width="185" height="18" fill="var(--red)" opacity="0.15"/>
+            <text x="20" y="70" fill="var(--text-muted)" font-size="10" font-family="monospace">3</text>
+            <text x="40" y="70" fill="var(--red)" font-size="10" font-family="monospace">- const old = true;</text>
+            <rect x="205" y="57" width="185" height="18" fill="var(--green)" opacity="0.15"/>
+            <text x="215" y="70" fill="var(--text-muted)" font-size="10" font-family="monospace">3</text>
+            <text x="235" y="70" fill="var(--green)" font-size="10" font-family="monospace">+ const new = false;</text>
+            <text x="20" y="90" fill="var(--text-muted)" font-size="10" font-family="monospace">4</text>
+            <text x="40" y="90" fill="var(--text-secondary)" font-size="10" font-family="monospace">function init() {</text>
+            <text x="215" y="90" fill="var(--text-muted)" font-size="10" font-family="monospace">4</text>
+            <text x="235" y="90" fill="var(--text-secondary)" font-size="10" font-family="monospace">function init() {</text>
+            <rect x="205" y="97" width="185" height="18" fill="var(--green)" opacity="0.15"/>
+            <text x="215" y="110" fill="var(--text-muted)" font-size="10" font-family="monospace">5</text>
+            <text x="235" y="110" fill="var(--green)" font-size="10" font-family="monospace">+   validate();</text>
+            <rect x="205" y="115" width="185" height="18" fill="var(--green)" opacity="0.15"/>
+            <text x="215" y="128" fill="var(--text-muted)" font-size="10" font-family="monospace">6</text>
+            <text x="235" y="128" fill="var(--green)" font-size="10" font-family="monospace">+   setup();</text>
+            <text x="20" y="150" fill="var(--text-muted)" font-size="10" font-family="monospace">5</text>
+            <text x="40" y="150" fill="var(--text-secondary)" font-size="10" font-family="monospace">  return config;</text>
+            <text x="215" y="150" fill="var(--text-muted)" font-size="10" font-family="monospace">7</text>
+            <text x="235" y="150" fill="var(--text-secondary)" font-size="10" font-family="monospace">  return config;</text>
+            <text x="20" y="170" fill="var(--text-muted)" font-size="10" font-family="monospace">6</text>
+            <text x="40" y="170" fill="var(--text-secondary)" font-size="10" font-family="monospace">}</text>
+            <text x="215" y="170" fill="var(--text-muted)" font-size="10" font-family="monospace">8</text>
+            <text x="235" y="170" fill="var(--text-secondary)" font-size="10" font-family="monospace">}</text>
+          </svg>
+        </div>
+      </div>
 
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--mauve">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          </div>
+      <!-- Showcase 3: Interactive Rebase — text left, visual right -->
+      <div class="showcase fade-in">
+        <div class="showcase-text">
+          <div class="showcase-label showcase-label--mauve">Advanced</div>
           <h3>Interactive Rebase</h3>
-          <p>Reorder, squash, edit, and drop commits with an intuitive drag-and-drop interactive rebase interface.</p>
+          <p>Reorder, squash, edit, and drop commits with a drag-and-drop interface. Rewrite history with confidence — undo and redo are always one click away.</p>
         </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--peach">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-          </div>
-          <h3>Branch Management</h3>
-          <p>Create, checkout, merge, rename, and delete branches effortlessly. Full support for remote tracking branches.</p>
+        <div class="showcase-visual showcase-visual--mauve">
+          <svg viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="10" width="360" height="36" rx="6" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="1.5"/>
+            <rect x="30" y="20" width="48" height="16" rx="4" fill="var(--accent)" opacity="0.2"/>
+            <text x="54" y="32" fill="var(--accent)" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="600">pick</text>
+            <text x="90" y="32" fill="var(--text-primary)" font-size="11" font-family="sans-serif">a3f7c2d feat: add auth flow</text>
+            <text x="360" y="32" fill="var(--text-muted)" font-size="10" font-family="sans-serif">:::</text>
+            <rect x="20" y="54" width="360" height="36" rx="6" fill="var(--surface-2)" stroke="var(--border-subtle)" stroke-width="1"/>
+            <rect x="30" y="64" width="56" height="16" rx="4" fill="var(--mauve)" opacity="0.2"/>
+            <text x="58" y="76" fill="var(--mauve)" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="600">squash</text>
+            <text x="98" y="76" fill="var(--text-primary)" font-size="11" font-family="sans-serif">b1e2f3a fix: typo in auth</text>
+            <text x="360" y="76" fill="var(--text-muted)" font-size="10" font-family="sans-serif">:::</text>
+            <rect x="20" y="98" width="360" height="36" rx="6" fill="var(--surface-2)" stroke="var(--border-subtle)" stroke-width="1"/>
+            <rect x="30" y="108" width="48" height="16" rx="4" fill="var(--accent)" opacity="0.2"/>
+            <text x="54" y="120" fill="var(--accent)" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="600">pick</text>
+            <text x="90" y="120" fill="var(--text-primary)" font-size="11" font-family="sans-serif">c4d5e6f feat: add settings UI</text>
+            <text x="360" y="120" fill="var(--text-muted)" font-size="10" font-family="sans-serif">:::</text>
+            <rect x="20" y="142" width="360" height="36" rx="6" fill="var(--surface-2)" stroke="var(--border-subtle)" stroke-width="1" opacity="0.5"/>
+            <rect x="30" y="152" width="48" height="16" rx="4" fill="var(--red)" opacity="0.2"/>
+            <text x="54" y="164" fill="var(--red)" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="600">drop</text>
+            <text x="90" y="164" fill="var(--text-muted)" font-size="11" font-family="sans-serif" text-decoration="line-through">d7e8f9a chore: debug logs</text>
+            <text x="360" y="164" fill="var(--text-muted)" font-size="10" font-family="sans-serif">:::</text>
+          </svg>
         </div>
+      </div>
 
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--yellow">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          </div>
-          <h3>Stash Management</h3>
-          <p>Save, browse, apply, and pop your stashes. Never lose work-in-progress changes again.</p>
+      <!-- Showcase 4: AI + Terminal — visual left, text right -->
+      <div class="showcase showcase--reverse fade-in">
+        <div class="showcase-text">
+          <div class="showcase-label showcase-label--green">Smart</div>
+          <h3>AI-Powered Workflow</h3>
+          <p>Generate meaningful commit messages with AI assistance, review code changes intelligently, and drop into a fully integrated terminal — all without leaving GitSmith.</p>
         </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--red">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <h3>Merge Conflict Resolution</h3>
-          <p>Resolve conflicts with a built-in merge editor. Visual indicators show conflicting sections clearly.</p>
+        <div class="showcase-visual showcase-visual--accent">
+          <svg viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="10" width="360" height="85" rx="8" fill="var(--surface-2)" stroke="var(--border-subtle)" stroke-width="1"/>
+            <text x="35" y="32" fill="var(--text-muted)" font-size="10" font-family="sans-serif">Commit message</text>
+            <rect x="30" y="40" width="340" height="44" rx="4" fill="var(--surface-0)"/>
+            <text x="40" y="58" fill="var(--text-primary)" font-size="11" font-family="monospace">feat: implement OAuth2 login with</text>
+            <text x="40" y="74" fill="var(--text-primary)" font-size="11" font-family="monospace">token refresh and session mgmt</text>
+            <rect x="295" y="14" width="76" height="22" rx="6" fill="var(--accent)" opacity="0.2"/>
+            <text x="333" y="29" fill="var(--accent)" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="600">AI Generated</text>
+            <rect x="20" y="108" width="360" height="82" rx="8" fill="#0d0d18" stroke="var(--border-subtle)" stroke-width="1"/>
+            <text x="35" y="128" fill="var(--green)" font-size="11" font-family="monospace">~/my-project $</text>
+            <text x="170" y="128" fill="var(--text-secondary)" font-size="11" font-family="monospace">git status</text>
+            <text x="35" y="148" fill="var(--text-muted)" font-size="10" font-family="monospace">On branch main</text>
+            <text x="35" y="164" fill="var(--green)" font-size="10" font-family="monospace">  modified: src/auth.ts</text>
+            <text x="35" y="180" fill="var(--green)" font-size="10" font-family="monospace">  modified: src/config.ts</text>
+          </svg>
         </div>
+      </div>
 
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--accent">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-          </div>
-          <h3>Git LFS Support</h3>
-          <p>Manage large files seamlessly with built-in Git LFS support. Track, fetch, and prune LFS objects.</p>
+      <!-- More features — pill list -->
+      <div class="features-more fade-in">
+        <h3>And much more</h3>
+        <div class="features-pills">
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg> Branch Management</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg> Stash Management</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> Merge Conflicts</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg> Git LFS</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg> Command Palette</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Multi-language</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09"/></svg> Worktrees</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Integrated Terminal</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> GPG Signing</span>
+          <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg> Keyboard Shortcuts</span>
         </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--mauve">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><command/><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
-          </div>
-          <h3>Command Palette & Shortcuts</h3>
-          <p>Access any action instantly with the command palette. Fully customizable keyboard shortcuts for power users.</p>
-        </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--green">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4c0 2 2 3 2 6h4c0-3 2-4 2-6a4 4 0 0 0-4-4z"/><rect x="9" y="14" width="6" height="4" rx="1"/><line x1="10" y1="21" x2="14" y2="21"/></svg>
-          </div>
-          <h3>AI Commit Messages</h3>
-          <p>Generate meaningful commit messages with AI assistance. Review and edit before committing.</p>
-        </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--peach">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          </div>
-          <h3>Multi-language</h3>
-          <p>Use GitSmith in your preferred language. Built-in i18n support with community translations.</p>
-        </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--yellow">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </div>
-          <h3>Worktree Management</h3>
-          <p>Work on multiple branches simultaneously with Git worktrees. Create, switch, and remove worktrees from the UI.</p>
-        </div>
-
-        <div class="feature-card fade-in">
-          <div class="feature-icon feature-icon--red">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          </div>
-          <h3>Integrated Terminal</h3>
-          <p>Drop into a full terminal without leaving GitSmith. Run any command right next to your commit graph.</p>
-        </div>
-
       </div>
     </div>
   </section>

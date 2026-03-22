@@ -322,11 +322,11 @@ a:hover {
 
 .section-header {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 80px;
 }
 
 .section-header h2 {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   font-weight: 700;
   margin-bottom: 12px;
 }
@@ -338,55 +338,114 @@ a:hover {
   margin: 0 auto;
 }
 
-.features-grid {
+/* Showcase row — alternating text + visual */
+.showcase {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  margin-bottom: 80px;
 }
 
-.feature-card {
+.showcase--reverse {
+  direction: rtl;
+}
+
+.showcase--reverse > * {
+  direction: ltr;
+}
+
+.showcase-text {
+  padding: 8px 0;
+}
+
+.showcase-label {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+}
+
+.showcase-label--accent { background: var(--accent-dim); color: var(--accent); }
+.showcase-label--green { background: var(--green-dim); color: var(--green); }
+.showcase-label--mauve { background: var(--mauve-dim); color: var(--mauve); }
+
+.showcase-text h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+
+.showcase-text p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.showcase-visual {
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 28px;
-  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  border-radius: 16px;
+  padding: 24px;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.feature-card:hover {
-  transform: translateY(-4px);
+.showcase-visual:hover {
   border-color: var(--border);
   box-shadow: 0 12px 40px var(--card-shadow);
 }
 
-.feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  font-size: 1.5rem;
-  transition: background 0.3s, color 0.3s;
+.showcase-visual svg {
+  width: 100%;
+  height: auto;
 }
 
-.feature-icon--accent { background: var(--accent-dim); color: var(--accent); }
-.feature-icon--green { background: var(--green-dim); color: var(--green); }
-.feature-icon--mauve { background: var(--mauve-dim); color: var(--mauve); }
-.feature-icon--peach { background: rgba(255, 190, 148, 0.16); color: var(--peach); }
-.feature-icon--red { background: var(--red-dim); color: var(--red); }
-.feature-icon--yellow { background: var(--yellow-dim); color: var(--yellow); }
+/* "And much more" pill list */
+.features-more {
+  text-align: center;
+  margin-top: 20px;
+}
 
-.feature-card h3 {
-  font-size: 1.1rem;
+.features-more h3 {
+  font-size: 1.3rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 24px;
+  color: var(--text-secondary);
 }
 
-.feature-card p {
+.features-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.pill:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  background: var(--accent-dim);
+}
+
+.pill svg {
+  color: var(--accent);
 }
 
 /* ─── Download ─── */
@@ -490,8 +549,13 @@ a:hover {
 
 /* ─── Responsive ─── */
 @media (max-width: 900px) {
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .showcase {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .showcase--reverse {
+    direction: ltr;
   }
 }
 
@@ -504,8 +568,8 @@ a:hover {
     font-size: 1rem;
   }
 
-  .features-grid {
-    grid-template-columns: 1fr;
+  .showcase-text h3 {
+    font-size: 1.3rem;
   }
 
   .nav {
