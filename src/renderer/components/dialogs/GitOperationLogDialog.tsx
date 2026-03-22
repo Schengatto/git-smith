@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { useGitOperationStore } from "../../store/git-operation-store";
 import type { OutputLine } from "../../store/git-operation-store";
 import type { CommandLogEntry } from "../../../shared/git-types";
@@ -17,6 +17,7 @@ export const GitOperationLogDialog: React.FC = () => {
     setAutoClose,
   } = useGitOperationStore();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [logExpanded, setLogExpanded] = useState(false);
 
   // Group output lines by entry id
   const outputByEntry = useMemo(() => {
@@ -126,32 +127,67 @@ export const GitOperationLogDialog: React.FC = () => {
           )}
         </div>
 
-        {/* Log area */}
-        <div
-          ref={scrollRef}
-          style={{
-            flex: 1,
-            overflow: "auto",
-            padding: "8px 16px",
-            fontFamily: "var(--font-mono, 'Cascadia Code', 'Fira Code', monospace)",
-            fontSize: 12,
-            lineHeight: 1.6,
-            minHeight: 80,
-            maxHeight: "50vh",
-          }}
-        >
-          {entries.length === 0 && running && (
-            <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
-              Waiting for git output...
+        {/* Log area (collapsible) */}
+        <div style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+          <button
+            onClick={() => setLogExpanded((v) => !v)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              width: "100%",
+              padding: "6px 16px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 500,
+              color: "var(--text-muted)",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              style={{
+                transition: "transform 0.15s ease",
+                transform: logExpanded ? "rotate(90deg)" : "rotate(0deg)",
+              }}
+            >
+              <polygon points="6,2 22,12 6,22" />
+            </svg>
+            {logExpanded ? "Nascondi dettagli log" : "Mostra dettagli log"}
+          </button>
+          {logExpanded && (
+            <div
+              ref={scrollRef}
+              style={{
+                overflow: "auto",
+                padding: "8px 16px",
+                fontFamily: "var(--font-mono, 'Cascadia Code', 'Fira Code', monospace)",
+                fontSize: 12,
+                lineHeight: 1.6,
+                maxHeight: "40vh",
+              }}
+            >
+              {entries.length === 0 && running && (
+                <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                  Waiting for git output...
+                </div>
+              )}
+              {entries.map((entry) => (
+                <LogEntryBlock
+                  key={entry.id}
+                  entry={entry}
+                  outputLines={outputByEntry.get(entry.id) ?? []}
+                />
+              ))}
             </div>
           )}
-          {entries.map((entry) => (
-            <LogEntryBlock
-              key={entry.id}
-              entry={entry}
-              outputLines={outputByEntry.get(entry.id) ?? []}
-            />
-          ))}
         </div>
 
         {/* Error detail */}

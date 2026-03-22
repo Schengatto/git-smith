@@ -145,15 +145,26 @@ describe("GitOperationLogDialog", () => {
     expect(storeState.setAutoClose).toHaveBeenCalledWith(true);
   });
 
-  it("shows Waiting for git output when running with no entries", () => {
+  it("log details are collapsed by default", () => {
     storeState.open = true;
     storeState.running = true;
     storeState.entries = [];
     render(<GitOperationLogDialog />);
-    expect(screen.getByText(/waiting for git output/i)).toBeInTheDocument();
+    expect(screen.getByText(/mostra dettagli log/i)).toBeInTheDocument();
+    expect(screen.queryByText(/waiting for git output/i)).not.toBeInTheDocument();
   });
 
-  it("renders log entries with command and args", () => {
+  it("shows Waiting for git output when running with no entries and log expanded", () => {
+    storeState.open = true;
+    storeState.running = true;
+    storeState.entries = [];
+    render(<GitOperationLogDialog />);
+    fireEvent.click(screen.getByText(/mostra dettagli log/i));
+    expect(screen.getByText(/waiting for git output/i)).toBeInTheDocument();
+    expect(screen.getByText(/nascondi dettagli log/i)).toBeInTheDocument();
+  });
+
+  it("renders log entries with command and args when expanded", () => {
     storeState.open = true;
     storeState.entries = [
       {
@@ -165,7 +176,7 @@ describe("GitOperationLogDialog", () => {
       },
     ];
     const { container } = render(<GitOperationLogDialog />);
-    // Command and args are in a span rendered as "git push origin main"
+    fireEvent.click(screen.getByText(/mostra dettagli log/i));
     expect(container.textContent).toContain("git");
     expect(container.textContent).toContain("push origin main");
   });
