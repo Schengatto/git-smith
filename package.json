@@ -1,5 +1,5 @@
 {
-  "name": "git-expansion",
+  "name": "gitsmith",
   "version": "0.4.0",
   "description": "Cross-platform Git GUI — inspired by GitExtensions",
   "license": "MIT",
@@ -34,7 +34,7 @@
       {
         "provider": "github",
         "owner": "Schengatto",
-        "repo": "git-expansion"
+        "repo": "gitsmith"
       }
     ]
   },

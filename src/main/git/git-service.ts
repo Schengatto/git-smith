@@ -99,6 +99,7 @@ export class GitService {
     "git push",
     "git pull",
     "git fetch",
+    "git commit",
     "git rebase",
     "git merge",
     "git stash",
@@ -179,6 +180,7 @@ export class GitService {
     // Only capture stdout/stderr for mutation commands to avoid flooding the
     // renderer with output from read-only commands (git log, git status, etc.)
     const tracked = GitService.TRACKED_PREFIXES.some((p) => description.startsWith(p));
+    entry.tracked = tracked;
     if (tracked) this._currentRunId = entry.id;
     this.emitCommandLog(entry);
     const start = Date.now();
@@ -1363,7 +1365,7 @@ export class GitService {
 
     const repoPath = this.repoPath!;
     const content = await this.getConflictFileContent(filePath);
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "git-expansion-merge-"));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gitsmith-merge-"));
 
     const basePath = path.join(tmpDir, "BASE_" + path.basename(filePath));
     const localPath = path.join(tmpDir, "LOCAL_" + path.basename(filePath));

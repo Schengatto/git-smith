@@ -16,7 +16,7 @@ export class GitOperationCancelledError extends Error {
   }
 }
 
-const AUTOCLOSE_KEY = "git-expansion-operation-autoclose";
+const AUTOCLOSE_KEY = "gitsmith-operation-autoclose";
 
 function getPersistedAutoClose(): boolean {
   try {
@@ -105,6 +105,9 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
       // late-arriving updates from a previous operation whose entries were cleared
       // by start(). A genuinely new entry never has exitCode on first emission.
       if (entry.exitCode !== undefined) return;
+      // Only show mutation commands (tracked) in the operation dialog;
+      // read-only commands (git log, git status, etc.) are background noise.
+      if (!entry.tracked) return;
       set((s) => ({ entries: [...s.entries, entry] }));
     }
   },

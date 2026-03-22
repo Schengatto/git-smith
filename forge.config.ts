@@ -20,9 +20,9 @@ const config: ForgeConfig = {
     asar: {
       unpack: "{**/*.node,**/node-pty/**}",
     },
-    name: "Git Expansion",
-    executableName: "git-expansion",
-    appBundleId: "com.git-expansion.app",
+    name: "GitSmith",
+    executableName: "gitsmith",
+    appBundleId: "com.gitsmith.app",
     icon: "./assets/icon",
     extraResource: ["./USER_MANUAL.pdf"],
   },
@@ -32,24 +32,24 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({
-      name: "git-expansion",
-      setupExe: "GitExpansion-Setup.exe",
+      name: "gitsmith",
+      setupExe: "GitSmith-Setup.exe",
     }),
     new MakerZIP({}, ["darwin"]),
     new MakerDeb({
       options: {
-        name: "git-expansion",
-        productName: "Git Expansion",
+        name: "gitsmith",
+        productName: "GitSmith",
         genericName: "Git GUI",
         description: "Cross-platform Git GUI inspired by GitExtensions",
         categories: ["Development", "RevisionControl"],
-        mimeType: ["x-scheme-handler/git-expansion"],
+        mimeType: ["x-scheme-handler/gitsmith"],
       },
     }),
     new MakerRpm({
       options: {
-        name: "git-expansion",
-        productName: "Git Expansion",
+        name: "gitsmith",
+        productName: "GitSmith",
         license: "MIT",
         description: "Cross-platform Git GUI inspired by GitExtensions",
         categories: ["Development", "RevisionControl"],
@@ -58,7 +58,7 @@ const config: ForgeConfig = {
   ],
   publishers: [
     new PublisherGithub({
-      repository: { owner: "Schengatto", name: "git-expansion" },
+      repository: { owner: "Schengatto", name: "gitsmith" },
       prerelease: false,
       draft: true,
     }),
@@ -81,7 +81,7 @@ const config: ForgeConfig = {
       const appUpdateYml = [
         "provider: github",
         "owner: Schengatto",
-        "repo: git-expansion",
+        "repo: gitsmith",
       ].join("\n");
       for (const outputPath of outputPaths) {
         const resourcesDir = path.join(outputPath, "resources");

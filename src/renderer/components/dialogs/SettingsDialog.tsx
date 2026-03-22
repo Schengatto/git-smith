@@ -2,11 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useUIStore } from "../../store/ui-store";
 import { useAccountStore } from "../../store/account-store";
 import type { GitAccount, SshHostEntry } from "../../../shared/git-types";
-import type {
-  AppSettings,
-  CommitTemplate,
-  CommitSnippet,
-} from "../../../shared/settings-types";
+import type { AppSettings, CommitTemplate, CommitSnippet } from "../../../shared/settings-types";
 
 type Tab =
   | "general"
@@ -236,8 +232,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
                   cursor: "pointer",
                   color: tab === t.id ? "var(--accent)" : "var(--text-secondary)",
                   background: tab === t.id ? "var(--accent-dim)" : "transparent",
-                  borderLeft:
-                    tab === t.id ? "2px solid var(--accent)" : "2px solid transparent",
+                  borderLeft: tab === t.id ? "2px solid var(--accent)" : "2px solid transparent",
                   transition: "all 0.1s",
                   fontWeight: tab === t.id ? 600 : 400,
                 }}
@@ -255,11 +250,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
             )}
             {tab === "accounts" && <AccountsTab mode={mode} />}
             {tab === "git" && gitConfig && globalConfig && (
-              <GitConfigTab
-                local={gitConfig}
-                global={globalConfig}
-                onSave={handleSaveGitConfig}
-              />
+              <GitConfigTab local={gitConfig} global={globalConfig} onSave={handleSaveGitConfig} />
             )}
             {settings && tab === "fetch" && (
               <FetchTab settings={settings} onChange={updateSetting} />
@@ -267,9 +258,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
             {settings && tab === "commit" && (
               <CommitTab settings={settings} onChange={updateSetting} />
             )}
-            {settings && tab === "diff" && (
-              <DiffTab settings={settings} onChange={updateSetting} />
-            )}
+            {settings && tab === "diff" && <DiffTab settings={settings} onChange={updateSetting} />}
             {settings && tab === "mergetool" && (
               <MergeToolTab
                 settings={settings}
@@ -280,9 +269,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
             {settings && tab === "advanced" && (
               <AdvancedTab settings={settings} onChange={updateSetting} />
             )}
-            {settings && tab === "ai" && (
-              <AiTab settings={settings} onChange={updateSetting} />
-            )}
+            {settings && tab === "ai" && <AiTab settings={settings} onChange={updateSetting} />}
           </div>
         </div>
 
@@ -365,10 +352,7 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
         />
       </SettingRow>
       <SectionTitle>Git</SectionTitle>
-      <SettingRow
-        label="Git binary path"
-        description="Leave empty to use git from system PATH"
-      >
+      <SettingRow label="Git binary path" description="Leave empty to use git from system PATH">
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           <input
             value={settings.gitBinaryPath}
@@ -409,9 +393,7 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
       >
         <Toggle
           checked={settings.notifications?.enabled ?? true}
-          onChange={(v) =>
-            onChange("notifications", { ...settings.notifications, enabled: v })
-          }
+          onChange={(v) => onChange("notifications", { ...settings.notifications, enabled: v })}
         />
       </SettingRow>
       {settings.notifications?.enabled && (
@@ -422,28 +404,19 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
           >
             <Toggle
               checked={settings.notifications?.onFetch ?? true}
-              onChange={(v) =>
-                onChange("notifications", { ...settings.notifications, onFetch: v })
-              }
+              onChange={(v) => onChange("notifications", { ...settings.notifications, onFetch: v })}
             />
           </SettingRow>
-          <SettingRow
-            label="On push"
-            description="Notify when push completes successfully"
-          >
+          <SettingRow label="On push" description="Notify when push completes successfully">
             <Toggle
               checked={settings.notifications?.onPush ?? true}
-              onChange={(v) =>
-                onChange("notifications", { ...settings.notifications, onPush: v })
-              }
+              onChange={(v) => onChange("notifications", { ...settings.notifications, onPush: v })}
             />
           </SettingRow>
           <SettingRow label="On error" description="Notify when a git operation fails">
             <Toggle
               checked={settings.notifications?.onError ?? true}
-              onChange={(v) =>
-                onChange("notifications", { ...settings.notifications, onError: v })
-              }
+              onChange={(v) => onChange("notifications", { ...settings.notifications, onError: v })}
             />
           </SettingRow>
         </>
@@ -569,10 +542,7 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
         label="Sign commits (GPG)"
         description="Automatically sign commits with your GPG key"
       >
-        <Toggle
-          checked={settings.signCommits}
-          onChange={(v) => onChange("signCommits", v)}
-        />
+        <Toggle checked={settings.signCommits} onChange={(v) => onChange("signCommits", v)} />
       </SettingRow>
       <SettingRow
         label="Default commit template"
@@ -617,9 +587,7 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
               border: "1px solid var(--border)",
             }}
           >
-            <span style={{ fontWeight: 600, fontSize: 12, minWidth: 70 }}>
-              {tpl.name}
-            </span>
+            <span style={{ fontWeight: 600, fontSize: 12, minWidth: 70 }}>{tpl.name}</span>
             <span
               style={{
                 fontSize: 11,
@@ -788,9 +756,7 @@ const SnippetManager: React.FC<{
             border: "1px solid var(--border)",
           }}
         >
-          <span style={{ fontWeight: 600, fontSize: 12, minWidth: 90 }}>
-            {snip.label}
-          </span>
+          <span style={{ fontWeight: 600, fontSize: 12, minWidth: 90 }}>{snip.label}</span>
           <span
             style={{
               fontSize: 11,
@@ -880,10 +846,7 @@ const DiffTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
         onChange={(v) => onChange("preferSideBySideDiff", v === "split")}
       />
     </SettingRow>
-    <SettingRow
-      label="Context lines"
-      description="Number of unchanged lines shown around changes"
-    >
+    <SettingRow label="Context lines" description="Number of unchanged lines shown around changes">
       <NumberInput
         value={settings.diffContextLines}
         min={0}
@@ -892,10 +855,7 @@ const DiffTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
       />
     </SettingRow>
     <SectionTitle>Graph</SectionTitle>
-    <SettingRow
-      label="Initial load count"
-      description="Number of commits loaded on first open"
-    >
+    <SettingRow label="Initial load count" description="Number of commits loaded on first open">
       <Select
         value={String(settings.graphMaxInitialLoad)}
         options={[
@@ -919,53 +879,52 @@ const DiffTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
   </div>
 );
 
-const MERGE_TOOL_PRESETS: { name: string; label: string; path: string; args: string }[] =
-  [
-    { name: "", label: "None (use internal editor)", path: "", args: "" },
-    {
-      name: "kdiff3",
-      label: "KDiff3",
-      path: "kdiff3",
-      args: '"$BASE" "$LOCAL" "$REMOTE" -o "$MERGED"',
-    },
-    {
-      name: "meld",
-      label: "Meld",
-      path: "meld",
-      args: '"$LOCAL" "$BASE" "$REMOTE" -o "$MERGED"',
-    },
-    {
-      name: "beyondcompare",
-      label: "Beyond Compare",
-      path: "bcomp",
-      args: '"$LOCAL" "$REMOTE" "$BASE" "$MERGED"',
-    },
-    {
-      name: "p4merge",
-      label: "P4Merge",
-      path: "p4merge",
-      args: '"$BASE" "$LOCAL" "$REMOTE" "$MERGED"',
-    },
-    {
-      name: "vscode",
-      label: "VS Code",
-      path: "code",
-      args: '--wait --merge "$LOCAL" "$REMOTE" "$BASE" "$MERGED"',
-    },
-    {
-      name: "tortoisegitmerge",
-      label: "TortoiseGitMerge",
-      path: "TortoiseGitMerge",
-      args: '-base:"$BASE" -theirs:"$REMOTE" -mine:"$LOCAL" -merged:"$MERGED"',
-    },
-    {
-      name: "winmerge",
-      label: "WinMerge",
-      path: "WinMergeU",
-      args: '"$LOCAL" "$REMOTE" "$MERGED"',
-    },
-    { name: "custom", label: "Custom...", path: "", args: "" },
-  ];
+const MERGE_TOOL_PRESETS: { name: string; label: string; path: string; args: string }[] = [
+  { name: "", label: "None (use internal editor)", path: "", args: "" },
+  {
+    name: "kdiff3",
+    label: "KDiff3",
+    path: "kdiff3",
+    args: '"$BASE" "$LOCAL" "$REMOTE" -o "$MERGED"',
+  },
+  {
+    name: "meld",
+    label: "Meld",
+    path: "meld",
+    args: '"$LOCAL" "$BASE" "$REMOTE" -o "$MERGED"',
+  },
+  {
+    name: "beyondcompare",
+    label: "Beyond Compare",
+    path: "bcomp",
+    args: '"$LOCAL" "$REMOTE" "$BASE" "$MERGED"',
+  },
+  {
+    name: "p4merge",
+    label: "P4Merge",
+    path: "p4merge",
+    args: '"$BASE" "$LOCAL" "$REMOTE" "$MERGED"',
+  },
+  {
+    name: "vscode",
+    label: "VS Code",
+    path: "code",
+    args: '--wait --merge "$LOCAL" "$REMOTE" "$BASE" "$MERGED"',
+  },
+  {
+    name: "tortoisegitmerge",
+    label: "TortoiseGitMerge",
+    path: "TortoiseGitMerge",
+    args: '-base:"$BASE" -theirs:"$REMOTE" -mine:"$LOCAL" -merged:"$MERGED"',
+  },
+  {
+    name: "winmerge",
+    label: "WinMerge",
+    path: "WinMergeU",
+    args: '"$LOCAL" "$REMOTE" "$MERGED"',
+  },
+  { name: "custom", label: "Custom...", path: "", args: "" },
+];
 
 const MergeToolTab: React.FC<{
   settings: AppSettings;
@@ -987,9 +946,7 @@ const MergeToolTab: React.FC<{
   };
 
   const handleBrowse = async () => {
-    const selected = await window.electronAPI.repo.browseDirectory(
-      "Select merge tool executable"
-    );
+    const selected = await window.electronAPI.repo.browseDirectory("Select merge tool executable");
     if (selected) onChange("mergeToolPath", selected);
   };
 
@@ -1000,8 +957,8 @@ const MergeToolTab: React.FC<{
     <div>
       <SectionTitle>External Merge Tool</SectionTitle>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
-        Configure an external tool for resolving merge conflicts. If none is set, the
-        built-in editor will be used.
+        Configure an external tool for resolving merge conflicts. If none is set, the built-in
+        editor will be used.
       </div>
       <SettingRow label="Merge tool" description="Select a preset or choose Custom">
         <Select
@@ -1196,9 +1153,7 @@ const GitConfigTab: React.FC<{
               title="Click to edit"
             >
               {global[key] || (
-                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
-                  not set
-                </span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>not set</span>
               )}
             </div>
           )}
@@ -1273,9 +1228,7 @@ const GitConfigTab: React.FC<{
               title="Click to edit"
             >
               {local[key] || global[key] || (
-                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
-                  not set
-                </span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>not set</span>
               )}
             </div>
           )}
@@ -1321,9 +1274,7 @@ const SettingRow: React.FC<{
   >
     <div>
       <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{label}</div>
-      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>
-        {description}
-      </div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{description}</div>
     </div>
     <div style={{ flexShrink: 0 }}>{children}</div>
   </div>
@@ -1587,10 +1538,7 @@ function IconAccount() {
 
 /* ---------- AI / MCP Tab ---------- */
 
-const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
-  settings,
-  onChange,
-}) => {
+const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
   const providerOptions = [
     { value: "none", label: "Disabled" },
     { value: "anthropic", label: "Anthropic (Claude)" },
@@ -1620,18 +1568,12 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
   return (
     <div>
       <SectionTitle>AI Provider</SectionTitle>
-      <SettingRow
-        label="Provider"
-        description="Select AI provider for code assistance features"
-      >
+      <SettingRow label="Provider" description="Select AI provider for code assistance features">
         <Select
           value={settings.aiProvider}
           options={providerOptions}
           onChange={(v) =>
-            onChange(
-              "aiProvider",
-              v as "none" | "anthropic" | "openai" | "gemini" | "custom-mcp"
-            )
+            onChange("aiProvider", v as "none" | "anthropic" | "openai" | "gemini" | "custom-mcp")
           }
         />
       </SettingRow>
@@ -1661,9 +1603,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
           {modelOptions[settings.aiProvider] && (
             <SettingRow label="Model" description="AI model to use for generation">
               <Select
-                value={
-                  settings.aiModel || modelOptions[settings.aiProvider]?.[0]?.value || ""
-                }
+                value={settings.aiModel || modelOptions[settings.aiProvider]?.[0]?.value || ""}
                 options={modelOptions[settings.aiProvider] ?? []}
                 onChange={(v) => onChange("aiModel", v)}
               />
@@ -1708,12 +1648,8 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
           lineHeight: 1.6,
         }}
       >
-        <div style={{ padding: "2px 0" }}>
-          &#8226; Generate commit messages from staged changes
-        </div>
-        <div style={{ padding: "2px 0" }}>
-          &#8226; AI-assisted merge conflict resolution
-        </div>
+        <div style={{ padding: "2px 0" }}>&#8226; Generate commit messages from staged changes</div>
+        <div style={{ padding: "2px 0" }}>&#8226; AI-assisted merge conflict resolution</div>
         <div style={{ padding: "2px 0" }}>&#8226; Code review of commits</div>
         <div style={{ padding: "2px 0" }}>&#8226; PR description generation</div>
       </div>
@@ -1739,7 +1675,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
         >
           Start with:{" "}
           <code style={{ fontSize: 11, color: "var(--accent)" }}>
-            git-expansion --mcp-server --repo /path/to/repo
+            gitsmith --mcp-server --repo /path/to/repo
           </code>
         </div>
       )}
@@ -1752,8 +1688,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
 const emptyAccount = { label: "", name: "", email: "", signingKey: "", sshKeyPath: "" };
 
 const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overlay" }) => {
-  const { accounts, loadAccounts, addAccount, updateAccount, deleteAccount } =
-    useAccountStore();
+  const { accounts, loadAccounts, addAccount, updateAccount, deleteAccount } = useAccountStore();
   const [form, setForm] = useState(emptyAccount);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -2050,9 +1985,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               </div>
             </div>
           </div>
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}
-          >
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
             <button
               onClick={handleCancel}
               style={{
@@ -2079,8 +2012,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: "pointer",
-                opacity:
-                  !form.label.trim() || !form.name.trim() || !form.email.trim() ? 0.5 : 1,
+                opacity: !form.label.trim() || !form.name.trim() || !form.email.trim() ? 0.5 : 1,
               }}
             >
               {editingId ? "Update" : "Add Account"}

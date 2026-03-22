@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Git Expansion",
+    "name": "GitSmith",
     "reload": "Reload",
     "somethingWentWrong": "Something went wrong",
     "unexpectedError": "An unexpected error occurred."

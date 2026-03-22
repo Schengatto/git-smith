@@ -123,9 +123,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
         category: "Git",
         needsRepo: true,
         action: async () => {
-          await runGitOperation("Fetch & Prune", () =>
-            window.electronAPI.remote.fetchPrune()
-          );
+          await runGitOperation("Fetch & Prune", () => window.electronAPI.remote.fetchPrune());
           await refresh();
         },
       },
@@ -145,9 +143,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
         category: "Git",
         needsRepo: true,
         action: async () => {
-          await runGitOperation("Pull (Rebase)", () =>
-            window.electronAPI.remote.pullRebase()
-          );
+          await runGitOperation("Pull (Rebase)", () => window.electronAPI.remote.pullRebase());
           await refresh();
         },
       },
@@ -157,9 +153,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
         category: "Git",
         needsRepo: true,
         action: async () => {
-          await runGitOperation("Pull (Merge)", () =>
-            window.electronAPI.remote.pullMerge()
-          );
+          await runGitOperation("Pull (Merge)", () => window.electronAPI.remote.pullMerge());
           await refresh();
         },
       },
@@ -399,7 +393,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "view:about",
-        label: "About Git Expansion",
+        label: "About GitSmith",
         category: "Help",
         action: () => openAboutDialog(),
       },
@@ -592,8 +586,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
                   padding: "7px 12px",
                   border: "none",
                   background: i === selectedIndex ? "var(--accent-dim)" : "transparent",
-                  color:
-                    i === selectedIndex ? "var(--text-primary)" : "var(--text-secondary)",
+                  color: i === selectedIndex ? "var(--text-primary)" : "var(--text-secondary)",
                   cursor: "pointer",
                   fontSize: 12,
                   textAlign: "left",

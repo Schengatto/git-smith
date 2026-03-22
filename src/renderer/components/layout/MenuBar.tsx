@@ -245,8 +245,7 @@ export const MenuBar: React.FC<{
   onOpenSsh,
   onResetLayout,
 }) => {
-  const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } =
-    useRepoStore();
+  const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } = useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -433,8 +432,7 @@ export const MenuBar: React.FC<{
         {
           label: "Git reflog...",
           disabled: !hasRepo,
-          onClick: () =>
-            window.dispatchEvent(new CustomEvent("command-palette:open-reflog")),
+          onClick: () => window.dispatchEvent(new CustomEvent("command-palette:open-reflog")),
         },
         { divider: true },
         {
@@ -469,9 +467,7 @@ export const MenuBar: React.FC<{
         {
           label: "Report an issue",
           onClick: () =>
-            window.electronAPI.repo.openExternal(
-              "https://github.com/Schengatto/git-expansion/issues"
-            ),
+            window.electronAPI.repo.openExternal("https://github.com/Schengatto/gitsmith/issues"),
         },
         {
           label: "Check for updates...",
@@ -479,7 +475,7 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
-          label: "About Git Expansion",
+          label: "About GitSmith",
           onClick: () => onOpenAbout(),
         },
       ],
@@ -503,9 +499,7 @@ export const MenuBar: React.FC<{
           >
             {menu.label}
           </button>
-          {openMenuIdx === idx && (
-            <MenuDropdown items={menu.items} onClose={handleClose} />
-          )}
+          {openMenuIdx === idx && <MenuDropdown items={menu.items} onClose={handleClose} />}
         </div>
       ))}
     </div>

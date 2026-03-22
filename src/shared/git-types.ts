@@ -111,6 +111,8 @@ export interface CommandLogEntry {
   duration?: number;
   exitCode?: number;
   error?: string;
+  /** True for mutation commands (commit, push, pull, etc.), false for read-only (log, status, diff) */
+  tracked?: boolean;
 }
 
 export interface CommandOutputLine {

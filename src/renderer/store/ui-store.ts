@@ -82,7 +82,7 @@ interface UIState {
 // Read persisted theme
 function getInitialTheme(): Theme {
   try {
-    const stored = localStorage.getItem("git-expansion-theme");
+    const stored = localStorage.getItem("gitsmith-theme");
     if (stored === "light" || stored === "dark") return stored;
   } catch {}
   return "dark";
@@ -93,7 +93,7 @@ function applyTheme(theme: Theme) {
     document.documentElement.setAttribute("data-theme", theme);
   }
   try {
-    localStorage.setItem("git-expansion-theme", theme);
+    localStorage.setItem("gitsmith-theme", theme);
   } catch {}
 }
 
@@ -174,8 +174,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   closeAdvancedStatsDialog: () => set({ advancedStatsDialogOpen: false }),
   openSshDialog: () => set({ sshDialogOpen: true }),
   closeSshDialog: () => set({ sshDialogOpen: false }),
-  openMergeEditor: (filePath: string) =>
-    set({ mergeEditorOpen: true, mergeEditorFile: filePath }),
+  openMergeEditor: (filePath: string) => set({ mergeEditorOpen: true, mergeEditorFile: filePath }),
   closeMergeEditor: () => set({ mergeEditorOpen: false, mergeEditorFile: "" }),
   openReviewPanel: (commitHash: string) =>
     set({ reviewPanelOpen: true, reviewPanelCommit: commitHash }),

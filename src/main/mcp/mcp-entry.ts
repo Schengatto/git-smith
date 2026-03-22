@@ -25,6 +25,6 @@ function getRepoArg(): string {
 const repoPath = getRepoArg();
 
 startMcpServer(repoPath).catch((err) => {
-  console.error(`[git-expansion-mcp] Failed to start: ${err.message}`);
+  console.error(`[gitsmith-mcp] Failed to start: ${err.message}`);
   process.exit(1);
 });

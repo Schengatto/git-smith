@@ -41,7 +41,7 @@ function createWindow() {
     y: bounds.y,
     minWidth: 800,
     minHeight: 600,
-    title: "Git Expansion",
+    title: "GitSmith",
     icon: path.join(__dirname, "../../assets/icon.png"),
     backgroundColor: "#1e1e2e",
     show: false,
@@ -124,7 +124,7 @@ if (app.commandLine.hasSwitch("mcp-server")) {
   const repoPath = app.commandLine.getSwitchValue("repo") || process.cwd();
   app.whenReady().then(() => {
     startMcpServer(repoPath).catch((err) => {
-      console.error("[git-expansion] MCP server failed:", err.message);
+      console.error("[gitsmith] MCP server failed:", err.message);
       app.quit();
     });
   });
@@ -170,7 +170,7 @@ if (app.commandLine.hasSwitch("mcp-server")) {
       startAutoFetch();
       if (mainWindow) initAutoUpdater(mainWindow);
     } catch (err) {
-      console.error("[git-expansion] Failed to initialize:", err);
+      console.error("[gitsmith] Failed to initialize:", err);
     }
   });
 

@@ -20,7 +20,7 @@ export async function startMcpServer(repoPath: string): Promise<void> {
   await mcpGitService.openRepo(repoPath);
 
   mcpServer = new McpServer(
-    { name: "git-expansion", version: "0.2.0" },
+    { name: "gitsmith", version: "0.2.0" },
     { capabilities: { tools: {} } }
   );
 
@@ -29,7 +29,7 @@ export async function startMcpServer(repoPath: string): Promise<void> {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 
-  console.error("[git-expansion-mcp] Server started for repo:", repoPath);
+  console.error("[gitsmith-mcp] Server started for repo:", repoPath);
 }
 
 /** Stop the MCP server and clean up resources. */
@@ -42,7 +42,7 @@ export async function stopMcpServer(): Promise<void> {
     mcpGitService.closeRepo();
     mcpGitService = null;
   }
-  console.error("[git-expansion-mcp] Server stopped");
+  console.error("[gitsmith-mcp] Server stopped");
 }
 
 /** Check if the MCP server is currently running. */

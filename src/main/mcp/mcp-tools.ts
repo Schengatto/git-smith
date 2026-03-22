@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { GitService } from "../git/git-service";
 
 /**
- * Register all Git Expansion tools on the given MCP server.
+ * Register all GitSmith tools on the given MCP server.
  * Tools are organized by domain: read-only first, then mutating.
  */
 export function registerMcpTools(server: McpServer, git: GitService): void {
@@ -26,8 +26,7 @@ export function registerMcpTools(server: McpServer, git: GitService): void {
     "status",
     {
       title: "Working Tree Status",
-      description:
-        "Get working tree status: staged, unstaged, untracked files and conflicts",
+      description: "Get working tree status: staged, unstaged, untracked files and conflicts",
       annotations: { readOnlyHint: true },
     },
     async () => {
@@ -366,10 +365,7 @@ export function registerMcpTools(server: McpServer, git: GitService): void {
       title: "Git Config",
       description: "List git configuration values",
       inputSchema: {
-        global: z
-          .boolean()
-          .optional()
-          .describe("If true, list global config instead of local"),
+        global: z.boolean().optional().describe("If true, list global config instead of local"),
       },
       annotations: { readOnlyHint: true },
     },
@@ -453,10 +449,7 @@ export function registerMcpTools(server: McpServer, git: GitService): void {
       title: "Amend Commit",
       description: "[MUTATING] Amend the last commit",
       inputSchema: {
-        message: z
-          .string()
-          .optional()
-          .describe("New commit message (omit to keep original)"),
+        message: z.string().optional().describe("New commit message (omit to keep original)"),
       },
       annotations: { destructiveHint: true },
     },
@@ -473,10 +466,7 @@ export function registerMcpTools(server: McpServer, git: GitService): void {
       description: "[MUTATING] Create a new branch",
       inputSchema: {
         name: z.string().describe("Branch name"),
-        startPoint: z
-          .string()
-          .optional()
-          .describe("Starting commit/branch (default: HEAD)"),
+        startPoint: z.string().optional().describe("Starting commit/branch (default: HEAD)"),
       },
       annotations: { readOnlyHint: false },
     },
@@ -542,16 +532,10 @@ export function registerMcpTools(server: McpServer, git: GitService): void {
       description: "[MUTATING] Merge with advanced options (ff strategy, squash, etc.)",
       inputSchema: {
         branch: z.string().describe("Branch to merge"),
-        mergeStrategy: z
-          .enum(["ff", "no-ff"])
-          .optional()
-          .describe("Fast-forward strategy"),
+        mergeStrategy: z.enum(["ff", "no-ff"]).optional().describe("Fast-forward strategy"),
         noCommit: z.boolean().optional().describe("Do not auto-commit the merge"),
         squash: z.boolean().optional().describe("Squash commits"),
-        allowUnrelatedHistories: z
-          .boolean()
-          .optional()
-          .describe("Allow unrelated histories"),
+        allowUnrelatedHistories: z.boolean().optional().describe("Allow unrelated histories"),
         message: z.string().optional().describe("Custom merge commit message"),
       },
       annotations: { readOnlyHint: false },

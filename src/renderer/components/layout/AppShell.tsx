@@ -462,9 +462,7 @@ export const AppShell: React.FC = () => {
         >
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
-        <p style={{ marginTop: 16, fontSize: 14, opacity: 0.7 }}>
-          Loading Git Expansion…
-        </p>
+        <p style={{ marginTop: 16, fontSize: 14, opacity: 0.7 }}>Loading GitSmith…</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -514,31 +512,19 @@ export const AppShell: React.FC = () => {
       <CloneDialog open={cloneDialogOpen} onClose={closeCloneDialog} />
       <ScanDialog open={scanDialogOpen} onClose={closeScanDialog} />
       <AboutDialog open={aboutDialogOpen} onClose={closeAboutDialog} />
-      <StaleBranchesDialog
-        open={staleBranchesDialogOpen}
-        onClose={closeStaleBranchesDialog}
-      />
+      <StaleBranchesDialog open={staleBranchesDialogOpen} onClose={closeStaleBranchesDialog} />
       <GitOperationLogDialog />
-      <CommandPalette
-        open={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-      />
+      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <ReflogDialog open={reflogOpen} onClose={() => setReflogOpen(false)} />
       <GitignoreDialog open={gitignoreDialogOpen} onClose={closeGitignoreDialog} />
       <GrepDialog open={grepDialogOpen} onClose={closeGrepDialog} />
       <BranchDiffDialog open={branchDiffDialogOpen} onClose={closeBranchDiffDialog} />
-      <BranchCompareDialog
-        open={branchCompareDialogOpen}
-        onClose={closeBranchCompareDialog}
-      />
+      <BranchCompareDialog open={branchCompareDialogOpen} onClose={closeBranchCompareDialog} />
       <HooksDialog open={hooksDialogOpen} onClose={closeHooksDialog} />
       <UndoDialog open={undoDialogOpen} onClose={closeUndoDialog} />
       <CIStatusDialog open={ciStatusDialogOpen} onClose={closeCIStatusDialog} />
       <GistDialog open={gistDialogOpen} onClose={closeGistDialog} />
-      <AdvancedStatsDialog
-        open={advancedStatsDialogOpen}
-        onClose={closeAdvancedStatsDialog}
-      />
+      <AdvancedStatsDialog open={advancedStatsDialogOpen} onClose={closeAdvancedStatsDialog} />
       <SSHDialog open={sshDialogOpen} onClose={closeSshDialog} />
       <MergeEditorDialog
         open={mergeEditorOpen}

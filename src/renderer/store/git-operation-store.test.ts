@@ -3,8 +3,12 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 const mockStorage: Record<string, string> = {};
 vi.stubGlobal("localStorage", {
   getItem: (key: string) => mockStorage[key] ?? null,
-  setItem: (key: string, value: string) => { mockStorage[key] = value; },
-  removeItem: (key: string) => { delete mockStorage[key]; },
+  setItem: (key: string, value: string) => {
+    mockStorage[key] = value;
+  },
+  removeItem: (key: string) => {
+    delete mockStorage[key];
+  },
   clear: () => Object.keys(mockStorage).forEach((k) => delete mockStorage[k]),
   length: 0,
   key: () => null,
@@ -42,6 +46,7 @@ describe("Git Operation Store", () => {
     args: ["push"],
     cwd: "/repo",
     timestamp: Date.now(),
+    tracked: true,
     ...(exitCode !== undefined ? { exitCode, duration: 100 } : {}),
     ...(error ? { error } : {}),
   });
@@ -86,6 +91,14 @@ describe("Git Operation Store", () => {
     useGitOperationStore.getState().finish();
     // After finish, running=false — new entries should be rejected
     useGitOperationStore.getState().addEntry(makeEntry("cmd-new"));
+    expect(useGitOperationStore.getState().entries).toHaveLength(0);
+  });
+
+  it("addEntry() rejects untracked (read-only) entries", () => {
+    useGitOperationStore.getState().start("Commit");
+    const entry = makeEntry("cmd-ro");
+    entry.tracked = false;
+    useGitOperationStore.getState().addEntry(entry);
     expect(useGitOperationStore.getState().entries).toHaveLength(0);
   });
 
@@ -166,11 +179,11 @@ describe("Git Operation Store", () => {
 
   it("setAutoClose() persists to localStorage", () => {
     useGitOperationStore.getState().setAutoClose(false);
-    expect(mockStorage["git-expansion-operation-autoclose"]).toBe("false");
+    expect(mockStorage["gitsmith-operation-autoclose"]).toBe("false");
     expect(useGitOperationStore.getState().autoClose).toBe(false);
 
     useGitOperationStore.getState().setAutoClose(true);
-    expect(mockStorage["git-expansion-operation-autoclose"]).toBe("true");
+    expect(mockStorage["gitsmith-operation-autoclose"]).toBe("true");
     expect(useGitOperationStore.getState().autoClose).toBe(true);
   });
 
@@ -188,13 +201,17 @@ describe("Git Operation Store", () => {
 
   it("addOutputLine() collects output while open", () => {
     useGitOperationStore.getState().start("Commit");
-    useGitOperationStore.getState().addOutputLine({ id: "cmd-1", stream: "stderr", text: "Running pre-commit hook..." });
+    useGitOperationStore
+      .getState()
+      .addOutputLine({ id: "cmd-1", stream: "stderr", text: "Running pre-commit hook..." });
     expect(useGitOperationStore.getState().outputLines).toHaveLength(1);
     expect(useGitOperationStore.getState().outputLines[0]!.text).toBe("Running pre-commit hook...");
   });
 
   it("addOutputLine() ignores lines when dialog is closed", () => {
-    useGitOperationStore.getState().addOutputLine({ id: "cmd-1", stream: "stderr", text: "ignored" });
+    useGitOperationStore
+      .getState()
+      .addOutputLine({ id: "cmd-1", stream: "stderr", text: "ignored" });
     expect(useGitOperationStore.getState().outputLines).toHaveLength(0);
   });
 });

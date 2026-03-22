@@ -20,7 +20,7 @@ describe("i18n index", () => {
   });
 
   it("translates known keys", () => {
-    expect(i18n.t("app.name")).toBe("Git Expansion");
+    expect(i18n.t("app.name")).toBe("GitSmith");
   });
 
   it("translates commit namespace keys", () => {
@@ -63,6 +63,6 @@ describe("i18n index", () => {
   it("has escapeValue set to false (no HTML escaping)", () => {
     // Verify by translating a key that would be escaped if escapeValue were true
     const result = i18n.t("app.name");
-    expect(result).toBe("Git Expansion");
+    expect(result).toBe("GitSmith");
   });
 });

@@ -9,60 +9,147 @@ const FolderIcon: React.FC<{ size?: number; color?: string }> = ({
   size = 14,
   color = "var(--text-muted)",
 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
   </svg>
 );
 
 const PlusIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
 const FolderOpenIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M5 19a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2 2h4a2 2 0 0 1 2 2v1" />
     <path d="M20.5 16H8l-3 3V10h15.5l-2 6z" />
   </svg>
 );
 
 const DownloadIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
 
 const XIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
 const TrashIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-    <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
   </svg>
 );
 
 const TagIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
     <line x1="7" y1="7" x2="7.01" y2="7" />
   </svg>
 );
 
 const EditIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 
 const ScanIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
     <line x1="11" y1="8" x2="11" y2="14" />
@@ -71,38 +158,98 @@ const ScanIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 );
 
 const CodeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
   </svg>
 );
 
 const HeartIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
 const BugIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
   </svg>
 );
 
 const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 10 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
   </svg>
 );
 
 const SearchIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
 
 const ChevronIcon: React.FC<{ size?: number; open?: boolean }> = ({ size = 12, open = true }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-    style={{ transition: "transform 0.15s", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ transition: "transform 0.15s", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
+  >
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
@@ -132,7 +279,10 @@ const ContextMenu: React.FC<{
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (!state) { setPos(null); return; }
+    if (!state) {
+      setPos(null);
+      return;
+    }
     // Start off-screen to measure, then adjust
     setPos({ x: state.x, y: state.y });
   }, [state]);
@@ -182,7 +332,10 @@ const ContextMenu: React.FC<{
             <div style={{ height: 1, background: "var(--border-subtle)", margin: "4px 0" }} />
           )}
           <div
-            onClick={() => { item.onClick(); onClose(); }}
+            onClick={() => {
+              item.onClick();
+              onClose();
+            }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -231,7 +384,10 @@ const InlineInput: React.FC<{
         if (e.key === "Enter" && value.trim()) onConfirm(value.trim());
         if (e.key === "Escape") onCancel();
       }}
-      onBlur={() => { if (value.trim()) onConfirm(value.trim()); else onCancel(); }}
+      onBlur={() => {
+        if (value.trim()) onConfirm(value.trim());
+        else onCancel();
+      }}
       placeholder={placeholder}
       style={{
         background: "var(--surface-2)",
@@ -306,9 +462,7 @@ const RepoItem: React.FC<{
     >
       <FolderIcon size={15} color="var(--accent)" />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>
-          {name}
-        </div>
+        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{name}</div>
         <div className="mono truncate" style={{ fontSize: 11, color: "var(--text-muted)" }}>
           {path}
         </div>
@@ -347,22 +501,26 @@ const SectionHeader: React.FC<{
       }}
     >
       <ChevronIcon open={open} />
-      <span style={{
-        fontSize: 11,
-        fontWeight: 700,
-        textTransform: "uppercase",
-        letterSpacing: "0.06em",
-        color: "var(--text-muted)",
-      }}>
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "var(--text-muted)",
+        }}
+      >
         {title}
       </span>
-      <span style={{
-        fontSize: 10,
-        color: "var(--text-muted)",
-        background: "var(--surface-2)",
-        borderRadius: 8,
-        padding: "1px 6px",
-      }}>
+      <span
+        style={{
+          fontSize: 10,
+          color: "var(--text-muted)",
+          background: "var(--surface-2)",
+          borderRadius: 8,
+          padding: "1px 6px",
+        }}
+      >
         {count}
       </span>
     </div>
@@ -403,7 +561,8 @@ export const WelcomeScreen: React.FC = () => {
   const toggleSection = useCallback((section: string) => {
     setCollapsedSections((prev) => {
       const next = new Set(prev);
-      if (next.has(section)) next.delete(section); else next.add(section);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
       return next;
     });
   }, []);
@@ -434,12 +593,13 @@ export const WelcomeScreen: React.FC = () => {
     e.stopPropagation();
     const currentCategory = repoCategories[repoPath] || null;
 
-    const categoryItems: ContextMenuItem[] = allCategoryNames.length > 0
-      ? allCategoryNames.map((cat) => ({
-          label: cat + (currentCategory === cat ? "  \u2713" : ""),
-          onClick: () => setRepoCategory(repoPath, currentCategory === cat ? null : cat),
-        }))
-      : [];
+    const categoryItems: ContextMenuItem[] =
+      allCategoryNames.length > 0
+        ? allCategoryNames.map((cat) => ({
+            label: cat + (currentCategory === cat ? "  \u2713" : ""),
+            onClick: () => setRepoCategory(repoPath, currentCategory === cat ? null : cat),
+          }))
+        : [];
 
     setContextMenu({
       x: e.clientX,
@@ -457,11 +617,15 @@ export const WelcomeScreen: React.FC = () => {
           onClick: () => setAssigningCategory(repoPath),
         },
         ...categoryItems,
-        ...(currentCategory ? [{
-          label: "Remove from category",
-          onClick: () => setRepoCategory(repoPath, null),
-          separator: categoryItems.length > 0,
-        }] : []),
+        ...(currentCategory
+          ? [
+              {
+                label: "Remove from category",
+                onClick: () => setRepoCategory(repoPath, null),
+                separator: categoryItems.length > 0,
+              },
+            ]
+          : []),
         {
           label: "Remove from list",
           icon: <XIcon />,
@@ -550,7 +714,16 @@ export const WelcomeScreen: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="6" y1="3" x2="6" y2="15" />
               <circle cx="18" cy="6" r="3" />
               <circle cx="6" cy="18" r="3" />
@@ -558,8 +731,15 @@ export const WelcomeScreen: React.FC = () => {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>
-              Git Expansion
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--text-primary)",
+                lineHeight: 1.2,
+              }}
+            >
+              GitSmith
             </div>
             <div style={{ fontSize: 10, color: "var(--text-muted)" }}>Git GUI</div>
           </div>
@@ -594,23 +774,45 @@ export const WelcomeScreen: React.FC = () => {
         </div>
 
         {/* Contribute */}
-        <div style={{ marginTop: "auto", padding: "12px 16px", borderTop: "1px solid var(--border-subtle)" }}>
-          <div style={{
-            fontSize: 10,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            color: "var(--text-muted)",
-            marginBottom: 8,
-          }}>
+        <div
+          style={{
+            marginTop: "auto",
+            padding: "12px 16px",
+            borderTop: "1px solid var(--border-subtle)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              color: "var(--text-muted)",
+              marginBottom: 8,
+            }}
+          >
             Contribute
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {([
-              { icon: <CodeIcon size={13} />, label: "Develop", url: "https://github.com/Schengatto/git-expansion" },
-              { icon: <HeartIcon size={13} />, label: "Donate", url: "https://www.paypal.com/donate?business=schintu.enrico@gmail.com&currency_code=EUR" },
-              { icon: <BugIcon size={13} />, label: "Issues", url: "https://github.com/Schengatto/git-expansion/issues" },
-            ] as const).map((item) => (
+            {(
+              [
+                {
+                  icon: <CodeIcon size={13} />,
+                  label: "Develop",
+                  url: "https://github.com/Schengatto/gitsmith",
+                },
+                {
+                  icon: <HeartIcon size={13} />,
+                  label: "Donate",
+                  url: "https://www.paypal.com/donate?business=schintu.enrico@gmail.com&currency_code=EUR",
+                },
+                {
+                  icon: <BugIcon size={13} />,
+                  label: "Issues",
+                  url: "https://github.com/Schengatto/gitsmith/issues",
+                },
+              ] as const
+            ).map((item) => (
               <div
                 key={item.label}
                 onClick={() => window.electronAPI.repo.openExternal(item.url)}
@@ -634,7 +836,9 @@ export const WelcomeScreen: React.FC = () => {
                   e.currentTarget.style.color = "var(--text-secondary)";
                 }}
               >
-                <span style={{ display: "flex", color: "var(--accent)", opacity: 0.7 }}>{item.icon}</span>
+                <span style={{ display: "flex", color: "var(--accent)", opacity: 0.7 }}>
+                  {item.icon}
+                </span>
                 <span style={{ flex: 1 }}>{item.label}</span>
                 <ExternalLinkIcon />
               </div>
@@ -644,13 +848,39 @@ export const WelcomeScreen: React.FC = () => {
 
         {/* Keyboard hints */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border-subtle)" }}>
-          <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", flexDirection: "column", gap: 4 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--text-muted)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+            }}
+          >
             <div>
-              <kbd style={{ padding: "1px 5px", borderRadius: 3, background: "var(--surface-2)", fontSize: 10 }}>Ctrl+O</kbd>
+              <kbd
+                style={{
+                  padding: "1px 5px",
+                  borderRadius: 3,
+                  background: "var(--surface-2)",
+                  fontSize: 10,
+                }}
+              >
+                Ctrl+O
+              </kbd>
               <span style={{ marginLeft: 6 }}>Open</span>
             </div>
             <div>
-              <kbd style={{ padding: "1px 5px", borderRadius: 3, background: "var(--surface-2)", fontSize: 10 }}>Ctrl+N</kbd>
+              <kbd
+                style={{
+                  padding: "1px 5px",
+                  borderRadius: 3,
+                  background: "var(--surface-2)",
+                  fontSize: 10,
+                }}
+              >
+                Ctrl+N
+              </kbd>
               <span style={{ marginLeft: 6 }}>Create new</span>
             </div>
           </div>
@@ -660,24 +890,28 @@ export const WelcomeScreen: React.FC = () => {
       {/* Main content area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Top bar with search */}
-        <div style={{
-          padding: "12px 20px",
-          borderBottom: "1px solid var(--border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}>
-          <div style={{
+        <div
+          style={{
+            padding: "12px 20px",
+            borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            flex: 1,
-            maxWidth: 400,
-            background: "var(--surface-2)",
-            borderRadius: 6,
-            padding: "6px 10px",
-            border: "1px solid var(--border-subtle)",
-          }}>
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flex: 1,
+              maxWidth: 400,
+              background: "var(--surface-2)",
+              borderRadius: 6,
+              padding: "6px 10px",
+              border: "1px solid var(--border-subtle)",
+            }}
+          >
             <SearchIcon size={13} />
             <input
               value={searchQuery}
@@ -707,15 +941,17 @@ export const WelcomeScreen: React.FC = () => {
         <div style={{ flex: 1, overflow: "auto", padding: "8px 20px 20px" }}>
           {recentRepos.length === 0 ? (
             /* Empty state */
-            <div style={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 16,
-              color: "var(--text-muted)",
-            }}>
+            <div
+              style={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 16,
+                color: "var(--text-muted)",
+              }}
+            >
               <FolderIcon size={48} color="var(--surface-3)" />
               <div style={{ fontSize: 14, fontWeight: 500 }}>No recent repositories</div>
               <div style={{ fontSize: 12 }}>
@@ -742,7 +978,9 @@ export const WelcomeScreen: React.FC = () => {
                           padding: "2px 6px",
                           borderRadius: 4,
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-hover)")}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "var(--surface-hover)")
+                        }
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
                         Actions
@@ -750,7 +988,13 @@ export const WelcomeScreen: React.FC = () => {
                     }
                   />
                   {!collapsedSections.has("recent") && (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 1 }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                        gap: 1,
+                      }}
+                    >
                       {uncategorizedRepos.map((path) => (
                         <RepoItem
                           key={path}
@@ -786,7 +1030,9 @@ export const WelcomeScreen: React.FC = () => {
                           padding: "2px 6px",
                           borderRadius: 4,
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-hover)")}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "var(--surface-hover)")
+                        }
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
                         Actions
@@ -807,7 +1053,13 @@ export const WelcomeScreen: React.FC = () => {
                     </div>
                   )}
                   {!collapsedSections.has(catName) && (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 1 }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                        gap: 1,
+                      }}
+                    >
                       {repos.map((path) => (
                         <RepoItem
                           key={path}
@@ -823,12 +1075,14 @@ export const WelcomeScreen: React.FC = () => {
 
               {/* No results from search */}
               {filteredRepos.length === 0 && searchQuery && (
-                <div style={{
-                  textAlign: "center",
-                  padding: "40px 0",
-                  color: "var(--text-muted)",
-                  fontSize: 13,
-                }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "40px 0",
+                    color: "var(--text-muted)",
+                    fontSize: 13,
+                  }}
+                >
                   No repositories match &ldquo;{searchQuery}&rdquo;
                 </div>
               )}
@@ -862,7 +1116,14 @@ export const WelcomeScreen: React.FC = () => {
               boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 12 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--text-primary)",
+                marginBottom: 12,
+              }}
+            >
               Assign category
             </div>
 
@@ -882,11 +1143,24 @@ export const WelcomeScreen: React.FC = () => {
                       borderRadius: 4,
                       cursor: "pointer",
                       color: "var(--text-primary)",
-                      background: repoCategories[assigningCategory] === cat ? "var(--accent-dim)" : "transparent",
+                      background:
+                        repoCategories[assigningCategory] === cat
+                          ? "var(--accent-dim)"
+                          : "transparent",
                       transition: "background 0.1s",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = repoCategories[assigningCategory] === cat ? "var(--accent-dim)" : "var(--surface-hover)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = repoCategories[assigningCategory] === cat ? "var(--accent-dim)" : "transparent")}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        repoCategories[assigningCategory] === cat
+                          ? "var(--accent-dim)"
+                          : "var(--surface-hover)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        repoCategories[assigningCategory] === cat
+                          ? "var(--accent-dim)"
+                          : "transparent")
+                    }
                   >
                     {cat}
                   </div>
