@@ -1321,10 +1321,10 @@ export const CommitGraphPanel: React.FC = () => {
         onConfirm={async () => {
           if (!deleteRemoteBranchTarget) return;
           try {
-            const fullName = deleteRemoteBranchTarget;
-            const slashIdx = fullName.indexOf("/");
-            const remote = fullName.substring(0, slashIdx);
-            const branch = fullName.substring(slashIdx + 1);
+            const stripped = deleteRemoteBranchTarget.replace(/^remotes\//, "");
+            const slashIdx = stripped.indexOf("/");
+            const remote = stripped.substring(0, slashIdx);
+            const branch = stripped.substring(slashIdx + 1);
             await runGitOperation("Delete Remote Branch", () =>
               window.electronAPI.branch.deleteRemote(remote, branch)
             );

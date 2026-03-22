@@ -740,11 +740,11 @@ export const Sidebar: React.FC = () => {
           onConfirm={async () => {
             if (dialog.type !== "delete-remote-branch") return;
             try {
-              // branch.name is like "origin/feature" — split into remote + branch
-              const fullName = dialog.branch;
-              const slashIdx = fullName.indexOf("/");
-              const remote = fullName.substring(0, slashIdx);
-              const branch = fullName.substring(slashIdx + 1);
+              // branch.name may be "remotes/origin/feature" or "origin/feature" — strip prefix then split
+              const stripped = dialog.branch.replace(/^remotes\//, "");
+              const slashIdx = stripped.indexOf("/");
+              const remote = stripped.substring(0, slashIdx);
+              const branch = stripped.substring(slashIdx + 1);
               await runGitOperation("Delete Remote Branch", () =>
                 window.electronAPI.branch.deleteRemote(remote, branch)
               );

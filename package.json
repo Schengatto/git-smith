@@ -58,6 +58,7 @@
     "release:major": "standard-version --release-as major",
     "release:patch": "standard-version --release-as patch",
     "release:first": "standard-version --first-release",
+    "generate-manual-pdf": "node scripts/generate-manual-pdf.mjs",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -88,6 +89,7 @@
     "husky": "9.1.7",
     "jsdom": "25.0.1",
     "lint-staged": "^16.4.0",
+    "md-to-pdf": "^5.2.5",
     "playwright": "1.58.2",
     "postcss": "8.4.49",
     "prettier": "^3.4.2",

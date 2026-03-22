@@ -164,7 +164,7 @@ vi.mock("../../utils/open-dialog", () => ({
 }));
 
 vi.mock("../../store/git-operation-store", () => ({
-  runGitOperation: vi.fn().mockResolvedValue(undefined),
+  runGitOperation: vi.fn().mockImplementation((_label: string, fn: () => Promise<unknown>) => fn()),
   GitOperationCancelledError: class extends Error {},
 }));
 
@@ -1194,5 +1194,40 @@ describe("CommitGraphPanel — context menu additional actions", () => {
     } else {
       expect(screen.getByTestId("context-menu")).toBeInTheDocument();
     }
+  });
+
+  it("strips remotes/ prefix when deleting a remote branch", async () => {
+    const rowWithRemote = makeRow({
+      commit: makeCommit({
+        hash: "rrrr2222",
+        abbreviatedHash: "rrrr222",
+        subject: "Remote prefixed commit",
+        refs: [{ name: "remotes/origin/dependabot/npm/zustand-5", type: "remote" }],
+      }),
+    });
+    graphStoreMockState = {
+      ...graphStoreMockState,
+      rows: [rowWithRemote],
+      allCommits: [rowWithRemote.commit],
+    };
+    repoStoreMockState = {
+      repo: { ...repoStoreMockState.repo, currentBranch: "main" },
+    };
+    render(<CommitGraphPanel />);
+    fireEvent.contextMenu(screen.getByText("Remote prefixed commit"));
+    const deleteBtn = screen.queryByTestId(
+      'ctx-item-Delete Remote Branch "remotes/origin/dependabot/npm/zustand-5"'
+    );
+    expect(deleteBtn).toBeTruthy();
+    fireEvent.click(deleteBtn!);
+    // Confirm deletion
+    const confirmBtn = screen.getByText("Delete");
+    await act(async () => {
+      fireEvent.click(confirmBtn);
+    });
+    expect(window.electronAPI.branch.deleteRemote).toHaveBeenCalledWith(
+      "origin",
+      "dependabot/npm/zustand-5"
+    );
   });
 });

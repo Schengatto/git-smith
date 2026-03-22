@@ -24,7 +24,7 @@ const config: ForgeConfig = {
     executableName: "git-expansion",
     appBundleId: "com.git-expansion.app",
     icon: "./assets/icon",
-    extraResource: ["./USER_MANUAL.md"],
+    extraResource: ["./USER_MANUAL.pdf"],
   },
   rebuildConfig: {
     // node-pty ships prebuilt NAPI binaries — skip native rebuild (no VS C++ needed)

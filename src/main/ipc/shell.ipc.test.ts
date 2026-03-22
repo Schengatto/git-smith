@@ -59,7 +59,7 @@ describe("shell IPC handlers", () => {
     await handler({});
     expect(mockShell.openPath).toHaveBeenCalled();
     const calledPath = mockShell.openPath.mock.calls[0]![0] as string;
-    expect(calledPath).toContain("USER_MANUAL.md");
+    expect(calledPath).toContain("USER_MANUAL.pdf");
   });
 
   it("SHELL.OPEN_FILE throws when no repo is open", async () => {
