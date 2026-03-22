@@ -62,9 +62,7 @@ function createWindow() {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
-    );
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
   mainWindow.on("close", () => {
@@ -92,15 +90,20 @@ function startAutoFetch() {
   autoFetchTimer = setInterval(async () => {
     if (!gitService.isOpen()) return;
     try {
+      const refsBefore = await gitService.getRefsSnapshot();
       if (settings.fetchPruneOnAuto) {
         await gitService.fetchPrune();
       } else {
         await gitService.fetchAll();
       }
-      if (mainWindow && !mainWindow.isDestroyed()) {
+      const refsAfter = await gitService.getRefsSnapshot();
+      const hasChanges = refsBefore !== refsAfter;
+      if (hasChanges && mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(IPC.EVENTS.REPO_CHANGED);
       }
-      showNotification("Fetch Complete", "Repository updated from remote", "fetch");
+      if (hasChanges) {
+        showNotification("Fetch Complete", "Repository updated from remote", "fetch");
+      }
     } catch (err) {
       showNotification("Fetch Failed", String(err), "error");
     }
@@ -149,12 +152,9 @@ if (app.commandLine.hasSwitch("mcp-server")) {
       });
 
       // Git config IPC
-      ipcMain.handle(
-        IPC.GIT_CONFIG.GET,
-        async (_event, key: string, global?: boolean) => {
-          return gitService.isOpen() ? gitService.getConfig(key, global) : "";
-        }
-      );
+      ipcMain.handle(IPC.GIT_CONFIG.GET, async (_event, key: string, global?: boolean) => {
+        return gitService.isOpen() ? gitService.getConfig(key, global) : "";
+      });
       ipcMain.handle(
         IPC.GIT_CONFIG.SET,
         async (_event, key: string, value: string, global?: boolean) => {
@@ -169,8 +169,6 @@ if (app.commandLine.hasSwitch("mcp-server")) {
       createWindow();
       startAutoFetch();
       if (mainWindow) initAutoUpdater(mainWindow);
-      // eslint-disable-next-line no-console
-      console.log("[git-expansion] App initialized successfully");
     } catch (err) {
       console.error("[git-expansion] Failed to initialize:", err);
     }

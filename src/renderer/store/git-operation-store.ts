@@ -139,18 +139,37 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
   close: () => {
     const prev = get()._autoCloseTimer;
     if (prev) clearTimeout(prev);
-    set({ open: false, entries: [], outputLines: [], running: false, error: null, _autoCloseTimer: null });
+    set({
+      open: false,
+      entries: [],
+      outputLines: [],
+      running: false,
+      error: null,
+      _autoCloseTimer: null,
+    });
   },
 
   cancel: () => {
     const prev = get()._autoCloseTimer;
     if (prev) clearTimeout(prev);
-    set({ open: false, entries: [], outputLines: [], running: false, error: null, cancelled: true, _autoCloseTimer: null });
-    window.electronAPI.operation.cancel().catch(() => {});
+    set({
+      open: false,
+      entries: [],
+      outputLines: [],
+      running: false,
+      error: null,
+      cancelled: true,
+      _autoCloseTimer: null,
+    });
+    window.electronAPI.operation.cancel().catch(() => {
+      /* best-effort cancel */
+    });
   },
 
   setAutoClose: (value: boolean) => {
-    try { localStorage.setItem(AUTOCLOSE_KEY, String(value)); } catch {}
+    try {
+      localStorage.setItem(AUTOCLOSE_KEY, String(value));
+    } catch {}
     // If toggling to auto-close while showing a successful result, start the timer
     if (value && get().open && !get().running && !get().error) {
       const timer = setTimeout(() => {
@@ -173,10 +192,7 @@ export const useGitOperationStore = create<GitOperationState>((set, get) => ({
  * Run a git operation with the log dialog.
  * Opens the dialog, executes the operation, collects logs, and auto-closes on success.
  */
-export async function runGitOperation<T>(
-  label: string,
-  fn: () => Promise<T>
-): Promise<T> {
+export async function runGitOperation<T>(label: string, fn: () => Promise<T>): Promise<T> {
   const store = useGitOperationStore.getState();
   store.start(label);
   try {

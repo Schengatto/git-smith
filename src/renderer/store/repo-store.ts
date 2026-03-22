@@ -44,11 +44,16 @@ export const useRepoStore = create<RepoState>((set, get) => ({
       set({ repo: info, loading: false });
       get().refreshStatus();
       // Background fetch on repo open - don't await, don't block UI
-      window.electronAPI.remote.fetchAll().then(() => {
-        get().refreshInfo();
-        get().refreshStatus();
-        useGraphStore.getState().loadGraph();
-      }).catch(() => {});
+      window.electronAPI.remote
+        .fetchAll()
+        .then(() => {
+          get().refreshInfo();
+          get().refreshStatus();
+          useGraphStore.getState().loadGraph();
+        })
+        .catch(() => {
+          /* background fetch — failure is non-critical */
+        });
     } catch (err: unknown) {
       set({
         loading: false,
@@ -65,11 +70,16 @@ export const useRepoStore = create<RepoState>((set, get) => ({
         set({ repo: info, loading: false });
         get().refreshStatus();
         // Background fetch on repo open
-        window.electronAPI.remote.fetchAll().then(() => {
-          get().refreshInfo();
-          get().refreshStatus();
-          useGraphStore.getState().loadGraph();
-        }).catch(() => {});
+        window.electronAPI.remote
+          .fetchAll()
+          .then(() => {
+            get().refreshInfo();
+            get().refreshStatus();
+            useGraphStore.getState().loadGraph();
+          })
+          .catch(() => {
+            /* background fetch — failure is non-critical */
+          });
       } else {
         set({ loading: false });
       }

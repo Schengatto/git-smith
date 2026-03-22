@@ -113,7 +113,9 @@ export function initAutoUpdater(win: BrowserWindow) {
 
   // Check on startup (after a delay) — silent, no dialog if up-to-date
   setTimeout(() => {
-    autoUpdater.checkForUpdates().catch(() => {});
+    autoUpdater.checkForUpdates().catch(() => {
+      /* silent startup check — ignore network errors */
+    });
   }, 10000);
 }
 

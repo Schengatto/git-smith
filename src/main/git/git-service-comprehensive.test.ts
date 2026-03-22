@@ -452,13 +452,7 @@ describe("GitService.createTag", () => {
   it("creates an annotated tag with a message", async () => {
     const service = makeService();
     await service.createTag("v1.0.0", "abc123", "Release 1.0.0");
-    expect(mockTag).toHaveBeenCalledWith([
-      "-a",
-      "v1.0.0",
-      "abc123",
-      "-m",
-      "Release 1.0.0",
-    ]);
+    expect(mockTag).toHaveBeenCalledWith(["-a", "v1.0.0", "abc123", "-m", "Release 1.0.0"]);
   });
 });
 
@@ -518,10 +512,7 @@ describe("GitService.addRemote", () => {
   it("calls git addRemote with name and url", async () => {
     const service = makeService();
     await service.addRemote("upstream", "https://github.com/original/repo.git");
-    expect(mockAddRemote).toHaveBeenCalledWith(
-      "upstream",
-      "https://github.com/original/repo.git"
-    );
+    expect(mockAddRemote).toHaveBeenCalledWith("upstream", "https://github.com/original/repo.git");
   });
 });
 
@@ -562,6 +553,17 @@ describe("GitService.fetchPrune", () => {
     const service = makeService();
     await service.fetchPrune();
     expect(mockFetch).toHaveBeenCalledWith(["--all", "--prune"]);
+  });
+});
+
+describe("GitService.getRefsSnapshot", () => {
+  it("returns raw for-each-ref output", async () => {
+    const service = makeService();
+    const refOutput = "refs/heads/main abc123\nrefs/remotes/origin/main def456";
+    mockRaw.mockResolvedValueOnce(refOutput);
+    const result = await service.getRefsSnapshot();
+    expect(mockRaw).toHaveBeenCalledWith(["for-each-ref", "--format=%(refname) %(objectname)"]);
+    expect(result).toBe(refOutput);
   });
 });
 
@@ -680,9 +682,7 @@ describe("GitService.getCommitFiles", () => {
 describe("GitService.getRangeFiles", () => {
   it("returns files changed between two hashes", async () => {
     const service = makeService();
-    mockRaw
-      .mockResolvedValueOnce("10\t5\tsrc/app.ts\n")
-      .mockResolvedValueOnce("M\tsrc/app.ts\n");
+    mockRaw.mockResolvedValueOnce("10\t5\tsrc/app.ts\n").mockResolvedValueOnce("M\tsrc/app.ts\n");
 
     const result = await service.getRangeFiles("hash1", "hash2");
     expect(result).toHaveLength(1);
@@ -713,19 +713,11 @@ describe("GitService.getRangeFileDiff", () => {
 describe("GitService.diffBranches", () => {
   it("calls raw diff with correct args and parses result", async () => {
     const service = makeService();
-    mockRaw
-      .mockResolvedValueOnce("10\t3\tsrc/app.ts\n")
-      .mockResolvedValueOnce("M\tsrc/app.ts\n");
+    mockRaw.mockResolvedValueOnce("10\t3\tsrc/app.ts\n").mockResolvedValueOnce("M\tsrc/app.ts\n");
 
     const result = await service.diffBranches("main", "feature");
     expect(mockRaw).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        "diff",
-        "--numstat",
-        "--diff-filter=ACDMR",
-        "-M",
-        "main...feature",
-      ])
+      expect.arrayContaining(["diff", "--numstat", "--diff-filter=ACDMR", "-M", "main...feature"])
     );
     expect(result.files).toHaveLength(1);
     expect(result.stats.additions).toBe(10);
@@ -1147,10 +1139,9 @@ describe("GitService.stageLines", () => {
       expect.stringContaining("tmp-patch.diff"),
       "diff content"
     );
-    expect(mockApplyPatch).toHaveBeenCalledWith(
-      expect.stringContaining("tmp-patch.diff"),
-      ["--cached"]
-    );
+    expect(mockApplyPatch).toHaveBeenCalledWith(expect.stringContaining("tmp-patch.diff"), [
+      "--cached",
+    ]);
   });
 });
 
@@ -1162,10 +1153,10 @@ describe("GitService.unstageLines", () => {
       expect.stringContaining("tmp-patch.diff"),
       "diff content"
     );
-    expect(mockApplyPatch).toHaveBeenCalledWith(
-      expect.stringContaining("tmp-patch.diff"),
-      ["--cached", "--reverse"]
-    );
+    expect(mockApplyPatch).toHaveBeenCalledWith(expect.stringContaining("tmp-patch.diff"), [
+      "--cached",
+      "--reverse",
+    ]);
   });
 });
 
@@ -1316,11 +1307,7 @@ describe("GitService.addSubmodule", () => {
   it("adds a submodule by URL", async () => {
     const service = makeService();
     await service.addSubmodule("https://github.com/user/lib.git");
-    expect(mockRaw).toHaveBeenCalledWith([
-      "submodule",
-      "add",
-      "https://github.com/user/lib.git",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["submodule", "add", "https://github.com/user/lib.git"]);
   });
 
   it("adds a submodule with a custom path", async () => {
@@ -1345,12 +1332,7 @@ describe("GitService.submoduleUpdate", () => {
   it("initializes and updates submodules recursively when init=true", async () => {
     const service = makeService();
     await service.submoduleUpdate(true);
-    expect(mockRaw).toHaveBeenCalledWith([
-      "submodule",
-      "update",
-      "--init",
-      "--recursive",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["submodule", "update", "--init", "--recursive"]);
   });
 });
 
@@ -1401,8 +1383,7 @@ describe("GitService.grep", () => {
 
   it("parses grep output with file headings", async () => {
     const service = makeService();
-    const output =
-      "src/app.ts\n5:hello world\n10:another hello\n\nsrc/utils.ts\n3:hello there\n";
+    const output = "src/app.ts\n5:hello world\n10:another hello\n\nsrc/utils.ts\n3:hello there\n";
     mockRaw.mockResolvedValue(output);
     const result = await service.grep("hello");
     expect(result.totalCount).toBe(3);
@@ -1557,12 +1538,7 @@ describe("GitService.worktreeAdd", () => {
   it("adds a worktree with a branch", async () => {
     const service = makeService();
     await service.worktreeAdd("/path/to/worktree", "feature");
-    expect(mockRaw).toHaveBeenCalledWith([
-      "worktree",
-      "add",
-      "/path/to/worktree",
-      "feature",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["worktree", "add", "/path/to/worktree", "feature"]);
   });
 
   it("creates a new branch when createBranch=true", async () => {
@@ -1588,12 +1564,7 @@ describe("GitService.worktreeRemove", () => {
   it("force-removes a worktree", async () => {
     const service = makeService();
     await service.worktreeRemove("/path/to/worktree", true);
-    expect(mockRaw).toHaveBeenCalledWith([
-      "worktree",
-      "remove",
-      "--force",
-      "/path/to/worktree",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["worktree", "remove", "--force", "/path/to/worktree"]);
   });
 });
 
@@ -1605,13 +1576,7 @@ describe("GitService.formatPatch", () => {
     mockRaw.mockResolvedValue("/output/0001-fix.patch\n");
     const result = await service.formatPatch(["abc123", "def456"], "/output");
     expect(mockRaw).toHaveBeenCalledTimes(2);
-    expect(mockRaw).toHaveBeenCalledWith([
-      "format-patch",
-      "-1",
-      "abc123",
-      "-o",
-      "/output",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["format-patch", "-1", "abc123", "-o", "/output"]);
     expect(result).toContain("/output/0001-fix.patch");
   });
 });
@@ -1663,14 +1628,7 @@ describe("GitService.addNote", () => {
   it("adds a note to a commit", async () => {
     const service = makeService();
     await service.addNote("abc123", "This is a note");
-    expect(mockRaw).toHaveBeenCalledWith([
-      "notes",
-      "add",
-      "-f",
-      "-m",
-      "This is a note",
-      "abc123",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["notes", "add", "-f", "-m", "This is a note", "abc123"]);
   });
 });
 
@@ -1922,9 +1880,7 @@ describe("GitService.verifyCommitSignature", () => {
 
   it("returns signed=true for U (untrusted) and E (expired) statuses", async () => {
     const service = makeService();
-    mockRaw
-      .mockResolvedValueOnce("U\0KEY\0Signer\0")
-      .mockResolvedValueOnce("E\0KEY\0Signer\0");
+    mockRaw.mockResolvedValueOnce("U\0KEY\0Signer\0").mockResolvedValueOnce("E\0KEY\0Signer\0");
     const res1 = await service.verifyCommitSignature("hash1");
     expect(res1.signed).toBe(true);
   });
@@ -1986,9 +1942,7 @@ describe("GitService.getConflictedFiles", () => {
     const service = makeService();
     // First raw call: diff --name-only --diff-filter=U
     // Second raw call: status --porcelain
-    mockRaw
-      .mockResolvedValueOnce("src/app.ts\n")
-      .mockResolvedValueOnce("UU src/app.ts\n");
+    mockRaw.mockResolvedValueOnce("src/app.ts\n").mockResolvedValueOnce("UU src/app.ts\n");
     const result = await service.getConflictedFiles();
     expect(result).toHaveLength(1);
     expect(result[0]!.path).toBe("src/app.ts");
@@ -1997,9 +1951,7 @@ describe("GitService.getConflictedFiles", () => {
 
   it("detects both-added conflict reason", async () => {
     const service = makeService();
-    mockRaw
-      .mockResolvedValueOnce("new-file.ts\n")
-      .mockResolvedValueOnce("AA new-file.ts\n");
+    mockRaw.mockResolvedValueOnce("new-file.ts\n").mockResolvedValueOnce("AA new-file.ts\n");
     const result = await service.getConflictedFiles();
     expect(result[0]!.reason).toBe("both-added");
   });
@@ -2161,12 +2113,7 @@ describe("GitService.getTagsBefore", () => {
     mockRaw.mockResolvedValue("v2.0.0\nv1.0.0\nv1.1.0\n");
     const result = await service.getTagsBefore("abc123");
     expect(result).toEqual(["v2.0.0", "v1.0.0", "v1.1.0"]);
-    expect(mockRaw).toHaveBeenCalledWith([
-      "tag",
-      "--merged",
-      "abc123",
-      "--sort=-creatordate",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["tag", "--merged", "abc123", "--sort=-creatordate"]);
   });
 
   it("returns empty array when there are no tags", async () => {
@@ -2289,11 +2236,7 @@ describe("GitService.applyAccount", () => {
       sshKeyPath: "/home/alice/.ssh/id_ed25519",
     });
     expect(mockRaw).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        "config",
-        "core.sshCommand",
-        expect.stringContaining("id_ed25519"),
-      ])
+      expect.arrayContaining(["config", "core.sshCommand", expect.stringContaining("id_ed25519")])
     );
   });
 
@@ -2311,12 +2254,7 @@ describe("GitService.applyAccount", () => {
     const service = makeService();
     await service.applyAccount("Alice", "alice@example.com", { global: true });
     expect(mockRaw).toHaveBeenCalledWith(["config", "--global", "user.name", "Alice"]);
-    expect(mockRaw).toHaveBeenCalledWith([
-      "config",
-      "--global",
-      "user.email",
-      "alice@example.com",
-    ]);
+    expect(mockRaw).toHaveBeenCalledWith(["config", "--global", "user.email", "alice@example.com"]);
   });
 });
 
@@ -2395,9 +2333,7 @@ describe("GitService.killCurrentOperation", () => {
     (service as unknown as Record<string, unknown>)["_activeChildProcess"] = fakeProc;
     service.killCurrentOperation();
     expect(mockKill).toHaveBeenCalled();
-    expect(
-      (service as unknown as Record<string, unknown>)["_activeChildProcess"]
-    ).toBeNull();
+    expect((service as unknown as Record<string, unknown>)["_activeChildProcess"]).toBeNull();
   });
 
   it("does not kill an already-killed process", () => {
@@ -2417,8 +2353,6 @@ describe("GitService.setMainWindow", () => {
     const service = makeService();
     const fakeWindow = { isDestroyed: () => false, webContents: { send: vi.fn() } };
     service.setMainWindow(fakeWindow as unknown as BrowserWindow);
-    expect((service as unknown as Record<string, unknown>)["mainWindow"]).toBe(
-      fakeWindow
-    );
+    expect((service as unknown as Record<string, unknown>)["mainWindow"]).toBe(fakeWindow);
   });
 });

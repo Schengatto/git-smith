@@ -7,21 +7,12 @@ import { SettingsDialog } from "./SettingsDialog";
 
 const mockSetTheme = vi.fn();
 
-vi.mock("../../store/ui-store", () => ({
-  useUIStore: (selector: (s: { showToast: ReturnType<typeof vi.fn> }) => unknown) =>
-    selector({ showToast: vi.fn() }),
-}));
-
-// We need getState for handleSave's useUIStore.getState().setTheme
 vi.mock("../../store/ui-store", () => {
-  const mock = vi.fn((selector: (s: unknown) => unknown) =>
-    selector({ showToast: vi.fn() })
-  );
-  (
-    mock as unknown as { getState: () => { setTheme: ReturnType<typeof vi.fn> } }
-  ).getState = () => ({
-    setTheme: mockSetTheme,
-  });
+  const mock = vi.fn((selector: (s: unknown) => unknown) => selector({ showToast: vi.fn() }));
+  (mock as unknown as { getState: () => { setTheme: ReturnType<typeof vi.fn> } }).getState =
+    () => ({
+      setTheme: mockSetTheme,
+    });
   return { useUIStore: mock };
 });
 
@@ -126,8 +117,7 @@ beforeEach(() => {
   mockAccounts = [];
   mockElectronAPI.settings.get.mockResolvedValue(defaultSettings);
   mockElectronAPI.gitConfig.list.mockResolvedValue({});
-  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI =
-    mockElectronAPI;
+  (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI = mockElectronAPI;
 });
 
 describe("SettingsDialog", () => {
@@ -519,9 +509,7 @@ describe("SettingsDialog", () => {
 
   it("clicking overlay background calls onClose in overlay mode", () => {
     const onClose = vi.fn();
-    const { container } = render(
-      <SettingsDialog open={true} onClose={onClose} mode="overlay" />
-    );
+    const { container } = render(<SettingsDialog open={true} onClose={onClose} mode="overlay" />);
     // The outer fixed overlay div has onClick that calls onClose when target === currentTarget
     const overlay = container.firstChild as HTMLElement;
     fireEvent.click(overlay);
@@ -786,9 +774,7 @@ describe("SettingsDialog", () => {
   });
 
   it("Accounts tab Delete button calls deleteAccount", async () => {
-    mockAccounts = [
-      { id: "acc-1", label: "Personal", name: "Bob", email: "bob@personal.com" },
-    ];
+    mockAccounts = [{ id: "acc-1", label: "Personal", name: "Bob", email: "bob@personal.com" }];
     render(<SettingsDialog open={true} onClose={vi.fn()} />);
     await waitFor(() => expect(mockElectronAPI.settings.get).toHaveBeenCalled());
     fireEvent.click(screen.getAllByText("Accounts")[0]!);
@@ -802,9 +788,7 @@ describe("SettingsDialog", () => {
   it("editing template with existing templates shows edit form", async () => {
     const settingsWithTemplate = {
       ...defaultSettings,
-      commitTemplates: [
-        { name: "Feature", prefix: "feat: ", body: "", description: "A feature" },
-      ],
+      commitTemplates: [{ name: "Feature", prefix: "feat: ", body: "", description: "A feature" }],
     };
     mockElectronAPI.settings.get.mockResolvedValue(settingsWithTemplate);
     render(<SettingsDialog open={true} onClose={vi.fn()} />);
@@ -823,9 +807,7 @@ describe("SettingsDialog", () => {
   it("deleting a template removes it from the list", async () => {
     const settingsWithTemplate = {
       ...defaultSettings,
-      commitTemplates: [
-        { name: "Bug", prefix: "fix: ", body: "", description: "A bug fix" },
-      ],
+      commitTemplates: [{ name: "Bug", prefix: "fix: ", body: "", description: "A bug fix" }],
     };
     mockElectronAPI.settings.get.mockResolvedValue(settingsWithTemplate);
     render(<SettingsDialog open={true} onClose={vi.fn()} />);
