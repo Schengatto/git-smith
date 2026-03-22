@@ -1,4 +1,4 @@
-/* GitSmith Landing Page — matching app dark & light themes */
+/* GitSmith Landing Page */
 
 /* ─── Dark theme (default) ─── */
 :root {
@@ -338,7 +338,7 @@ a:hover {
   margin: 0 auto;
 }
 
-/* Showcase row — alternating text + visual */
+/* Showcase row */
 .showcase {
   display: grid;
   grid-template-columns: 1fr 1fr;

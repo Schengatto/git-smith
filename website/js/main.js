@@ -1,4 +1,4 @@
-// Theme toggle — switches CSS variables + screenshot
+// Theme toggle: switches CSS variables and screenshot
 const themeToggle = document.querySelector(".theme-toggle");
 if (themeToggle) {
   themeToggle.addEventListener("click", () => {
