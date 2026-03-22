@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useUIStore } from "../../store/ui-store";
 import { useAccountStore } from "../../store/account-store";
 import type { GitAccount, SshHostEntry } from "../../../shared/git-types";
-import type { AppSettings, CommitTemplate } from "../../../shared/settings-types";
+import type {
+  AppSettings,
+  CommitTemplate,
+  CommitSnippet,
+} from "../../../shared/settings-types";
 
 type Tab =
   | "general"
@@ -755,8 +759,8 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
 };
 
 const SnippetManager: React.FC<{
-  snippets: import("../../../shared/settings-types").CommitSnippet[];
-  onChange: (s: import("../../../shared/settings-types").CommitSnippet[]) => void;
+  snippets: CommitSnippet[];
+  onChange: (s: CommitSnippet[]) => void;
 }> = ({ snippets, onChange }) => {
   const [addLabel, setAddLabel] = useState("");
   const [addText, setAddText] = useState("");

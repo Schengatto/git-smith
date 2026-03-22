@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type pathModule from "path";
 
 // ── Hoisted mock state ─────────────────────────────────────────────────────
 // vi.mock factories are hoisted to top of file; use vi.hoisted() for refs.
@@ -33,15 +34,20 @@ vi.mock("os", () => ({
 }));
 
 vi.mock("path", async () => {
-  const actual = await vi.importActual<typeof import("path")>("path");
+  const actual = await vi.importActual<typeof pathModule>("path");
   return { default: actual };
 });
 
 // ── Imports ────────────────────────────────────────────────────────────────
 
+import path from "path";
 import { ipcMain } from "electron";
 import { registerSshHandlers } from "./ssh.ipc";
 import { IPC } from "../../shared/ipc-channels";
+
+// ── Path helpers (cross-platform) ─────────────────────────────────────────
+const HOME = "/home/testuser";
+const SSH_DIR = path.join(HOME, ".ssh");
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -110,7 +116,7 @@ describe("SSH IPC handlers", () => {
 
     it("returns key info with type and fingerprint when pub key exists", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
+        if (p === SSH_DIR) return true;
         if (p.endsWith(".pub")) return true;
         return false;
       });
@@ -139,7 +145,7 @@ describe("SSH IPC handlers", () => {
 
     it("handles key without pub file", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
+        if (p === SSH_DIR) return true;
         if (p.endsWith(".pub")) return false;
         return true;
       });
@@ -161,7 +167,7 @@ describe("SSH IPC handlers", () => {
 
     it("handles ssh-keygen fingerprint failure gracefully", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
+        if (p === SSH_DIR) return true;
         if (p.endsWith(".pub")) return true;
         return false;
       });
@@ -179,7 +185,7 @@ describe("SSH IPC handlers", () => {
 
     it("extracts type by removing 'ssh-' prefix from pub key", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
+        if (p === SSH_DIR) return true;
         if (p.endsWith(".pub")) return true;
         return false;
       });
@@ -195,7 +201,7 @@ describe("SSH IPC handlers", () => {
 
     it("returns multiple keys", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
+        if (p === SSH_DIR) return true;
         if (p.endsWith(".pub")) return false;
         return true;
       });
@@ -213,9 +219,9 @@ describe("SSH IPC handlers", () => {
   describe("SSH.GENERATE", () => {
     it("generates an ed25519 key and returns public key content", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/my_key") return false;
-        if (p === "/home/testuser/.ssh/my_key.pub") return true;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "my_key")) return false;
+        if (p === path.join(SSH_DIR, "my_key.pub")) return true;
         return false;
       });
       fsMock.readFileSync.mockReturnValue("ssh-ed25519 AAAA user@host\n");
@@ -234,9 +240,9 @@ describe("SSH IPC handlers", () => {
 
     it("adds -b 4096 flag for RSA keys", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/id_rsa") return false;
-        if (p === "/home/testuser/.ssh/id_rsa.pub") return true;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "id_rsa")) return false;
+        if (p === path.join(SSH_DIR, "id_rsa.pub")) return true;
         return false;
       });
       fsMock.readFileSync.mockReturnValue("ssh-rsa AAAA user\n");
@@ -252,9 +258,9 @@ describe("SSH IPC handlers", () => {
 
     it("does NOT add -b 4096 for ed25519 keys", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/mykey") return false;
-        if (p === "/home/testuser/.ssh/mykey.pub") return true;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "mykey")) return false;
+        if (p === path.join(SSH_DIR, "mykey.pub")) return true;
         return false;
       });
       fsMock.readFileSync.mockReturnValue("ssh-ed25519 AAAA\n");
@@ -269,8 +275,8 @@ describe("SSH IPC handlers", () => {
 
     it("throws when key file already exists", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/existing_key") return true;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "existing_key")) return true;
         return false;
       });
 
@@ -282,9 +288,9 @@ describe("SSH IPC handlers", () => {
 
     it("creates ~/.ssh directory if it doesn't exist", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return false;
-        if (p === "/home/testuser/.ssh/new_key") return false;
-        if (p === "/home/testuser/.ssh/new_key.pub") return true;
+        if (p === SSH_DIR) return false;
+        if (p === path.join(SSH_DIR, "new_key")) return false;
+        if (p === path.join(SSH_DIR, "new_key.pub")) return true;
         return false;
       });
       fsMock.readFileSync.mockReturnValue("ssh-ed25519 AAAA\n");
@@ -293,7 +299,7 @@ describe("SSH IPC handlers", () => {
       const handler = getHandler(IPC.SSH.GENERATE);
       await handler({}, "ed25519", "", "", "new_key");
 
-      expect(fsMock.mkdirSync).toHaveBeenCalledWith("/home/testuser/.ssh", {
+      expect(fsMock.mkdirSync).toHaveBeenCalledWith(SSH_DIR, {
         mode: 0o700,
         recursive: true,
       });
@@ -301,8 +307,8 @@ describe("SSH IPC handlers", () => {
 
     it("throws when stderr includes 'Error'", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/bad_key") return false;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "bad_key")) return false;
         return false;
       });
       mockExecFileAsync.mockResolvedValue({
@@ -318,9 +324,9 @@ describe("SSH IPC handlers", () => {
 
     it("returns empty string when pub file doesn't exist after generation", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/no_pub_key") return false;
-        if (p === "/home/testuser/.ssh/no_pub_key.pub") return false;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "no_pub_key")) return false;
+        if (p === path.join(SSH_DIR, "no_pub_key.pub")) return false;
         return false;
       });
       mockExecFileAsync.mockResolvedValue({ stdout: "", stderr: "" });
@@ -332,9 +338,9 @@ describe("SSH IPC handlers", () => {
 
     it("includes key path and passphrase in args", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh") return true;
-        if (p === "/home/testuser/.ssh/mykey2") return false;
-        if (p === "/home/testuser/.ssh/mykey2.pub") return true;
+        if (p === SSH_DIR) return true;
+        if (p === path.join(SSH_DIR, "mykey2")) return false;
+        if (p === path.join(SSH_DIR, "mykey2.pub")) return true;
         return false;
       });
       fsMock.readFileSync.mockReturnValue("ssh-ed25519 AAAA\n");
@@ -345,7 +351,7 @@ describe("SSH IPC handlers", () => {
 
       const args = mockExecFileAsync.mock.calls[0]![1] as string[];
       expect(args).toContain("-f");
-      expect(args).toContain("/home/testuser/.ssh/mykey2");
+      expect(args).toContain(path.join(SSH_DIR, "mykey2"));
       expect(args).toContain("-N");
       expect(args).toContain("mypassphrase");
     });
@@ -356,7 +362,7 @@ describe("SSH IPC handlers", () => {
   describe("SSH.GET_PUBLIC", () => {
     it("returns public key content when .pub file exists", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh/id_ed25519.pub") return true;
+        if (p === path.join(SSH_DIR, "id_ed25519.pub")) return true;
         return false;
       });
       fsMock.readFileSync.mockReturnValue("ssh-ed25519 AAAA user@host\n");
@@ -368,8 +374,8 @@ describe("SSH IPC handlers", () => {
 
     it("returns empty string when .pub file does not exist but private key exists", async () => {
       fsMock.existsSync.mockImplementation((p: string) => {
-        if (p === "/home/testuser/.ssh/id_rsa.pub") return false;
-        if (p === "/home/testuser/.ssh/id_rsa") return true;
+        if (p === path.join(SSH_DIR, "id_rsa.pub")) return false;
+        if (p === path.join(SSH_DIR, "id_rsa")) return true;
         return false;
       });
 

@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
+import type { GitHookInfo } from "../../shared/git-types";
 import fs from "fs";
 import path from "path";
 
@@ -55,7 +56,7 @@ export function registerHooksHandlers() {
     const hooksDir = getHooksDir();
     if (!fs.existsSync(hooksDir)) return [];
     const entries = fs.readdirSync(hooksDir);
-    const hooks: import("../../shared/git-types").GitHookInfo[] = [];
+    const hooks: GitHookInfo[] = [];
     for (const entry of entries) {
       const fullPath = path.join(hooksDir, entry);
       const stat = fs.statSync(fullPath);

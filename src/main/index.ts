@@ -169,6 +169,7 @@ if (app.commandLine.hasSwitch("mcp-server")) {
       createWindow();
       startAutoFetch();
       if (mainWindow) initAutoUpdater(mainWindow);
+      // eslint-disable-next-line no-console
       console.log("[git-expansion] App initialized successfully");
     } catch (err) {
       console.error("[git-expansion] Failed to initialize:", err);

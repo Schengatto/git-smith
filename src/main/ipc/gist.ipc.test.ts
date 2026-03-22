@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type pathModule from "path";
 
 // ── Hoisted mock state ─────────────────────────────────────────────────────
 // vi.mock factories are hoisted to top of file, so they cannot reference
@@ -37,7 +38,7 @@ vi.mock("os", () => ({
 }));
 
 vi.mock("path", async () => {
-  const actual = await vi.importActual<typeof import("path")>("path");
+  const actual = await vi.importActual<typeof pathModule>("path");
   return { default: actual };
 });
 

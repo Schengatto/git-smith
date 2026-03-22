@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
+import type { SearchCommitsOptions } from "../../shared/git-types";
 
 export function registerLogHandlers() {
   ipcMain.handle(
@@ -33,10 +34,7 @@ export function registerLogHandlers() {
     return gitService.showFile(hash, filePath);
   });
 
-  ipcMain.handle(
-    IPC.LOG.SEARCH,
-    async (_event, options: import("../../shared/git-types").SearchCommitsOptions) => {
-      return gitService.searchCommits(options);
-    }
-  );
+  ipcMain.handle(IPC.LOG.SEARCH, async (_event, options: SearchCommitsOptions) => {
+    return gitService.searchCommits(options);
+  });
 }

@@ -398,9 +398,8 @@ describe("InteractiveRebaseDialog", () => {
     const { GitOperationCancelledError } = await import(
       "../../store/git-operation-store"
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockElectronAPI.branch.rebaseCommits.mockRejectedValueOnce(
-      new (GitOperationCancelledError as any)("cancelled")
+      new (GitOperationCancelledError as new (...args: unknown[]) => Error)("cancelled")
     );
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
     await waitFor(() => {

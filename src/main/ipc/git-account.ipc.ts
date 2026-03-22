@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { IPC } from "../../shared/ipc-channels";
-import { GitAccount, SshHostEntry } from "../../shared/git-types";
+import type { GitAccount, SshHostEntry } from "../../shared/git-types";
 import { gitService } from "../git/git-service";
 import {
   getGitAccounts,
@@ -37,18 +37,21 @@ export function registerAccountHandlers() {
     return getGitAccounts().find((a) => a.id === accountId) || null;
   });
 
-  ipcMain.handle(IPC.ACCOUNT.SET_FOR_REPO, async (_e, repoPath: string, accountId: string | null) => {
-    setRepoAccount(repoPath, accountId);
-    if (accountId && gitService.isOpen()) {
-      const account = getGitAccounts().find((a) => a.id === accountId);
-      if (account) {
-        await gitService.applyAccount(account.name, account.email, {
-          signingKey: account.signingKey,
-          sshKeyPath: account.sshKeyPath,
-        });
+  ipcMain.handle(
+    IPC.ACCOUNT.SET_FOR_REPO,
+    async (_e, repoPath: string, accountId: string | null) => {
+      setRepoAccount(repoPath, accountId);
+      if (accountId && gitService.isOpen()) {
+        const account = getGitAccounts().find((a) => a.id === accountId);
+        if (account) {
+          await gitService.applyAccount(account.name, account.email, {
+            signingKey: account.signingKey,
+            sshKeyPath: account.sshKeyPath,
+          });
+        }
       }
     }
-  });
+  );
 
   ipcMain.handle(IPC.ACCOUNT.GET_DEFAULT, () => {
     const id = getDefaultAccountId();

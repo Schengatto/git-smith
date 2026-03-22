@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type * as NodePty from "node-pty";
 
 vi.mock("electron", () => ({
   ipcMain: { handle: vi.fn() },
@@ -15,18 +16,12 @@ vi.mock("../git/git-service", () => ({
   },
 }));
 
-// Mock node-pty so that no real terminal process is spawned
-vi.mock("node-pty", () => ({
-  default: {
-    spawn: vi.fn(() => ({
-      pid: 99999,
-      onData: vi.fn(() => ({ dispose: vi.fn() })),
-      onExit: vi.fn(() => ({ dispose: vi.fn() })),
-      write: vi.fn(),
-      resize: vi.fn(),
-      kill: vi.fn(),
-    })),
-  },
+import { ipcMain, BrowserWindow } from "electron";
+import { registerTerminalHandlers, _setPtyForTesting } from "./terminal.ipc";
+import { IPC } from "../../shared/ipc-channels";
+
+// Provide a mock pty object instead of trying to mock the native "node-pty" module
+const mockPty = {
   spawn: vi.fn(() => ({
     pid: 99999,
     onData: vi.fn(() => ({ dispose: vi.fn() })),
@@ -35,11 +30,8 @@ vi.mock("node-pty", () => ({
     resize: vi.fn(),
     kill: vi.fn(),
   })),
-}));
-
-import { ipcMain, BrowserWindow } from "electron";
-import { registerTerminalHandlers } from "./terminal.ipc";
-import { IPC } from "../../shared/ipc-channels";
+};
+_setPtyForTesting(mockPty as unknown as typeof NodePty);
 
 function getHandler(ch: string) {
   const m = ipcMain.handle as unknown as ReturnType<typeof vi.fn>;

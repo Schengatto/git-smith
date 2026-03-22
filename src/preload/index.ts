@@ -22,7 +22,35 @@ import type {
   ConflictFile,
   ConflictFileContent,
   ChangelogData,
+  SubmoduleDetailInfo,
+  GitAccount,
+  SshHostEntry,
+  ReflogEntry,
+  BisectStatus,
+  WorktreeInfo,
+  LfsStatus,
+  LfsFileInfo,
+  PrInfo,
+  PrCreateOptions,
+  GrepResult,
+  BranchDiffResult,
+  TimelineEntry,
+  ChurnEntry,
+  ContributorTimelineEntry,
+  ReviewComment,
+  ReviewData,
+  SshKeyInfo,
+  CIStatus,
+  IssueInfo,
+  GistCreateOptions,
+  GistResult,
+  UndoEntry,
+  GitHookInfo,
 } from "../shared/git-types";
+import type { DialogOpenRequest, DialogResult } from "../shared/dialog-types";
+import type { Timeframe, LeaderboardEntry, AuthorDetail } from "../shared/stats-types";
+import type { CodebaseStats } from "../shared/codebase-stats-types";
+import type { GitignoreTemplate } from "../shared/gitignore-templates";
 
 const electronAPI = {
   repo: {
@@ -269,7 +297,7 @@ const electronAPI = {
     sync: (): Promise<void> => ipcRenderer.invoke(IPC.SUBMODULE.SYNC),
     deinit: (submodulePath: string, force?: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.SUBMODULE.DEINIT, submodulePath, force),
-    status: (): Promise<import("../shared/git-types").SubmoduleDetailInfo[]> =>
+    status: (): Promise<SubmoduleDetailInfo[]> =>
       ipcRenderer.invoke(IPC.SUBMODULE.STATUS),
   },
   settings: {
@@ -306,50 +334,40 @@ const electronAPI = {
     write: (content: string): Promise<void> =>
       ipcRenderer.invoke(IPC.GITIGNORE.WRITE, content),
     preview: (): Promise<string[]> => ipcRenderer.invoke(IPC.GITIGNORE.PREVIEW),
-    templates: (): Promise<import("../shared/gitignore-templates").GitignoreTemplate[]> =>
+    templates: (): Promise<GitignoreTemplate[]> =>
       ipcRenderer.invoke(IPC.GITIGNORE.TEMPLATES),
   },
   account: {
-    list: (): Promise<import("../shared/git-types").GitAccount[]> =>
-      ipcRenderer.invoke(IPC.ACCOUNT.LIST),
-    add: (account: import("../shared/git-types").GitAccount): Promise<void> =>
+    list: (): Promise<GitAccount[]> => ipcRenderer.invoke(IPC.ACCOUNT.LIST),
+    add: (account: GitAccount): Promise<void> =>
       ipcRenderer.invoke(IPC.ACCOUNT.ADD, account),
-    update: (
-      id: string,
-      partial: Partial<import("../shared/git-types").GitAccount>
-    ): Promise<void> => ipcRenderer.invoke(IPC.ACCOUNT.UPDATE, id, partial),
+    update: (id: string, partial: Partial<GitAccount>): Promise<void> =>
+      ipcRenderer.invoke(IPC.ACCOUNT.UPDATE, id, partial),
     delete: (id: string): Promise<void> => ipcRenderer.invoke(IPC.ACCOUNT.DELETE, id),
-    getForRepo: (
-      repoPath: string
-    ): Promise<import("../shared/git-types").GitAccount | null> =>
+    getForRepo: (repoPath: string): Promise<GitAccount | null> =>
       ipcRenderer.invoke(IPC.ACCOUNT.GET_FOR_REPO, repoPath),
     setForRepo: (repoPath: string, accountId: string | null): Promise<void> =>
       ipcRenderer.invoke(IPC.ACCOUNT.SET_FOR_REPO, repoPath, accountId),
-    getDefault: (): Promise<import("../shared/git-types").GitAccount | null> =>
+    getDefault: (): Promise<GitAccount | null> =>
       ipcRenderer.invoke(IPC.ACCOUNT.GET_DEFAULT),
     setDefault: (accountId: string | null): Promise<void> =>
       ipcRenderer.invoke(IPC.ACCOUNT.SET_DEFAULT, accountId),
-    parseSshConfig: (): Promise<import("../shared/git-types").SshHostEntry[]> =>
+    parseSshConfig: (): Promise<SshHostEntry[]> =>
       ipcRenderer.invoke(IPC.ACCOUNT.PARSE_SSH_CONFIG),
   },
   dialog: {
-    open: (
-      request: import("../shared/dialog-types").DialogOpenRequest
-    ): Promise<{ windowId: number }> => ipcRenderer.invoke(IPC.DIALOG.OPEN, request),
+    open: (request: DialogOpenRequest): Promise<{ windowId: number }> =>
+      ipcRenderer.invoke(IPC.DIALOG.OPEN, request),
     close: (dialogKey: string): Promise<void> =>
       ipcRenderer.invoke(IPC.DIALOG.CLOSE, dialogKey),
     getInitData: (): Promise<Record<string, unknown> | undefined> =>
       ipcRenderer.invoke(IPC.DIALOG.GET_INIT_DATA),
-    sendResult: (result: import("../shared/dialog-types").DialogResult): void => {
+    sendResult: (result: DialogResult): void => {
       ipcRenderer.send(IPC.DIALOG.RESULT, result);
     },
-    onResult: (
-      callback: (result: import("../shared/dialog-types").DialogResult) => void
-    ) => {
-      const handler = (
-        _event: Electron.IpcRendererEvent,
-        result: import("../shared/dialog-types").DialogResult
-      ) => callback(result);
+    onResult: (callback: (result: DialogResult) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, result: DialogResult) =>
+        callback(result);
       ipcRenderer.on(IPC.DIALOG.ON_RESULT, handler);
       return () => ipcRenderer.removeListener(IPC.DIALOG.ON_RESULT, handler);
     },
@@ -366,18 +384,12 @@ const electronAPI = {
     openUserManual: (): Promise<void> => ipcRenderer.invoke(IPC.APP.OPEN_USER_MANUAL),
   },
   stats: {
-    getLeaderboard: (
-      timeframe: import("../shared/stats-types").Timeframe
-    ): Promise<import("../shared/stats-types").LeaderboardEntry[]> =>
+    getLeaderboard: (timeframe: Timeframe): Promise<LeaderboardEntry[]> =>
       ipcRenderer.invoke(IPC.STATS.LEADERBOARD, timeframe),
-    getAuthorDetail: (
-      email: string,
-      timeframe: import("../shared/stats-types").Timeframe
-    ): Promise<import("../shared/stats-types").AuthorDetail> =>
+    getAuthorDetail: (email: string, timeframe: Timeframe): Promise<AuthorDetail> =>
       ipcRenderer.invoke(IPC.STATS.AUTHOR_DETAIL, email, timeframe),
-    getCodebaseStats: (): Promise<
-      import("../shared/codebase-stats-types").CodebaseStats
-    > => ipcRenderer.invoke(IPC.STATS.CODEBASE),
+    getCodebaseStats: (): Promise<CodebaseStats> =>
+      ipcRenderer.invoke(IPC.STATS.CODEBASE),
   },
   on: {
     commandLog: (callback: (entry: CommandLogEntry) => void) => {
@@ -453,7 +465,7 @@ const electronAPI = {
   },
 
   reflog: {
-    list: (maxCount?: number): Promise<import("../shared/git-types").ReflogEntry[]> =>
+    list: (maxCount?: number): Promise<ReflogEntry[]> =>
       ipcRenderer.invoke(IPC.REFLOG.LIST, maxCount),
   },
 
@@ -470,13 +482,11 @@ const electronAPI = {
     skip: (ref?: string): Promise<string> => ipcRenderer.invoke(IPC.BISECT.SKIP, ref),
     reset: (): Promise<string> => ipcRenderer.invoke(IPC.BISECT.RESET),
     log: (): Promise<string> => ipcRenderer.invoke(IPC.BISECT.LOG),
-    status: (): Promise<import("../shared/git-types").BisectStatus> =>
-      ipcRenderer.invoke(IPC.BISECT.STATUS),
+    status: (): Promise<BisectStatus> => ipcRenderer.invoke(IPC.BISECT.STATUS),
   },
 
   worktree: {
-    list: (): Promise<import("../shared/git-types").WorktreeInfo[]> =>
-      ipcRenderer.invoke(IPC.WORKTREE.LIST),
+    list: (): Promise<WorktreeInfo[]> => ipcRenderer.invoke(IPC.WORKTREE.LIST),
     add: (path: string, branch?: string, createBranch?: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.WORKTREE.ADD, path, branch, createBranch),
     remove: (path: string, force?: boolean): Promise<void> =>
@@ -507,10 +517,8 @@ const electronAPI = {
   },
 
   lfs: {
-    status: (): Promise<import("../shared/git-types").LfsStatus> =>
-      ipcRenderer.invoke(IPC.LFS.STATUS),
-    listTracked: (): Promise<import("../shared/git-types").LfsFileInfo[]> =>
-      ipcRenderer.invoke(IPC.LFS.LIST_TRACKED),
+    status: (): Promise<LfsStatus> => ipcRenderer.invoke(IPC.LFS.STATUS),
+    listTracked: (): Promise<LfsFileInfo[]> => ipcRenderer.invoke(IPC.LFS.LIST_TRACKED),
     track: (pattern: string): Promise<void> => ipcRenderer.invoke(IPC.LFS.TRACK, pattern),
     untrack: (pattern: string): Promise<void> =>
       ipcRenderer.invoke(IPC.LFS.UNTRACK, pattern),
@@ -526,10 +534,9 @@ const electronAPI = {
       repo: string;
       baseUrl: string;
     }> => ipcRenderer.invoke(IPC.PR.DETECT_PROVIDER),
-    list: (): Promise<import("../shared/git-types").PrInfo[]> =>
-      ipcRenderer.invoke(IPC.PR.LIST),
+    list: (): Promise<PrInfo[]> => ipcRenderer.invoke(IPC.PR.LIST),
     view: (number: number): Promise<string> => ipcRenderer.invoke(IPC.PR.VIEW, number),
-    create: (options: import("../shared/git-types").PrCreateOptions): Promise<string> =>
+    create: (options: PrCreateOptions): Promise<string> =>
       ipcRenderer.invoke(IPC.PR.CREATE, options),
   },
 
@@ -549,49 +556,34 @@ const electronAPI = {
         wholeWord?: boolean;
         maxCount?: number;
       }
-    ): Promise<import("../shared/git-types").GrepResult> =>
-      ipcRenderer.invoke(IPC.GREP.SEARCH, pattern, options),
+    ): Promise<GrepResult> => ipcRenderer.invoke(IPC.GREP.SEARCH, pattern, options),
   },
 
   diffBranches: {
-    compare: (
-      from: string,
-      to: string
-    ): Promise<import("../shared/git-types").BranchDiffResult> =>
+    compare: (from: string, to: string): Promise<BranchDiffResult> =>
       ipcRenderer.invoke(IPC.DIFF_BRANCHES.COMPARE, from, to),
   },
 
   logRange: {
-    compare: (
-      from: string,
-      to: string
-    ): Promise<import("../shared/git-types").CommitInfo[]> =>
+    compare: (from: string, to: string): Promise<CommitInfo[]> =>
       ipcRenderer.invoke(IPC.LOG_RANGE.COMPARE, from, to),
   },
 
   statsAdvanced: {
-    timeline: (
-      period?: "day" | "week" | "month"
-    ): Promise<import("../shared/git-types").TimelineEntry[]> =>
+    timeline: (period?: "day" | "week" | "month"): Promise<TimelineEntry[]> =>
       ipcRenderer.invoke(IPC.STATS_ADVANCED.TIMELINE, period),
-    churn: (
-      period?: "day" | "week" | "month"
-    ): Promise<import("../shared/git-types").ChurnEntry[]> =>
+    churn: (period?: "day" | "week" | "month"): Promise<ChurnEntry[]> =>
       ipcRenderer.invoke(IPC.STATS_ADVANCED.CHURN, period),
     contributorsTimeline: (
       period?: "day" | "week" | "month"
-    ): Promise<import("../shared/git-types").ContributorTimelineEntry[]> =>
+    ): Promise<ContributorTimelineEntry[]> =>
       ipcRenderer.invoke(IPC.STATS_ADVANCED.CONTRIBUTORS_TIMELINE, period),
   },
 
   review: {
-    save: (
-      commitHash: string,
-      comments: import("../shared/git-types").ReviewComment[]
-    ): Promise<void> => ipcRenderer.invoke(IPC.REVIEW.SAVE, commitHash, comments),
-    load: (
-      commitHash: string
-    ): Promise<import("../shared/git-types").ReviewData | null> =>
+    save: (commitHash: string, comments: ReviewComment[]): Promise<void> =>
+      ipcRenderer.invoke(IPC.REVIEW.SAVE, commitHash, comments),
+    load: (commitHash: string): Promise<ReviewData | null> =>
       ipcRenderer.invoke(IPC.REVIEW.LOAD, commitHash),
     clear: (commitHash: string): Promise<void> =>
       ipcRenderer.invoke(IPC.REVIEW.CLEAR, commitHash),
@@ -599,8 +591,7 @@ const electronAPI = {
   },
 
   ssh: {
-    list: (): Promise<import("../shared/git-types").SshKeyInfo[]> =>
-      ipcRenderer.invoke(IPC.SSH.LIST),
+    list: (): Promise<SshKeyInfo[]> => ipcRenderer.invoke(IPC.SSH.LIST),
     generate: (
       type: "ed25519" | "rsa",
       comment: string,
@@ -614,34 +605,28 @@ const electronAPI = {
   },
 
   ci: {
-    status: (sha: string): Promise<import("../shared/git-types").CIStatus[]> =>
-      ipcRenderer.invoke(IPC.CI.STATUS, sha),
+    status: (sha: string): Promise<CIStatus[]> => ipcRenderer.invoke(IPC.CI.STATUS, sha),
   },
 
   issues: {
-    resolve: (
-      issueRef: string
-    ): Promise<import("../shared/git-types").IssueInfo | null> =>
+    resolve: (issueRef: string): Promise<IssueInfo | null> =>
       ipcRenderer.invoke(IPC.ISSUES.RESOLVE, issueRef),
   },
 
   gist: {
-    create: (
-      options: import("../shared/git-types").GistCreateOptions
-    ): Promise<import("../shared/git-types").GistResult> =>
+    create: (options: GistCreateOptions): Promise<GistResult> =>
       ipcRenderer.invoke(IPC.GIST.CREATE, options),
   },
 
   undo: {
-    history: (maxCount?: number): Promise<import("../shared/git-types").UndoEntry[]> =>
+    history: (maxCount?: number): Promise<UndoEntry[]> =>
       ipcRenderer.invoke(IPC.UNDO.HISTORY, maxCount),
     revert: (reflogIndex: number): Promise<void> =>
       ipcRenderer.invoke(IPC.UNDO.REVERT, reflogIndex),
   },
 
   hooks: {
-    list: (): Promise<import("../shared/git-types").GitHookInfo[]> =>
-      ipcRenderer.invoke(IPC.HOOKS.LIST),
+    list: (): Promise<GitHookInfo[]> => ipcRenderer.invoke(IPC.HOOKS.LIST),
     read: (name: string): Promise<string> => ipcRenderer.invoke(IPC.HOOKS.READ, name),
     write: (name: string, content: string): Promise<void> =>
       ipcRenderer.invoke(IPC.HOOKS.WRITE, name, content),

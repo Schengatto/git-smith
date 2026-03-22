@@ -13,6 +13,7 @@ import type {
   CommandOutputLine,
   RepoInfo,
   GitStatus,
+  GitOperation,
   FileStatus,
   CommitInfo,
   CommitFullInfo,
@@ -24,8 +25,24 @@ import type {
   StaleRemoteBranch,
   RebaseOptions,
   ConflictFile,
+  ConflictFileContent,
   ChangelogEntry,
+  SearchCommitsOptions,
+  MergeOptions,
+  CherryPickOptions,
+  RevertOptions,
+  SquashOptions,
+  GrepResult,
+  GrepMatch,
+  BranchDiffResult,
+  UndoEntry,
+  TimelineEntry,
+  ChurnEntry,
+  ContributorTimelineEntry,
+  ReflogEntry,
 } from "../../shared/git-types";
+import type { CodebaseStats } from "../../shared/codebase-stats-types";
+import type { Timeframe, LeaderboardEntry, AuthorDetail } from "../../shared/stats-types";
 
 let idCounter = 0;
 function nextId(): string {
@@ -303,7 +320,7 @@ export class GitService {
         ? fs.existsSync(path.join(this.repoPath, ".git", "CHERRY_PICK_HEAD"))
         : false;
 
-      let operationInProgress: import("../../shared/git-types").GitOperation = null;
+      let operationInProgress: GitOperation = null;
       let rebaseStep: { current: number; total: number } | undefined;
 
       if (mergeInProgress) {
@@ -576,9 +593,7 @@ export class GitService {
     );
   }
 
-  async searchCommits(
-    options: import("../../shared/git-types").SearchCommitsOptions
-  ): Promise<CommitInfo[]> {
+  async searchCommits(options: SearchCommitsOptions): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
     const maxCount = options.maxCount || 200;
     const args = ["log", "--all", "--date-order", `--max-count=${maxCount}`];
@@ -882,9 +897,7 @@ export class GitService {
     });
   }
 
-  async mergeWithOptions(
-    options: import("../../shared/git-types").MergeOptions
-  ): Promise<string> {
+  async mergeWithOptions(options: MergeOptions): Promise<string> {
     const git = this.ensureRepo();
     const args: string[] = [];
 
@@ -1006,9 +1019,7 @@ export class GitService {
     await this.run("git cherry-pick", [hash], () => git.raw(["cherry-pick", hash]));
   }
 
-  async cherryPickWithOptions(
-    options: import("../../shared/git-types").CherryPickOptions
-  ): Promise<void> {
+  async cherryPickWithOptions(options: CherryPickOptions): Promise<void> {
     const git = this.ensureRepo();
     const args = ["cherry-pick"];
     if (options.noCommit) args.push("--no-commit");
@@ -1017,9 +1028,7 @@ export class GitService {
     await this.run("git cherry-pick", args.slice(1), () => git.raw(args));
   }
 
-  async revertCommit(
-    options: import("../../shared/git-types").RevertOptions
-  ): Promise<void> {
+  async revertCommit(options: RevertOptions): Promise<void> {
     const git = this.ensureRepo();
     const args = ["revert"];
     if (options.noCommit) args.push("--no-commit");
@@ -1066,9 +1075,7 @@ export class GitService {
     });
   }
 
-  async squashCommits(
-    options: import("../../shared/git-types").SquashOptions
-  ): Promise<void> {
+  async squashCommits(options: SquashOptions): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git squash", [options.targetHash], async () => {
       // Soft reset to the parent of the target commit, keeping all changes staged
@@ -1293,13 +1300,13 @@ export class GitService {
 
   // ─── Conflict resolution ───────────────────────────
 
-  async getConflictedFiles(): Promise<import("../../shared/git-types").ConflictFile[]> {
+  async getConflictedFiles(): Promise<ConflictFile[]> {
     const git = this.ensureRepo();
     // git diff --name-only --diff-filter=U lists unmerged files
     const raw = await git.raw(["diff", "--name-only", "--diff-filter=U"]);
     if (!raw.trim()) return [];
 
-    const files: import("../../shared/git-types").ConflictFile[] = [];
+    const files: ConflictFile[] = [];
     // Also get detailed status to determine conflict reason
     const statusRaw = await git.raw(["status", "--porcelain"]);
     const statusMap = new Map<string, string>();
@@ -1324,9 +1331,7 @@ export class GitService {
     return files;
   }
 
-  async getConflictFileContent(
-    filePath: string
-  ): Promise<import("../../shared/git-types").ConflictFileContent> {
+  async getConflictFileContent(filePath: string): Promise<ConflictFileContent> {
     const git = this.ensureRepo();
 
     // Read the three versions using git show :<stage>:<path>
@@ -1974,7 +1979,7 @@ export class GitService {
       wholeWord?: boolean;
       maxCount?: number;
     } = {}
-  ): Promise<import("../../shared/git-types").GrepResult> {
+  ): Promise<GrepResult> {
     const git = this.ensureRepo();
     const args = ["grep", "-n", "--heading"];
     if (options.ignoreCase) args.push("-i");
@@ -1999,7 +2004,7 @@ export class GitService {
         throw e;
       }
       if (!result.trim()) return { matches: [], totalCount: 0 };
-      const matches: import("../../shared/git-types").GrepMatch[] = [];
+      const matches: GrepMatch[] = [];
       let currentFile = "";
       for (const line of result.split("\n")) {
         if (!line) {
@@ -2029,10 +2034,7 @@ export class GitService {
   // Branch Diff Comparison
   // ---------------------------------------------------------------------------
 
-  async diffBranches(
-    from: string,
-    to: string
-  ): Promise<import("../../shared/git-types").BranchDiffResult> {
+  async diffBranches(from: string, to: string): Promise<BranchDiffResult> {
     const git = this.ensureRepo();
     return this.run("git diff branches", [from, to], async () => {
       const numstatResult = await git.raw([
@@ -2066,7 +2068,7 @@ export class GitService {
       }
       let totalAdditions = 0;
       let totalDeletions = 0;
-      const files: import("../../shared/git-types").CommitFileInfo[] = [];
+      const files: CommitFileInfo[] = [];
       for (const line of numstatResult.trim().split("\n")) {
         if (!line.trim()) continue;
         const [addStr, delStr, ...pathParts] = line.split("\t");
@@ -2136,9 +2138,7 @@ export class GitService {
   // Undo
   // ---------------------------------------------------------------------------
 
-  async getUndoHistory(
-    maxCount = 20
-  ): Promise<import("../../shared/git-types").UndoEntry[]> {
+  async getUndoHistory(maxCount = 20): Promise<UndoEntry[]> {
     const git = this.ensureRepo();
     const SEP = "\x1e";
     const format = ["%H", "%gd", "%gs", "%s", "%ci"].join(SEP);
@@ -2175,9 +2175,7 @@ export class GitService {
   // Advanced Stats
   // ---------------------------------------------------------------------------
 
-  async getTimeline(
-    period: "day" | "week" | "month" = "week"
-  ): Promise<import("../../shared/git-types").TimelineEntry[]> {
+  async getTimeline(period: "day" | "week" | "month" = "week"): Promise<TimelineEntry[]> {
     const git = this.ensureRepo();
     const format = period === "day" ? "%Y-%m-%d" : period === "week" ? "%Y-%W" : "%Y-%m";
     const result = await git.raw([
@@ -2196,9 +2194,7 @@ export class GitService {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  async getChurn(
-    period: "day" | "week" | "month" = "week"
-  ): Promise<import("../../shared/git-types").ChurnEntry[]> {
+  async getChurn(period: "day" | "week" | "month" = "week"): Promise<ChurnEntry[]> {
     const git = this.ensureRepo();
     const format = period === "day" ? "%Y-%m-%d" : period === "week" ? "%Y-%W" : "%Y-%m";
     const result = await git.raw([
@@ -2233,7 +2229,7 @@ export class GitService {
 
   async getContributorsTimeline(
     period: "day" | "week" | "month" = "month"
-  ): Promise<import("../../shared/git-types").ContributorTimelineEntry[]> {
+  ): Promise<ContributorTimelineEntry[]> {
     const git = this.ensureRepo();
     const format = period === "day" ? "%Y-%m-%d" : period === "week" ? "%Y-%W" : "%Y-%m";
     const SEP = "\x1e";
@@ -2244,7 +2240,7 @@ export class GitService {
       `--date=format:${format}`,
     ]);
     if (!result.trim()) return [];
-    const entries: import("../../shared/git-types").ContributorTimelineEntry[] = [];
+    const entries: ContributorTimelineEntry[] = [];
     const counts = new Map<string, number>();
     for (const line of result.trim().split("\n")) {
       const [author, date] = line.split(SEP);
@@ -2265,9 +2261,7 @@ export class GitService {
   // Stats methods
   // ---------------------------------------------------------------------------
 
-  async getReflog(
-    maxCount = 100
-  ): Promise<import("../../shared/git-types").ReflogEntry[]> {
+  async getReflog(maxCount = 100): Promise<ReflogEntry[]> {
     const git = this.ensureRepo();
     return this.run("git reflog", [`-n ${maxCount}`], async () => {
       const SEP = "‖";
@@ -2297,18 +2291,14 @@ export class GitService {
     });
   }
 
-  async getCodebaseStats(): Promise<
-    import("../../shared/codebase-stats-types").CodebaseStats
-  > {
+  async getCodebaseStats(): Promise<CodebaseStats> {
     const git = this.ensureRepo();
     return this.run("git ls-files (codebase stats)", [], async () => {
       return computeCodebaseStats(git);
     });
   }
 
-  async getLeaderboard(
-    timeframe: import("../../shared/stats-types").Timeframe
-  ): Promise<import("../../shared/stats-types").LeaderboardEntry[]> {
+  async getLeaderboard(timeframe: Timeframe): Promise<LeaderboardEntry[]> {
     const git = this.ensureRepo();
     return this.run("git log --shortstat", ["--format=COMMIT_START"], async () => {
       const sinceArg: string[] = [];
@@ -2380,7 +2370,7 @@ export class GitService {
         }
       }
 
-      const result: import("../../shared/stats-types").LeaderboardEntry[] = [];
+      const result: LeaderboardEntry[] = [];
       for (const accum of authorMap.values()) {
         const gravatarHash = crypto
           .createHash("md5")
@@ -2420,10 +2410,7 @@ export class GitService {
     });
   }
 
-  async getAuthorDetail(
-    email: string,
-    timeframe: import("../../shared/stats-types").Timeframe
-  ): Promise<import("../../shared/stats-types").AuthorDetail> {
+  async getAuthorDetail(email: string, timeframe: Timeframe): Promise<AuthorDetail> {
     const git = this.ensureRepo();
     return this.run(
       "git log --numstat",

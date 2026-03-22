@@ -1,5 +1,7 @@
-import { autoUpdater, UpdateInfo } from "electron-updater";
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import type { UpdateInfo } from "electron-updater";
+import { autoUpdater } from "electron-updater";
+import type { BrowserWindow } from "electron";
+import { app, ipcMain, dialog } from "electron";
 import { IPC } from "../shared/ipc-channels";
 
 let mainWindow: BrowserWindow | null = null;

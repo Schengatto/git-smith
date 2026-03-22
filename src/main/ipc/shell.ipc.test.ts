@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type pathModule from "path";
 
 vi.mock("electron", () => ({
   ipcMain: { handle: vi.fn() },
@@ -21,10 +22,11 @@ vi.mock("../git/git-service", () => ({
 }));
 
 vi.mock("path", async () => {
-  const actual = await vi.importActual<typeof import("path")>("path");
+  const actual = await vi.importActual<typeof pathModule>("path");
   return actual;
 });
 
+import path from "path";
 import { ipcMain, shell } from "electron";
 import { registerShellHandlers } from "./shell.ipc";
 import { IPC } from "../../shared/ipc-channels";
@@ -72,7 +74,9 @@ describe("shell IPC handlers", () => {
     mockShell.openPath.mockResolvedValueOnce("");
     const handler = getHandler(IPC.SHELL.OPEN_FILE);
     await handler({}, "src/index.ts");
-    expect(mockShell.openPath).toHaveBeenCalledWith("/home/user/repo/src/index.ts");
+    expect(mockShell.openPath).toHaveBeenCalledWith(
+      path.resolve("/home/user/repo", "src/index.ts")
+    );
   });
 
   it("SHELL.SHOW_IN_FOLDER throws when no repo is open", async () => {
@@ -87,7 +91,7 @@ describe("shell IPC handlers", () => {
     const handler = getHandler(IPC.SHELL.SHOW_IN_FOLDER);
     await handler({}, "src/utils.ts");
     expect(mockShell.showItemInFolder).toHaveBeenCalledWith(
-      "/home/user/repo/src/utils.ts"
+      path.resolve("/home/user/repo", "src/utils.ts")
     );
   });
 });

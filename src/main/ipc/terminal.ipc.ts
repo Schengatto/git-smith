@@ -3,19 +3,34 @@ import os from "os";
 import fs from "fs";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
+import type * as NodePty from "node-pty";
 
-let pty: typeof import("node-pty") | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  pty = require("node-pty");
-} catch {
-  console.warn("node-pty not available — terminal feature disabled");
+let _pty: typeof NodePty | null | undefined = undefined;
+
+function getPty(): typeof NodePty | null {
+  if (_pty === undefined) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      _pty = require("node-pty");
+    } catch {
+      console.warn("node-pty not available — terminal feature disabled");
+      _pty = null;
+    }
+  }
+  return _pty ?? null;
+}
+
+/** @internal — only for tests */
+export function _setPtyForTesting(mock: typeof NodePty | null) {
+  _pty = mock;
 }
 
 type IPty = {
   pid: number;
   onData: (callback: (data: string) => void) => { dispose: () => void };
-  onExit: (callback: (e: { exitCode: number; signal?: number }) => void) => { dispose: () => void };
+  onExit: (callback: (e: { exitCode: number; signal?: number }) => void) => {
+    dispose: () => void;
+  };
   write: (data: string) => void;
   resize: (cols: number, rows: number) => void;
   kill: () => void;
@@ -43,6 +58,7 @@ function getShell(): { command: string; args: string[] } {
 
 export function registerTerminalHandlers() {
   ipcMain.handle(IPC.TERMINAL.SPAWN, (event, cols: number, rows: number) => {
+    const pty = getPty();
     if (!pty) {
       throw new Error("Terminal not available: node-pty module could not be loaded");
     }
@@ -100,7 +116,11 @@ export function registerTerminalHandlers() {
 
 export function killTerminal() {
   if (activePty) {
-    try { activePty.kill(); } catch { /* ignore */ }
+    try {
+      activePty.kill();
+    } catch {
+      /* ignore */
+    }
     activePty = null;
   }
 }

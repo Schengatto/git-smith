@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type fs from "fs";
 import path from "path";
 
 const mockStatus = vi.fn();
@@ -20,7 +21,7 @@ vi.mock("electron", () => ({
 const mockExistsSync = vi.fn();
 const mockReadFileSync = vi.fn();
 vi.mock("fs", async () => {
-  const actual = await vi.importActual<typeof import("fs")>("fs");
+  const actual = await vi.importActual<typeof fs>("fs");
   return {
     ...actual,
     default: {
@@ -39,13 +40,15 @@ import { GitService } from "./git-service";
 
 const fakeRepoPath = "/fake/repo";
 
-function makeStatusResult(overrides: Partial<{
-  files: { path: string; index: string; working_dir: string }[];
-  not_added: string[];
-  renamed: { from: string; to: string }[];
-  conflicted: string[];
-  isClean: () => boolean;
-}> = {}) {
+function makeStatusResult(
+  overrides: Partial<{
+    files: { path: string; index: string; working_dir: string }[];
+    not_added: string[];
+    renamed: { from: string; to: string }[];
+    conflicted: string[];
+    isClean: () => boolean;
+  }> = {}
+) {
   return {
     files: [],
     not_added: [],
@@ -79,8 +82,8 @@ describe("GitService.getStatus - operation detection", () => {
 
   it("detects merge in progress (MERGE_HEAD exists)", async () => {
     mockStatus.mockResolvedValue(makeStatusResult());
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
     );
 
     const result = await service.getStatus();
@@ -91,8 +94,8 @@ describe("GitService.getStatus - operation detection", () => {
 
   it("detects interactive rebase (rebase-merge dir with msgnum/end files)", async () => {
     mockStatus.mockResolvedValue(makeStatusResult());
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "rebase-merge")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "rebase-merge")
     );
     mockReadFileSync.mockImplementation((p: string) => {
       if (p === path.join(fakeRepoPath, ".git", "rebase-merge", "msgnum")) return "3\n";
@@ -108,8 +111,8 @@ describe("GitService.getStatus - operation detection", () => {
 
   it("detects non-interactive rebase (rebase-apply dir with next/last files)", async () => {
     mockStatus.mockResolvedValue(makeStatusResult());
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "rebase-apply")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "rebase-apply")
     );
     mockReadFileSync.mockImplementation((p: string) => {
       if (p === path.join(fakeRepoPath, ".git", "rebase-apply", "next")) return "2\n";
@@ -124,8 +127,8 @@ describe("GitService.getStatus - operation detection", () => {
 
   it("detects cherry-pick in progress (CHERRY_PICK_HEAD exists)", async () => {
     mockStatus.mockResolvedValue(makeStatusResult());
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "CHERRY_PICK_HEAD")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "CHERRY_PICK_HEAD")
     );
 
     const result = await service.getStatus();
@@ -145,15 +148,15 @@ describe("GitService.getStatus - operation detection", () => {
   });
 
   it("detects conflicted files during rebase (not just merge)", async () => {
-    mockStatus.mockResolvedValue(makeStatusResult({
-      files: [
-        { path: "conflicted.ts", index: "U", working_dir: "U" },
-      ],
-      conflicted: ["conflicted.ts"],
-    }));
+    mockStatus.mockResolvedValue(
+      makeStatusResult({
+        files: [{ path: "conflicted.ts", index: "U", working_dir: "U" }],
+        conflicted: ["conflicted.ts"],
+      })
+    );
     // Only rebase-merge exists, NOT MERGE_HEAD
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "rebase-merge")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "rebase-merge")
     );
     mockReadFileSync.mockImplementation((p: string) => {
       if (p === path.join(fakeRepoPath, ".git", "rebase-merge", "msgnum")) return "1\n";
@@ -171,27 +174,25 @@ describe("GitService.getStatus - operation detection", () => {
   });
 
   it("detects conflicted files during cherry-pick", async () => {
-    mockStatus.mockResolvedValue(makeStatusResult({
-      files: [
-        { path: "file.ts", index: "A", working_dir: "A" },
-      ],
-      conflicted: ["file.ts"],
-    }));
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "CHERRY_PICK_HEAD")
+    mockStatus.mockResolvedValue(
+      makeStatusResult({
+        files: [{ path: "file.ts", index: "A", working_dir: "A" }],
+        conflicted: ["file.ts"],
+      })
+    );
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "CHERRY_PICK_HEAD")
     );
 
     const result = await service.getStatus();
     expect(result.operationInProgress).toBe("cherry-pick");
-    expect(result.conflicted).toEqual([
-      { path: "file.ts", reason: "both-added" },
-    ]);
+    expect(result.conflicted).toEqual([{ path: "file.ts", reason: "both-added" }]);
   });
 
   it("handles missing rebase step files gracefully", async () => {
     mockStatus.mockResolvedValue(makeStatusResult());
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "rebase-merge")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "rebase-merge")
     );
     mockReadFileSync.mockImplementation(() => {
       throw new Error("ENOENT: no such file or directory");

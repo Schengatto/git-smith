@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type fs from "fs";
+import type { BrowserWindow } from "electron";
+import path from "path";
 
 // ─── Mock Setup ─────────────────────────────────────────────────────────────
 
@@ -90,7 +93,7 @@ const mockUnlinkSync = vi.fn();
 const mockMkdirSync = vi.fn();
 
 vi.mock("fs", async () => {
-  const actual = await vi.importActual<typeof import("fs")>("fs");
+  const actual = await vi.importActual<typeof fs>("fs");
   return {
     ...actual,
     default: {
@@ -2043,7 +2046,7 @@ describe("GitService.saveMergedFile", () => {
     const service = makeService();
     await service.saveMergedFile("src/app.ts", "merged content");
     expect(mockWriteFileSync).toHaveBeenCalledWith(
-      "/fake/repo/src/app.ts",
+      path.join("/fake/repo", "src/app.ts"),
       "merged content",
       "utf-8"
     );
@@ -2413,7 +2416,7 @@ describe("GitService.setMainWindow", () => {
   it("stores the main window reference", () => {
     const service = makeService();
     const fakeWindow = { isDestroyed: () => false, webContents: { send: vi.fn() } };
-    service.setMainWindow(fakeWindow as unknown as import("electron").BrowserWindow);
+    service.setMainWindow(fakeWindow as unknown as BrowserWindow);
     expect((service as unknown as Record<string, unknown>)["mainWindow"]).toBe(
       fakeWindow
     );

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import path from "path";
 
 // Mock electron modules before importing store
 vi.mock("electron", () => ({
@@ -519,19 +520,21 @@ describe("main/store — scanForRepos", () => {
     const { scanForRepos } = await freshStore();
 
     // Simulate: /root has a subdir "project" that contains ".git"
+    const root = path.resolve("/root");
+    const project = path.join(root, "project");
     mockReaddirSync.mockImplementation((dir: string) => {
-      if (dir === "/root") {
+      if (dir === root) {
         return [{ name: "project", isDirectory: () => true, isFile: () => false }];
       }
-      if (dir === "/root/project") {
+      if (dir === project) {
         return [{ name: ".git", isDirectory: () => true, isFile: () => false }];
       }
       return [];
     });
 
     const onProgress = vi.fn();
-    const found = await scanForRepos("/root", 2, onProgress);
-    expect(found).toContain("/root/project");
+    const found = await scanForRepos(root, 2, onProgress);
+    expect(found).toContain(project);
     expect(onProgress).toHaveBeenCalled();
   });
 
@@ -539,32 +542,35 @@ describe("main/store — scanForRepos", () => {
     simulateNoFile();
     const { scanForRepos } = await freshStore();
 
+    const root = path.resolve("/root");
     mockReaddirSync.mockImplementation((dir: string) => {
-      if (dir === "/root") {
+      if (dir === root) {
         return [{ name: "node_modules", isDirectory: () => true, isFile: () => false }];
       }
       return [];
     });
 
-    const found = await scanForRepos("/root", 2, vi.fn());
+    const found = await scanForRepos(root, 2, vi.fn());
     expect(found).toHaveLength(0);
   });
 
   it("skips repos already in recentRepos", async () => {
-    simulateFile({ recentRepos: ["/root/project"] });
+    const root = path.resolve("/root");
+    const project = path.join(root, "project");
+    simulateFile({ recentRepos: [project] });
     const { scanForRepos } = await freshStore();
 
     mockReaddirSync.mockImplementation((dir: string) => {
-      if (dir === "/root") {
+      if (dir === root) {
         return [{ name: "project", isDirectory: () => true, isFile: () => false }];
       }
-      if (dir === "/root/project") {
+      if (dir === project) {
         return [{ name: ".git", isDirectory: () => true, isFile: () => false }];
       }
       return [];
     });
 
-    const found = await scanForRepos("/root", 2, vi.fn());
+    const found = await scanForRepos(root, 2, vi.fn());
     expect(found).toHaveLength(0);
   });
 

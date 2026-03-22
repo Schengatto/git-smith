@@ -2,11 +2,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
 
 // Import initializes i18n on load
-import i18n, { setAppLanguage } from "./index";
+import i18n, { setAppLanguage, i18nReady } from "./index";
 
 beforeAll(async () => {
   // Ensure i18n is initialized before tests
-  await i18n.init;
+  await i18nReady;
 });
 
 describe("i18n index", () => {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type fs from "fs";
 import path from "path";
 
 const mockStatus = vi.fn();
@@ -18,7 +19,7 @@ vi.mock("electron", () => ({
 // Mock fs.existsSync for MERGE_HEAD detection
 const mockExistsSync = vi.fn();
 vi.mock("fs", async () => {
-  const actual = await vi.importActual<typeof import("fs")>("fs");
+  const actual = await vi.importActual<typeof fs>("fs");
   return {
     ...actual,
     default: {
@@ -65,15 +66,13 @@ describe("GitService.getStatus", () => {
 
   it("detects merge in progress via MERGE_HEAD", async () => {
     mockStatus.mockResolvedValue({
-      files: [
-        { path: "greeting.txt", index: "U", working_dir: "U" },
-      ],
+      files: [{ path: "greeting.txt", index: "U", working_dir: "U" }],
       not_added: [],
       renamed: [],
       conflicted: ["greeting.txt"],
     });
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
     );
 
     const result = await service.getStatus();
@@ -85,21 +84,17 @@ describe("GitService.getStatus", () => {
 
   it("reports both-added conflict reason for AA status", async () => {
     mockStatus.mockResolvedValue({
-      files: [
-        { path: "newfile.txt", index: "A", working_dir: "A" },
-      ],
+      files: [{ path: "newfile.txt", index: "A", working_dir: "A" }],
       not_added: [],
       renamed: [],
       conflicted: ["newfile.txt"],
     });
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
     );
 
     const result = await service.getStatus();
-    expect(result.conflicted).toEqual([
-      { path: "newfile.txt", reason: "both-added" },
-    ]);
+    expect(result.conflicted).toEqual([{ path: "newfile.txt", reason: "both-added" }]);
   });
 
   it("includes normal files alongside merge state", async () => {
@@ -112,8 +107,8 @@ describe("GitService.getStatus", () => {
       renamed: [],
       conflicted: ["conflict.txt"],
     });
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
     );
 
     const result = await service.getStatus();
@@ -126,15 +121,13 @@ describe("GitService.getStatus", () => {
 
   it("returns empty conflicted when merge in progress but no conflicted files", async () => {
     mockStatus.mockResolvedValue({
-      files: [
-        { path: "auto-merged.ts", index: "M", working_dir: " " },
-      ],
+      files: [{ path: "auto-merged.ts", index: "M", working_dir: " " }],
       not_added: [],
       renamed: [],
       conflicted: [],
     });
-    mockExistsSync.mockImplementation((p: string) =>
-      p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
+    mockExistsSync.mockImplementation(
+      (p: string) => p === path.join(fakeRepoPath, ".git", "MERGE_HEAD")
     );
 
     const result = await service.getStatus();
