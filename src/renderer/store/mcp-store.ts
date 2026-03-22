@@ -7,6 +7,7 @@ interface McpState {
   lastConflictSuggestion: string | null;
   lastReview: string | null;
   lastPrDescription: string | null;
+  lastPrTitle: string | null;
   error: string | null;
 
   // MCP server state
@@ -16,7 +17,8 @@ interface McpState {
   // Actions
   generateCommitMessage: () => Promise<string>;
   suggestConflictResolution: (filePath: string) => Promise<string>;
-  generatePrDescription: (commitHashes: string[]) => Promise<string>;
+  generatePrTitle: (source: string, target: string) => Promise<string>;
+  generatePrDescription: (source: string, target: string) => Promise<string>;
   reviewCommit: (hash: string) => Promise<string>;
   startServer: () => Promise<void>;
   stopServer: () => Promise<void>;
@@ -30,6 +32,7 @@ export const useMcpStore = create<McpState>((set) => ({
   lastConflictSuggestion: null,
   lastReview: null,
   lastPrDescription: null,
+  lastPrTitle: null,
   error: null,
   serverRunning: false,
   serverRepoPath: null,
@@ -60,10 +63,23 @@ export const useMcpStore = create<McpState>((set) => ({
     }
   },
 
-  generatePrDescription: async (commitHashes: string[]) => {
+  generatePrTitle: async (source: string, target: string) => {
     set({ generating: true, error: null });
     try {
-      const result = await window.electronAPI.mcp.generatePrDescription(commitHashes);
+      const result = await window.electronAPI.mcp.generatePrTitle(source, target);
+      set({ generating: false, lastPrTitle: result });
+      return result;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ generating: false, error: msg });
+      throw err;
+    }
+  },
+
+  generatePrDescription: async (source: string, target: string) => {
+    set({ generating: true, error: null });
+    try {
+      const result = await window.electronAPI.mcp.generatePrDescription(source, target);
       set({ generating: false, lastPrDescription: result });
       return result;
     } catch (err: unknown) {

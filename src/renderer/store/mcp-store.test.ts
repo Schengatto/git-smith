@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 const mockGenerateCommitMessage = vi.fn();
 const mockSuggestConflictResolution = vi.fn();
+const mockGeneratePrTitle = vi.fn();
 const mockGeneratePrDescription = vi.fn();
 const mockReviewCommit = vi.fn();
 const mockServerStart = vi.fn();
@@ -13,6 +14,7 @@ vi.stubGlobal("window", {
     mcp: {
       generateCommitMessage: mockGenerateCommitMessage,
       suggestConflictResolution: mockSuggestConflictResolution,
+      generatePrTitle: mockGeneratePrTitle,
       generatePrDescription: mockGeneratePrDescription,
       reviewCommit: mockReviewCommit,
       serverStart: mockServerStart,
@@ -31,6 +33,7 @@ const resetStore = () => {
     lastConflictSuggestion: null,
     lastReview: null,
     lastPrDescription: null,
+    lastPrTitle: null,
     error: null,
     serverRunning: false,
     serverRepoPath: null,
@@ -62,6 +65,10 @@ describe("mcp-store", () => {
 
     it("lastPrDescription is null", () => {
       expect(useMcpStore.getState().lastPrDescription).toBeNull();
+    });
+
+    it("lastPrTitle is null", () => {
+      expect(useMcpStore.getState().lastPrTitle).toBeNull();
     });
 
     it("error is null", () => {
@@ -121,9 +128,7 @@ describe("mcp-store", () => {
   describe("suggestConflictResolution", () => {
     it("returns the suggestion from the API", async () => {
       mockSuggestConflictResolution.mockResolvedValue("Accept incoming change");
-      const result = await useMcpStore
-        .getState()
-        .suggestConflictResolution("/src/foo.ts");
+      const result = await useMcpStore.getState().suggestConflictResolution("/src/foo.ts");
       expect(result).toBe("Accept incoming change");
     });
 
@@ -147,17 +152,15 @@ describe("mcp-store", () => {
 
     it("sets error and re-throws on failure", async () => {
       mockSuggestConflictResolution.mockRejectedValue(new Error("timeout"));
-      await expect(
-        useMcpStore.getState().suggestConflictResolution("/f")
-      ).rejects.toThrow("timeout");
+      await expect(useMcpStore.getState().suggestConflictResolution("/f")).rejects.toThrow(
+        "timeout"
+      );
       expect(useMcpStore.getState().error).toBe("timeout");
     });
 
     it("sets generating to false on failure", async () => {
       mockSuggestConflictResolution.mockRejectedValue(new Error("fail"));
-      await expect(
-        useMcpStore.getState().suggestConflictResolution("/f")
-      ).rejects.toThrow();
+      await expect(useMcpStore.getState().suggestConflictResolution("/f")).rejects.toThrow();
       expect(useMcpStore.getState().generating).toBe(false);
     });
   });
@@ -165,34 +168,56 @@ describe("mcp-store", () => {
   describe("generatePrDescription", () => {
     it("returns the description from the API", async () => {
       mockGeneratePrDescription.mockResolvedValue("## Summary\n- Added feature X");
-      const result = await useMcpStore.getState().generatePrDescription(["abc", "def"]);
+      const result = await useMcpStore.getState().generatePrDescription("feature-branch", "main");
       expect(result).toBe("## Summary\n- Added feature X");
     });
 
-    it("calls the API with the commit hashes array", async () => {
+    it("calls the API with source and target branches", async () => {
       mockGeneratePrDescription.mockResolvedValue("desc");
-      await useMcpStore.getState().generatePrDescription(["a1", "b2", "c3"]);
-      expect(mockGeneratePrDescription).toHaveBeenCalledWith(["a1", "b2", "c3"]);
+      await useMcpStore.getState().generatePrDescription("feature-branch", "main");
+      expect(mockGeneratePrDescription).toHaveBeenCalledWith("feature-branch", "main");
     });
 
     it("stores the description in lastPrDescription", async () => {
       mockGeneratePrDescription.mockResolvedValue("PR body text");
-      await useMcpStore.getState().generatePrDescription(["abc"]);
+      await useMcpStore.getState().generatePrDescription("feature-branch", "main");
       expect(useMcpStore.getState().lastPrDescription).toBe("PR body text");
     });
 
     it("sets generating to false after success", async () => {
       mockGeneratePrDescription.mockResolvedValue("ok");
-      await useMcpStore.getState().generatePrDescription([]);
+      await useMcpStore.getState().generatePrDescription("feature-branch", "main");
       expect(useMcpStore.getState().generating).toBe(false);
     });
 
     it("sets error and re-throws on failure", async () => {
       mockGeneratePrDescription.mockRejectedValue(new Error("model error"));
-      await expect(useMcpStore.getState().generatePrDescription([])).rejects.toThrow(
-        "model error"
-      );
+      await expect(
+        useMcpStore.getState().generatePrDescription("feature-branch", "main")
+      ).rejects.toThrow("model error");
       expect(useMcpStore.getState().error).toBe("model error");
+    });
+  });
+
+  describe("generatePrTitle", () => {
+    it("returns the title from the API", async () => {
+      mockGeneratePrTitle.mockResolvedValue("feat: add auth");
+      const result = await useMcpStore.getState().generatePrTitle("feat-branch", "main");
+      expect(result).toBe("feat: add auth");
+    });
+
+    it("stores the title in lastPrTitle", async () => {
+      mockGeneratePrTitle.mockResolvedValue("fix: resolve bug");
+      await useMcpStore.getState().generatePrTitle("fix-branch", "main");
+      expect(useMcpStore.getState().lastPrTitle).toBe("fix: resolve bug");
+    });
+
+    it("sets error on failure", async () => {
+      mockGeneratePrTitle.mockRejectedValue(new Error("API error"));
+      await expect(useMcpStore.getState().generatePrTitle("branch", "main")).rejects.toThrow(
+        "API error"
+      );
+      expect(useMcpStore.getState().error).toBe("API error");
     });
   });
 
@@ -223,9 +248,7 @@ describe("mcp-store", () => {
 
     it("sets error and re-throws on failure", async () => {
       mockReviewCommit.mockRejectedValue(new Error("review failed"));
-      await expect(useMcpStore.getState().reviewCommit("hash")).rejects.toThrow(
-        "review failed"
-      );
+      await expect(useMcpStore.getState().reviewCommit("hash")).rejects.toThrow("review failed");
       expect(useMcpStore.getState().error).toBe("review failed");
     });
 
