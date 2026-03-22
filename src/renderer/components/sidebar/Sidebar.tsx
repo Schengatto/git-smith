@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
-import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
+import type { ContextMenuEntry } from "../layout/ContextMenu";
+import { ContextMenu } from "../layout/ContextMenu";
 import {
   CreateBranchDialog,
   DeleteBranchDialog,
@@ -14,7 +15,10 @@ import { CreateStashDialog } from "../dialogs/StashDialog";
 import { CreateTagDialog } from "../dialogs/TagDialog";
 import { ModalDialog, DialogActions } from "../dialogs/ModalDialog";
 import { AddSubmoduleDialog } from "../dialogs/AddSubmoduleDialog";
-import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
+import {
+  runGitOperation,
+  GitOperationCancelledError,
+} from "../../store/git-operation-store";
 import { CheckoutDialog } from "../dialogs/CheckoutDialog";
 import { openDialogWindow } from "../../utils/open-dialog";
 import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types";
@@ -22,7 +26,16 @@ import type { BranchInfo, StashEntry, TagInfo } from "../../../shared/git-types"
 /* ---------- Icons ---------- */
 
 const IconGitBranch = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="6" y1="3" x2="6" y2="15" />
     <circle cx="18" cy="6" r="3" />
     <circle cx="6" cy="18" r="3" />
@@ -31,27 +44,63 @@ const IconGitBranch = () => (
 );
 
 const IconCloud = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
   </svg>
 );
 
 const IconTag = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
     <line x1="7" y1="7" x2="7.01" y2="7" />
   </svg>
 );
 
 const IconSubmodule = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
     <rect x="7" y="7" width="10" height="10" rx="1" ry="1" />
   </svg>
 );
 
 const IconArchive = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="21 8 21 21 3 21 3 8" />
     <rect x="1" y="3" width="22" height="5" />
     <line x1="10" y1="12" x2="14" y2="12" />
@@ -59,7 +108,16 @@ const IconArchive = () => (
 );
 
 const IconSearch = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
@@ -138,7 +196,9 @@ export const Sidebar: React.FC = () => {
       setSubmodules(submoduleList);
       setStashes(stashList);
     } catch (err: unknown) {
-      showToast(`Failed to load sidebar data: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(
+        `Failed to load sidebar data: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -155,23 +215,26 @@ export const Sidebar: React.FC = () => {
   const q = searchQuery.toLowerCase();
   const localBranches = useMemo(
     () => branches.filter((b) => !b.remote && (!q || b.name.toLowerCase().includes(q))),
-    [branches, q],
+    [branches, q]
   );
   const remoteBranches = useMemo(
     () => branches.filter((b) => b.remote && (!q || b.name.toLowerCase().includes(q))),
-    [branches, q],
+    [branches, q]
   );
   const filteredTags = useMemo(
     () => tags.filter((t) => !q || t.name.toLowerCase().includes(q)),
-    [tags, q],
+    [tags, q]
   );
   const filteredSubmodules = useMemo(
-    () => submodules.filter((s) => !q || s.name.toLowerCase().includes(q) || s.path.toLowerCase().includes(q)),
-    [submodules, q],
+    () =>
+      submodules.filter(
+        (s) => !q || s.name.toLowerCase().includes(q) || s.path.toLowerCase().includes(q)
+      ),
+    [submodules, q]
   );
   const filteredStashes = useMemo(
     () => stashes.filter((s) => !q || s.message.toLowerCase().includes(q)),
-    [stashes, q],
+    [stashes, q]
   );
 
   if (!repo) {
@@ -194,7 +257,10 @@ export const Sidebar: React.FC = () => {
 
   const branchesSectionCtx = (e: React.MouseEvent) =>
     showSectionCtx(e, [
-      { label: "Create New Branch...", onClick: () => setDialog({ type: "create-branch" }) },
+      {
+        label: "Create New Branch...",
+        onClick: () => setDialog({ type: "create-branch" }),
+      },
     ]);
 
   const tagsSectionCtx = (e: React.MouseEvent) =>
@@ -208,13 +274,19 @@ export const Sidebar: React.FC = () => {
       {
         label: "Update All (init)",
         onClick: async () => {
-          try { await window.electronAPI.submodule.update(true); loadData(); } catch {}
+          try {
+            await window.electronAPI.submodule.update(true);
+            loadData();
+          } catch {}
         },
       },
       {
         label: "Sync All",
         onClick: async () => {
-          try { await window.electronAPI.submodule.sync(); loadData(); } catch {}
+          try {
+            await window.electronAPI.submodule.sync();
+            loadData();
+          } catch {}
         },
       },
     ]);
@@ -253,7 +325,11 @@ export const Sidebar: React.FC = () => {
         });
         items.push({
           label: "Interactive Rebase onto This",
-          onClick: () => openDialogWindow({ dialog: "InteractiveRebaseDialog", data: { onto: branch.name } }),
+          onClick: () =>
+            openDialogWindow({
+              dialog: "InteractiveRebaseDialog",
+              data: { onto: branch.name },
+            }),
         });
       }
 
@@ -308,15 +384,27 @@ export const Sidebar: React.FC = () => {
     {
       label: "Pop",
       onClick: async () => {
-        await runGitOperation("Stash Pop", () => window.electronAPI.stash.pop(stash.index));
-        await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
+        await runGitOperation("Stash Pop", () =>
+          window.electronAPI.stash.pop(stash.index)
+        );
+        await Promise.all([
+          loadData(),
+          loadGraph(),
+          useRepoStore.getState().refreshStatus(),
+        ]);
       },
     },
     {
       label: "Apply",
       onClick: async () => {
-        await runGitOperation("Stash Apply", () => window.electronAPI.stash.apply(stash.index));
-        await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
+        await runGitOperation("Stash Apply", () =>
+          window.electronAPI.stash.apply(stash.index)
+        );
+        await Promise.all([
+          loadData(),
+          loadGraph(),
+          useRepoStore.getState().refreshStatus(),
+        ]);
       },
     },
     { divider: true },
@@ -333,29 +421,37 @@ export const Sidebar: React.FC = () => {
   const getCtxMenuItems = (): ContextMenuEntry[] => {
     if (!ctxMenu) return [];
     switch (ctxMenu.kind) {
-      case "branch": return buildBranchContextMenu(ctxMenu.branch);
-      case "tag": return buildTagContextMenu(ctxMenu.tag);
-      case "stash": return buildStashContextMenu(ctxMenu.stash);
-      case "section": return ctxMenu.items;
+      case "branch":
+        return buildBranchContextMenu(ctxMenu.branch);
+      case "tag":
+        return buildTagContextMenu(ctxMenu.tag);
+      case "stash":
+        return buildStashContextMenu(ctxMenu.stash);
+      case "section":
+        return ctxMenu.items;
     }
   };
 
   return (
     <div className="h-full flex flex-col select-none">
       {/* Search Bar */}
-      <div style={{
-        padding: "6px 8px",
-        borderBottom: "1px solid var(--surface-2)",
-      }}>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          background: "var(--surface-1)",
-          borderRadius: 4,
-          padding: "4px 8px",
-          border: "1px solid var(--surface-2)",
-        }}>
+      <div
+        style={{
+          padding: "6px 8px",
+          borderBottom: "1px solid var(--surface-2)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "var(--surface-1)",
+            borderRadius: 4,
+            padding: "4px 8px",
+            border: "1px solid var(--surface-2)",
+          }}
+        >
           <span style={{ color: "var(--text-muted)", display: "flex", flexShrink: 0 }}>
             <IconSearch />
           </span>
@@ -396,7 +492,6 @@ export const Sidebar: React.FC = () => {
 
       {/* Scrollable sections */}
       <div className="flex-1 overflow-y-auto" style={{ paddingTop: 4, paddingBottom: 8 }}>
-
         {/* Branches (Local) */}
         <SectionHeader
           icon={<IconGitBranch />}
@@ -467,7 +562,13 @@ export const Sidebar: React.FC = () => {
               <div
                 key={t.name}
                 className="list-item"
-                style={{ paddingLeft: 28, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
+                style={{
+                  paddingLeft: 28,
+                  fontSize: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
                 title={t.annotation || t.name}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -483,7 +584,9 @@ export const Sidebar: React.FC = () => {
                     flexShrink: 0,
                   }}
                 />
-                <span className="truncate" style={{ flex: 1, minWidth: 0 }}>{t.name}</span>
+                <span className="truncate" style={{ flex: 1, minWidth: 0 }}>
+                  {t.name}
+                </span>
                 <span style={{ fontSize: 10, color: "var(--text-muted)", flexShrink: 0 }}>
                   {t.hash.slice(0, 7)}
                 </span>
@@ -510,10 +613,19 @@ export const Sidebar: React.FC = () => {
               <div
                 key={s.path}
                 className="list-item"
-                style={{ paddingLeft: 28, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
+                style={{
+                  paddingLeft: 28,
+                  fontSize: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
                 title={`${s.path}\n${s.url}`}
               >
-                <span className="truncate" style={{ flex: 1, minWidth: 0, color: "var(--text-secondary)" }}>
+                <span
+                  className="truncate"
+                  style={{ flex: 1, minWidth: 0, color: "var(--text-secondary)" }}
+                >
                   {s.path}
                 </span>
                 <span style={{ fontSize: 10, color: "var(--text-muted)", flexShrink: 0 }}>
@@ -603,14 +715,8 @@ export const Sidebar: React.FC = () => {
         commitHash={repo.headCommit}
         commitSubject={`HEAD (${repo.currentBranch})`}
       />
-      <AddSubmoduleDialog
-        open={dialog.type === "add-submodule"}
-        onClose={closeDialog}
-      />
-      <CreateStashDialog
-        open={dialog.type === "create-stash"}
-        onClose={closeDialog}
-      />
+      <AddSubmoduleDialog open={dialog.type === "add-submodule"} onClose={closeDialog} />
+      <CreateStashDialog open={dialog.type === "create-stash"} onClose={closeDialog} />
       <CheckoutDialog
         open={dialog.type === "checkout"}
         onClose={closeDialog}
@@ -625,8 +731,9 @@ export const Sidebar: React.FC = () => {
         width={380}
       >
         <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
-          Are you sure you want to delete remote branch &quot;{dialog.type === "delete-remote-branch" ? dialog.branch : ""}&quot;?
-          This will remove it from the remote server.
+          Are you sure you want to delete remote branch &quot;
+          {dialog.type === "delete-remote-branch" ? dialog.branch : ""}&quot;? This will
+          remove it from the remote server.
         </p>
         <DialogActions
           onCancel={closeDialog}
@@ -638,12 +745,16 @@ export const Sidebar: React.FC = () => {
               const slashIdx = fullName.indexOf("/");
               const remote = fullName.substring(0, slashIdx);
               const branch = fullName.substring(slashIdx + 1);
-              await runGitOperation("Delete Remote Branch", () => window.electronAPI.branch.deleteRemote(remote, branch));
+              await runGitOperation("Delete Remote Branch", () =>
+                window.electronAPI.branch.deleteRemote(remote, branch)
+              );
               await loadGraph();
               loadData();
             } catch (err) {
               if (err instanceof GitOperationCancelledError) return;
-              alert(`Failed to delete remote branch: ${err instanceof Error ? err.message : err}`);
+              alert(
+                `Failed to delete remote branch: ${err instanceof Error ? err.message : err}`
+              );
             }
             setDialog({ type: "none" });
           }}
@@ -656,18 +767,39 @@ export const Sidebar: React.FC = () => {
       <ModalDialog
         open={dialog.type === "delete-tag"}
         title="Delete Tag"
-        onClose={() => { closeDialog(); setDeleteTagRemote(false); }}
+        onClose={() => {
+          closeDialog();
+          setDeleteTagRemote(false);
+        }}
         width={380}
       >
         <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
-          Are you sure you want to delete tag &quot;{dialog.type === "delete-tag" ? dialog.tag : ""}&quot;?
+          Are you sure you want to delete tag &quot;
+          {dialog.type === "delete-tag" ? dialog.tag : ""}&quot;?
         </p>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 13, color: "var(--text-primary)", cursor: "pointer" }}>
-          <input type="checkbox" checked={deleteTagRemote} onChange={(e) => setDeleteTagRemote(e.target.checked)} />
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            marginTop: 10,
+            fontSize: 13,
+            color: "var(--text-primary)",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={deleteTagRemote}
+            onChange={(e) => setDeleteTagRemote(e.target.checked)}
+          />
           Delete tag from remote
         </label>
         <DialogActions
-          onCancel={() => { closeDialog(); setDeleteTagRemote(false); }}
+          onCancel={() => {
+            closeDialog();
+            setDeleteTagRemote(false);
+          }}
           onConfirm={async () => {
             if (dialog.type !== "delete-tag") return;
             try {
@@ -695,7 +827,10 @@ export const Sidebar: React.FC = () => {
 /* ---------- Sub-components ---------- */
 
 const EmptyMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="text-xs px-3 py-2" style={{ color: "var(--text-muted)", paddingLeft: 28 }}>
+  <div
+    className="text-xs px-3 py-2"
+    style={{ color: "var(--text-muted)", paddingLeft: 28 }}
+  >
     {children}
   </div>
 );
@@ -752,7 +887,13 @@ const BranchItem: React.FC<{
   return (
     <div
       className={`list-item ${branch.current ? "list-item-active" : ""}`}
-      style={{ paddingLeft: 28, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
+      style={{
+        paddingLeft: 28,
+        fontSize: 12,
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+      }}
       onDoubleClick={handleCheckout}
       onContextMenu={onContextMenu}
       title={branch.name}
@@ -768,15 +909,25 @@ const BranchItem: React.FC<{
           }}
         />
       )}
-      <span className="truncate" style={{ flex: 1, minWidth: 0 }}>{branch.name}</span>
-      {branch.ahead != null && branch.ahead > 0 && (
-        <span style={{ fontSize: 10, color: "var(--green)", flexShrink: 0 }} title={`${branch.ahead} ahead`}>
-          {"\u2191"}{branch.ahead}
+      <span className="truncate" style={{ flex: 1, minWidth: 0 }}>
+        {branch.name}
+      </span>
+      {branch.ahead !== null && branch.ahead !== undefined && branch.ahead > 0 && (
+        <span
+          style={{ fontSize: 10, color: "var(--green)", flexShrink: 0 }}
+          title={`${branch.ahead} ahead`}
+        >
+          {"\u2191"}
+          {branch.ahead}
         </span>
       )}
-      {branch.behind != null && branch.behind > 0 && (
-        <span style={{ fontSize: 10, color: "var(--peach)", flexShrink: 0 }} title={`${branch.behind} behind`}>
-          {"\u2193"}{branch.behind}
+      {branch.behind !== null && branch.behind !== undefined && branch.behind > 0 && (
+        <span
+          style={{ fontSize: 10, color: "var(--peach)", flexShrink: 0 }}
+          title={`${branch.behind} behind`}
+        >
+          {"\u2193"}
+          {branch.behind}
         </span>
       )}
     </div>

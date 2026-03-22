@@ -1,3 +1,28 @@
+export interface CommitTemplate {
+  name: string;
+  prefix: string;
+  body: string;
+  description: string;
+}
+
+export interface CommitSnippet {
+  label: string;
+  text: string;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  onFetch: boolean;
+  onPush: boolean;
+  onError: boolean;
+}
+
+export interface IssueTrackerConfig {
+  provider: "github" | "gitlab" | "jira" | "custom";
+  pattern: string;
+  urlTemplate: string;
+}
+
 export interface AppSettings {
   // General
   theme: "dark" | "light";
@@ -9,6 +34,10 @@ export interface AppSettings {
   // Commit
   defaultCommitTemplate: string;
   signCommits: boolean;
+  commitTemplates: CommitTemplate[];
+  commitSnippets: CommitSnippet[];
+  notifications: NotificationSettings;
+  issueTracker: IssueTrackerConfig;
   // Diff
   diffContextLines: number;
   preferSideBySideDiff: boolean;

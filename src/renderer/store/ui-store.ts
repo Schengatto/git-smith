@@ -25,6 +25,20 @@ interface UIState {
   scanDialogOpen: boolean;
   aboutDialogOpen: boolean;
   staleBranchesDialogOpen: boolean;
+  gitignoreDialogOpen: boolean;
+  grepDialogOpen: boolean;
+  branchDiffDialogOpen: boolean;
+  branchCompareDialogOpen: boolean;
+  hooksDialogOpen: boolean;
+  undoDialogOpen: boolean;
+  ciStatusDialogOpen: boolean;
+  gistDialogOpen: boolean;
+  advancedStatsDialogOpen: boolean;
+  sshDialogOpen: boolean;
+  mergeEditorOpen: boolean;
+  mergeEditorFile: string;
+  reviewPanelOpen: boolean;
+  reviewPanelCommit: string;
   openCloneDialog: () => void;
   closeCloneDialog: () => void;
   openSettingsDialog: () => void;
@@ -35,6 +49,30 @@ interface UIState {
   closeAboutDialog: () => void;
   openStaleBranchesDialog: () => void;
   closeStaleBranchesDialog: () => void;
+  openGitignoreDialog: () => void;
+  closeGitignoreDialog: () => void;
+  openGrepDialog: () => void;
+  closeGrepDialog: () => void;
+  openBranchDiffDialog: () => void;
+  closeBranchDiffDialog: () => void;
+  openBranchCompareDialog: () => void;
+  closeBranchCompareDialog: () => void;
+  openHooksDialog: () => void;
+  closeHooksDialog: () => void;
+  openUndoDialog: () => void;
+  closeUndoDialog: () => void;
+  openCIStatusDialog: () => void;
+  closeCIStatusDialog: () => void;
+  openGistDialog: () => void;
+  closeGistDialog: () => void;
+  openAdvancedStatsDialog: () => void;
+  closeAdvancedStatsDialog: () => void;
+  openSshDialog: () => void;
+  closeSshDialog: () => void;
+  openMergeEditor: (filePath: string) => void;
+  closeMergeEditor: () => void;
+  openReviewPanel: (commitHash: string) => void;
+  closeReviewPanel: () => void;
 
   toasts: ToastMessage[];
   showToast: (text: string, type?: "error" | "info") => void;
@@ -98,10 +136,50 @@ export const useUIStore = create<UIState>((set, get) => ({
   openScanDialog: () => set({ scanDialogOpen: true }),
   closeScanDialog: () => set({ scanDialogOpen: false }),
   staleBranchesDialogOpen: false,
+  gitignoreDialogOpen: false,
+  grepDialogOpen: false,
+  branchDiffDialogOpen: false,
+  branchCompareDialogOpen: false,
+  hooksDialogOpen: false,
+  undoDialogOpen: false,
+  ciStatusDialogOpen: false,
+  gistDialogOpen: false,
+  advancedStatsDialogOpen: false,
+  sshDialogOpen: false,
+  mergeEditorOpen: false,
+  mergeEditorFile: "",
+  reviewPanelOpen: false,
+  reviewPanelCommit: "",
   openAboutDialog: () => set({ aboutDialogOpen: true }),
   closeAboutDialog: () => set({ aboutDialogOpen: false }),
   openStaleBranchesDialog: () => set({ staleBranchesDialogOpen: true }),
   closeStaleBranchesDialog: () => set({ staleBranchesDialogOpen: false }),
+  openGitignoreDialog: () => set({ gitignoreDialogOpen: true }),
+  closeGitignoreDialog: () => set({ gitignoreDialogOpen: false }),
+  openGrepDialog: () => set({ grepDialogOpen: true }),
+  closeGrepDialog: () => set({ grepDialogOpen: false }),
+  openBranchDiffDialog: () => set({ branchDiffDialogOpen: true }),
+  closeBranchDiffDialog: () => set({ branchDiffDialogOpen: false }),
+  openBranchCompareDialog: () => set({ branchCompareDialogOpen: true }),
+  closeBranchCompareDialog: () => set({ branchCompareDialogOpen: false }),
+  openHooksDialog: () => set({ hooksDialogOpen: true }),
+  closeHooksDialog: () => set({ hooksDialogOpen: false }),
+  openUndoDialog: () => set({ undoDialogOpen: true }),
+  closeUndoDialog: () => set({ undoDialogOpen: false }),
+  openCIStatusDialog: () => set({ ciStatusDialogOpen: true }),
+  closeCIStatusDialog: () => set({ ciStatusDialogOpen: false }),
+  openGistDialog: () => set({ gistDialogOpen: true }),
+  closeGistDialog: () => set({ gistDialogOpen: false }),
+  openAdvancedStatsDialog: () => set({ advancedStatsDialogOpen: true }),
+  closeAdvancedStatsDialog: () => set({ advancedStatsDialogOpen: false }),
+  openSshDialog: () => set({ sshDialogOpen: true }),
+  closeSshDialog: () => set({ sshDialogOpen: false }),
+  openMergeEditor: (filePath: string) =>
+    set({ mergeEditorOpen: true, mergeEditorFile: filePath }),
+  closeMergeEditor: () => set({ mergeEditorOpen: false, mergeEditorFile: "" }),
+  openReviewPanel: (commitHash: string) =>
+    set({ reviewPanelOpen: true, reviewPanelCommit: commitHash }),
+  closeReviewPanel: () => set({ reviewPanelOpen: false, reviewPanelCommit: "" }),
 
   toasts: [],
   showToast: (text, type = "error") => {

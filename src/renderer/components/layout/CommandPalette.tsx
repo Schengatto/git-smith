@@ -36,6 +36,16 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       openScanDialog,
       openAboutDialog,
       openStaleBranchesDialog,
+      openGitignoreDialog,
+      openGrepDialog,
+      openBranchDiffDialog,
+      openBranchCompareDialog,
+      openHooksDialog,
+      openUndoDialog,
+      openCIStatusDialog,
+      openGistDialog,
+      openAdvancedStatsDialog,
+      openSshDialog,
       toggleTheme,
     } = useUIStore.getState();
 
@@ -113,7 +123,9 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
         category: "Git",
         needsRepo: true,
         action: async () => {
-          await runGitOperation("Fetch & Prune", () => window.electronAPI.remote.fetchPrune());
+          await runGitOperation("Fetch & Prune", () =>
+            window.electronAPI.remote.fetchPrune()
+          );
           await refresh();
         },
       },
@@ -232,6 +244,76 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
         category: "Tools",
         needsRepo: true,
         action: () => openStaleBranchesDialog(),
+      },
+      {
+        id: "dialog:gitignore",
+        label: ".gitignore Editor...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openGitignoreDialog(),
+      },
+      {
+        id: "dialog:grep",
+        label: "Code Search (grep)...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openGrepDialog(),
+        shortcut: "Ctrl+Shift+F",
+      },
+      {
+        id: "dialog:branch-diff",
+        label: "Branch Diff Comparison...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openBranchDiffDialog(),
+      },
+      {
+        id: "dialog:branch-compare",
+        label: "Branch Commit Range Compare...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openBranchCompareDialog(),
+      },
+      {
+        id: "dialog:hooks",
+        label: "Git Hooks Manager...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openHooksDialog(),
+      },
+      {
+        id: "dialog:undo",
+        label: "Undo Git Operations...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openUndoDialog(),
+      },
+      {
+        id: "dialog:ci-status",
+        label: "CI/CD Pipeline Status...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openCIStatusDialog(),
+      },
+      {
+        id: "dialog:gist",
+        label: "Create Gist...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openGistDialog(),
+      },
+      {
+        id: "dialog:advanced-stats",
+        label: "Advanced Statistics...",
+        category: "Tools",
+        needsRepo: true,
+        action: () => openAdvancedStatsDialog(),
+      },
+      {
+        id: "dialog:ssh",
+        label: "SSH Key Manager...",
+        category: "Tools",
+        action: () => openSshDialog(),
       },
       {
         id: "dialog:reflog",
@@ -509,12 +591,9 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
                   width: "100%",
                   padding: "7px 12px",
                   border: "none",
-                  background:
-                    i === selectedIndex ? "var(--accent-dim)" : "transparent",
+                  background: i === selectedIndex ? "var(--accent-dim)" : "transparent",
                   color:
-                    i === selectedIndex
-                      ? "var(--text-primary)"
-                      : "var(--text-secondary)",
+                    i === selectedIndex ? "var(--text-primary)" : "var(--text-secondary)",
                   cursor: "pointer",
                   fontSize: 12,
                   textAlign: "left",

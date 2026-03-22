@@ -1,18 +1,16 @@
 import { ipcMain } from "electron";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
+import { showNotification } from "../notifications/notification-service";
 
 export function registerRemoteHandlers() {
   ipcMain.handle(IPC.REMOTE.LIST, async () => {
     return gitService.getRemotes();
   });
 
-  ipcMain.handle(
-    IPC.REMOTE.ADD,
-    async (_event, name: string, url: string) => {
-      await gitService.addRemote(name, url);
-    }
-  );
+  ipcMain.handle(IPC.REMOTE.ADD, async (_event, name: string, url: string) => {
+    await gitService.addRemote(name, url);
+  });
 
   ipcMain.handle(IPC.REMOTE.REMOVE, async (_event, name: string) => {
     await gitService.removeRemote(name);
@@ -30,12 +28,9 @@ export function registerRemoteHandlers() {
     await gitService.fetchPrune();
   });
 
-  ipcMain.handle(
-    IPC.REMOTE.PULL,
-    async (_event, remote?: string, branch?: string) => {
-      await gitService.pull(remote, branch);
-    }
-  );
+  ipcMain.handle(IPC.REMOTE.PULL, async (_event, remote?: string, branch?: string) => {
+    await gitService.pull(remote, branch);
+  });
 
   ipcMain.handle(
     IPC.REMOTE.PULL_REBASE,
@@ -61,6 +56,11 @@ export function registerRemoteHandlers() {
       setUpstream?: boolean
     ) => {
       await gitService.push(remote, branch, force, setUpstream);
+      showNotification(
+        "Push Successful",
+        `Pushed to ${remote || "origin"}/${branch || "current branch"}`,
+        "push"
+      );
     }
   );
 
@@ -81,10 +81,7 @@ export function registerRemoteHandlers() {
     }
   );
 
-  ipcMain.handle(
-    IPC.REMOTE.LIST_REMOTE_BRANCHES,
-    async (_event, url: string) => {
-      return gitService.listRemoteBranches(url);
-    }
-  );
+  ipcMain.handle(IPC.REMOTE.LIST_REMOTE_BRANCHES, async (_event, url: string) => {
+    return gitService.listRemoteBranches(url);
+  });
 }

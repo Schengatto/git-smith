@@ -26,6 +26,17 @@ import { registerNotesHandlers } from "./git-notes.ipc";
 import { registerGpgHandlers } from "./git-gpg.ipc";
 import { registerLfsHandlers } from "./git-lfs.ipc";
 import { registerPrHandlers } from "./git-pr.ipc";
+import { registerGrepHandlers } from "./git-grep.ipc";
+import { registerDiffBranchesHandlers } from "./git-diff-branches.ipc";
+import { registerLogRangeHandlers } from "./git-log-range.ipc";
+import { registerHooksHandlers } from "./git-hooks.ipc";
+import { registerUndoHandlers } from "./git-undo.ipc";
+import { registerCIStatusHandlers } from "./ci-status.ipc";
+import { registerIssuesHandlers } from "./issues.ipc";
+import { registerGistHandlers } from "./gist.ipc";
+import { registerStatsAdvancedHandlers } from "./stats-advanced.ipc";
+import { registerSshHandlers } from "./ssh.ipc";
+import { registerReviewHandlers } from "./review.ipc";
 
 export function registerAllHandlers() {
   registerRepoHandlers();
@@ -56,4 +67,15 @@ export function registerAllHandlers() {
   registerGpgHandlers();
   registerLfsHandlers();
   registerPrHandlers();
+  registerGrepHandlers();
+  registerDiffBranchesHandlers();
+  registerLogRangeHandlers();
+  registerHooksHandlers();
+  registerUndoHandlers();
+  registerCIStatusHandlers();
+  registerIssuesHandlers();
+  registerGistHandlers();
+  registerStatsAdvancedHandlers();
+  registerSshHandlers();
+  registerReviewHandlers();
 }

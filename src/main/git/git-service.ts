@@ -1,6 +1,7 @@
-import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git";
+import type { SimpleGit, SimpleGitOptions } from "simple-git";
+import simpleGit from "simple-git";
 import { getCodebaseStats as computeCodebaseStats } from "./codebase-stats";
-import { BrowserWindow } from "electron";
+import type { BrowserWindow } from "electron";
 import type { ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -78,9 +79,20 @@ export class GitService {
    *  Read-only commands (git log, git diff, git status, etc.) are excluded to avoid
    *  flooding the renderer with output during background refreshes. */
   private static readonly TRACKED_PREFIXES = [
-    "git push", "git pull", "git fetch", "git commit", "git rebase",
-    "git merge", "git stash", "git reset", "git checkout", "git clone",
-    "git cherry-pick", "git revert", "git apply", "git clean",
+    "git push",
+    "git pull",
+    "git fetch",
+    "git commit",
+    "git rebase",
+    "git merge",
+    "git stash",
+    "git reset",
+    "git checkout",
+    "git clone",
+    "git cherry-pick",
+    "git revert",
+    "git apply",
+    "git clean",
   ];
 
   /**
@@ -98,7 +110,12 @@ export class GitService {
     cp.spawn = function (...args: unknown[]) {
       const child: ChildProcess = originalSpawn.apply(this, args);
       const cmd = String(args[0] || "");
-      if (cmd === "git" || cmd.endsWith("/git") || cmd.endsWith("\\git") || cmd.endsWith("git.exe")) {
+      if (
+        cmd === "git" ||
+        cmd.endsWith("/git") ||
+        cmd.endsWith("\\git") ||
+        cmd.endsWith("git.exe")
+      ) {
         self._activeChildProcess = child;
         child.on("exit", () => {
           if (self._activeChildProcess === child) self._activeChildProcess = null;
@@ -149,7 +166,7 @@ export class GitService {
     const entry = this.logCommand(description, args);
     // Only capture stdout/stderr for mutation commands to avoid flooding the
     // renderer with output from read-only commands (git log, git status, etc.)
-    const tracked = GitService.TRACKED_PREFIXES.some(p => description.startsWith(p));
+    const tracked = GitService.TRACKED_PREFIXES.some((p) => description.startsWith(p));
     if (tracked) this._currentRunId = entry.id;
     this.emitCommandLog(entry);
     const start = Date.now();
@@ -278,8 +295,10 @@ export class GitService {
       const mergeInProgress = this.repoPath
         ? fs.existsSync(path.join(this.repoPath, ".git", "MERGE_HEAD"))
         : false;
-      const rebaseMerge = this.repoPath && fs.existsSync(path.join(this.repoPath, ".git", "rebase-merge"));
-      const rebaseApply = this.repoPath && fs.existsSync(path.join(this.repoPath, ".git", "rebase-apply"));
+      const rebaseMerge =
+        this.repoPath && fs.existsSync(path.join(this.repoPath, ".git", "rebase-merge"));
+      const rebaseApply =
+        this.repoPath && fs.existsSync(path.join(this.repoPath, ".git", "rebase-apply"));
       const cherryPickInProgress = this.repoPath
         ? fs.existsSync(path.join(this.repoPath, ".git", "CHERRY_PICK_HEAD"))
         : false;
@@ -293,12 +312,44 @@ export class GitService {
         operationInProgress = "rebase";
         try {
           if (rebaseMerge) {
-            const current = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-merge", "msgnum"), "utf-8").trim(), 10);
-            const total = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-merge", "end"), "utf-8").trim(), 10);
+            const current = parseInt(
+              fs
+                .readFileSync(
+                  path.join(this.repoPath!, ".git", "rebase-merge", "msgnum"),
+                  "utf-8"
+                )
+                .trim(),
+              10
+            );
+            const total = parseInt(
+              fs
+                .readFileSync(
+                  path.join(this.repoPath!, ".git", "rebase-merge", "end"),
+                  "utf-8"
+                )
+                .trim(),
+              10
+            );
             rebaseStep = { current, total };
           } else {
-            const current = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-apply", "next"), "utf-8").trim(), 10);
-            const total = parseInt(fs.readFileSync(path.join(this.repoPath!, ".git", "rebase-apply", "last"), "utf-8").trim(), 10);
+            const current = parseInt(
+              fs
+                .readFileSync(
+                  path.join(this.repoPath!, ".git", "rebase-apply", "next"),
+                  "utf-8"
+                )
+                .trim(),
+              10
+            );
+            const total = parseInt(
+              fs
+                .readFileSync(
+                  path.join(this.repoPath!, ".git", "rebase-apply", "last"),
+                  "utf-8"
+                )
+                .trim(),
+              10
+            );
             rebaseStep = { current, total };
           }
         } catch {
@@ -336,18 +387,23 @@ export class GitService {
     });
   }
 
+  async getIgnoredFiles(): Promise<string[]> {
+    const git = this.ensureRepo();
+    const result = await git.raw(["status", "--ignored", "--short"]);
+    return result
+      .split("\n")
+      .filter((l) => l.startsWith("!! "))
+      .map((l) => l.slice(3).trim());
+  }
+
   async stage(paths: string[]): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git add", paths, () =>
-      git.raw(["add", "-A", "--", ...paths])
-    );
+    await this.run("git add", paths, () => git.raw(["add", "-A", "--", ...paths]));
   }
 
   async unstage(paths: string[]): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git reset HEAD", paths, () =>
-      git.reset(["HEAD", "--", ...paths])
-    );
+    await this.run("git reset HEAD", paths, () => git.reset(["HEAD", "--", ...paths]));
   }
 
   async stageLines(patch: string): Promise<void> {
@@ -358,7 +414,9 @@ export class GitService {
       try {
         await git.applyPatch(tmpFile, ["--cached"]);
       } finally {
-        try { fs.unlinkSync(tmpFile); } catch {}
+        try {
+          fs.unlinkSync(tmpFile);
+        } catch {}
       }
     });
   }
@@ -371,7 +429,9 @@ export class GitService {
       try {
         await git.applyPatch(tmpFile, ["--cached", "--reverse"]);
       } finally {
-        try { fs.unlinkSync(tmpFile); } catch {}
+        try {
+          fs.unlinkSync(tmpFile);
+        } catch {}
       }
     });
   }
@@ -445,9 +505,7 @@ export class GitService {
         // Exclude: show all except selected branches
         refArgs = [
           ...branchVisibility.branches.map((b) =>
-            b.startsWith("remotes/")
-              ? `--exclude=refs/${b}`
-              : `--exclude=refs/heads/${b}`
+            b.startsWith("remotes/") ? `--exclude=refs/${b}` : `--exclude=refs/heads/${b}`
           ),
           "--all",
         ];
@@ -466,16 +524,16 @@ export class GitService {
         const RECORD_SEP = "%x1e";
         const FIELD_SEP = "%x00";
         const format = [
-          "%H",    // 0  hash
-          "%h",    // 1  abbreviated hash
-          "%s",    // 2  subject
-          "%an",   // 3  author name
-          "%ae",   // 4  author email
-          "%aI",   // 5  author date ISO
-          "%cI",   // 6  committer date ISO
-          "%P",    // 7  parent hashes
-          "%D",    // 8  ref names
-          "%B",    // 9  full message (subject+body) — MUST be last
+          "%H", // 0  hash
+          "%h", // 1  abbreviated hash
+          "%s", // 2  subject
+          "%an", // 3  author name
+          "%ae", // 4  author email
+          "%aI", // 5  author date ISO
+          "%cI", // 6  committer date ISO
+          "%P", // 7  parent hashes
+          "%D", // 8  ref names
+          "%B", // 9  full message (subject+body) — MUST be last
         ].join(FIELD_SEP);
 
         const result = await git.raw([
@@ -509,14 +567,18 @@ export class GitService {
               committerDate: parts[6] || "",
               parentHashes: parts[7] ? parts[7].split(" ") : [],
               refs: parseRefs(parts[8] || ""),
-              gravatarHash: email ? crypto.createHash("md5").update(email).digest("hex") : undefined,
+              gravatarHash: email
+                ? crypto.createHash("md5").update(email).digest("hex")
+                : undefined,
             };
           });
       }
     );
   }
 
-  async searchCommits(options: import("../../shared/git-types").SearchCommitsOptions): Promise<CommitInfo[]> {
+  async searchCommits(
+    options: import("../../shared/git-types").SearchCommitsOptions
+  ): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
     const maxCount = options.maxCount || 200;
     const args = ["log", "--all", "--date-order", `--max-count=${maxCount}`];
@@ -526,9 +588,9 @@ export class GitService {
 
     const RECORD_SEP = "%x1e";
     const FIELD_SEP = "%x00";
-    const format = [
-      "%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D", "%B",
-    ].join(FIELD_SEP);
+    const format = ["%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D", "%B"].join(
+      FIELD_SEP
+    );
     args.push(`--format=${RECORD_SEP}${format}`);
 
     return this.run("git log", args.slice(1), async () => {
@@ -553,7 +615,9 @@ export class GitService {
             committerDate: parts[6] || "",
             parentHashes: parts[7] ? parts[7].split(" ") : [],
             refs: parseRefs(parts[8] || ""),
-            gravatarHash: email ? crypto.createHash("md5").update(email).digest("hex") : undefined,
+            gravatarHash: email
+              ? crypto.createHash("md5").update(email).digest("hex")
+              : undefined,
           };
         });
     });
@@ -563,15 +627,19 @@ export class GitService {
     const git = this.ensureRepo();
     return this.run("git show", [hash, "--format=..."], async () => {
       const format = [
-        "%H", "%h", "%s", "%b", "%an", "%ae", "%aI", "%cI", "%P", "%D",
+        "%H",
+        "%h",
+        "%s",
+        "%b",
+        "%an",
+        "%ae",
+        "%aI",
+        "%cI",
+        "%P",
+        "%D",
       ].join("%x00");
 
-      const result = await git.raw([
-        "show",
-        hash,
-        `--format=${format}`,
-        "--no-patch",
-      ]);
+      const result = await git.raw(["show", hash, `--format=${format}`, "--no-patch"]);
 
       const parts = result.trim().split("\0");
       const detailEmail = (parts[5] || "").trim().toLowerCase();
@@ -586,7 +654,9 @@ export class GitService {
         committerDate: parts[7]!,
         parentHashes: parts[8] ? parts[8].split(" ") : [],
         refs: parseRefs(parts[9] || ""),
-        gravatarHash: detailEmail ? crypto.createHash("md5").update(detailEmail).digest("hex") : undefined,
+        gravatarHash: detailEmail
+          ? crypto.createHash("md5").update(detailEmail).digest("hex")
+          : undefined,
       };
     });
   }
@@ -604,7 +674,18 @@ export class GitService {
       // Get commit details including committer info
       const FIELD_SEP = "%x00";
       const format = [
-        "%H", "%h", "%s", "%b", "%an", "%ae", "%aI", "%cn", "%ce", "%cI", "%P", "%D",
+        "%H",
+        "%h",
+        "%s",
+        "%b",
+        "%an",
+        "%ae",
+        "%aI",
+        "%cn",
+        "%ce",
+        "%cI",
+        "%P",
+        "%D",
       ].join(FIELD_SEP);
 
       const result = await git.raw(["show", hash, `--format=${format}`, "--no-patch"]);
@@ -622,7 +703,9 @@ export class GitService {
             break;
           }
         }
-      } catch { /* no children */ }
+      } catch {
+        /* no children */
+      }
 
       // Get branches containing this commit
       let containedInBranches: string[] = [];
@@ -634,20 +717,32 @@ export class GitService {
           .filter(Boolean)
           .map((b) => b.replace(/^\*?\s+/, "").trim())
           .filter(Boolean);
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
 
       // Get tags containing this commit
       let containedInTags: string[] = [];
       try {
         const tagResult = await git.raw(["tag", "--contains", hash]);
-        containedInTags = tagResult.trim().split("\n").filter(Boolean).map((t) => t.trim());
-      } catch { /* empty */ }
+        containedInTags = tagResult
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .map((t) => t.trim());
+      } catch {
+        /* empty */
+      }
 
       // Get nearest ancestor tag
       let derivesFromTag = "";
       try {
-        derivesFromTag = (await git.raw(["describe", "--tags", "--abbrev=0", hash])).trim();
-      } catch { /* no tag */ }
+        derivesFromTag = (
+          await git.raw(["describe", "--tags", "--abbrev=0", hash])
+        ).trim();
+      } catch {
+        /* no tag */
+      }
 
       return {
         hash: parts[0] || "",
@@ -663,7 +758,9 @@ export class GitService {
         parentHashes: parts[10] ? parts[10].split(" ") : [],
         childHashes,
         refs: parseRefs(parts[11] || ""),
-        gravatarHash: email ? crypto.createHash("md5").update(email).digest("hex") : undefined,
+        gravatarHash: email
+          ? crypto.createHash("md5").update(email).digest("hex")
+          : undefined,
         containedInBranches,
         containedInTags,
         derivesFromTag,
@@ -709,9 +806,7 @@ export class GitService {
   async deleteBranch(name: string, force = false): Promise<void> {
     const git = this.ensureRepo();
     const flag = force ? "-D" : "-d";
-    await this.run("git branch", [flag, name], () =>
-      git.branch([flag, name])
-    );
+    await this.run("git branch", [flag, name], () => git.branch([flag, name]));
   }
 
   async deleteRemoteBranch(remote: string, branch: string): Promise<void> {
@@ -787,7 +882,9 @@ export class GitService {
     });
   }
 
-  async mergeWithOptions(options: import("../../shared/git-types").MergeOptions): Promise<string> {
+  async mergeWithOptions(
+    options: import("../../shared/git-types").MergeOptions
+  ): Promise<string> {
     const git = this.ensureRepo();
     const args: string[] = [];
 
@@ -795,7 +892,8 @@ export class GitService {
     if (options.noCommit) args.push("--no-commit");
     if (options.squash) args.push("--squash");
     if (options.allowUnrelatedHistories) args.push("--allow-unrelated-histories");
-    if (options.log != null && options.log > 0) args.push(`--log=${options.log}`);
+    if (options.log !== null && options.log !== undefined && options.log > 0)
+      args.push(`--log=${options.log}`);
     if (options.message) args.push("-m", options.message);
 
     args.push(options.branch);
@@ -833,26 +931,27 @@ export class GitService {
 
     if (options.interactive && options.todoEntries && options.todoEntries.length > 0) {
       // Build the todo file for interactive rebase
-      const todoContent = options.todoEntries
-        .map((e) => `${e.action} ${e.hash}`)
-        .join("\n") + "\n";
+      const todoContent =
+        options.todoEntries.map((e) => `${e.action} ${e.hash}`).join("\n") + "\n";
 
       const todoPath = path.join(this.repoPath!, ".git", "rebase-todo-custom.txt");
       fs.writeFileSync(todoPath, todoContent);
 
       const editorScript = path.join(this.repoPath!, ".git", "rebase-editor.sh");
-      fs.writeFileSync(
-        editorScript,
-        `#!/bin/sh\ncp "${todoPath}" "$1"\n`,
-        { mode: 0o755 }
-      );
+      fs.writeFileSync(editorScript, `#!/bin/sh\ncp "${todoPath}" "$1"\n`, {
+        mode: 0o755,
+      });
 
       await this.run("git rebase", args, async () => {
         try {
           await git.env("GIT_SEQUENCE_EDITOR", editorScript).rebase(args);
         } finally {
-          try { fs.unlinkSync(todoPath); } catch {}
-          try { fs.unlinkSync(editorScript); } catch {}
+          try {
+            fs.unlinkSync(todoPath);
+          } catch {}
+          try {
+            fs.unlinkSync(editorScript);
+          } catch {}
         }
       });
     } else {
@@ -899,19 +998,17 @@ export class GitService {
   async resetToCommit(hash: string, mode: "soft" | "mixed" | "hard"): Promise<void> {
     const git = this.ensureRepo();
     const flag = `--${mode}`;
-    await this.run("git reset", [flag, hash], () =>
-      git.reset([flag, hash])
-    );
+    await this.run("git reset", [flag, hash], () => git.reset([flag, hash]));
   }
 
   async cherryPick(hash: string): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git cherry-pick", [hash], () =>
-      git.raw(["cherry-pick", hash])
-    );
+    await this.run("git cherry-pick", [hash], () => git.raw(["cherry-pick", hash]));
   }
 
-  async cherryPickWithOptions(options: import("../../shared/git-types").CherryPickOptions): Promise<void> {
+  async cherryPickWithOptions(
+    options: import("../../shared/git-types").CherryPickOptions
+  ): Promise<void> {
     const git = this.ensureRepo();
     const args = ["cherry-pick"];
     if (options.noCommit) args.push("--no-commit");
@@ -920,7 +1017,9 @@ export class GitService {
     await this.run("git cherry-pick", args.slice(1), () => git.raw(args));
   }
 
-  async revertCommit(options: import("../../shared/git-types").RevertOptions): Promise<void> {
+  async revertCommit(
+    options: import("../../shared/git-types").RevertOptions
+  ): Promise<void> {
     const git = this.ensureRepo();
     const args = ["revert"];
     if (options.noCommit) args.push("--no-commit");
@@ -934,9 +1033,9 @@ export class GitService {
     return this.run("git log", [`${targetHash}..HEAD`], async () => {
       const RECORD_SEP = "%x1e";
       const FIELD_SEP = "%x00";
-      const format = [
-        "%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D",
-      ].join(FIELD_SEP);
+      const format = ["%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D"].join(
+        FIELD_SEP
+      );
 
       const result = await git.raw([
         "log",
@@ -967,7 +1066,9 @@ export class GitService {
     });
   }
 
-  async squashCommits(options: import("../../shared/git-types").SquashOptions): Promise<void> {
+  async squashCommits(
+    options: import("../../shared/git-types").SquashOptions
+  ): Promise<void> {
     const git = this.ensureRepo();
     await this.run("git squash", [options.targetHash], async () => {
       // Soft reset to the parent of the target commit, keeping all changes staged
@@ -985,20 +1086,14 @@ export class GitService {
     });
   }
 
-  async createTag(
-    name: string,
-    commitHash: string,
-    message?: string
-  ): Promise<void> {
+  async createTag(name: string, commitHash: string, message?: string): Promise<void> {
     const git = this.ensureRepo();
     if (message) {
       await this.run("git tag", ["-a", name, commitHash, "-m", message], () =>
         git.tag(["-a", name, commitHash, "-m", message])
       );
     } else {
-      await this.run("git tag", [name, commitHash], () =>
-        git.tag([name, commitHash])
-      );
+      await this.run("git tag", [name, commitHash], () => git.tag([name, commitHash]));
     }
   }
 
@@ -1009,16 +1104,16 @@ export class GitService {
 
   async deleteRemoteTag(name: string, remote = "origin"): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git push --delete tag", [remote, "--delete", `refs/tags/${name}`], () =>
-      git.raw(["push", remote, "--delete", `refs/tags/${name}`])
+    await this.run(
+      "git push --delete tag",
+      [remote, "--delete", `refs/tags/${name}`],
+      () => git.raw(["push", remote, "--delete", `refs/tags/${name}`])
     );
   }
 
   async pushTag(name: string, remote = "origin"): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git push", [remote, name], () =>
-      git.push(remote, name)
-    );
+    await this.run("git push", [remote, name], () => git.push(remote, name));
   }
 
   async getStashList(): Promise<StashEntry[]> {
@@ -1034,7 +1129,10 @@ export class GitService {
     });
   }
 
-  async stashCreate(message?: string, options?: { keepIndex?: boolean; includeUntracked?: boolean; staged?: boolean }): Promise<void> {
+  async stashCreate(
+    message?: string,
+    options?: { keepIndex?: boolean; includeUntracked?: boolean; staged?: boolean }
+  ): Promise<void> {
     const git = this.ensureRepo();
     const args = ["push"];
     if (options?.staged) args.push("--staged");
@@ -1067,12 +1165,12 @@ export class GitService {
 
   async blame(file: string): Promise<string> {
     const git = this.ensureRepo();
-    return this.run("git blame", [file], () =>
-      git.raw(["blame", "--porcelain", file])
-    );
+    return this.run("git blame", [file], () => git.raw(["blame", "--porcelain", file]));
   }
 
-  async getSubmodules(): Promise<{ name: string; path: string; url: string; hash: string }[]> {
+  async getSubmodules(): Promise<
+    { name: string; path: string; url: string; hash: string }[]
+  > {
     const git = this.ensureRepo();
     return this.run("git submodule", ["status"], async () => {
       const result = await git.raw(["submodule", "status"]).catch(() => "");
@@ -1104,9 +1202,9 @@ export class GitService {
     return this.run("git log", [`${onto}..HEAD`], async () => {
       const RECORD_SEP = "%x1e";
       const FIELD_SEP = "%x00";
-      const format = [
-        "%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D",
-      ].join(FIELD_SEP);
+      const format = ["%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D"].join(
+        FIELD_SEP
+      );
 
       const result = await git.raw([
         "log",
@@ -1149,9 +1247,7 @@ export class GitService {
     const git = this.ensureRepo();
 
     // Build the todo file content
-    const todoContent = todoEntries
-      .map((e) => `${e.action} ${e.hash}`)
-      .join("\n") + "\n";
+    const todoContent = todoEntries.map((e) => `${e.action} ${e.hash}`).join("\n") + "\n";
 
     // Write todo to a temp file
     const todoPath = path.join(this.repoPath!, ".git", "rebase-todo-custom.txt");
@@ -1160,39 +1256,31 @@ export class GitService {
     // Create a script that copies our todo over the default one
     const editorScript = path.join(this.repoPath!, ".git", "rebase-editor.sh");
     // The editor receives the todo file path as $1
-    fs.writeFileSync(
-      editorScript,
-      `#!/bin/sh\ncp "${todoPath}" "$1"\n`,
-      { mode: 0o755 }
-    );
+    fs.writeFileSync(editorScript, `#!/bin/sh\ncp "${todoPath}" "$1"\n`, { mode: 0o755 });
 
-    await this.run(
-      "git rebase",
-      ["-i", onto],
-      async () => {
+    await this.run("git rebase", ["-i", onto], async () => {
+      try {
+        await git.env("GIT_SEQUENCE_EDITOR", editorScript).rebase(["-i", onto]);
+      } finally {
+        // Cleanup temp files
         try {
-          await git.env("GIT_SEQUENCE_EDITOR", editorScript).rebase(["-i", onto]);
-        } finally {
-          // Cleanup temp files
-          try { fs.unlinkSync(todoPath); } catch {}
-          try { fs.unlinkSync(editorScript); } catch {}
-        }
+          fs.unlinkSync(todoPath);
+        } catch {}
+        try {
+          fs.unlinkSync(editorScript);
+        } catch {}
       }
-    );
+    });
   }
 
   async rebaseContinue(): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git rebase", ["--continue"], () =>
-      git.rebase(["--continue"])
-    );
+    await this.run("git rebase", ["--continue"], () => git.rebase(["--continue"]));
   }
 
   async rebaseSkip(): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git rebase", ["--skip"], () =>
-      git.rebase(["--skip"])
-    );
+    await this.run("git rebase", ["--skip"], () => git.rebase(["--skip"]));
   }
 
   async isRebaseInProgress(): Promise<boolean> {
@@ -1247,16 +1335,30 @@ export class GitService {
     let ours: string | null = null;
     let theirs: string | null = null;
 
-    try { base = await git.raw(["show", `:1:${filePath}`]); } catch { base = null; }
-    try { ours = await git.raw(["show", `:2:${filePath}`]); } catch { ours = null; }
-    try { theirs = await git.raw(["show", `:3:${filePath}`]); } catch { theirs = null; }
+    try {
+      base = await git.raw(["show", `:1:${filePath}`]);
+    } catch {
+      base = null;
+    }
+    try {
+      ours = await git.raw(["show", `:2:${filePath}`]);
+    } catch {
+      ours = null;
+    }
+    try {
+      theirs = await git.raw(["show", `:3:${filePath}`]);
+    } catch {
+      theirs = null;
+    }
 
     // Read the current working tree file with conflict markers
     let merged = "";
     try {
       const fullPath = path.join(this.repoPath!, filePath);
       merged = fs.readFileSync(fullPath, "utf-8");
-    } catch { merged = ""; }
+    } catch {
+      merged = "";
+    }
 
     return { ours, theirs, base, merged };
   }
@@ -1324,7 +1426,9 @@ export class GitService {
       .replace(/\$MERGED/g, mergedPath);
 
     // Parse args respecting quotes
-    const args = resolvedArgs.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(a => a.replace(/^"|"$/g, "")) || [];
+    const args =
+      resolvedArgs.match(/(?:[^\s"]+|"[^"]*")+/g)?.map((a) => a.replace(/^"|"$/g, "")) ||
+      [];
 
     return new Promise((resolve) => {
       const proc = spawn(toolPath, args, { stdio: "ignore" });
@@ -1334,16 +1438,36 @@ export class GitService {
       });
       proc.on("close", (code) => {
         let mergedContent = "";
-        try { mergedContent = fs.readFileSync(mergedPath, "utf-8"); } catch { /* file may not exist */ }
+        try {
+          mergedContent = fs.readFileSync(mergedPath, "utf-8");
+        } catch {
+          /* file may not exist */
+        }
         cleanup();
         resolve({ exitCode: code ?? -1, mergedContent });
       });
 
       function cleanup() {
-        try { fs.unlinkSync(basePath); } catch { /* ignore */ }
-        try { fs.unlinkSync(localPath); } catch { /* ignore */ }
-        try { fs.unlinkSync(remotePath); } catch { /* ignore */ }
-        try { fs.rmdirSync(tmpDir); } catch { /* ignore */ }
+        try {
+          fs.unlinkSync(basePath);
+        } catch {
+          /* ignore */
+        }
+        try {
+          fs.unlinkSync(localPath);
+        } catch {
+          /* ignore */
+        }
+        try {
+          fs.unlinkSync(remotePath);
+        } catch {
+          /* ignore */
+        }
+        try {
+          fs.rmdirSync(tmpDir);
+        } catch {
+          /* ignore */
+        }
       }
     });
   }
@@ -1363,9 +1487,7 @@ export class GitService {
   async setConfig(key: string, value: string, global = false): Promise<void> {
     const git = this.ensureRepo();
     const args = global ? ["--global", key, value] : [key, value];
-    await this.run("git config", args, () =>
-      git.raw(["config", ...args])
-    );
+    await this.run("git config", args, () => git.raw(["config", ...args]));
   }
 
   async listConfig(global = false): Promise<Record<string, string>> {
@@ -1413,30 +1535,23 @@ export class GitService {
     const git = this.ensureRepo();
     const args = ["add", url];
     if (path) args.push(path);
-    await this.run("git submodule", args, () =>
-      git.raw(["submodule", ...args])
-    );
+    await this.run("git submodule", args, () => git.raw(["submodule", ...args]));
   }
 
   async submoduleUpdate(init = false): Promise<void> {
     const git = this.ensureRepo();
     const args = init ? ["update", "--init", "--recursive"] : ["update", "--recursive"];
-    await this.run("git submodule", args, () =>
-      git.raw(["submodule", ...args])
-    );
+    await this.run("git submodule", args, () => git.raw(["submodule", ...args]));
   }
 
-  async getFileHistory(
-    file: string,
-    maxCount = 100
-  ): Promise<CommitInfo[]> {
+  async getFileHistory(file: string, maxCount = 100): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
     return this.run("git log", ["--follow", file], async () => {
       const RECORD_SEP = "%x1e";
       const FIELD_SEP = "%x00";
-      const format = [
-        "%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D",
-      ].join(FIELD_SEP);
+      const format = ["%H", "%h", "%s", "%an", "%ae", "%aI", "%cI", "%P", "%D"].join(
+        FIELD_SEP
+      );
 
       const result = await git.raw([
         "log",
@@ -1484,16 +1599,12 @@ export class GitService {
 
   async addRemote(name: string, url: string): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git remote add", [name, url], () =>
-      git.addRemote(name, url)
-    );
+    await this.run("git remote add", [name, url], () => git.addRemote(name, url));
   }
 
   async removeRemote(name: string): Promise<void> {
     const git = this.ensureRepo();
-    await this.run("git remote remove", [name], () =>
-      git.removeRemote(name)
-    );
+    await this.run("git remote remove", [name], () => git.removeRemote(name));
   }
 
   async clone(
@@ -1544,9 +1655,7 @@ export class GitService {
   async fetch(remote?: string): Promise<void> {
     const git = this.ensureRepo();
     const args = remote ? [remote] : [];
-    await this.run("git fetch", args, () =>
-      remote ? git.fetch(remote) : git.fetch()
-    );
+    await this.run("git fetch", args, () => (remote ? git.fetch(remote) : git.fetch()));
   }
 
   async fetchAll(): Promise<void> {
@@ -1583,7 +1692,12 @@ export class GitService {
     );
   }
 
-  async push(remote?: string, branch?: string, force = false, setUpstream = false): Promise<void> {
+  async push(
+    remote?: string,
+    branch?: string,
+    force = false,
+    setUpstream = false
+  ): Promise<void> {
     const git = this.ensureRepo();
     const r = remote || "origin";
     const flags: string[] = [];
@@ -1596,10 +1710,7 @@ export class GitService {
     await this.run("git push", logArgs, () => git.raw(rawArgs));
   }
 
-  async getDiff(
-    file?: string,
-    staged = false
-  ): Promise<string> {
+  async getDiff(file?: string, staged = false): Promise<string> {
     const git = this.ensureRepo();
     const args = staged ? ["--cached"] : [];
     if (file) args.push("--", file);
@@ -1713,32 +1824,49 @@ export class GitService {
     });
   }
 
-  async getRemoteBranchCommits(remoteBranch: string, maxCount = 20): Promise<CommitInfo[]> {
+  async getRemoteBranchCommits(
+    remoteBranch: string,
+    maxCount = 20
+  ): Promise<CommitInfo[]> {
     const git = this.ensureRepo();
     return this.run("git log", [remoteBranch, `-${maxCount}`], async () => {
       const format = [
-        "%H", "%h", "%s", "%b", "%an", "%ae", "%aI", "%cI", "%P", "%D",
+        "%H",
+        "%h",
+        "%s",
+        "%b",
+        "%an",
+        "%ae",
+        "%aI",
+        "%cI",
+        "%P",
+        "%D",
       ].join("%x00");
       const raw = await git.raw([
-        "log", remoteBranch, `--max-count=${maxCount}`,
+        "log",
+        remoteBranch,
+        `--max-count=${maxCount}`,
         `--format=${format}`,
       ]);
       if (!raw.trim()) return [];
-      return raw.trim().split("\n").map((line) => {
-        const parts = line.split("\x00");
-        return {
-          hash: parts[0]!,
-          abbreviatedHash: parts[1]!,
-          subject: parts[2]!,
-          body: parts[3]!,
-          authorName: parts[4]!,
-          authorEmail: parts[5]!,
-          authorDate: parts[6]!,
-          committerDate: parts[7]!,
-          parentHashes: parts[8] ? parts[8].split(" ") : [],
-          refs: parseRefs(parts[9] || ""),
-        };
-      });
+      return raw
+        .trim()
+        .split("\n")
+        .map((line) => {
+          const parts = line.split("\x00");
+          return {
+            hash: parts[0]!,
+            abbreviatedHash: parts[1]!,
+            subject: parts[2]!,
+            body: parts[3]!,
+            authorName: parts[4]!,
+            authorEmail: parts[5]!,
+            authorDate: parts[6]!,
+            committerDate: parts[7]!,
+            parentHashes: parts[8] ? parts[8].split(" ") : [],
+            refs: parseRefs(parts[9] || ""),
+          };
+        });
     });
   }
 
@@ -1759,9 +1887,13 @@ export class GitService {
       } catch {
         // First commit has no parent
         return await git.raw(["diff", "--no-index", "/dev/null", file]).catch(() =>
-          git.raw(["show", `${hash}:${file}`]).then((content) =>
-            `--- /dev/null\n+++ b/${file}\n@@ -0,0 +1,${content.split("\n").length} @@\n` +
-            content.split("\n").map((l) => `+${l}`).join("\n")
+          git.raw(["show", `${hash}:${file}`]).then(
+            (content) =>
+              `--- /dev/null\n+++ b/${file}\n@@ -0,0 +1,${content.split("\n").length} @@\n` +
+              content
+                .split("\n")
+                .map((l) => `+${l}`)
+                .join("\n")
           )
         );
       }
@@ -1772,10 +1904,20 @@ export class GitService {
     const git = this.ensureRepo();
     return this.run("git diff", [hash1, hash2, "--numstat"], async () => {
       const numstatResult = await git.raw([
-        "diff", "--numstat", "--diff-filter=ACDMR", "-M", hash1, hash2,
+        "diff",
+        "--numstat",
+        "--diff-filter=ACDMR",
+        "-M",
+        hash1,
+        hash2,
       ]);
       const nameStatusResult = await git.raw([
-        "diff", "--name-status", "--diff-filter=ACDMR", "-M", hash1, hash2,
+        "diff",
+        "--name-status",
+        "--diff-filter=ACDMR",
+        "-M",
+        hash1,
+        hash2,
       ]);
 
       const statusMap = new Map<string, string>();
@@ -1821,10 +1963,311 @@ export class GitService {
   }
 
   // ---------------------------------------------------------------------------
+  // Grep
+  // ---------------------------------------------------------------------------
+
+  async grep(
+    pattern: string,
+    options: {
+      ignoreCase?: boolean;
+      regex?: boolean;
+      wholeWord?: boolean;
+      maxCount?: number;
+    } = {}
+  ): Promise<import("../../shared/git-types").GrepResult> {
+    const git = this.ensureRepo();
+    const args = ["grep", "-n", "--heading"];
+    if (options.ignoreCase) args.push("-i");
+    if (!options.regex) args.push("-F");
+    if (options.wholeWord) args.push("-w");
+    if (options.maxCount) args.push(`--max-count=${options.maxCount}`);
+    args.push("--", pattern);
+    return this.run("git grep", [pattern], async () => {
+      let result: string;
+      try {
+        result = await git.raw(args);
+      } catch (e: unknown) {
+        if (
+          e &&
+          typeof e === "object" &&
+          "message" in e &&
+          typeof (e as { message: string }).message === "string" &&
+          (e as { message: string }).message.includes("exit code 1")
+        ) {
+          return { matches: [], totalCount: 0 };
+        }
+        throw e;
+      }
+      if (!result.trim()) return { matches: [], totalCount: 0 };
+      const matches: import("../../shared/git-types").GrepMatch[] = [];
+      let currentFile = "";
+      for (const line of result.split("\n")) {
+        if (!line) {
+          currentFile = "";
+          continue;
+        }
+        if (!line.includes(":") && !currentFile) {
+          currentFile = line;
+          continue;
+        }
+        const colonIdx = line.indexOf(":");
+        if (colonIdx === -1) continue;
+        const lineNumStr = line.slice(0, colonIdx);
+        const lineNum = parseInt(lineNumStr, 10);
+        if (isNaN(lineNum)) {
+          currentFile = line;
+          continue;
+        }
+        const text = line.slice(colonIdx + 1);
+        matches.push({ file: currentFile, line: lineNum, text });
+      }
+      return { matches, totalCount: matches.length };
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Branch Diff Comparison
+  // ---------------------------------------------------------------------------
+
+  async diffBranches(
+    from: string,
+    to: string
+  ): Promise<import("../../shared/git-types").BranchDiffResult> {
+    const git = this.ensureRepo();
+    return this.run("git diff branches", [from, to], async () => {
+      const numstatResult = await git.raw([
+        "diff",
+        "--numstat",
+        "--diff-filter=ACDMR",
+        "-M",
+        `${from}...${to}`,
+      ]);
+      const nameStatusResult = await git.raw([
+        "diff",
+        "--name-status",
+        "--diff-filter=ACDMR",
+        "-M",
+        `${from}...${to}`,
+      ]);
+      const statusMap = new Map<string, string>();
+      for (const line of nameStatusResult.trim().split("\n")) {
+        if (!line.trim()) continue;
+        const parts = line.split("\t");
+        const statusChar = (parts[0] || "").charAt(0);
+        const filePath = parts.length >= 3 ? parts[2]! : parts[1]!;
+        const statusNames: Record<string, string> = {
+          A: "added",
+          M: "modified",
+          D: "deleted",
+          R: "renamed",
+          C: "copied",
+        };
+        statusMap.set(filePath, statusNames[statusChar] || "modified");
+      }
+      let totalAdditions = 0;
+      let totalDeletions = 0;
+      const files: import("../../shared/git-types").CommitFileInfo[] = [];
+      for (const line of numstatResult.trim().split("\n")) {
+        if (!line.trim()) continue;
+        const [addStr, delStr, ...pathParts] = line.split("\t");
+        const filePath = pathParts.join("\t");
+        const additions = addStr === "-" ? 0 : parseInt(addStr!, 10) || 0;
+        const deletions = delStr === "-" ? 0 : parseInt(delStr!, 10) || 0;
+        totalAdditions += additions;
+        totalDeletions += deletions;
+        files.push({
+          path: filePath,
+          status: (statusMap.get(filePath) || "modified") as CommitFileInfo["status"],
+          additions,
+          deletions,
+        });
+      }
+      return {
+        files,
+        stats: {
+          additions: totalAdditions,
+          deletions: totalDeletions,
+          filesChanged: files.length,
+        },
+      };
+    });
+  }
+
+  async diffBranchFile(from: string, to: string, file: string): Promise<string> {
+    const git = this.ensureRepo();
+    return this.run("git diff branch file", [from, to, file], async () => {
+      return git.raw(["diff", `${from}...${to}`, "--", file]);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Branch Commit Range Comparison
+  // ---------------------------------------------------------------------------
+
+  async logRange(from: string, to: string): Promise<CommitInfo[]> {
+    const git = this.ensureRepo();
+    return this.run("git log range", [from, to], async () => {
+      const SEP = "\x1e";
+      const format = ["%H", "%h", "%s", "%an", "%ae", "%ai", "%ci", "%P"].join(SEP);
+      const result = await git.raw(["log", `--format=${format}`, `${from}..${to}`]);
+      if (!result.trim()) return [];
+      return result
+        .trim()
+        .split("\n")
+        .map((line) => {
+          const parts = line.split(SEP);
+          return {
+            hash: parts[0]!,
+            abbreviatedHash: parts[1]!,
+            subject: parts[2]!,
+            body: "",
+            authorName: parts[3]!,
+            authorEmail: parts[4]!,
+            authorDate: parts[5]!,
+            committerDate: parts[6]!,
+            parentHashes: (parts[7] || "").split(" ").filter(Boolean),
+            refs: [],
+          };
+        });
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Undo
+  // ---------------------------------------------------------------------------
+
+  async getUndoHistory(
+    maxCount = 20
+  ): Promise<import("../../shared/git-types").UndoEntry[]> {
+    const git = this.ensureRepo();
+    const SEP = "\x1e";
+    const format = ["%H", "%gd", "%gs", "%s", "%ci"].join(SEP);
+    const result = await git.raw([
+      "reflog",
+      `--format=${format}`,
+      "-n",
+      String(maxCount),
+    ]);
+    if (!result.trim()) return [];
+    return result
+      .trim()
+      .split("\n")
+      .map((line, idx) => {
+        const parts = line.split(SEP);
+        return {
+          index: idx,
+          hash: parts[0]!,
+          action: parts[2] || "",
+          description: parts[3] || "",
+          date: parts[4] || "",
+        };
+      });
+  }
+
+  async undoToReflog(reflogIndex: number): Promise<void> {
+    const git = this.ensureRepo();
+    await this.run("git reset", [`HEAD@{${reflogIndex}}`], async () => {
+      await git.raw(["reset", "--hard", `HEAD@{${reflogIndex}}`]);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Advanced Stats
+  // ---------------------------------------------------------------------------
+
+  async getTimeline(
+    period: "day" | "week" | "month" = "week"
+  ): Promise<import("../../shared/git-types").TimelineEntry[]> {
+    const git = this.ensureRepo();
+    const format = period === "day" ? "%Y-%m-%d" : period === "week" ? "%Y-%W" : "%Y-%m";
+    const result = await git.raw([
+      "log",
+      "--all",
+      `--format=%ad`,
+      `--date=format:${format}`,
+    ]);
+    if (!result.trim()) return [];
+    const counts = new Map<string, number>();
+    for (const line of result.trim().split("\n")) {
+      counts.set(line, (counts.get(line) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getChurn(
+    period: "day" | "week" | "month" = "week"
+  ): Promise<import("../../shared/git-types").ChurnEntry[]> {
+    const git = this.ensureRepo();
+    const format = period === "day" ? "%Y-%m-%d" : period === "week" ? "%Y-%W" : "%Y-%m";
+    const result = await git.raw([
+      "log",
+      "--all",
+      "--numstat",
+      `--format=DATE:%ad`,
+      `--date=format:${format}`,
+    ]);
+    if (!result.trim()) return [];
+    const data = new Map<string, { additions: number; deletions: number }>();
+    let currentDate = "";
+    for (const line of result.split("\n")) {
+      if (line.startsWith("DATE:")) {
+        currentDate = line.slice(5);
+        continue;
+      }
+      if (!currentDate || !line.trim()) continue;
+      const parts = line.split("\t");
+      if (parts.length < 3) continue;
+      const add = parts[0] === "-" ? 0 : parseInt(parts[0]!, 10) || 0;
+      const del = parts[1] === "-" ? 0 : parseInt(parts[1]!, 10) || 0;
+      const entry = data.get(currentDate) || { additions: 0, deletions: 0 };
+      entry.additions += add;
+      entry.deletions += del;
+      data.set(currentDate, entry);
+    }
+    return Array.from(data.entries())
+      .map(([date, v]) => ({ date, additions: v.additions, deletions: v.deletions }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getContributorsTimeline(
+    period: "day" | "week" | "month" = "month"
+  ): Promise<import("../../shared/git-types").ContributorTimelineEntry[]> {
+    const git = this.ensureRepo();
+    const format = period === "day" ? "%Y-%m-%d" : period === "week" ? "%Y-%W" : "%Y-%m";
+    const SEP = "\x1e";
+    const result = await git.raw([
+      "log",
+      "--all",
+      `--format=%an${SEP}%ad`,
+      `--date=format:${format}`,
+    ]);
+    if (!result.trim()) return [];
+    const entries: import("../../shared/git-types").ContributorTimelineEntry[] = [];
+    const counts = new Map<string, number>();
+    for (const line of result.trim().split("\n")) {
+      const [author, date] = line.split(SEP);
+      if (!author || !date) continue;
+      const key = `${date}|${author}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    for (const [key, count] of counts) {
+      const [date, author] = key.split("|");
+      entries.push({ date: date!, author: author!, count });
+    }
+    return entries.sort(
+      (a, b) => a.date.localeCompare(b.date) || a.author.localeCompare(b.author)
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Stats methods
   // ---------------------------------------------------------------------------
 
-  async getReflog(maxCount = 100): Promise<import("../../shared/git-types").ReflogEntry[]> {
+  async getReflog(
+    maxCount = 100
+  ): Promise<import("../../shared/git-types").ReflogEntry[]> {
     const git = this.ensureRepo();
     return this.run("git reflog", [`-n ${maxCount}`], async () => {
       const SEP = "‖";
@@ -1840,20 +2283,32 @@ export class GitService {
         .trim()
         .split("\n")
         .map((line) => {
-          const [hash, abbreviatedHash, selector, action, subject, date] = line.split(SEP);
-          return { hash: hash!, abbreviatedHash: abbreviatedHash!, selector: selector!, action: action!, subject: subject!, date: date! };
+          const [hash, abbreviatedHash, selector, action, subject, date] =
+            line.split(SEP);
+          return {
+            hash: hash!,
+            abbreviatedHash: abbreviatedHash!,
+            selector: selector!,
+            action: action!,
+            subject: subject!,
+            date: date!,
+          };
         });
     });
   }
 
-  async getCodebaseStats(): Promise<import("../../shared/codebase-stats-types").CodebaseStats> {
+  async getCodebaseStats(): Promise<
+    import("../../shared/codebase-stats-types").CodebaseStats
+  > {
     const git = this.ensureRepo();
     return this.run("git ls-files (codebase stats)", [], async () => {
       return computeCodebaseStats(git);
     });
   }
 
-  async getLeaderboard(timeframe: import("../../shared/stats-types").Timeframe): Promise<import("../../shared/stats-types").LeaderboardEntry[]> {
+  async getLeaderboard(
+    timeframe: import("../../shared/stats-types").Timeframe
+  ): Promise<import("../../shared/stats-types").LeaderboardEntry[]> {
     const git = this.ensureRepo();
     return this.run("git log --shortstat", ["--format=COMMIT_START"], async () => {
       const sinceArg: string[] = [];
@@ -1927,7 +2382,10 @@ export class GitService {
 
       const result: import("../../shared/stats-types").LeaderboardEntry[] = [];
       for (const accum of authorMap.values()) {
-        const gravatarHash = crypto.createHash("md5").update(accum.authorEmail.toLowerCase().trim()).digest("hex");
+        const gravatarHash = crypto
+          .createHash("md5")
+          .update(accum.authorEmail.toLowerCase().trim())
+          .digest("hex");
 
         // Sort dates ascending
         const sortedDates = accum.dates
@@ -1955,7 +2413,9 @@ export class GitService {
       }
 
       result.sort((a, b) => b.commits - a.commits);
-      result.forEach((e, i) => { e.rank = i + 1; });
+      result.forEach((e, i) => {
+        e.rank = i + 1;
+      });
       return result;
     });
   }
@@ -1965,158 +2425,162 @@ export class GitService {
     timeframe: import("../../shared/stats-types").Timeframe
   ): Promise<import("../../shared/stats-types").AuthorDetail> {
     const git = this.ensureRepo();
-    return this.run("git log --numstat", ["--format=COMMIT_START", `--author=^${email}$`], async () => {
-      const sinceArg: string[] = [];
-      if (timeframe === "week") {
-        const since = new Date();
-        since.setUTCDate(since.getUTCDate() - 7);
-        sinceArg.push(`--since=${since.toISOString()}`);
-      } else if (timeframe === "month") {
-        const since = new Date();
-        since.setUTCMonth(since.getUTCMonth() - 1);
-        sinceArg.push(`--since=${since.toISOString()}`);
-      }
+    return this.run(
+      "git log --numstat",
+      ["--format=COMMIT_START", `--author=^${email}$`],
+      async () => {
+        const sinceArg: string[] = [];
+        if (timeframe === "week") {
+          const since = new Date();
+          since.setUTCDate(since.getUTCDate() - 7);
+          sinceArg.push(`--since=${since.toISOString()}`);
+        } else if (timeframe === "month") {
+          const since = new Date();
+          since.setUTCMonth(since.getUTCMonth() - 1);
+          sinceArg.push(`--since=${since.toISOString()}`);
+        }
 
-      const output = await git.raw([
-        "log",
-        "--all",
-        `--author=${email}`,
-        "--format=COMMIT_START%n%an%n%aI%n%ae",
-        "--numstat",
-        ...sinceArg,
-      ]);
+        const output = await git.raw([
+          "log",
+          "--all",
+          `--author=${email}`,
+          "--format=COMMIT_START%n%an%n%aI%n%ae",
+          "--numstat",
+          ...sinceArg,
+        ]);
 
-      if (!output.trim()) {
+        if (!output.trim()) {
+          return {
+            authorName: "",
+            authorEmail: email,
+            commitTimeline: [],
+            topFiles: [],
+            hourlyDistribution: new Array(24).fill(0),
+            dailyDistribution: new Array(7).fill(0),
+            avgCommitSize: 0,
+            linesAdded: 0,
+            linesRemoved: 0,
+            longestStreak: 0,
+            currentStreak: 0,
+            firstCommitDate: "",
+            lastCommitDate: "",
+          };
+        }
+
+        let authorName = "";
+        let totalAdded = 0;
+        let totalRemoved = 0;
+        const dates: string[] = [];
+        const fileMap = new Map<string, number>();
+        const hourlyDist = new Array(24).fill(0);
+        const dailyDist = new Array(7).fill(0);
+        const commitSizes: number[] = [];
+        let firstCommitDate = "";
+        let lastCommitDate = "";
+
+        const blocks = output.split("COMMIT_START\n").filter((b) => b.trim().length > 0);
+        for (const block of blocks) {
+          const lines = block.split("\n");
+          const name = (lines[0] || "").trim();
+          const dateStr = (lines[1] || "").trim();
+          const commitEmail = (lines[2] || "").trim().toLowerCase();
+
+          // Safety net: verify exact email match (--author does substring matching)
+          if (commitEmail !== email.toLowerCase()) continue;
+
+          if (name && !authorName) authorName = name;
+          if (dateStr) {
+            dates.push(dateStr);
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+              hourlyDist[d.getUTCHours()]++;
+              dailyDist[d.getUTCDay()]++;
+            }
+          }
+
+          let commitAdded = 0;
+          let commitRemoved = 0;
+          for (let i = 3; i < lines.length; i++) {
+            const line = lines[i]!.trim();
+            if (!line) continue;
+            const parts = line.split("\t");
+            if (parts.length < 3) continue;
+            const added = parseInt(parts[0]!) || 0;
+            const removed = parseInt(parts[1]!) || 0;
+            const filePath = parts[2]!.trim();
+            if (!filePath) continue;
+            commitAdded += added;
+            commitRemoved += removed;
+            fileMap.set(filePath, (fileMap.get(filePath) || 0) + added + removed);
+          }
+          totalAdded += commitAdded;
+          totalRemoved += commitRemoved;
+          commitSizes.push(commitAdded + commitRemoved);
+        }
+
+        const sortedDates = dates
+          .map((d) => d.substring(0, 10))
+          .filter((d) => d.length === 10)
+          .sort();
+
+        const allSortedFull = dates.slice().sort();
+        firstCommitDate = allSortedFull[0] || "";
+        lastCommitDate = allSortedFull[allSortedFull.length - 1] || "";
+
+        const uniqueDates = [...new Set(sortedDates)];
+        const longestStreak = computeLongestStreak(uniqueDates);
+        const currentStreak = computeCurrentStreak(uniqueDates);
+
+        // Commit timeline: group by day (week/month), week (all)
+        const timelineMap = new Map<string, number>();
+        for (const d of dates) {
+          let key: string;
+          if (timeframe === "all") {
+            // group by week: ISO week start (Monday)
+            const dt = new Date(d);
+            const dayOfWeek = dt.getUTCDay(); // 0=Sun
+            const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const monday = new Date(dt);
+            monday.setUTCDate(dt.getUTCDate() - diff);
+            key = monday.toISOString().substring(0, 10);
+          } else {
+            // group by day
+            key = d.substring(0, 10);
+          }
+          timelineMap.set(key, (timelineMap.get(key) || 0) + 1);
+        }
+        const commitTimeline = [...timelineMap.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([date, count]) => ({ date, count }));
+
+        // Top files
+        const topFiles = [...fileMap.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([path, changes]) => ({ path, changes }));
+
+        const avgCommitSize =
+          commitSizes.length > 0
+            ? commitSizes.reduce((a, b) => a + b, 0) / commitSizes.length
+            : 0;
+
         return {
-          authorName: "",
+          authorName,
           authorEmail: email,
-          commitTimeline: [],
-          topFiles: [],
-          hourlyDistribution: new Array(24).fill(0),
-          dailyDistribution: new Array(7).fill(0),
-          avgCommitSize: 0,
-          linesAdded: 0,
-          linesRemoved: 0,
-          longestStreak: 0,
-          currentStreak: 0,
-          firstCommitDate: "",
-          lastCommitDate: "",
+          commitTimeline,
+          topFiles,
+          hourlyDistribution: hourlyDist,
+          dailyDistribution: dailyDist,
+          avgCommitSize,
+          linesAdded: totalAdded,
+          linesRemoved: totalRemoved,
+          longestStreak,
+          currentStreak,
+          firstCommitDate,
+          lastCommitDate,
         };
       }
-
-      let authorName = "";
-      let totalAdded = 0;
-      let totalRemoved = 0;
-      const dates: string[] = [];
-      const fileMap = new Map<string, number>();
-      const hourlyDist = new Array(24).fill(0);
-      const dailyDist = new Array(7).fill(0);
-      const commitSizes: number[] = [];
-      let firstCommitDate = "";
-      let lastCommitDate = "";
-
-      const blocks = output.split("COMMIT_START\n").filter((b) => b.trim().length > 0);
-      for (const block of blocks) {
-        const lines = block.split("\n");
-        const name = (lines[0] || "").trim();
-        const dateStr = (lines[1] || "").trim();
-        const commitEmail = (lines[2] || "").trim().toLowerCase();
-
-        // Safety net: verify exact email match (--author does substring matching)
-        if (commitEmail !== email.toLowerCase()) continue;
-
-        if (name && !authorName) authorName = name;
-        if (dateStr) {
-          dates.push(dateStr);
-          const d = new Date(dateStr);
-          if (!isNaN(d.getTime())) {
-            hourlyDist[d.getUTCHours()]++;
-            dailyDist[d.getUTCDay()]++;
-          }
-        }
-
-        let commitAdded = 0;
-        let commitRemoved = 0;
-        for (let i = 3; i < lines.length; i++) {
-          const line = lines[i]!.trim();
-          if (!line) continue;
-          const parts = line.split("\t");
-          if (parts.length < 3) continue;
-          const added = parseInt(parts[0]!) || 0;
-          const removed = parseInt(parts[1]!) || 0;
-          const filePath = parts[2]!.trim();
-          if (!filePath) continue;
-          commitAdded += added;
-          commitRemoved += removed;
-          fileMap.set(filePath, (fileMap.get(filePath) || 0) + added + removed);
-        }
-        totalAdded += commitAdded;
-        totalRemoved += commitRemoved;
-        commitSizes.push(commitAdded + commitRemoved);
-      }
-
-      const sortedDates = dates
-        .map((d) => d.substring(0, 10))
-        .filter((d) => d.length === 10)
-        .sort();
-
-      const allSortedFull = dates.slice().sort();
-      firstCommitDate = allSortedFull[0] || "";
-      lastCommitDate = allSortedFull[allSortedFull.length - 1] || "";
-
-      const uniqueDates = [...new Set(sortedDates)];
-      const longestStreak = computeLongestStreak(uniqueDates);
-      const currentStreak = computeCurrentStreak(uniqueDates);
-
-      // Commit timeline: group by day (week/month), week (all)
-      const timelineMap = new Map<string, number>();
-      for (const d of dates) {
-        let key: string;
-        if (timeframe === "all") {
-          // group by week: ISO week start (Monday)
-          const dt = new Date(d);
-          const dayOfWeek = dt.getUTCDay(); // 0=Sun
-          const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          const monday = new Date(dt);
-          monday.setUTCDate(dt.getUTCDate() - diff);
-          key = monday.toISOString().substring(0, 10);
-        } else {
-          // group by day
-          key = d.substring(0, 10);
-        }
-        timelineMap.set(key, (timelineMap.get(key) || 0) + 1);
-      }
-      const commitTimeline = [...timelineMap.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, count]) => ({ date, count }));
-
-      // Top files
-      const topFiles = [...fileMap.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([path, changes]) => ({ path, changes }));
-
-      const avgCommitSize =
-        commitSizes.length > 0
-          ? commitSizes.reduce((a, b) => a + b, 0) / commitSizes.length
-          : 0;
-
-      return {
-        authorName,
-        authorEmail: email,
-        commitTimeline,
-        topFiles,
-        hourlyDistribution: hourlyDist,
-        dailyDistribution: dailyDist,
-        avgCommitSize,
-        linesAdded: totalAdded,
-        linesRemoved: totalRemoved,
-        longestStreak,
-        currentStreak,
-        firstCommitDate,
-        lastCommitDate,
-      };
-    });
+    );
   }
 
   private validateRef(ref: string): void {
@@ -2134,19 +2598,14 @@ export class GitService {
   async getTagsBefore(hash: string): Promise<string[]> {
     if (!this.git) throw new Error("No repo open");
     this.validateRef(hash);
-    const result = await this.git.raw([
-      "tag", "--merged", hash, "--sort=-creatordate",
-    ]);
+    const result = await this.git.raw(["tag", "--merged", hash, "--sort=-creatordate"]);
     return result
       .split("\n")
       .map((t) => t.trim())
       .filter(Boolean);
   }
 
-  async getChangelogCommits(
-    from: string,
-    to: string,
-  ): Promise<ChangelogEntry[]> {
+  async getChangelogCommits(from: string, to: string): Promise<ChangelogEntry[]> {
     if (!this.git) throw new Error("No repo open");
     this.validateRef(from);
     this.validateRef(to);
@@ -2156,7 +2615,10 @@ export class GitService {
     const format = "%H%x00%h%x00%s%x00%b%x00%an%x00%aI%x1e";
 
     const raw = await this.git.raw([
-      "log", `${from}..${to}`, "--no-merges", `--format=${format}`,
+      "log",
+      `${from}..${to}`,
+      "--no-merges",
+      `--format=${format}`,
     ]);
 
     if (!raw.trim()) return [];
@@ -2180,7 +2642,9 @@ export class GitService {
   }
 
   // ─── GPG Signature Verification ─────────────────────────
-  async verifyCommitSignature(hash: string): Promise<{ signed: boolean; key?: string; status?: string; signer?: string }> {
+  async verifyCommitSignature(
+    hash: string
+  ): Promise<{ signed: boolean; key?: string; status?: string; signer?: string }> {
     const git = this.ensureRepo();
     try {
       const raw = await git.raw(["log", "-1", "--format=%G?%x00%GK%x00%GS%x00%GG", hash]);
@@ -2198,9 +2662,20 @@ export class GitService {
   }
 
   // ─── Archive/Export ──────────────────────────────────────
-  async archive(ref: string, outputPath: string, format: "zip" | "tar.gz"): Promise<void> {
+  async archive(
+    ref: string,
+    outputPath: string,
+    format: "zip" | "tar.gz"
+  ): Promise<void> {
     const git = this.ensureRepo();
-    const args = ["archive", "--format", format === "tar.gz" ? "tar.gz" : "zip", "-o", outputPath, ref];
+    const args = [
+      "archive",
+      "--format",
+      format === "tar.gz" ? "tar.gz" : "zip",
+      "-o",
+      outputPath,
+      ref,
+    ];
     await this.run("git archive", args, () => git.raw(args));
   }
 
@@ -2241,10 +2716,17 @@ export class GitService {
 
   async bisectLog(): Promise<string> {
     const git = this.ensureRepo();
-    return this.run("git bisect", ["log"], () => git.raw(["bisect", "log"])).catch(() => "");
+    return this.run("git bisect", ["log"], () => git.raw(["bisect", "log"])).catch(
+      () => ""
+    );
   }
 
-  async bisectStatus(): Promise<{ active: boolean; good: string[]; bad: string[]; current?: string }> {
+  async bisectStatus(): Promise<{
+    active: boolean;
+    good: string[];
+    bad: string[];
+    current?: string;
+  }> {
     const git = this.ensureRepo();
     try {
       const log = await git.raw(["bisect", "log"]).catch(() => "");
@@ -2265,19 +2747,40 @@ export class GitService {
   }
 
   // ─── Worktrees ─────────────────────────────────────────
-  async worktreeList(): Promise<{ path: string; branch: string; head: string; isBare: boolean; isMain: boolean }[]> {
+  async worktreeList(): Promise<
+    { path: string; branch: string; head: string; isBare: boolean; isMain: boolean }[]
+  > {
     const git = this.ensureRepo();
     return this.run("git worktree", ["list"], async () => {
       const raw = await git.raw(["worktree", "list", "--porcelain"]);
-      const worktrees: { path: string; branch: string; head: string; isBare: boolean; isMain: boolean }[] = [];
-      let current: { path: string; branch: string; head: string; isBare: boolean; isMain: boolean } | null = null;
+      const worktrees: {
+        path: string;
+        branch: string;
+        head: string;
+        isBare: boolean;
+        isMain: boolean;
+      }[] = [];
+      let current: {
+        path: string;
+        branch: string;
+        head: string;
+        isBare: boolean;
+        isMain: boolean;
+      } | null = null;
       for (const line of raw.split("\n")) {
         if (line.startsWith("worktree ")) {
           if (current) worktrees.push(current);
-          current = { path: line.slice(9), branch: "", head: "", isBare: false, isMain: false };
+          current = {
+            path: line.slice(9),
+            branch: "",
+            head: "",
+            isBare: false,
+            isMain: false,
+          };
         } else if (current) {
           if (line.startsWith("HEAD ")) current.head = line.slice(5);
-          else if (line.startsWith("branch ")) current.branch = line.slice(7).replace("refs/heads/", "");
+          else if (line.startsWith("branch "))
+            current.branch = line.slice(7).replace("refs/heads/", "");
           else if (line === "bare") current.isBare = true;
         }
       }
@@ -2287,7 +2790,11 @@ export class GitService {
     });
   }
 
-  async worktreeAdd(path: string, branch?: string, createBranch?: boolean): Promise<void> {
+  async worktreeAdd(
+    path: string,
+    branch?: string,
+    createBranch?: boolean
+  ): Promise<void> {
     const git = this.ensureRepo();
     const args = ["worktree", "add"];
     if (createBranch && branch) {
@@ -2364,27 +2871,36 @@ export class GitService {
   async submoduleSync(recursive = true): Promise<void> {
     const git = this.ensureRepo();
     const args = recursive ? ["sync", "--recursive"] : ["sync"];
-    await this.run("git submodule", args, () =>
-      git.raw(["submodule", ...args])
-    );
+    await this.run("git submodule", args, () => git.raw(["submodule", ...args]));
   }
 
   async submoduleDeinit(submodulePath: string, force = false): Promise<void> {
     const git = this.ensureRepo();
     const args = force ? ["deinit", "-f", submodulePath] : ["deinit", submodulePath];
-    await this.run("git submodule", args, () =>
-      git.raw(["submodule", ...args])
-    );
+    await this.run("git submodule", args, () => git.raw(["submodule", ...args]));
   }
 
-  async getSubmoduleStatus(): Promise<{ name: string; path: string; url: string; hash: string; branch: string; status: string }[]> {
+  async getSubmoduleStatus(): Promise<
+    {
+      name: string;
+      path: string;
+      url: string;
+      hash: string;
+      branch: string;
+      status: string;
+    }[]
+  > {
     const git = this.ensureRepo();
     return this.run("git submodule", ["status"], async () => {
-      const statusResult = await git.raw(["submodule", "status", "--recursive"]).catch(() => "");
+      const statusResult = await git
+        .raw(["submodule", "status", "--recursive"])
+        .catch(() => "");
       if (!statusResult.trim()) return [];
 
       // Parse .gitmodules for URLs and branches
-      const configResult = await git.raw(["config", "--file", ".gitmodules", "--list"]).catch(() => "");
+      const configResult = await git
+        .raw(["config", "--file", ".gitmodules", "--list"])
+        .catch(() => "");
       const urlMap: Record<string, string> = {};
       const branchMap: Record<string, string> = {};
       for (const line of configResult.split("\n")) {
@@ -2416,7 +2932,14 @@ export class GitService {
             status: statusLabel,
           };
         })
-        .filter(Boolean) as { name: string; path: string; url: string; hash: string; branch: string; status: string }[];
+        .filter(Boolean) as {
+        name: string;
+        path: string;
+        url: string;
+        hash: string;
+        branch: string;
+        status: string;
+      }[];
     });
   }
 
@@ -2426,12 +2949,15 @@ export class GitService {
 
   async lfsInstall(): Promise<string> {
     const git = this.ensureRepo();
-    return this.run("git lfs", ["install"], () =>
-      git.raw(["lfs", "install"])
-    );
+    return this.run("git lfs", ["install"], () => git.raw(["lfs", "install"]));
   }
 
-  async lfsStatus(): Promise<{ installed: boolean; version: string; tracked: { pattern: string; filter: string }[]; files: { path: string; lfsOid: string; size: string }[] }> {
+  async lfsStatus(): Promise<{
+    installed: boolean;
+    version: string;
+    tracked: { pattern: string; filter: string }[];
+    files: { path: string; lfsOid: string; size: string }[];
+  }> {
     const git = this.ensureRepo();
     return this.run("git lfs", ["status"], async () => {
       // Check if LFS is installed
@@ -2452,7 +2978,9 @@ export class GitService {
           const m = line.match(/^\s+(\S+)\s+\((.+)\)/);
           if (m) tracked.push({ pattern: m[1]!, filter: m[2]! });
         }
-      } catch { /* no tracked patterns */ }
+      } catch {
+        /* no tracked patterns */
+      }
 
       // Get LFS files
       const files: { path: string; lfsOid: string; size: string }[] = [];
@@ -2462,7 +2990,9 @@ export class GitService {
           const m = line.match(/^([0-9a-f]+)\s+[-*]\s+(.+)/);
           if (m) files.push({ path: m[2]!.trim(), lfsOid: m[1]!, size: "" });
         }
-      } catch { /* no lfs files */ }
+      } catch {
+        /* no lfs files */
+      }
 
       return { installed, version, tracked, files };
     });
@@ -2519,7 +3049,12 @@ export class GitService {
   // PR Integration
   // ---------------------------------------------------------------------------
 
-  async detectProvider(): Promise<{ provider: string; owner: string; repo: string; baseUrl: string }> {
+  async detectProvider(): Promise<{
+    provider: string;
+    owner: string;
+    repo: string;
+    baseUrl: string;
+  }> {
     const git = this.ensureRepo();
     return this.run("git remote", ["get-url origin"], async () => {
       const url = (await git.raw(["remote", "get-url", "origin"]).catch(() => "")).trim();
@@ -2527,25 +3062,62 @@ export class GitService {
 
       // GitHub
       let m = url.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
-      if (m) return { provider: "github", owner: m[1]!, repo: m[2]!, baseUrl: "https://github.com" };
+      if (m)
+        return {
+          provider: "github",
+          owner: m[1]!,
+          repo: m[2]!,
+          baseUrl: "https://github.com",
+        };
 
       // GitLab
       m = url.match(/gitlab\.com[:/]([^/]+)\/([^/.]+)/);
-      if (m) return { provider: "gitlab", owner: m[1]!, repo: m[2]!, baseUrl: "https://gitlab.com" };
+      if (m)
+        return {
+          provider: "gitlab",
+          owner: m[1]!,
+          repo: m[2]!,
+          baseUrl: "https://gitlab.com",
+        };
 
       // Self-hosted detection (contains gitlab or github in hostname)
       m = url.match(/(?:https?:\/\/|git@)([^:/]+)[:/]([^/]+)\/([^/.]+)/);
       if (m) {
         const host = m[1]!;
-        if (host.includes("gitlab")) return { provider: "gitlab", owner: m[2]!, repo: m[3]!, baseUrl: `https://${host}` };
-        if (host.includes("github")) return { provider: "github", owner: m[2]!, repo: m[3]!, baseUrl: `https://${host}` };
+        if (host.includes("gitlab"))
+          return {
+            provider: "gitlab",
+            owner: m[2]!,
+            repo: m[3]!,
+            baseUrl: `https://${host}`,
+          };
+        if (host.includes("github"))
+          return {
+            provider: "github",
+            owner: m[2]!,
+            repo: m[3]!,
+            baseUrl: `https://${host}`,
+          };
       }
 
       return { provider: "unknown", owner: "", repo: "", baseUrl: "" };
     });
   }
 
-  async listPrs(): Promise<{ number: number; title: string; state: string; author: string; url: string; createdAt: string; updatedAt: string; sourceBranch: string; targetBranch: string; labels: string[] }[]> {
+  async listPrs(): Promise<
+    {
+      number: number;
+      title: string;
+      state: string;
+      author: string;
+      url: string;
+      createdAt: string;
+      updatedAt: string;
+      sourceBranch: string;
+      targetBranch: string;
+      labels: string[];
+    }[]
+  > {
     this.ensureRepo();
     return this.run("gh/glab", ["pr list"], async () => {
       const detection = await this.detectProvider();
@@ -2561,7 +3133,7 @@ export class GitService {
           return prs.map((pr: Record<string, unknown>) => ({
             number: pr.number,
             title: pr.title,
-            state: (pr.state as string || "").toLowerCase(),
+            state: ((pr.state as string) || "").toLowerCase(),
             author: (pr.author as Record<string, string>)?.login || "",
             url: pr.url,
             createdAt: pr.createdAt,
@@ -2586,7 +3158,7 @@ export class GitService {
           return mrs.map((mr: Record<string, unknown>) => ({
             number: mr.iid,
             title: mr.title,
-            state: (mr.state as string || "").toLowerCase(),
+            state: ((mr.state as string) || "").toLowerCase(),
             author: (mr.author as Record<string, string>)?.username || "",
             url: mr.web_url,
             createdAt: mr.created_at,
@@ -2637,13 +3209,31 @@ export class GitService {
     });
   }
 
-  async createPr(options: { title: string; body: string; targetBranch: string; sourceBranch: string; draft?: boolean }): Promise<string> {
+  async createPr(options: {
+    title: string;
+    body: string;
+    targetBranch: string;
+    sourceBranch: string;
+    draft?: boolean;
+  }): Promise<string> {
     return this.run("gh/glab", ["pr create"], async () => {
       const detection = await this.detectProvider();
       const { execSync } = await import("child_process");
 
       if (detection.provider === "github") {
-        const args = ["gh", "pr", "create", "--title", JSON.stringify(options.title), "--body", JSON.stringify(options.body), "--base", options.targetBranch, "--head", options.sourceBranch];
+        const args = [
+          "gh",
+          "pr",
+          "create",
+          "--title",
+          JSON.stringify(options.title),
+          "--body",
+          JSON.stringify(options.body),
+          "--base",
+          options.targetBranch,
+          "--head",
+          options.sourceBranch,
+        ];
         if (options.draft) args.push("--draft");
         try {
           return execSync(args.join(" "), {
@@ -2652,12 +3242,26 @@ export class GitService {
             timeout: 30000,
           }).trim();
         } catch (err) {
-          throw new Error(`Failed to create PR: ${err instanceof Error ? err.message : String(err)}`);
+          throw new Error(
+            `Failed to create PR: ${err instanceof Error ? err.message : String(err)}`
+          );
         }
       }
 
       if (detection.provider === "gitlab") {
-        const args = ["glab", "mr", "create", "--title", JSON.stringify(options.title), "--description", JSON.stringify(options.body), "--target-branch", options.targetBranch, "--source-branch", options.sourceBranch];
+        const args = [
+          "glab",
+          "mr",
+          "create",
+          "--title",
+          JSON.stringify(options.title),
+          "--description",
+          JSON.stringify(options.body),
+          "--target-branch",
+          options.targetBranch,
+          "--source-branch",
+          options.sourceBranch,
+        ];
         if (options.draft) args.push("--draft");
         args.push("--yes");
         try {
@@ -2667,11 +3271,15 @@ export class GitService {
             timeout: 30000,
           }).trim();
         } catch (err) {
-          throw new Error(`Failed to create MR: ${err instanceof Error ? err.message : String(err)}`);
+          throw new Error(
+            `Failed to create MR: ${err instanceof Error ? err.message : String(err)}`
+          );
         }
       }
 
-      throw new Error("Unknown provider. Cannot create PR/MR. Make sure 'gh' or 'glab' CLI is installed.");
+      throw new Error(
+        "Unknown provider. Cannot create PR/MR. Make sure 'gh' or 'glab' CLI is installed."
+      );
     });
   }
 }

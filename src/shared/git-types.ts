@@ -8,7 +8,7 @@ export interface RepoInfo {
   headCommit: string;
 }
 
-export type GitOperation = 'merge' | 'rebase' | 'cherry-pick' | null;
+export type GitOperation = "merge" | "rebase" | "cherry-pick" | null;
 
 export interface GitStatus {
   staged: FileStatus[];
@@ -60,7 +60,16 @@ export interface GraphRow {
 export interface GraphEdge {
   fromLane: number;
   toLane: number;
-  type: "straight" | "merge-left" | "merge-right" | "fork-left" | "fork-right" | "converge-left" | "converge-right" | "start" | "end";
+  type:
+    | "straight"
+    | "merge-left"
+    | "merge-right"
+    | "fork-left"
+    | "fork-right"
+    | "converge-left"
+    | "converge-right"
+    | "start"
+    | "end";
   color: number; // index into palette
 }
 
@@ -398,3 +407,101 @@ export interface PrCreateOptions {
 }
 
 export type GitProvider = "github" | "gitlab" | "unknown";
+
+export interface GrepMatch {
+  file: string;
+  line: number;
+  text: string;
+}
+
+export interface GrepResult {
+  matches: GrepMatch[];
+  totalCount: number;
+}
+
+export interface BranchDiffResult {
+  files: CommitFileInfo[];
+  stats: { additions: number; deletions: number; filesChanged: number };
+}
+
+export interface UndoEntry {
+  index: number;
+  hash: string;
+  action: string;
+  description: string;
+  date: string;
+}
+
+export interface CIStatus {
+  sha: string;
+  status: "success" | "failure" | "pending" | "running" | "unknown";
+  name: string;
+  url: string;
+  conclusion: string;
+  startedAt: string;
+}
+
+export interface IssueInfo {
+  number: number;
+  title: string;
+  state: "open" | "closed";
+  url: string;
+}
+
+export interface GistCreateOptions {
+  filename: string;
+  content: string;
+  description: string;
+  public: boolean;
+}
+
+export interface GistResult {
+  url: string;
+  id: string;
+}
+
+export interface TimelineEntry {
+  date: string;
+  count: number;
+}
+
+export interface ChurnEntry {
+  date: string;
+  additions: number;
+  deletions: number;
+}
+
+export interface ContributorTimelineEntry {
+  date: string;
+  author: string;
+  count: number;
+}
+
+export interface ReviewComment {
+  id: string;
+  file: string;
+  line: number;
+  body: string;
+  severity: "comment" | "suggestion" | "issue";
+  createdAt: string;
+}
+
+export interface ReviewData {
+  commitHash: string;
+  comments: ReviewComment[];
+  createdAt: string;
+}
+
+export interface SshKeyInfo {
+  name: string;
+  type: string;
+  fingerprint: string;
+  path: string;
+  hasPublicKey: boolean;
+}
+
+export interface GitHookInfo {
+  name: string;
+  active: boolean;
+  content: string;
+}

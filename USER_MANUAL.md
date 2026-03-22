@@ -1,471 +1,489 @@
-# Git Expansion - Manuale Utente
+# Git Expansion - User Manual
 
-> **Versione:** 0.4.0
-> **Licenza:** MIT
-> **Piattaforme:** Windows, Linux (DEB/RPM)
+> **Version:** 0.4.0
+> **License:** MIT
+> **Platforms:** Windows, Linux (DEB/RPM)
 
-Git Expansion e un client Git grafico cross-platform ispirato a [Git Extensions](https://gitextensions.github.io/), costruito con Electron, React e TypeScript. Offre un'interfaccia moderna con tema Catppuccin per gestire repository Git in modo visuale e completo.
+Git Expansion is a cross-platform Git GUI desktop app inspired by [Git Extensions](https://gitextensions.github.io/), built with Electron, React, and TypeScript. It provides a modern interface with Catppuccin theming for managing Git repositories visually and comprehensively.
 
 ---
 
-## Indice
+## Table of Contents
 
-1. [Installazione e Requisiti](#1-installazione-e-requisiti)
-2. [Primo Avvio](#2-primo-avvio)
-3. [Interfaccia Principale](#3-interfaccia-principale)
-   - [Barra dei Menu](#31-barra-dei-menu)
+1. [Installation and Requirements](#1-installation-and-requirements)
+2. [First Launch](#2-first-launch)
+3. [Main Interface](#3-main-interface)
+   - [Menu Bar](#31-menu-bar)
    - [Toolbar](#32-toolbar)
    - [Sidebar](#33-sidebar)
-   - [Grafico dei Commit](#34-grafico-dei-commit)
-   - [Pannello Dettagli Commit](#35-pannello-dettagli-commit)
-   - [Barra di Stato](#36-barra-di-stato)
-   - [Banner Conflitti](#37-banner-conflitti)
-4. [Gestione Repository](#4-gestione-repository)
-   - [Creare un Repository](#41-creare-un-repository)
-   - [Aprire un Repository](#42-aprire-un-repository)
-   - [Clonare un Repository](#43-clonare-un-repository)
-   - [Scansionare il Filesystem](#44-scansionare-il-filesystem)
-   - [Repository Preferiti e Recenti](#45-repository-preferiti-e-recenti)
-5. [Commit e Staging](#5-commit-e-staging)
+   - [Commit Graph](#34-commit-graph)
+   - [Commit Details Panel](#35-commit-details-panel)
+   - [Status Bar](#36-status-bar)
+   - [Conflict Banner](#37-conflict-banner)
+4. [Repository Management](#4-repository-management)
+   - [Create a Repository](#41-create-a-repository)
+   - [Open a Repository](#42-open-a-repository)
+   - [Clone a Repository](#43-clone-a-repository)
+   - [Scan the Filesystem](#44-scan-the-filesystem)
+   - [Favorite and Recent Repositories](#45-favorite-and-recent-repositories)
+5. [Commit and Staging](#5-commit-and-staging)
    - [Commit Dialog](#51-commit-dialog)
-   - [Staging e Unstaging File](#52-staging-e-unstaging-file)
-   - [Staging per Righe e Hunk](#53-staging-per-righe-e-hunk)
-   - [Amend dell'Ultimo Commit](#54-amend-dellultimo-commit)
-   - [Template di Commit](#55-template-di-commit)
-   - [Messaggi AI per i Commit](#56-messaggi-ai-per-i-commit)
-6. [Branch](#6-branch)
-   - [Creare un Branch](#61-creare-un-branch)
-   - [Checkout di un Branch](#62-checkout-di-un-branch)
-   - [Rinominare ed Eliminare Branch](#63-rinominare-ed-eliminare-branch)
-   - [Eliminare Branch Remoti](#64-eliminare-branch-remoti)
+   - [Staging and Unstaging Files](#52-staging-and-unstaging-files)
+   - [Line and Hunk Staging](#53-line-and-hunk-staging)
+   - [Amend Last Commit](#54-amend-last-commit)
+   - [Commit Templates](#55-commit-templates)
+   - [AI Commit Messages](#56-ai-commit-messages)
+6. [Branches](#6-branches)
+   - [Create a Branch](#61-create-a-branch)
+   - [Checkout a Branch](#62-checkout-a-branch)
+   - [Rename and Delete Branches](#63-rename-and-delete-branches)
+   - [Delete Remote Branches](#64-delete-remote-branches)
+   - [Set Upstream Branch](#65-set-upstream-branch)
 7. [Merge](#7-merge)
    - [Merge Dialog](#71-merge-dialog)
-   - [Opzioni di Merge](#72-opzioni-di-merge)
-   - [Abort e Continue](#73-abort-e-continue)
+   - [Merge Options](#72-merge-options)
+   - [Abort and Continue](#73-abort-and-continue)
 8. [Rebase](#8-rebase)
-   - [Rebase Standard](#81-rebase-standard)
-   - [Rebase Interattivo](#82-rebase-interattivo)
-   - [Gestione Conflitti durante Rebase](#83-gestione-conflitti-durante-rebase)
+   - [Standard Rebase](#81-standard-rebase)
+   - [Interactive Rebase](#82-interactive-rebase)
+   - [Conflict Handling During Rebase](#83-conflict-handling-during-rebase)
 9. [Cherry-Pick](#9-cherry-pick)
-10. [Risoluzione Conflitti](#10-risoluzione-conflitti)
-    - [Editor Interno 3-Way](#101-editor-interno-3-way)
-    - [Tool di Merge Esterno](#102-tool-di-merge-esterno)
-    - [Risoluzione con AI](#103-risoluzione-con-ai)
-11. [Diff e Visualizzazione File](#11-diff-e-visualizzazione-file)
-    - [Diff Viewer](#111-diff-viewer)
-    - [File History](#112-file-history)
-    - [Blame View](#113-blame-view)
-    - [Confronto tra Commit](#114-confronto-tra-commit)
-    - [Menu Contestuale File](#115-menu-contestuale-file)
-12. [Tag](#12-tag)
-13. [Stash](#13-stash)
-14. [Remote](#14-remote)
-    - [Fetch, Pull e Push](#141-fetch-pull-e-push)
-    - [Gestione dei Remote](#142-gestione-dei-remote)
-    - [Branch Remoti Obsoleti](#143-branch-remoti-obsoleti)
-15. [Reset](#15-reset)
-16. [Submodule](#16-submodule)
-17. [Changelog](#17-changelog)
-18. [Console Integrata](#18-console-integrata)
-19. [Log dei Comandi](#19-log-dei-comandi)
-20. [Statistiche](#20-statistiche)
-    - [Statistiche Autori](#201-statistiche-autori)
-    - [Statistiche Codebase](#202-statistiche-codebase)
-21. [Account Git](#21-account-git)
-22. [Impostazioni](#22-impostazioni)
-    - [Generale](#221-generale)
-    - [Account](#222-account)
-    - [Git Config](#223-git-config)
-    - [Fetch](#224-fetch)
-    - [Commit](#225-commit)
-    - [Diff e Grafico](#226-diff-e-grafico)
-    - [Merge Tool](#227-merge-tool)
-    - [Avanzate](#228-avanzate)
-    - [AI / MCP](#229-ai--mcp)
-23. [Integrazione AI e MCP](#23-integrazione-ai-e-mcp)
-    - [Provider AI Supportati](#231-provider-ai-supportati)
-    - [MCP Server](#232-mcp-server)
-    - [Funzionalita AI](#233-funzionalita-ai)
-24. [Aggiornamenti Automatici](#24-aggiornamenti-automatici)
-25. [Scorciatoie da Tastiera](#25-scorciatoie-da-tastiera)
-26. [Temi](#26-temi)
-27. [Layout Personalizzabile](#27-layout-personalizzabile)
+10. [Revert](#10-revert)
+11. [Squash](#11-squash)
+12. [Conflict Resolution](#12-conflict-resolution)
+    - [Built-in 3-Way Editor](#121-built-in-3-way-editor)
+    - [External Merge Tool](#122-external-merge-tool)
+    - [AI-Assisted Resolution](#123-ai-assisted-resolution)
+13. [Diff and File Viewing](#13-diff-and-file-viewing)
+    - [Diff Viewer](#131-diff-viewer)
+    - [File History](#132-file-history)
+    - [Blame View](#133-blame-view)
+    - [Commit Comparison](#134-commit-comparison)
+    - [File Context Menu](#135-file-context-menu)
+14. [Tags](#14-tags)
+15. [Stash](#15-stash)
+16. [Remotes](#16-remotes)
+    - [Fetch, Pull, and Push](#161-fetch-pull-and-push)
+    - [Remote Management](#162-remote-management)
+    - [Stale Remote Branches](#163-stale-remote-branches)
+17. [Reset](#17-reset)
+18. [Reflog](#18-reflog)
+19. [Bisect](#19-bisect)
+20. [Worktrees](#20-worktrees)
+21. [Submodules](#21-submodules)
+22. [Git LFS (Large File Storage)](#22-git-lfs-large-file-storage)
+23. [Patches](#23-patches)
+24. [Archive and Export](#24-archive-and-export)
+25. [Git Notes](#25-git-notes)
+26. [Pull Request Integration](#26-pull-request-integration)
+27. [Changelog](#27-changelog)
+28. [Integrated Console](#28-integrated-console)
+29. [Command Log](#29-command-log)
+30. [Statistics](#30-statistics)
+    - [Author Statistics](#301-author-statistics)
+    - [Codebase Statistics](#302-codebase-statistics)
+31. [Git Accounts](#31-git-accounts)
+32. [Settings](#32-settings)
+    - [General](#321-general)
+    - [Accounts](#322-accounts)
+    - [Git Config](#323-git-config)
+    - [Fetch](#324-fetch)
+    - [Commit](#325-commit)
+    - [Diff and Graph](#326-diff-and-graph)
+    - [Merge Tool](#327-merge-tool)
+    - [Advanced](#328-advanced)
+    - [AI / MCP](#329-ai--mcp)
+33. [AI and MCP Integration](#33-ai-and-mcp-integration)
+    - [Supported AI Providers](#331-supported-ai-providers)
+    - [MCP Server](#332-mcp-server)
+    - [AI Features](#333-ai-features)
+34. [Automatic Updates](#34-automatic-updates)
+35. [Keyboard Shortcuts](#35-keyboard-shortcuts)
+36. [Themes](#36-themes)
+37. [Customizable Layout](#37-customizable-layout)
+38. [Internationalization](#38-internationalization)
 
 ---
 
-## 1. Installazione e Requisiti
+## 1. Installation and Requirements
 
-### Requisiti di Sistema
+### System Requirements
 
-- **Node.js** 20 o superiore (solo per build da sorgente)
-- **Git** 2.30 o superiore (deve essere nel PATH di sistema)
-- **Sistema Operativo:** Windows 10+, Linux (distribuzioni basate su Debian/RPM)
+- **Node.js** 20 or higher (only for building from source)
+- **Git** 2.30 or higher (must be in the system PATH)
+- **Operating System:** Windows 10+, Linux (Debian/RPM-based distributions)
 
-### Installazione da Release
+### Install from Release
 
-Scaricare l'installer appropriato dalla pagina [GitHub Releases](https://github.com/Schengatto/git-expansion/releases):
+Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/git-expansion/releases) page:
 
-- **Windows:** Installer Squirrel (`.exe`) o archivio ZIP
-- **Linux:** Pacchetto `.deb` (Debian/Ubuntu) o `.rpm` (Fedora/RHEL)
+- **Windows:** Squirrel installer (`.exe`) or ZIP archive
+- **Linux:** `.deb` package (Debian/Ubuntu) or `.rpm` package (Fedora/RHEL)
 
-### Build da Sorgente
+### Build from Source
 
 ```bash
 git clone https://github.com/Schengatto/git-expansion.git
 cd git-expansion
 npm install
-npm start          # Avvia in modalita sviluppo
-npm run make       # Crea i pacchetti distribuibili
+npm start          # Launch in development mode
+npm run make       # Create distributable packages
 ```
 
 ---
 
-## 2. Primo Avvio
+## 2. First Launch
 
-Al primo avvio, Git Expansion mostra una **schermata di benvenuto** con:
+On first launch, Git Expansion shows a **welcome screen** with:
 
-- **Azioni rapide:** Crea, Apri, Clona o Scansiona repository
-- **Repository recenti:** Lista dei repository aperti di recente (inizialmente vuota)
-- **Suggerimenti per le scorciatoie:** `Ctrl+O` per aprire, `Ctrl+N` per creare
+- **Quick actions:** Create, Open, Clone, or Scan for repositories
+- **Recent repositories:** List of recently opened repositories (initially empty)
+- **Shortcut hints:** `Ctrl+O` to open, `Ctrl+N` to create
 
-L'applicazione ricorda l'ultimo repository aperto e lo riapre automaticamente nelle sessioni successive.
+The application remembers the last opened repository and automatically reopens it on subsequent sessions.
 
 ---
 
-## 3. Interfaccia Principale
+## 3. Main Interface
 
-L'interfaccia e divisa in diverse aree, tutte personalizzabili grazie al sistema di pannelli agganciabili (dockview).
+The interface is divided into several areas, all customizable through the dockable panel system (dockview).
 
-### 3.1 Barra dei Menu
+### 3.1 Menu Bar
 
-La barra dei menu in alto offre quattro menu principali:
+The top menu bar provides four main menus:
 
-#### Menu Start
-| Voce | Scorciatoia | Descrizione |
-|------|-------------|-------------|
-| Create new repository... | | Inizializza un nuovo repository Git |
-| Open repository... | `Ctrl+O` | Apri un repository esistente |
-| Favorite repositories | | Sottomenu con repository organizzati per categoria |
-| Recent repositories | | Ultimi 10 repository aperti |
-| Clone repository... | | Clona un repository remoto |
-| Scan for repositories... | | Cerca repository Git nel filesystem |
-| Exit | `Ctrl+Q` | Chiudi l'applicazione |
+#### Start Menu
+| Item | Shortcut | Description |
+|------|----------|-------------|
+| Create new repository... | | Initialize a new Git repository |
+| Open repository... | `Ctrl+O` | Open an existing repository |
+| Favorite repositories | | Submenu with repositories organized by category |
+| Recent repositories | | Last 10 opened repositories |
+| Clone repository... | | Clone a remote repository |
+| Scan for repositories... | | Search for Git repositories in the filesystem |
+| Exit | `Ctrl+Q` | Close the application |
 
-#### Menu Dashboard
-| Voce | Scorciatoia | Descrizione |
-|------|-------------|-------------|
-| Refresh | `F5` | Aggiorna il grafico e lo stato |
-| Reset layout | | Ripristina il layout dei pannelli al default |
+#### Dashboard Menu
+| Item | Shortcut | Description |
+|------|----------|-------------|
+| Refresh | `F5` | Refresh the graph and status |
+| Reset layout | | Restore the panel layout to default |
 
-#### Menu Tools
-| Voce | Scorciatoia | Descrizione |
-|------|-------------|-------------|
-| Git bash | `Ctrl+G` | Apre un terminale Git nella directory del repo |
-| Stale remote branches... | | Trova ed elimina branch remoti obsoleti |
-| Settings... | `Ctrl+,` | Apre le impostazioni |
+#### Tools Menu
+| Item | Shortcut | Description |
+|------|----------|-------------|
+| Git bash | `Ctrl+G` | Open a terminal in the repository directory |
+| Stale remote branches... | | Find and delete obsolete remote branches |
+| Settings... | `Ctrl+,` | Open settings |
 
-#### Menu Help
-| Voce | Descrizione |
+#### Help Menu
+| Item | Description |
 |------|-------------|
-| User manual | Apre la documentazione online (GitHub wiki) |
-| Report an issue | Apre la pagina per segnalare bug su GitHub |
-| Check for updates... | Verifica disponibilita aggiornamenti |
-| About Git Expansion | Mostra versione, licenza e informazioni |
+| User manual | Open the online documentation (GitHub wiki) |
+| Report an issue | Open the bug report page on GitHub |
+| Check for updates... | Check for available updates |
+| About Git Expansion | Show version, license, and information |
 
 ### 3.2 Toolbar
 
-La toolbar appare sotto la barra dei menu e si adatta al contesto:
+The toolbar appears below the menu bar and adapts to the context:
 
-- **Senza repository aperto:** Mostra solo i pulsanti Open e Init
-- **Con repository aperto:** Mostra la serie completa di operazioni
+- **Without an open repository:** Shows only the Open and Init buttons
+- **With an open repository:** Shows the full set of operations
 
-Pulsanti disponibili (da sinistra a destra):
-| Pulsante | Descrizione |
-|----------|-------------|
-| Open | Apri un repository |
-| Init | Crea un nuovo repository |
-| Refresh | Aggiorna grafico e stato |
-| Account | Selettore account Git attivo |
-| Fetch | Scarica aggiornamenti dal remote (con dropdown per opzioni) |
-| Pull | Pull dal remote (con dropdown: merge, rebase) |
-| Push | Push al remote |
-| Commit (`Ctrl+K`) | Apre il Commit Dialog |
-| Merge | Apre il Merge Dialog |
-| Rebase | Apre il Rebase Dialog |
-| Cherry-pick | Cherry-pick di un commit |
+Available buttons (left to right):
+| Button | Description |
+|--------|-------------|
+| Open | Open a repository |
+| Init | Create a new repository |
+| Refresh | Refresh graph and status |
+| Account | Active Git account selector |
+| Fetch | Download updates from remote (with dropdown for options) |
+| Pull | Pull from remote (with dropdown: merge, rebase) |
+| Push | Push to remote |
+| Commit (`Ctrl+K`) | Open the Commit Dialog |
+| Merge | Open the Merge Dialog |
+| Rebase | Open the Rebase Dialog |
+| Cherry-pick | Cherry-pick a commit |
 
-I pulsanti Fetch e Pull hanno dropdown aggiuntivi con opzioni avanzate (fetch all, fetch prune, pull con rebase, pull con merge).
+The Fetch and Pull buttons have additional dropdowns with advanced options (fetch all, fetch prune, pull with rebase, pull with merge).
 
 ### 3.3 Sidebar
 
-La sidebar a sinistra mostra l'albero del repository con sezioni espandibili:
+The left sidebar shows the repository tree with expandable sections:
 
-- **Barra di ricerca:** Filtra branch, remote, tag per nome
-- **Branches:** Branch locali e remoti con indicatori ahead/behind
-- **Remotes:** Lista dei remote configurati
-- **Tags:** Tutti i tag del repository
-- **Submodules:** Sottomoduli git
-- **Stashes:** Lista degli stash salvati
+- **Search bar:** Filter branches, remotes, and tags by name
+- **Branches:** Local and remote branches with ahead/behind indicators
+- **Remotes:** List of configured remotes
+- **Tags:** All repository tags
+- **Submodules:** Git submodules
+- **Stashes:** List of saved stashes
 
-Ogni sezione supporta il **menu contestuale** (click destro) con le operazioni specifiche:
+Each section supports a **context menu** (right-click) with specific operations:
 
-**Branch (click destro):**
+**Branch (right-click):**
 - Checkout, Merge, Rebase, Delete, Rename, Set upstream
 
-**Remote (click destro):**
+**Remote (right-click):**
 - Add, Remove, Edit URL
 
-**Tag (click destro):**
+**Tag (right-click):**
 - Delete, Push to remote
 
-**Stash (click destro):**
+**Stash (right-click):**
 - Apply, Pop, Drop, Inspect
 
-### 3.4 Grafico dei Commit
+### 3.4 Commit Graph
 
-Il pannello centrale mostra il grafico dei commit con:
+The central panel shows the commit graph with:
 
-- **Linee colorate** per ogni branch/lane
-- **Punti/dot** per ogni commit (il commit HEAD ha un dot piu grande con bordo bianco e testo in grassetto)
-- **Avatar Gravatar** accanto al nome dell'autore
-- **Decorazioni:** Etichette per branch e tag su ogni commit
-- **Scrolling virtualizzato** per gestire repository con migliaia di commit
-- **Paginazione:** Pulsante "Load More" per caricare altri commit (blocchi da 500)
+- **Colored lines** for each branch/lane
+- **Dots** for each commit (the HEAD commit has a larger dot with a white border and bold text)
+- **Gravatar avatars** next to the author's name
+- **Decorations:** Labels for branches and tags on each commit
+- **Virtualized scrolling** to handle repositories with thousands of commits
+- **Pagination:** "Load More" button to load additional commits (blocks of 500)
 
-#### Filtri del Grafico
+#### Graph Filters
 
-Nella toolbar del grafico sono disponibili due filtri:
+Two filters are available in the graph toolbar:
 
-1. **Filtro branch per nome:** Campo di testo per filtrare i commit per nome del branch (sottostringa)
-2. **Filtro visibilita branch:** Dropdown per includere/escludere branch specifici dalla visualizzazione
+1. **Branch name filter:** Text field to filter commits by branch name (substring match)
+2. **Branch visibility filter:** Dropdown to include/exclude specific branches from the view
 
-Questi filtri vengono **salvati per ogni repository** e ripristinati automaticamente alla riapertura.
+These filters are **saved per repository** and automatically restored when reopened.
 
-#### Ricerca Commit
+#### Commit Search
 
-Premere `Ctrl+F` per aprire la barra di ricerca nel grafico. E possibile cercare per:
-- Messaggio di commit
-- Nome autore
-- Hash del commit
-- Nome di riferimento (branch/tag)
+Press `Ctrl+F` to open the search bar in the graph. You can search by:
+- Commit message
+- Author name
+- Commit hash
+- Reference name (branch/tag)
 
-#### Menu Contestuale del Grafico (click destro su un commit)
+#### Graph Context Menu (right-click on a commit)
 
-| Voce | Descrizione |
+| Item | Description |
 |------|-------------|
-| Checkout | Checkout del commit o branch |
-| Create branch | Crea un nuovo branch da questo commit |
-| Delete branch | Elimina il branch a cui punta il commit |
-| Rename branch | Rinomina il branch |
-| Merge into current | Mergia questo branch nel branch corrente |
-| Rebase current onto | Rebase del branch corrente su questo commit |
-| Cherry-pick | Applica questo commit sul branch corrente |
-| Reset current branch | Reset del branch corrente a questo commit |
-| Create tag | Crea un tag su questo commit |
-| Delete tag | Elimina un tag |
-| Delete remote branch | Elimina il branch remoto |
-| Compare with HEAD | Confronta questo commit con HEAD |
-| Compare with selected | Confronta con un altro commit selezionato |
-| Generate changelog | Genera un changelog da questo commit |
-| AI code review | Revisione del codice tramite AI |
+| Checkout | Checkout the commit or branch |
+| Create branch | Create a new branch from this commit |
+| Delete branch | Delete the branch pointing to this commit |
+| Rename branch | Rename the branch |
+| Merge into current | Merge this branch into the current branch |
+| Rebase current onto | Rebase the current branch onto this commit |
+| Cherry-pick | Apply this commit to the current branch |
+| Revert | Revert this commit |
+| Squash commits | Squash commits up to this point |
+| Reset current branch | Reset the current branch to this commit |
+| Create tag | Create a tag on this commit |
+| Delete tag | Delete a tag |
+| Delete remote branch | Delete the remote branch |
+| Compare with HEAD | Compare this commit with HEAD |
+| Compare with selected | Compare with another selected commit |
+| Generate changelog | Generate a changelog from this commit |
+| AI code review | AI-powered code review for this commit |
 
-### 3.5 Pannello Dettagli Commit
+### 3.5 Commit Details Panel
 
-Quando si seleziona un commit nel grafico, il pannello dettagli mostra due tab:
+When a commit is selected in the graph, the details panel shows two tabs:
 
-#### Tab Diff
-Mostra il diff unificato del commit con:
-- Modalita **line-by-line** o **side-by-side** (commutabile)
+#### Diff Tab
+Shows the unified diff of the commit with:
+- **Line-by-line** or **side-by-side** mode (toggleable)
 - Syntax highlighting
-- Linee colorate (rosso = rimosse, verde = aggiunte)
+- Colored lines (red = removed, green = added)
 
-#### Tab Files
-Mostra l'albero dei file modificati con:
-- Badge di stato per ogni file (A = aggiunto, M = modificato, D = eliminato, R = rinominato, C = copiato)
-- Click su un file per vedere il suo diff
-- Click destro per il menu contestuale file
+#### Files Tab
+Shows the tree of modified files with:
+- Status badges for each file (A = added, M = modified, D = deleted, R = renamed, C = copied)
+- Click a file to view its diff
+- Right-click for the file context menu
 
-Se nessun commit e selezionato, il pannello mostra le informazioni di HEAD come fallback.
+If no commit is selected, the panel shows HEAD information as a fallback.
 
-### 3.6 Barra di Stato
+### 3.6 Status Bar
 
-La barra in basso mostra:
-- **Branch corrente** (es. `main`)
-- **Conteggio modifiche:** Numero di file staged, unstaged e untracked
-- **Hash HEAD:** Primi 8 caratteri dell'hash del commit corrente
-- **Colore accento:** Cambia in base allo stato del repository (pulito/sporco)
+The bottom bar shows:
+- **Current branch** (e.g., `main`)
+- **Change count:** Number of staged, unstaged, and untracked files
+- **HEAD hash:** First 8 characters of the current commit hash
+- **Accent color:** Changes based on the repository state (clean/dirty)
 
-### 3.7 Banner Conflitti
+### 3.7 Conflict Banner
 
-Quando un'operazione di merge, rebase o cherry-pick e in corso e ci sono conflitti, appare un banner nella parte superiore dell'interfaccia:
+When a merge, rebase, or cherry-pick operation is in progress and there are conflicts, a banner appears at the top of the interface:
 
-- **Colore rosso:** Ci sono conflitti irrisolti
-- **Colore verde:** Tutti i conflitti sono stati risolti
-- **Progresso:** Per il rebase, mostra lo step corrente (es. "Step 3/7")
-- **Contatore conflitti:** Mostra quanti conflitti sono stati risolti (es. "2/5 risolti")
+- **Red color:** There are unresolved conflicts
+- **Green color:** All conflicts have been resolved
+- **Progress:** For rebase, shows the current step (e.g., "Step 3/7")
+- **Conflict counter:** Shows how many conflicts have been resolved (e.g., "2/5 resolved")
 
-Pulsanti disponibili:
-| Pulsante | Descrizione |
-|----------|-------------|
-| Resolve Conflicts | Apre l'editor di risoluzione conflitti |
-| Skip Commit | Salta il commit corrente (durante rebase) |
-| Abort | Annulla l'intera operazione |
-| Continue | Procedi con l'operazione dopo la risoluzione |
+Available buttons:
+| Button | Description |
+|--------|-------------|
+| Resolve Conflicts | Open the conflict resolution editor |
+| Skip Commit | Skip the current commit (during rebase) |
+| Abort | Cancel the entire operation |
+| Continue | Proceed with the operation after resolution |
 
 ---
 
-## 4. Gestione Repository
+## 4. Repository Management
 
-### 4.1 Creare un Repository
+### 4.1 Create a Repository
 
-1. Clicca su **Start > Create new repository...** oppure premi il pulsante **Init** nella toolbar
-2. Seleziona la directory dove creare il repository
-3. Git Expansion eseguira `git init` nella directory scelta
-4. Il nuovo repository verra aperto automaticamente
+1. Click **Start > Create new repository...** or press the **Init** button in the toolbar
+2. Select the directory where you want to create the repository
+3. Git Expansion will run `git init` in the chosen directory
+4. The new repository will be opened automatically
 
-### 4.2 Aprire un Repository
+### 4.2 Open a Repository
 
-- Scorciatoia: `Ctrl+O`
+- Shortcut: `Ctrl+O`
 - Menu: **Start > Open repository...**
-- Toolbar: Pulsante **Open**
+- Toolbar: **Open** button
 
-Si aprira un dialogo per selezionare la directory del repository. Il repository verra aggiunto automaticamente alla lista dei recenti.
+A dialog will open to select the repository directory. The repository will be automatically added to the recent list.
 
-### 4.3 Clonare un Repository
+### 4.3 Clone a Repository
 
 Menu: **Start > Clone repository...**
 
-Il Clone Dialog offre le seguenti opzioni:
+The Clone Dialog provides the following options:
 
-| Opzione | Descrizione |
-|---------|-------------|
-| URL | Indirizzo del repository remoto (HTTPS o SSH) |
-| Destinazione | Directory locale dove clonare (con pulsante Browse) |
-| Branch | Branch specifico da clonare (opzionale) |
-| Bare clone | Clona solo il database Git senza working tree |
-| Fetch submodules | Scarica anche i sottomoduli |
-| Shallow clone | Clone superficiale con profondita configurabile |
+| Option | Description |
+|--------|-------------|
+| URL | Remote repository address (HTTPS or SSH) |
+| Destination | Local directory to clone into (with Browse button) |
+| Branch | Specific branch to clone (optional) |
+| Bare clone | Clone only the Git database without a working tree |
+| Fetch submodules | Also download submodules |
+| Shallow clone | Shallow clone with configurable depth |
 
-### 4.4 Scansionare il Filesystem
+### 4.4 Scan the Filesystem
 
 Menu: **Start > Scan for repositories...**
 
-La funzione Scan cerca ricorsivamente repository Git nel filesystem:
+The Scan function recursively searches for Git repositories in the filesystem:
 
-1. Seleziona la **directory radice** da cui iniziare la ricerca
-2. Imposta la **profondita massima** (1-10, default 4)
-3. Avvia la scansione
-4. I repository trovati vengono mostrati in tempo reale con conteggio progressivo
-5. Tutti i repository trovati vengono aggiunti automaticamente alla lista dei recenti
+1. Select the **root directory** to start searching from
+2. Set the **maximum depth** (1-10, default 4)
+3. Start the scan
+4. Found repositories are displayed in real-time with a progressive count
+5. All found repositories are automatically added to the recent list
 
-### 4.5 Repository Preferiti e Recenti
+### 4.5 Favorite and Recent Repositories
 
-#### Repository Recenti
-- Accessibili da **Start > Recent repositories**
-- Mostra gli ultimi 10 repository aperti
-- I repository rimossi dal filesystem vengono automaticamente eliminati dalla lista
+#### Recent Repositories
+- Accessible from **Start > Recent repositories**
+- Shows the last 10 opened repositories
+- Repositories removed from the filesystem are automatically cleaned from the list
 
-#### Repository Preferiti
-- Accessibili da **Start > Favorite repositories**
-- Organizzati in **categorie** personalizzabili
-- Per aggiungere un repository ai preferiti: assegna una categoria al repository
-- Le categorie possono essere create, rinominate ed eliminate
+#### Favorite Repositories
+- Accessible from **Start > Favorite repositories**
+- Organized in customizable **categories**
+- To add a repository to favorites: assign a category to the repository
+- Categories can be created, renamed, and deleted
 
 ---
 
-## 5. Commit e Staging
+## 5. Commit and Staging
 
 ### 5.1 Commit Dialog
 
-Apri con: `Ctrl+K` oppure pulsante **Commit** nella toolbar.
+Open with: `Ctrl+K` or the **Commit** button in the toolbar.
 
-Il Commit Dialog e ispirato a Git Extensions e presenta:
+The Commit Dialog is inspired by Git Extensions and features:
 
-- **Pannello sinistro superiore:** Lista file unstaged con badge di stato
-- **Pannello sinistro inferiore:** Lista file staged con badge di stato
-- **Pannello centrale/destro:** Visualizzazione diff del file selezionato
-- **Area messaggio:** Campo per il messaggio di commit
-- **Barra superiore:** Branch corrente e percorso del file selezionato
+- **Upper-left panel:** List of unstaged files with status badges
+- **Lower-left panel:** List of staged files with status badges
+- **Center/right panel:** Diff view of the selected file
+- **Message area:** Field for the commit message
+- **Top bar:** Current branch and selected file path
 
-### 5.2 Staging e Unstaging File
+### 5.2 Staging and Unstaging Files
 
-Nel Commit Dialog:
+In the Commit Dialog:
 
-- **Stage:** Seleziona i file nella lista unstaged e clicca il pulsante con freccia giu (o doppio click)
-- **Unstage:** Seleziona i file nella lista staged e clicca il pulsante con freccia su (o doppio click)
-- **Stage All / Unstage All:** Pulsanti per spostare tutti i file in blocco
-- **Discard:** Scarta le modifiche ai file selezionati
+- **Stage:** Select files in the unstaged list and click the down arrow button (or double-click)
+- **Unstage:** Select files in the staged list and click the up arrow button (or double-click)
+- **Stage All / Unstage All:** Buttons to move all files at once
+- **Discard:** Discard changes to selected files
 
-### 5.3 Staging per Righe e Hunk
+### 5.3 Line and Hunk Staging
 
-Per un controllo granulare, e possibile fare staging di singole righe o blocchi di codice (hunk):
+For granular control, you can stage individual lines or code blocks (hunks):
 
-1. Seleziona un file nella lista unstaged
-2. Nel diff viewer, seleziona le righe specifiche che vuoi includere nello staging
-3. Usa i pulsanti **Stage Lines** o **Unstage Lines** per operare sulle singole righe
+1. Select a file in the unstaged list
+2. In the diff viewer, select the specific lines you want to stage
+3. Use the **Stage Lines** or **Unstage Lines** buttons to operate on individual lines
 
-> **Nota:** Lo staging per righe non e disponibile per i file in conflitto.
+> **Note:** Line staging is not available for conflicted files.
 
-### 5.4 Amend dell'Ultimo Commit
+### 5.4 Amend Last Commit
 
-Nel Commit Dialog, il pulsante commit ha un **menu dropdown** con l'opzione **Amend**:
+In the Commit Dialog, the commit button has a **dropdown menu** with the **Amend** option:
 
-- Modifica il messaggio dell'ultimo commit
-- Aggiunge i file staged all'ultimo commit
-- Il campo messaggio viene precompilato con il messaggio dell'ultimo commit
+- Modify the message of the last commit
+- Add staged files to the last commit
+- The message field is pre-filled with the last commit's message
 
-### 5.5 Template di Commit
+### 5.5 Commit Templates
 
-Il dropdown del messaggio di commit offre:
+The commit message dropdown offers:
 
-- **Messaggi recenti:** Gli ultimi 10 messaggi di commit usati
-- **Template conventional commits:** Template predefiniti seguendo la convenzione Conventional Commits:
-  - `feat: `, `fix: `, `docs: `, `style: `, `refactor: `, `test: `, `chore: `, ecc.
+- **Recent messages:** The last 10 used commit messages
+- **Conventional commit templates:** Predefined templates following the Conventional Commits convention:
+  - `feat: `, `fix: `, `docs: `, `style: `, `refactor: `, `test: `, `chore: `, etc.
 
-### 5.6 Messaggi AI per i Commit
+### 5.6 AI Commit Messages
 
-Se un provider AI e configurato (vedi [Impostazioni AI/MCP](#229-ai--mcp)):
+If an AI provider is configured (see [AI/MCP Settings](#329-ai--mcp)):
 
-- Il pulsante **AI** nel Commit Dialog genera automaticamente un messaggio di commit basato sul diff staged
-- Il messaggio segue la convenzione Conventional Commits
-- Puoi modificare il suggerimento prima di confermare
+- The **AI** button in the Commit Dialog automatically generates a commit message based on the staged diff
+- The message follows the Conventional Commits convention
+- You can edit the suggestion before confirming
 
 ---
 
-## 6. Branch
+## 6. Branches
 
-### 6.1 Creare un Branch
+### 6.1 Create a Branch
 
-Modalita:
-1. **Menu contestuale del grafico:** Click destro su un commit > **Create branch**
-2. **Sidebar:** Click destro su un branch > **Create branch**
-3. **Commit Dialog:** Pulsante "Create branch" nella barra superiore
+Methods:
+1. **Graph context menu:** Right-click a commit > **Create branch**
+2. **Sidebar:** Right-click a branch > **Create branch**
+3. **Commit Dialog:** "Create branch" button in the top bar
 
-Opzioni:
-- **Nome:** Nome del nuovo branch
-- **Start point:** Commit o branch da cui partire (default: commit selezionato)
-- **Checkout:** Opzione per fare checkout immediatamente del nuovo branch
+Options:
+- **Name:** Name of the new branch
+- **Start point:** Commit or branch to start from (default: selected commit)
+- **Checkout:** Option to immediately checkout the new branch
 
-### 6.2 Checkout di un Branch
+### 6.2 Checkout a Branch
 
-Il Checkout Dialog (accessibile dal grafico o dalla sidebar) offre:
+The Checkout Dialog (accessible from the graph or sidebar) provides:
 
-| Opzione | Descrizione |
-|---------|-------------|
-| Branch locale | Seleziona tra i branch locali |
-| Branch remoto | Crea automaticamente un tracking branch locale |
-| Commit hash | Checkout in modalita detached HEAD |
-| Gestione modifiche locali | None / Merge / Stash / Reset |
+| Option | Description |
+|--------|-------------|
+| Local branch | Select from local branches |
+| Remote branch | Automatically creates a local tracking branch |
+| Commit hash | Checkout in detached HEAD mode |
+| Local changes handling | None / Merge / Stash / Reset |
 
-### 6.3 Rinominare ed Eliminare Branch
+### 6.3 Rename and Delete Branches
 
-- **Rinomina:** Click destro su un branch > Rename > Inserisci il nuovo nome
-- **Elimina locale:** Click destro > Delete branch (con opzione force per branch non mergiati)
-- **Elimina remoto:** Click destro > Delete remote branch (richiede conferma)
+- **Rename:** Right-click a branch > Rename > Enter the new name
+- **Delete local:** Right-click > Delete branch (with force option for unmerged branches)
+- **Delete remote:** Right-click > Delete remote branch (requires confirmation)
 
-### 6.4 Eliminare Branch Remoti
+### 6.4 Delete Remote Branches
 
-Disponibile sia dal grafico (click destro) che dalla sidebar. Per eliminazioni in blocco di branch obsoleti, usa **Tools > Stale remote branches** (vedi [sezione 14.3](#143-branch-remoti-obsoleti)).
+Available from both the graph (right-click) and the sidebar. For bulk deletion of obsolete branches, use **Tools > Stale remote branches** (see [section 16.3](#163-stale-remote-branches)).
+
+### 6.5 Set Upstream Branch
+
+Right-click a branch > **Set upstream** to configure the remote tracking branch. A dialog allows you to select the remote and upstream branch name.
 
 ---
 
@@ -473,306 +491,460 @@ Disponibile sia dal grafico (click destro) che dalla sidebar. Per eliminazioni i
 
 ### 7.1 Merge Dialog
 
-Accessibile da:
-- Toolbar: Pulsante **Merge**
-- Grafico: Click destro > **Merge into current branch**
-- Sidebar: Click destro su un branch > **Merge**
+Accessible from:
+- Toolbar: **Merge** button
+- Graph: Right-click > **Merge into current branch**
+- Sidebar: Right-click a branch > **Merge**
 
-### 7.2 Opzioni di Merge
+### 7.2 Merge Options
 
-| Opzione | Descrizione |
-|---------|-------------|
-| Branch | Branch da mergiare nel branch corrente |
-| Fast-forward | Permetti fast-forward quando possibile |
-| No fast-forward | Forza la creazione di un merge commit |
-| Squash | Combina tutti i commit in un unico commit |
-| No commit | Esegui il merge senza creare il commit automaticamente |
-| Allow unrelated histories | Permetti merge di storie non correlate |
-| Add log messages | Aggiungi i messaggi dei commit al messaggio di merge |
-| Custom message | Messaggio personalizzato per il merge commit |
+| Option | Description |
+|--------|-------------|
+| Branch | Branch to merge into the current branch |
+| Fast-forward | Allow fast-forward when possible |
+| No fast-forward | Force creation of a merge commit |
+| Squash | Combine all commits into a single commit |
+| No commit | Perform the merge without creating the commit automatically |
+| Allow unrelated histories | Allow merging unrelated histories |
+| Add log messages | Add commit messages to the merge message |
+| Custom message | Custom message for the merge commit |
 
-### 7.3 Abort e Continue
+### 7.3 Abort and Continue
 
-Se il merge genera conflitti:
-- Il **Banner Conflitti** appare con le opzioni Resolve / Abort / Continue
-- **Abort:** Annulla completamente il merge, ripristinando lo stato precedente
-- **Continue:** Dopo aver risolto i conflitti, procedi con il merge commit
+If the merge generates conflicts:
+- The **Conflict Banner** appears with Resolve / Abort / Continue options
+- **Abort:** Completely cancel the merge, restoring the previous state
+- **Continue:** After resolving conflicts, proceed with the merge commit
 
 ---
 
 ## 8. Rebase
 
-### 8.1 Rebase Standard
+### 8.1 Standard Rebase
 
-Accessibile da:
-- Toolbar: Pulsante **Rebase**
-- Grafico: Click destro > **Rebase current onto**
-- Sidebar: Click destro su branch > **Rebase**
+Accessible from:
+- Toolbar: **Rebase** button
+- Graph: Right-click > **Rebase current onto**
+- Sidebar: Right-click a branch > **Rebase**
 
-Opzioni disponibili:
-| Opzione | Descrizione |
-|---------|-------------|
-| Onto | Branch o commit su cui fare rebase |
-| Preserve merges | Mantieni i merge commit |
-| Autosquash | Riordina automaticamente i commit fixup! e squash! |
-| Auto-stash | Salva e ripristina automaticamente le modifiche locali |
-| Update refs | Aggiorna i riferimenti dei branch durante il rebase |
+Available options:
+| Option | Description |
+|--------|-------------|
+| Onto | Branch or commit to rebase onto |
+| Preserve merges | Keep merge commits |
+| Autosquash | Automatically reorder fixup! and squash! commits |
+| Auto-stash | Automatically save and restore local changes |
+| Update refs | Update branch references during the rebase |
 
-### 8.2 Rebase Interattivo
+### 8.2 Interactive Rebase
 
-Attivando l'opzione **Interactive** nel Rebase Dialog, si apre l'editor di rebase interattivo:
+Enabling the **Interactive** option in the Rebase Dialog opens the interactive rebase editor:
 
-- **Tabella dei commit:** Lista dei commit che verranno rebasati
-- **Azioni disponibili per ogni commit:**
+- **Commit table:** List of commits that will be rebased
+- **Available actions for each commit:**
 
-| Azione | Tasto | Colore | Descrizione |
-|--------|-------|--------|-------------|
-| Pick | `P` | Verde | Mantieni il commit |
-| Reword | `R` | Blu | Modifica solo il messaggio |
-| Squash | `S` | Arancione | Fondi con il commit precedente |
-| Fixup | `F` | Giallo | Come squash ma scarta il messaggio |
-| Edit | `E` | Viola | Fermati per modificare il commit |
-| Drop | `D` | Rosso | Elimina il commit |
+| Action | Key | Color | Description |
+|--------|-----|-------|-------------|
+| Pick | `P` | Green | Keep the commit |
+| Reword | `R` | Blue | Edit only the message |
+| Squash | `S` | Orange | Merge with the previous commit |
+| Fixup | `F` | Yellow | Like squash but discard the message |
+| Edit | `E` | Purple | Stop to modify the commit |
+| Drop | `D` | Red | Delete the commit |
 
-- **Drag and drop:** Riordina i commit trascinandoli
-- **Scorciatoie da tastiera:** Premi la lettera corrispondente per cambiare azione
+- **Drag and drop:** Reorder commits by dragging them
+- **Keyboard shortcuts:** Press the corresponding letter to change the action
 
-### 8.3 Gestione Conflitti durante Rebase
+### 8.3 Conflict Handling During Rebase
 
-Durante un rebase con conflitti:
-- Il banner mostra il progresso (es. "Step 3/7")
-- Opzioni: **Skip** (salta il commit), **Abort** (annulla il rebase), **Continue** (procedi al prossimo step)
+During a rebase with conflicts:
+- The banner shows progress (e.g., "Step 3/7")
+- Options: **Skip** (skip the commit), **Abort** (cancel the rebase), **Continue** (proceed to the next step)
 
 ---
 
 ## 9. Cherry-Pick
 
-Per applicare un commit specifico sul branch corrente:
+To apply a specific commit to the current branch:
 
-1. Nel grafico, click destro sul commit desiderato
-2. Seleziona **Cherry-pick**
-3. Il commit viene applicato sul branch corrente
+1. In the graph, right-click the desired commit
+2. Select **Cherry-pick**
+3. The commit is applied to the current branch
 
-In caso di conflitti, il banner apparira con le opzioni Abort / Continue.
+If conflicts arise, the banner will appear with Abort / Continue options.
 
 ---
 
-## 10. Risoluzione Conflitti
+## 10. Revert
 
-Quando un'operazione genera conflitti, Git Expansion offre tre modalita di risoluzione:
+To undo the changes introduced by a specific commit:
 
-### 10.1 Editor Interno 3-Way
+1. In the graph, right-click the commit you want to revert
+2. Select **Revert**
+3. A new commit is created that reverses the changes of the selected commit
 
-L'editor interno mostra una vista a tre colonne:
+If the revert results in conflicts, the conflict banner will appear with the standard Abort / Continue options.
 
-- **Ours (sinistra):** La versione del branch corrente
-- **Base (centro):** La versione antenata comune
-- **Theirs (destra):** La versione del branch in arrivo
+---
 
-Per ogni sezione in conflitto, sono disponibili i pulsanti:
-| Pulsante | Descrizione |
-|----------|-------------|
-| Accept Ours | Usa la versione del branch corrente |
-| Accept Theirs | Usa la versione del branch in arrivo |
-| Accept Both | Mantieni entrambe le versioni |
-| Custom | Modifica manualmente la risoluzione |
+## 11. Squash
 
-La lista file a sinistra mostra il conteggio dei conflitti e lo stato di risoluzione per ogni file.
+Squash allows you to combine multiple commits into a single commit:
 
-### 10.2 Tool di Merge Esterno
+1. In the graph, right-click a commit > **Squash commits**
+2. A preview dialog shows the commits that will be squashed
+3. Review the combined changes before confirming
+4. The selected commits are condensed into one commit
 
-Git Expansion supporta tool di merge esterni:
+This is useful for cleaning up a series of small, incremental commits into a single meaningful one before merging.
+
+---
+
+## 12. Conflict Resolution
+
+When an operation generates conflicts, Git Expansion offers three resolution methods:
+
+### 12.1 Built-in 3-Way Editor
+
+The built-in editor shows a three-column view:
+
+- **Ours (left):** The version from the current branch
+- **Base (center):** The common ancestor version
+- **Theirs (right):** The version from the incoming branch
+
+For each conflicting section, the following buttons are available:
+| Button | Description |
+|--------|-------------|
+| Accept Ours | Use the current branch version |
+| Accept Theirs | Use the incoming branch version |
+| Accept Both | Keep both versions |
+| Custom | Manually edit the resolution |
+
+The file list on the left shows the conflict count and resolution status for each file.
+
+### 12.2 External Merge Tool
+
+Git Expansion supports external merge tools:
 - **KDiff3**
 - **Meld**
 - **Beyond Compare**
-- E altri configurabili
+- And others (configurable)
 
-Configurazione in **Settings > Merge Tool**: seleziona il tool, specifica il percorso dell'eseguibile e il pattern degli argomenti.
+Configuration in **Settings > Merge Tool**: select the tool, specify the executable path, and the argument pattern.
 
-### 10.3 Risoluzione con AI
+### 12.3 AI-Assisted Resolution
 
-Se un provider AI e configurato:
-- Il pulsante **"Resolve with AI"** analizza le versioni ours/theirs/base
-- Mostra un'anteprima della risoluzione suggerita con diff LCS
-- Puoi accettare o modificare il suggerimento prima di applicarlo
+If an AI provider is configured:
+- The **"Resolve with AI"** button analyzes the ours/theirs/base versions
+- Shows a preview of the suggested resolution with LCS diff
+- You can accept or modify the suggestion before applying it
 
 ---
 
-## 11. Diff e Visualizzazione File
+## 13. Diff and File Viewing
 
-### 11.1 Diff Viewer
+### 13.1 Diff Viewer
 
-Il visualizzatore diff supporta due modalita:
+The diff viewer supports two modes:
 
-- **Line-by-line (unificato):** Mostra le modifiche in un'unica vista con linee colorate
-- **Side-by-side (affiancato):** Mostra la versione prima e dopo affiancate
+- **Line-by-line (unified):** Shows changes in a single view with colored lines
+- **Side-by-side:** Shows the before and after versions side by side
 
-Funzionalita:
+Features:
 - Syntax highlighting
-- Numeri di riga sincronizzati
-- Colori: rosso per righe rimosse, verde per righe aggiunte
-- Per le immagini: viewer side-by-side con before/after
+- Synchronized line numbers
+- Colors: red for removed lines, green for added lines
+- For images: side-by-side viewer with before/after comparison
 
-### 11.2 File History
+### 13.2 File History
 
-Mostra la cronologia dei commit per un singolo file:
+Shows the commit history for a single file:
 
-1. Click destro su un file > **File History**
-2. Appare una lista virtualizzata di tutti i commit che hanno modificato quel file
-3. Supporta `git log --follow` per tracciare file rinominati
-4. Click su un commit per vedere il diff di quel file in quel commit
+1. Right-click a file > **File History**
+2. A virtualized list appears with all commits that modified that file
+3. Supports `git log --follow` to track renamed files
+4. Click a commit to view the diff for that file at that commit
 
-### 11.3 Blame View
+### 13.3 Blame View
 
-Mostra l'annotazione riga per riga di un file:
+Shows line-by-line annotation of a file:
 
-1. Click destro su un file > **Blame**
-2. Per ogni riga vengono mostrati: autore, hash del commit, data
-3. Utile per capire chi ha scritto ogni riga e quando
+1. Right-click a file > **Blame**
+2. For each line: author, commit hash, and date are displayed
+3. Useful for understanding who wrote each line and when
 
-### 11.4 Confronto tra Commit
+### 13.4 Commit Comparison
 
-Per confrontare due commit:
+To compare two commits:
 
-1. Nel grafico, click destro su un commit > **Compare with HEAD** (confronta con il commit corrente)
-2. Oppure seleziona un commit, poi click destro su un altro > **Compare with selected commit**
-3. Si apre il **Commit Compare Dialog** con la lista dei file modificati e il diff per ciascuno
+1. In the graph, right-click a commit > **Compare with HEAD** (compare with the current commit)
+2. Or select a commit, then right-click another > **Compare with selected commit**
+3. The **Commit Compare Dialog** opens with the list of modified files and the diff for each
 
-### 11.5 Menu Contestuale File
+### 13.5 File Context Menu
 
-In tutti i pannelli dove appaiono file, il click destro offre:
+In all panels where files appear, right-click offers:
 
-| Voce | Descrizione |
+| Item | Description |
 |------|-------------|
-| File History | Cronologia dei commit per questo file |
-| Blame | Vista blame con annotazioni riga per riga |
-| Open | Apri il file con l'applicazione predefinita |
-| Show in Folder | Apri la cartella contenente nel file manager |
-| Copy Path | Copia il percorso del file negli appunti |
-| Add to .gitignore | Aggiungi il file/pattern al .gitignore |
+| File History | Commit history for this file |
+| Blame | Blame view with line-by-line annotations |
+| Open | Open the file with the default application |
+| Show in Folder | Open the containing folder in the file manager |
+| Copy Path | Copy the file path to the clipboard |
+| Add to .gitignore | Add the file/pattern to .gitignore |
 
 ---
 
-## 12. Tag
+## 14. Tags
 
-### Creare un Tag
+### Create a Tag
 
-1. Click destro su un commit nel grafico > **Create tag**
-2. Oppure click destro nella sezione Tags della sidebar > **Create tag**
+1. Right-click a commit in the graph > **Create tag**
+2. Or right-click in the Tags section of the sidebar > **Create tag**
 
-Opzioni:
-| Opzione | Descrizione |
-|---------|-------------|
-| Nome | Nome del tag |
-| Messaggio | Messaggio per tag annotati (opzionale) |
-| Annotated | Se selezionato, crea un tag annotato con messaggio |
-| Push to remote | Pusha il tag immediatamente dopo la creazione |
-
-### Eliminare un Tag
-
-- **Locale:** Click destro > **Delete tag**
-- **Remoto:** Nella conferma di eliminazione, spunta l'opzione **Delete remote tag** per eliminare anche dal remote
-- E possibile eliminare tag remoti anche dalla sidebar
-
----
-
-## 13. Stash
-
-Lo Stash Dialog offre due modalita:
-
-### Modalita Creazione (Working Directory)
-- Mostra la lista dei file modificati in un albero
-- Opzioni: include untracked, keep index, staged only
-- Campo messaggio opzionale per descrivere lo stash
-
-### Modalita Gestione (Stash List)
-- Lista di tutti gli stash salvati con descrizione
-- Per ogni stash:
-
-| Azione | Descrizione |
+Options:
+| Option | Description |
 |--------|-------------|
-| Apply | Applica lo stash senza rimuoverlo dalla lista |
-| Pop | Applica lo stash e rimuovilo dalla lista |
-| Drop | Elimina lo stash dalla lista |
-| Inspect | Visualizza i file e le modifiche contenute |
+| Name | Tag name |
+| Message | Message for annotated tags (optional) |
+| Annotated | If selected, creates an annotated tag with a message |
+| Push to remote | Push the tag immediately after creation |
+
+### Delete a Tag
+
+- **Local:** Right-click > **Delete tag**
+- **Remote:** In the deletion confirmation, check the **Delete remote tag** option to also delete from the remote
+- You can also delete remote tags from the sidebar
 
 ---
 
-## 14. Remote
+## 15. Stash
 
-### 14.1 Fetch, Pull e Push
+The Stash Dialog offers two modes:
+
+### Creation Mode (Working Directory)
+- Shows a list of modified files in a tree
+- Options: include untracked, keep index, staged only
+- Optional message field to describe the stash
+
+### Management Mode (Stash List)
+- List of all saved stashes with descriptions
+- For each stash:
+
+| Action | Description |
+|--------|-------------|
+| Apply | Apply the stash without removing it from the list |
+| Pop | Apply the stash and remove it from the list |
+| Drop | Delete the stash from the list |
+| Inspect | View the files and changes contained |
+
+---
+
+## 16. Remotes
+
+### 16.1 Fetch, Pull, and Push
 
 #### Fetch
-- **Fetch:** Scarica gli aggiornamenti dal remote predefinito
-- **Fetch All:** Scarica da tutti i remote configurati
-- **Fetch Prune:** Scarica e rimuovi i riferimenti a branch remoti eliminati
+- **Fetch:** Download updates from the default remote
+- **Fetch All:** Download from all configured remotes
+- **Fetch Prune:** Download and remove references to deleted remote branches
 
 #### Pull
-- **Pull (merge):** Scarica e integra con merge
-- **Pull (rebase):** Scarica e integra con rebase
+- **Pull (merge):** Download and integrate with merge
+- **Pull (rebase):** Download and integrate with rebase
 
 #### Push
-- Push sul remote predefinito
-- Opzioni: force push, set upstream
+- Push to the default remote
+- Options: force push, set upstream
 
-Tutte queste operazioni mostrano il **Git Operation Log Dialog** con output in tempo reale e possibilita di annullamento.
+All these operations display the **Git Operation Log Dialog** with real-time output and the ability to cancel.
 
-### 14.2 Gestione dei Remote
+### 16.2 Remote Management
 
-Dalla sidebar o dal menu contestuale:
-- **Add remote:** Aggiungi un nuovo remote (nome + URL)
-- **Remove remote:** Rimuovi un remote
-- **Edit URL:** Modifica l'URL di un remote esistente
+From the sidebar or context menu:
+- **Add remote:** Add a new remote (name + URL)
+- **Remove remote:** Remove a remote
+- **Edit URL:** Modify the URL of an existing remote
 
-### 14.3 Branch Remoti Obsoleti
+### 16.3 Stale Remote Branches
 
 Menu: **Tools > Stale remote branches...**
 
-Questo strumento trova branch remoti piu vecchi di una soglia configurabile:
+This tool finds remote branches older than a configurable threshold:
 
-1. Imposta la **soglia di eta** (es. 30, 60, 90 giorni)
-2. Avvia la ricerca
-3. Vengono mostrati i branch che non hanno ricevuto commit oltre la soglia
-4. Seleziona i branch da eliminare
-5. Conferma l'eliminazione in blocco
-
----
-
-## 15. Reset
-
-Il Reset Dialog permette di spostare HEAD a un commit specifico:
-
-| Modalita | Descrizione |
-|----------|-------------|
-| **Soft** | Sposta solo HEAD; staging area e working tree invariati |
-| **Mixed** | Sposta HEAD e resetta la staging area; working tree invariato |
-| **Hard** | Sposta HEAD, resetta staging area e working tree. **Attenzione: le modifiche vengono perse!** |
-
-Accessibile dal grafico: click destro su un commit > **Reset current branch to this commit**.
-
-Le modalita sono codificate a colori nel dialog per evidenziare il livello di rischio.
+1. Set the **age threshold** (e.g., 30, 60, 90 days)
+2. Start the search
+3. Branches that haven't received commits beyond the threshold are shown
+4. Select the branches to delete
+5. Confirm the bulk deletion
 
 ---
 
-## 16. Submodule
+## 17. Reset
 
-Dalla sezione **Submodules** della sidebar:
+The Reset Dialog allows you to move HEAD to a specific commit:
 
-| Azione | Descrizione |
+| Mode | Description |
+|------|-------------|
+| **Soft** | Moves only HEAD; staging area and working tree remain unchanged |
+| **Mixed** | Moves HEAD and resets the staging area; working tree remains unchanged |
+| **Hard** | Moves HEAD, resets staging area and working tree. **Warning: changes will be lost!** |
+
+Accessible from the graph: right-click a commit > **Reset current branch to this commit**.
+
+The modes are color-coded in the dialog to highlight the risk level.
+
+---
+
+## 18. Reflog
+
+The Reflog provides a safety net by showing every change made to HEAD:
+
+1. Access via the sidebar or graph context menu
+2. Shows a chronological list of all ref updates (commits, checkouts, rebases, resets, etc.)
+3. Each entry displays the action, the resulting commit hash, and a description
+4. You can navigate to any reflog entry to inspect or restore a previous state
+
+The reflog is essential for recovering from mistakes like accidental resets or deleted branches.
+
+---
+
+## 19. Bisect
+
+Git Bisect helps you find the commit that introduced a bug using binary search:
+
+1. Open the Bisect Dialog
+2. **Start a bisect session** by specifying a known **bad** commit (where the bug exists) and a known **good** commit (where the bug doesn't exist)
+3. Git automatically checks out a commit halfway between the two
+4. Test the code, then mark the commit as:
+   - **Good** — the bug is not present
+   - **Bad** — the bug is present
+   - **Skip** — cannot determine (e.g., build failure)
+5. Repeat until Git identifies the exact commit that introduced the bug
+6. **Reset** to end the bisect session
+
+The Bisect Dialog shows the current progress and provides a log of all bisect steps.
+
+---
+
+## 20. Worktrees
+
+Worktrees allow you to work on multiple branches simultaneously without switching:
+
+1. **List worktrees:** View all existing worktrees for the repository
+2. **Add worktree:** Create a new worktree at a specified path, optionally creating a new branch
+3. **Remove worktree:** Delete a worktree (with force option for dirty worktrees)
+
+Each worktree is an independent working directory linked to the same repository, allowing parallel development on different branches.
+
+---
+
+## 21. Submodules
+
+From the **Submodules** section of the sidebar:
+
+| Action | Description |
 |--------|-------------|
-| Add | Aggiungi un nuovo sottomodulo (URL + percorso opzionale) |
-| Initialize | Inizializza i sottomoduli non ancora inizializzati |
-| Update | Aggiorna i sottomoduli all'ultimo commit registrato |
+| Add | Add a new submodule (URL + optional path) |
+| Initialize | Initialize submodules that are not yet initialized |
+| Update | Update submodules to the latest registered commit |
+| Sync | Synchronize submodule remote URLs |
+| Deinitialize | Unregister a submodule |
+| Status | View the current status of all submodules |
 
 ---
 
-## 17. Changelog
+## 22. Git LFS (Large File Storage)
 
-Per generare un changelog tra due punti della storia:
+Git LFS management is accessible via a dedicated dialog:
 
-1. Click destro su un commit nel grafico > **Generate changelog**
-2. Seleziona il tag/commit di inizio e fine
-3. Il changelog viene generato automaticamente, raggruppato per tipo di Conventional Commit:
+| Action | Description |
+|--------|-------------|
+| Install LFS | Install Git LFS hooks in the repository |
+| Status | View LFS status and tracked files |
+| Track | Add file patterns to be tracked by LFS (e.g., `*.psd`, `*.zip`) |
+| Untrack | Remove file patterns from LFS tracking |
+| Storage info | View LFS storage usage information |
+
+LFS is useful for managing large binary files (images, videos, compiled assets) without bloating the repository history.
+
+---
+
+## 23. Patches
+
+Patches allow you to share changes outside of the normal push/pull workflow:
+
+### Create a Patch
+1. Select one or more commits in the graph
+2. Right-click > **Create patch** (or use the Patch Dialog)
+3. A `.patch` file is generated using `git format-patch`
+
+### Apply a Patch
+1. Open the Patch Dialog
+2. Select a `.patch` file to apply
+3. Preview the patch content before applying
+4. Apply the patch to the current branch
+
+---
+
+## 24. Archive and Export
+
+Export a snapshot of the repository at any ref as an archive:
+
+1. Open the Archive Dialog
+2. Select the ref (branch, tag, or commit) to export
+3. Choose the format: **ZIP** or **tar.gz**
+4. Select the destination path
+5. The archive is generated from the selected ref
+
+This is useful for creating release packages or sharing code snapshots without Git history.
+
+---
+
+## 25. Git Notes
+
+Git Notes allow you to attach additional information to commits without modifying the commit itself:
+
+| Action | Description |
+|--------|-------------|
+| View notes | Display notes attached to a commit |
+| Add note | Attach a note to a specific commit |
+| Remove note | Remove a note from a commit |
+
+Notes are useful for adding review comments, deployment metadata, or other annotations to commits after the fact.
+
+---
+
+## 26. Pull Request Integration
+
+Git Expansion integrates with popular Git hosting providers for pull request management:
+
+### Supported Providers
+- **GitHub**
+- **GitLab**
+- **Gitea**
+- **Bitbucket**
+
+The provider is automatically detected from the remote URL.
+
+### Features
+| Feature | Description |
+|---------|-------------|
+| List PRs | View all open pull requests for the repository |
+| View PR details | See the description, status, and changes of a PR |
+| Create PR | Create a new pull request from the current branch |
+| AI PR description | Generate a PR description automatically using AI (if configured) |
+
+---
+
+## 27. Changelog
+
+To generate a changelog between two points in history:
+
+1. Right-click a commit in the graph > **Generate changelog**
+2. Select the start and end tag/commit
+3. The changelog is automatically generated, grouped by Conventional Commit type:
    - **Features** (`feat:`)
    - **Bug Fixes** (`fix:`)
    - **Documentation** (`docs:`)
@@ -781,323 +953,334 @@ Per generare un changelog tra due punti della storia:
    - **Tests** (`test:`)
    - **Chores** (`chore:`)
 
-Il dialog puo essere aperto anche come finestra separata.
+The dialog can also be opened as a separate window.
 
 ---
 
-## 18. Console Integrata
+## 28. Integrated Console
 
-Git Expansion include un terminale integrato (simile alla Console di Git Extensions):
+Git Expansion includes a built-in terminal (similar to the Console in Git Extensions):
 
-- **Shell:** Rileva automaticamente la shell del sistema (bash/zsh su Linux, cmd/PowerShell su Windows)
+- **Shell:** Automatically detects the system shell (bash/zsh on Linux, cmd/PowerShell on Windows)
 - **Font:** Cascadia Code (fallback: Consolas, Courier New)
-- **Colori:** Sincronizzati con il tema dell'applicazione
-- **Scrollback:** 5000 righe di cronologia
-- **Ridimensionamento:** Si adatta automaticamente alla dimensione del pannello
+- **Colors:** Synchronized with the application theme
+- **Scrollback:** 5000 lines of history
+- **Resizing:** Automatically adapts to the panel size
 
-Il terminale si apre automaticamente nella directory del repository corrente.
+The terminal opens automatically in the current repository directory.
 
 ---
 
-## 19. Log dei Comandi
+## 29. Command Log
 
-Il pannello **Command Log** mostra tutti i comandi Git eseguiti dall'applicazione:
+The **Command Log** panel shows all Git commands executed by the application:
 
-- Timestamp per ogni comando
-- Comando completo con argomenti
-- Massimo 200 voci nella cronologia
-- Pulsante **Clear** per svuotare il log
+- Timestamp for each command
+- Full command with arguments
+- Maximum of 200 entries in the history
+- **Clear** button to empty the log
 
-Utile per debug e per capire quali operazioni Git vengono eseguite dall'interfaccia.
+Useful for debugging and understanding which Git operations the interface executes.
 
 ### Git Operation Log Dialog
 
-Per le operazioni che possono richiedere tempo (push, pull, fetch, merge, rebase, cherry-pick):
+For operations that may take time (push, pull, fetch, merge, rebase, cherry-pick):
 
-- Si apre automaticamente un dialogo modale con output in tempo reale
-- Mostra stdout e stderr del processo Git
-- Pulsante **Cancel** per interrompere l'operazione
-- Checkbox **Auto-close on success** per chiudere automaticamente dopo 1.5 secondi in caso di successo
-- In caso di errore, mostra il messaggio in un riquadro rosso
-
----
-
-## 20. Statistiche
-
-### 20.1 Statistiche Autori
-
-Il pannello **Author Statistics** mostra una classifica dei contributori:
-
-#### Classifica
-- Ordinabile per: commit, aggiunte, eliminazioni, file toccati
-- Filtro temporale: All Time, Ultimo Mese, Ultima Settimana
-- Avatar Gravatar per ogni autore
-
-#### Dettaglio Autore (click per espandere)
-- **Sparkline:** Grafico a linee dell'attivita nelle ultime 52 settimane
-- **Heatmap:** Mappa di calore in stile GitHub dell'attivita giornaliera
-- **Top Files:** File su cui l'autore ha lavorato di piu
-- **Streaks:** Serie consecutive di giorni con commit
-
-Le statistiche si aggiornano automaticamente dopo un auto-fetch.
-
-### 20.2 Statistiche Codebase
-
-Il pannello **Codebase Statistics** analizza il codice del repository:
-
-- **LOC per linguaggio:** Grafico a barre con 70+ estensioni supportate
-- **LOC per tipo:** Suddivisione in source, test, config, styles, docs, CI/CD, other
-- **Test Ratio:** Barra che mostra il rapporto tra codice di test e codice sorgente
+- A modal dialog opens automatically with real-time output
+- Shows stdout and stderr from the Git process
+- **Cancel** button to interrupt the operation
+- **Auto-close on success** checkbox to automatically close after 1.5 seconds on success
+- On error, the message is displayed in a red box
 
 ---
 
-## 21. Account Git
+## 30. Statistics
 
-Git Expansion supporta la gestione di piu identita Git:
+### 30.1 Author Statistics
 
-### Configurazione Account
+The **Author Statistics** panel shows a contributor leaderboard:
+
+#### Leaderboard
+- Sortable by: commits, additions, deletions, files touched
+- Time filter: All Time, Last Month, Last Week
+- Gravatar avatar for each author
+
+#### Author Detail (click to expand)
+- **Sparkline:** Line chart of activity over the last 52 weeks
+- **Heatmap:** GitHub-style heat map of daily activity
+- **Top Files:** Files the author has worked on most
+- **Streaks:** Consecutive days with commits
+
+Statistics update automatically after an auto-fetch.
+
+### 30.2 Codebase Statistics
+
+The **Codebase Statistics** panel analyzes the repository's code:
+
+- **LOC by language:** Bar chart with 70+ supported file extensions
+- **LOC by type:** Breakdown into source, test, config, styles, docs, CI/CD, other
+- **Test Ratio:** Bar showing the ratio of test code to source code
+
+---
+
+## 31. Git Accounts
+
+Git Expansion supports managing multiple Git identities:
+
+### Account Configuration
 In **Settings > Accounts**:
 
-1. Aggiungi uno o piu account con:
-   - Nome
+1. Add one or more accounts with:
+   - Name
    - Email
-   - Chiave di firma (opzionale)
-   - Percorso chiave SSH (opzionale)
-2. Imposta un **account predefinito**
+   - Signing key (optional)
+   - SSH key path (optional)
+2. Set a **default account**
 
-### Assegnazione per Repository
-- Ogni repository puo avere un account specifico assegnato
-- Il selettore account nella toolbar mostra l'account attivo
-- Cambiare account aggiorna automaticamente `user.name` e `user.email` nel config locale del repo
+### Per-Repository Assignment
+- Each repository can have a specific account assigned
+- The account selector in the toolbar shows the active account
+- Changing the account automatically updates `user.name` and `user.email` in the local repo config
 
-### Import SSH
-Git Expansion puo analizzare il file `~/.ssh/config` per importare le configurazioni SSH esistenti.
+### SSH Import
+Git Expansion can parse the `~/.ssh/config` file to import existing SSH configurations.
 
 ---
 
-## 22. Impostazioni
+## 32. Settings
 
-Apri con: `Ctrl+,` oppure **Tools > Settings...**
+Open with: `Ctrl+,` or **Tools > Settings...**
 
-### 22.1 Generale
-| Impostazione | Descrizione |
-|-------------|-------------|
-| Theme | Dark (Catppuccin Mocha) o Light (Catppuccin Latte) |
-| Auto-fetch | Abilita/disabilita il fetch automatico periodico |
-| Fetch interval | Intervallo in secondi tra i fetch automatici |
-| Prune on auto-fetch | Rimuovi riferimenti remoti obsoleti durante l'auto-fetch |
+### 32.1 General
+| Setting | Description |
+|---------|-------------|
+| Theme | Dark (Catppuccin Mocha) or Light (Catppuccin Latte) |
+| Language | Application language (see [Internationalization](#38-internationalization)) |
+| Auto-fetch | Enable/disable periodic automatic fetching |
+| Fetch interval | Interval in seconds between automatic fetches |
+| Prune on auto-fetch | Remove obsolete remote references during auto-fetch |
 
-### 22.2 Account
-Gestione account Git multipli (vedi [sezione 21](#21-account-git)).
+### 32.2 Accounts
+Multiple Git account management (see [section 31](#31-git-accounts)).
 
-### 22.3 Git Config
-Modifica diretta delle chiavi di configurazione Git:
-- `user.name` e `user.email`
-- Impostazioni core
-- Default per merge e pull
-- Configurazione a livello locale (repo) o globale
+### 32.3 Git Config
+Direct editing of Git configuration keys:
+- `user.name` and `user.email`
+- Core settings
+- Defaults for merge and pull
+- Configuration at local (repo) or global level
 
-### 22.4 Fetch
-- Remote predefinito
-- Impostazioni di prune
+### 32.4 Fetch
+- Default remote
+- Prune settings
 
-### 22.5 Commit
-| Impostazione | Descrizione |
-|-------------|-------------|
-| Default template | Template predefinito per i messaggi di commit |
-| Sign commits | Firma i commit con GPG/SSH |
-| Default message | Messaggio predefinito per nuovi commit |
+### 32.5 Commit
+| Setting | Description |
+|---------|-------------|
+| Default template | Default template for commit messages |
+| Sign commits | Sign commits with GPG/SSH |
+| Default message | Default message for new commits |
 
-### 22.6 Diff e Grafico
-| Impostazione | Descrizione |
-|-------------|-------------|
-| Context lines | Numero di righe di contesto nel diff |
-| Side-by-side | Preferenza per la visualizzazione side-by-side |
-| Max initial load | Numero massimo di commit caricati inizialmente nel grafico |
-| Show remote branches | Mostra/nascondi i branch remoti nel grafico |
+### 32.6 Diff and Graph
+| Setting | Description |
+|---------|-------------|
+| Context lines | Number of context lines in the diff |
+| Side-by-side | Preference for side-by-side view |
+| Max initial load | Maximum number of commits initially loaded in the graph |
+| Show remote branches | Show/hide remote branches in the graph |
 
-### 22.7 Merge Tool
-| Impostazione | Descrizione |
-|-------------|-------------|
-| Tool name | Nome del tool (KDiff3, Meld, Beyond Compare, ecc.) |
-| Tool path | Percorso dell'eseguibile |
-| Arguments pattern | Pattern degli argomenti da passare al tool |
+### 32.7 Merge Tool
+| Setting | Description |
+|---------|-------------|
+| Tool name | Name of the tool (KDiff3, Meld, Beyond Compare, etc.) |
+| Tool path | Path to the executable |
+| Arguments pattern | Argument pattern to pass to the tool |
 
-### 22.8 Avanzate
-| Impostazione | Descrizione |
-|-------------|-------------|
-| Max concurrent processes | Numero massimo di processi Git paralleli |
-| Git binary path | Percorso personalizzato dell'eseguibile Git (con pulsante Browse) |
+### 32.8 Advanced
+| Setting | Description |
+|---------|-------------|
+| Max concurrent processes | Maximum number of parallel Git processes |
+| Git binary path | Custom path to the Git executable (with Browse button) |
 
-### 22.9 AI / MCP
-| Impostazione | Descrizione |
-|-------------|-------------|
+### 32.9 AI / MCP
+| Setting | Description |
+|---------|-------------|
 | Provider | none / Anthropic / OpenAI / Google Gemini / Custom MCP |
-| API key | Chiave API del provider selezionato |
-| Model | Modello specifico da utilizzare |
-| Base URL | URL personalizzato per l'endpoint API |
-| MCP Server | Abilita/disabilita il server MCP integrato |
+| API key | API key for the selected provider |
+| Model | Specific model to use |
+| Base URL | Custom URL for the API endpoint |
+| MCP Server | Enable/disable the built-in MCP server |
 
 ---
 
-## 23. Integrazione AI e MCP
+## 33. AI and MCP Integration
 
-### 23.1 Provider AI Supportati
+### 33.1 Supported AI Providers
 
-| Provider | Descrizione |
+| Provider | Description |
 |----------|-------------|
-| **Anthropic** | Claude (claude-3-opus, claude-3-sonnet, ecc.) |
-| **OpenAI** | GPT-4, GPT-3.5, ecc. |
-| **Google Gemini** | Gemini Pro, ecc. |
-| **Custom MCP** | Qualsiasi server compatibile con il protocollo MCP |
+| **Anthropic** | Claude (claude-3-opus, claude-3-sonnet, etc.) |
+| **OpenAI** | GPT-4, GPT-3.5, etc. |
+| **Google Gemini** | Gemini Pro, etc. |
+| **Custom MCP** | Any server compatible with the MCP protocol |
 
-### 23.2 MCP Server
+### 33.2 MCP Server
 
-Git Expansion include un **server MCP integrato** che espone 50+ operazioni Git come tool per assistenti AI esterni:
+Git Expansion includes a **built-in MCP server** that exposes 50+ Git operations as tools for external AI assistants:
 
-- Operazioni di lettura: status, log, diff, blame, branch list, ecc.
-- Operazioni di scrittura: commit, checkout, merge, push, ecc.
-- Comunicazione via protocollo stdio standard MCP
+- Read operations: status, log, diff, blame, branch list, etc.
+- Write operations: commit, checkout, merge, push, etc.
+- Communication via standard MCP stdio protocol
 
-Per attivarlo: **Settings > AI / MCP > MCP Server > Enabled**
+To enable it: **Settings > AI / MCP > MCP Server > Enabled**
 
-### 23.3 Funzionalita AI
+### 33.3 AI Features
 
-Quando un provider AI e configurato, le seguenti funzionalita diventano disponibili:
+When an AI provider is configured, the following features become available:
 
-| Funzionalita | Dove | Descrizione |
-|-------------|------|-------------|
-| **Commit message** | Commit Dialog | Genera un messaggio conventional commit dal diff |
-| **Conflict resolution** | Merge Conflict Dialog | Suggerisce la risoluzione di conflitti con anteprima diff |
-| **PR description** | Toolbar/Menu | Genera la descrizione di una Pull Request dai commit |
-| **Code review** | Grafico (click destro) | Revisione del codice per un commit specifico |
-
----
-
-## 24. Aggiornamenti Automatici
-
-Git Expansion supporta gli aggiornamenti automatici tramite GitHub Releases:
-
-1. **Verifica manuale:** Menu **Help > Check for updates...**
-2. **Notifica automatica:** L'applicazione verifica periodicamente la disponibilita di nuove versioni
-3. Quando disponibile, viene mostrata una notifica con l'opzione di scaricare e installare
-
-L'aggiornamento viene scaricato in background e installato al riavvio.
+| Feature | Where | Description |
+|---------|-------|-------------|
+| **Commit message** | Commit Dialog | Generates a conventional commit message from the diff |
+| **Conflict resolution** | Merge Conflict Dialog | Suggests conflict resolution with diff preview |
+| **PR description** | Toolbar/Menu | Generates a Pull Request description from commits |
+| **Code review** | Graph (right-click) | Code review for a specific commit |
 
 ---
 
-## 25. Scorciatoie da Tastiera
+## 34. Automatic Updates
 
-### Globali
+Git Expansion supports automatic updates via GitHub Releases:
 
-| Scorciatoia | Azione |
-|-------------|--------|
-| `Ctrl+O` | Apri repository |
-| `Ctrl+N` | Crea nuovo repository (quando nessun repo e aperto) |
-| `Ctrl+K` | Apri Commit Dialog |
-| `Ctrl+Q` | Esci dall'applicazione |
-| `Ctrl+,` | Apri Impostazioni |
-| `Ctrl+G` | Apri Git bash |
-| `F5` | Aggiorna |
+1. **Manual check:** Menu **Help > Check for updates...**
+2. **Automatic notification:** The application periodically checks for new versions
+3. When available, a notification is shown with the option to download and install
 
-### Grafico dei Commit
+The update is downloaded in the background and installed on restart.
 
-| Scorciatoia | Azione |
-|-------------|--------|
-| `Ctrl+F` | Mostra/nascondi la barra di ricerca |
+---
+
+## 35. Keyboard Shortcuts
+
+### Global
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+O` | Open repository |
+| `Ctrl+N` | Create new repository (when no repo is open) |
+| `Ctrl+K` | Open Commit Dialog |
+| `Ctrl+Q` | Exit the application |
+| `Ctrl+,` | Open Settings |
+| `Ctrl+G` | Open Git bash |
+| `F5` | Refresh |
+
+### Commit Graph
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+F` | Show/hide the search bar |
 
 ### Commit Dialog
 
-| Scorciatoia | Azione |
-|-------------|--------|
-| `Ctrl+Enter` | Conferma il commit |
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Enter` | Confirm the commit |
 
-### Rebase Interattivo
+### Interactive Rebase
 
-| Scorciatoia | Azione |
-|-------------|--------|
-| `P` | Pick (mantieni commit) |
-| `R` | Reword (modifica messaggio) |
-| `S` | Squash (fondi) |
-| `F` | Fixup (fondi senza messaggio) |
-| `E` | Edit (modifica commit) |
-| `D` | Drop (elimina commit) |
+| Shortcut | Action |
+|----------|--------|
+| `P` | Pick (keep commit) |
+| `R` | Reword (edit message) |
+| `S` | Squash (merge) |
+| `F` | Fixup (merge without message) |
+| `E` | Edit (modify commit) |
+| `D` | Drop (delete commit) |
 
-### Generali
+### General
 
-| Scorciatoia | Azione |
-|-------------|--------|
-| `Escape` | Chiudi menu contestuali e dialoghi |
-| `Enter` | Conferma nei campi di input |
+| Shortcut | Action |
+|----------|--------|
+| `Escape` | Close context menus and dialogs |
+| `Enter` | Confirm in input fields |
 
 ---
 
-## 26. Temi
+## 36. Themes
 
-Git Expansion offre due temi basati sulla palette **Catppuccin**:
+Git Expansion offers two themes based on the **Catppuccin** palette:
 
 ### Dark Theme (Catppuccin Mocha)
-- Sfondo scuro con testo chiaro
-- Colori accento vibranti
-- Alta leggibilita con contrasto ottimizzato
+- Dark background with light text
+- Vibrant accent colors
+- High readability with optimized contrast
 
 ### Light Theme (Catppuccin Latte)
-- Sfondo chiaro con testo scuro
-- Colori accento adattati per lo sfondo chiaro
-- Contrasto elevato per la leggibilita
+- Light background with dark text
+- Accent colors adapted for the light background
+- High contrast for readability
 
-Cambia tema da: **Settings > General > Theme**
+Change the theme from: **Settings > General > Theme**
 
-Il tema viene salvato e applicato immediatamente senza riavvio.
+The theme is saved and applied immediately without restarting.
 
 ---
 
-## 27. Layout Personalizzabile
+## 37. Customizable Layout
 
-L'interfaccia usa il sistema **dockview** per pannelli agganciabili:
+The interface uses the **dockview** system for dockable panels:
 
-- **Drag & drop:** Trascina i pannelli per riposizionarli
-- **Tab:** Raggruppa piu pannelli nella stessa area con tab
-- **Ridimensionamento:** Trascina i bordi per ridimensionare i pannelli
-- **Persistenza:** Il layout viene salvato per ogni repository e ripristinato automaticamente
+- **Drag & drop:** Drag panels to reposition them
+- **Tabs:** Group multiple panels in the same area with tabs
+- **Resizing:** Drag borders to resize panels
+- **Persistence:** The layout is saved per repository and automatically restored
 
-### Pannelli Disponibili
+### Available Panels
 
-| Pannello | Descrizione |
-|----------|-------------|
-| Sidebar | Browser di branch, remote, tag, stash, submodule |
-| Commit Graph | Grafico dei commit con linee colorate |
-| Commit Info | Dettagli del commit selezionato |
-| Diff / Files | Diff viewer e albero file del commit |
-| Command Log | Cronologia dei comandi Git eseguiti |
-| Console | Terminale integrato |
-| Author Statistics | Statistiche per autore |
-| Codebase Statistics | Statistiche del codice sorgente |
+| Panel | Description |
+|-------|-------------|
+| Sidebar | Browser for branches, remotes, tags, stash, submodules |
+| Commit Graph | Commit graph with colored lines |
+| Commit Info | Details of the selected commit |
+| Diff / Files | Diff viewer and file tree of the commit |
+| Command Log | History of executed Git commands |
+| Console | Integrated terminal |
+| Author Statistics | Statistics by author |
+| Codebase Statistics | Source code statistics |
 
 ### Reset Layout
 
-Se il layout diventa problematico: **Dashboard > Reset layout** ripristina la disposizione predefinita.
+If the layout becomes problematic: **Dashboard > Reset layout** restores the default arrangement.
 
 ---
 
-## Appendice: Risoluzione Problemi
+## 38. Internationalization
 
-### Git non trovato
-Se Git non e nel PATH di sistema, configura il percorso manualmente in **Settings > Advanced > Git binary path**.
+Git Expansion supports multiple languages via the internationalization (i18n) system:
 
-### Performance con repository grandi
-- Riduci il numero di commit caricati inizialmente in **Settings > Diff & Graph > Max initial load**
-- Usa i filtri branch per limitare la visualizzazione
-- Disabilita "Show remote branches" se non necessario
-
-### Auto-fetch non funziona
-Verifica che **Settings > General > Auto-fetch** sia abilitato e che l'intervallo sia configurato correttamente.
-
-### Conflitti non rilevati
-Assicurati che Git sia aggiornato (2.30+). Premi `F5` per aggiornare lo stato del repository.
+- Change the language from **Settings > General > Language**
+- All UI elements, menus, dialogs, and messages are translated
+- The language setting is applied immediately
 
 ---
 
-*Git Expansion e un software open-source rilasciato sotto licenza MIT.*
+## Appendix: Troubleshooting
+
+### Git Not Found
+If Git is not in the system PATH, configure the path manually in **Settings > Advanced > Git binary path**.
+
+### Performance with Large Repositories
+- Reduce the number of initially loaded commits in **Settings > Diff & Graph > Max initial load**
+- Use branch filters to limit the view
+- Disable "Show remote branches" if not needed
+
+### Auto-fetch Not Working
+Verify that **Settings > General > Auto-fetch** is enabled and the interval is configured correctly.
+
+### Conflicts Not Detected
+Make sure Git is updated (2.30+). Press `F5` to refresh the repository status.
+
+---
+
+*Git Expansion is open-source software released under the MIT license.*
 *Repository: https://github.com/Schengatto/git-expansion*
-*Segnala bug: https://github.com/Schengatto/git-expansion/issues*
+*Report bugs: https://github.com/Schengatto/git-expansion/issues*

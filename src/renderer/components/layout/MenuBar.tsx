@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRepoStore } from "../../store/repo-store";
 
-
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -143,7 +142,8 @@ const MenuItemRow: React.FC<{
   const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <div style={{ position: "relative" }}
+    <div
+      style={{ position: "relative" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -170,7 +170,11 @@ const MenuItemRow: React.FC<{
             "divider" in child && child.divider ? (
               <div key={`divider-${i}`} style={dividerStyle} />
             ) : (
-              <MenuItemRow key={(child as MenuItemDef).label} item={child as MenuItemDef} onClose={onClose} />
+              <MenuItemRow
+                key={(child as MenuItemDef).label}
+                item={child as MenuItemDef}
+                onClose={onClose}
+              />
             )
           )}
         </div>
@@ -192,7 +196,11 @@ const MenuDropdown: React.FC<{
       "divider" in item && item.divider ? (
         <div key={`divider-${i}`} style={dividerStyle} />
       ) : (
-        <MenuItemRow key={(item as MenuItemDef).label} item={item as MenuItemDef} onClose={onClose} />
+        <MenuItemRow
+          key={(item as MenuItemDef).label}
+          item={item as MenuItemDef}
+          onClose={onClose}
+        />
       )
     )}
   </div>
@@ -208,9 +216,37 @@ export const MenuBar: React.FC<{
   onOpenScan: () => void;
   onOpenAbout: () => void;
   onOpenStaleBranches: () => void;
+  onOpenGitignore: () => void;
+  onOpenGrep: () => void;
+  onOpenBranchDiff: () => void;
+  onOpenBranchCompare: () => void;
+  onOpenHooks: () => void;
+  onOpenUndo: () => void;
+  onOpenCIStatus: () => void;
+  onOpenGist: () => void;
+  onOpenAdvancedStats: () => void;
+  onOpenSsh: () => void;
   onResetLayout: () => void;
-}> = ({ onOpenClone, onOpenSettings, onOpenScan, onOpenAbout, onOpenStaleBranches, onResetLayout }) => {
-  const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } = useRepoStore();
+}> = ({
+  onOpenClone,
+  onOpenSettings,
+  onOpenScan,
+  onOpenAbout,
+  onOpenStaleBranches,
+  onOpenGitignore,
+  onOpenGrep,
+  onOpenBranchDiff,
+  onOpenBranchCompare,
+  onOpenHooks,
+  onOpenUndo,
+  onOpenCIStatus,
+  onOpenGist,
+  onOpenAdvancedStats,
+  onOpenSsh,
+  onResetLayout,
+}) => {
+  const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } =
+    useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -333,9 +369,7 @@ export const MenuBar: React.FC<{
           disabled: !hasRepo,
           onClick: () => {
             if (hasRepo) {
-              window.electronAPI.repo.openExternal(
-                `git-bash --cd="${repo!.path}"`
-              );
+              window.electronAPI.repo.openExternal(`git-bash --cd="${repo!.path}"`);
             }
           },
         },
@@ -344,6 +378,57 @@ export const MenuBar: React.FC<{
           label: "Stale remote branches...",
           disabled: !hasRepo,
           onClick: () => onOpenStaleBranches(),
+        },
+        {
+          label: ".gitignore editor...",
+          disabled: !hasRepo,
+          onClick: () => onOpenGitignore(),
+        },
+        {
+          label: "Code search (grep)...",
+          shortcut: "Ctrl+Shift+F",
+          disabled: !hasRepo,
+          onClick: () => onOpenGrep(),
+        },
+        {
+          label: "Branch diff...",
+          disabled: !hasRepo,
+          onClick: () => onOpenBranchDiff(),
+        },
+        {
+          label: "Branch compare...",
+          disabled: !hasRepo,
+          onClick: () => onOpenBranchCompare(),
+        },
+        {
+          label: "Git hooks...",
+          disabled: !hasRepo,
+          onClick: () => onOpenHooks(),
+        },
+        {
+          label: "Undo operations...",
+          shortcut: "Ctrl+Z",
+          disabled: !hasRepo,
+          onClick: () => onOpenUndo(),
+        },
+        {
+          label: "CI/CD status...",
+          disabled: !hasRepo,
+          onClick: () => onOpenCIStatus(),
+        },
+        {
+          label: "Create gist...",
+          disabled: !hasRepo,
+          onClick: () => onOpenGist(),
+        },
+        {
+          label: "Advanced statistics...",
+          disabled: !hasRepo,
+          onClick: () => onOpenAdvancedStats(),
+        },
+        {
+          label: "SSH key manager...",
+          onClick: () => onOpenSsh(),
         },
         {
           label: "Git reflog...",
@@ -378,10 +463,7 @@ export const MenuBar: React.FC<{
       items: [
         {
           label: "User manual",
-          onClick: () =>
-            window.electronAPI.repo.openExternal(
-              "https://github.com/Schengatto/git-expansion/wiki"
-            ),
+          onClick: () => window.electronAPI.app.openUserManual(),
         },
         { divider: true },
         {

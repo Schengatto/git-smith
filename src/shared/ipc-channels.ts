@@ -150,6 +150,10 @@ export const IPC = {
   },
   GITIGNORE: {
     ADD: "git:gitignore:add",
+    READ: "git:gitignore:read",
+    WRITE: "git:gitignore:write",
+    PREVIEW: "git:gitignore:preview",
+    TEMPLATES: "git:gitignore:templates",
   },
   ACCOUNT: {
     LIST: "git:account:list",
@@ -188,6 +192,7 @@ export const IPC = {
     CHECK_FOR_UPDATES: "app:check-for-updates",
     GET_VERSION: "app:get-version",
     UPDATE_STATUS: "app:update-status",
+    OPEN_USER_MANUAL: "app:open-user-manual",
   },
   MENU: {
     OPEN_REPO: "menu:open-repo",
@@ -263,5 +268,51 @@ export const IPC = {
   CHANGELOG: {
     TAGS_BEFORE: "git:changelog:tags-before",
     GENERATE: "git:changelog:generate",
+  },
+  GREP: {
+    SEARCH: "git:grep:search",
+  },
+  DIFF_BRANCHES: {
+    COMPARE: "git:diff:branches",
+  },
+  LOG_RANGE: {
+    COMPARE: "git:log:range",
+  },
+  UNDO: {
+    HISTORY: "git:undo:history",
+    REVERT: "git:undo:revert",
+  },
+  HOOKS: {
+    LIST: "git:hooks:list",
+    READ: "git:hooks:read",
+    WRITE: "git:hooks:write",
+    TOGGLE: "git:hooks:toggle",
+    DELETE: "git:hooks:delete",
+  },
+  CI: {
+    STATUS: "ci:status:get",
+  },
+  ISSUES: {
+    RESOLVE: "issues:resolve",
+  },
+  GIST: {
+    CREATE: "gist:create",
+  },
+  STATS_ADVANCED: {
+    TIMELINE: "git:stats:timeline",
+    CHURN: "git:stats:churn",
+    CONTRIBUTORS_TIMELINE: "git:stats:contributors-timeline",
+  },
+  REVIEW: {
+    SAVE: "review:comments:save",
+    LOAD: "review:comments:load",
+    CLEAR: "review:comments:clear",
+    LIST_REVIEWS: "review:comments:list",
+  },
+  SSH: {
+    LIST: "ssh:keys:list",
+    GENERATE: "ssh:keys:generate",
+    GET_PUBLIC: "ssh:keys:get-public",
+    TEST: "ssh:keys:test",
   },
 } as const;

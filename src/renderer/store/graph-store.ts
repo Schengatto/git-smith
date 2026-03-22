@@ -8,6 +8,8 @@ export interface BranchVisibility {
   branches: string[];
 }
 
+export type AuthorFilterMode = "highlight" | "filter";
+
 interface GraphState {
   rows: GraphRow[];
   rowMap: Map<string, number>; // hash → index for O(1) lookup
@@ -21,6 +23,8 @@ interface GraphState {
   allCommits: CommitInfo[];
   /** Whether saved view settings have been restored for the current repo */
   viewSettingsRestored: boolean;
+  authorFilter: string | null;
+  authorFilterMode: AuthorFilterMode;
 
   loadGraph: (maxCount?: number) => Promise<void>;
   loadMore: () => Promise<void>;
@@ -28,6 +32,8 @@ interface GraphState {
   clearSelection: () => void;
   setBranchFilter: (filter: string) => void;
   setBranchVisibility: (visibility: BranchVisibility | null) => void;
+  setAuthorFilter: (author: string | null) => void;
+  setAuthorFilterMode: (mode: AuthorFilterMode) => void;
   restoreViewSettings: () => Promise<void>;
 }
 
@@ -44,6 +50,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   branchVisibility: null,
   allCommits: [],
   viewSettingsRestored: false,
+  authorFilter: null,
+  authorFilterMode: "highlight",
 
   restoreViewSettings: async () => {
     const repoPath = useRepoStore.getState().repo?.path;
@@ -64,8 +72,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({ loading: true });
     try {
       const { branchFilter, branchVisibility } = get();
-      const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
-      const commits = await window.electronAPI.log.getCommits(maxCount, 0, branchFilter || undefined, vis);
+      const vis =
+        branchVisibility && branchVisibility.branches.length > 0
+          ? branchVisibility
+          : undefined;
+      const commits = await window.electronAPI.log.getCommits(
+        maxCount,
+        0,
+        branchFilter || undefined,
+        vis
+      );
       const rows = buildGraph(commits);
       const rowMap = new Map<string, number>();
       rows.forEach((r, i) => rowMap.set(r.commit.hash, i));
@@ -83,12 +99,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { allCommits, loading, hasMore, totalLoaded, branchFilter, branchVisibility } = get();
+    const { allCommits, loading, hasMore, totalLoaded, branchFilter, branchVisibility } =
+      get();
     if (loading || !hasMore) return;
     set({ loading: true });
     try {
-      const vis = branchVisibility && branchVisibility.branches.length > 0 ? branchVisibility : undefined;
-      const moreCommits = await window.electronAPI.log.getCommits(CHUNK_SIZE, totalLoaded, branchFilter || undefined, vis);
+      const vis =
+        branchVisibility && branchVisibility.branches.length > 0
+          ? branchVisibility
+          : undefined;
+      const moreCommits = await window.electronAPI.log.getCommits(
+        CHUNK_SIZE,
+        totalLoaded,
+        branchFilter || undefined,
+        vis
+      );
       // Accumulate all commits and rebuild graph from scratch
       const newAllCommits = [...allCommits, ...moreCommits];
       const rows = buildGraph(newAllCommits);
@@ -131,4 +156,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       window.electronAPI.repo.setViewSettings(repoPath, { branchVisibility: visibility });
     }
   },
+
+  setAuthorFilter: (author: string | null) => set({ authorFilter: author }),
+
+  setAuthorFilterMode: (mode: AuthorFilterMode) => set({ authorFilterMode: mode }),
 }));

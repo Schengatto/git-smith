@@ -1,0 +1,98 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import "@testing-library/jest-dom/vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import React from "react";
+import { CommandLogPanel } from "./CommandLogPanel";
+
+const mockClear = vi.fn();
+let mockEntries: unknown[] = [];
+
+vi.mock("../../store/command-log-store", () => ({
+  useCommandLogStore: vi.fn((selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = { entries: mockEntries, clear: mockClear };
+    return selector ? selector(state as Record<string, unknown>) : state;
+  }),
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockEntries = [];
+});
+
+const makeEntry = (overrides: Record<string, unknown> = {}) => ({
+  id: "1",
+  command: "git",
+  args: ["status"],
+  timestamp: new Date("2026-03-21T10:00:00").getTime(),
+  ...overrides,
+});
+
+describe("CommandLogPanel", () => {
+  it("renders empty state when there are no entries", () => {
+    render(<CommandLogPanel />);
+    expect(screen.getByText("Git commands will appear here")).toBeInTheDocument();
+  });
+
+  it("renders entries list when entries are present", () => {
+    mockEntries = [makeEntry()];
+    render(<CommandLogPanel />);
+    expect(screen.getByText("git")).toBeInTheDocument();
+    expect(screen.getByText("status")).toBeInTheDocument();
+  });
+
+  it("shows entry count in header", () => {
+    mockEntries = [makeEntry({ id: "1" }), makeEntry({ id: "2", args: ["log"] })];
+    render(<CommandLogPanel />);
+    expect(screen.getByText("Commands (2)")).toBeInTheDocument();
+  });
+
+  it("shows Clear button when entries exist", () => {
+    mockEntries = [makeEntry()];
+    render(<CommandLogPanel />);
+    expect(screen.getByText("Clear")).toBeInTheDocument();
+  });
+
+  it("calls clear when Clear button is clicked", () => {
+    mockEntries = [makeEntry()];
+    render(<CommandLogPanel />);
+    fireEvent.click(screen.getByText("Clear"));
+    expect(mockClear).toHaveBeenCalledOnce();
+  });
+
+  it("renders entry with duration when present", () => {
+    mockEntries = [makeEntry({ duration: 123 })];
+    render(<CommandLogPanel />);
+    expect(screen.getByText("123ms")).toBeInTheDocument();
+  });
+
+  it("renders entry error message when present", () => {
+    mockEntries = [makeEntry({ error: "fatal: not a git repo" })];
+    render(<CommandLogPanel />);
+    expect(screen.getByText("fatal: not a git repo")).toBeInTheDocument();
+  });
+
+  it("does not render duration when not present", () => {
+    mockEntries = [makeEntry()];
+    render(<CommandLogPanel />);
+    expect(screen.queryByText(/ms/)).not.toBeInTheDocument();
+  });
+
+  it("renders multiple entries", () => {
+    mockEntries = [
+      makeEntry({ id: "1", command: "git", args: ["fetch"] }),
+      makeEntry({ id: "2", command: "git", args: ["pull"] }),
+    ];
+    render(<CommandLogPanel />);
+    expect(screen.getByText("fetch")).toBeInTheDocument();
+    expect(screen.getByText("pull")).toBeInTheDocument();
+  });
+
+  it("renders formatted timestamp for each entry", () => {
+    mockEntries = [makeEntry()];
+    render(<CommandLogPanel />);
+    // Timestamp is formatted as HH:MM:SS — just verify it rendered some time text
+    const timeCells = screen.getAllByText(/\d{2}:\d{2}:\d{2}/);
+    expect(timeCells.length).toBeGreaterThan(0);
+  });
+});

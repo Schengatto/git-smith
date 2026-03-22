@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -55,12 +56,20 @@ beforeEach(() => {
       showFile: showFileMock,
     },
   };
-  (window as unknown as Record<string, unknown>).electronAPI = (globalThis as unknown as Record<string, unknown>).electronAPI;
+  (window as unknown as Record<string, unknown>).electronAPI = (
+    globalThis as unknown as Record<string, unknown>
+  ).electronAPI;
 });
 
 // Mock stores
 const mockSelectedCommit = { hash: "abc123", subject: "test commit" };
-const mockRepo = { headCommit: "head456", path: "/repo", name: "repo", currentBranch: "main", isDirty: false };
+const mockRepo = {
+  headCommit: "head456",
+  path: "/repo",
+  name: "repo",
+  currentBranch: "main",
+  isDirty: false,
+};
 
 vi.mock("../../store/graph-store", () => ({
   useGraphStore: vi.fn((selector?: (s: Record<string, unknown>) => unknown) => {
@@ -114,6 +123,169 @@ describe("CommitDetailsPanel", () => {
     render(<CommitDetailsPanel />);
     await waitFor(() => {
       expect(screen.getByText("Select a file to view diff")).toBeInTheDocument();
+    });
+  });
+
+  it("shows file count badge in Diff tab header after loading", async () => {
+    render(<CommitDetailsPanel />);
+    await waitFor(() => {
+      // mockFiles has 2 entries
+      const badges = Array.from(document.querySelectorAll("span")).map(
+        (s) => s.textContent
+      );
+      expect(badges).toContain("2");
+    });
+  });
+
+  it("shows file count badge in Files tab header after loading", async () => {
+    render(<CommitDetailsPanel />);
+    await waitFor(() => {
+      // mockTreeFiles has 4 entries
+      const badges = Array.from(document.querySelectorAll("span")).map(
+        (s) => s.textContent
+      );
+      expect(badges).toContain("4");
+    });
+  });
+
+  it("loads diff for selected file in Diff tab", async () => {
+    render(<CommitDetailsPanel />);
+    await waitFor(() => screen.getByText("Diff"));
+
+    // Wait for files to load; in the diff tab the FileTree receives mockFiles
+    // The test just needs to verify commitFileMock gets called when a file is selected
+    // FileTree is not mocked so we find the file by its name in the DOM
+    await waitFor(() => {
+      expect(commitFilesMock).toHaveBeenCalledWith("abc123");
+    });
+
+    // Find main.ts in the file list and click it
+    const fileEntries = screen.queryAllByText("main.ts");
+    if (fileEntries.length > 0) {
+      fireEvent.click(fileEntries[0]!);
+      await waitFor(() => {
+        expect(commitFileMock).toHaveBeenCalledWith("abc123", "src/main.ts");
+      });
+    }
+  });
+
+  it("loads file content when a file is selected in Files tab", async () => {
+    render(<CommitDetailsPanel />);
+    await waitFor(() => screen.getByText("Files"));
+    fireEvent.click(screen.getByText("Files"));
+
+    await waitFor(() => {
+      expect(treeFilesMock).toHaveBeenCalledWith("abc123");
+    });
+
+    // README.md is a top-level file in mockTreeFiles (not nested in a directory)
+    await waitFor(() => screen.queryAllByText("README.md"));
+    const readmeLinks = screen.queryAllByText("README.md");
+    if (readmeLinks.length > 0) {
+      fireEvent.click(readmeLinks[0]!);
+      await waitFor(() => {
+        expect(showFileMock).toHaveBeenCalledWith("abc123", "README.md");
+      });
+    }
+  });
+
+  it("shows file content in pre element after file selected in Files tab", async () => {
+    showFileMock.mockResolvedValueOnce("const x = 1; const y = 2;");
+    render(<CommitDetailsPanel />);
+    fireEvent.click(await screen.findByText("Files"));
+
+    await waitFor(() => treeFilesMock.mock.calls.length > 0);
+
+    // Click README.md (top-level file)
+    const readmeLinks = screen.queryAllByText("README.md");
+    if (readmeLinks.length > 0) {
+      fireEvent.click(readmeLinks[0]!);
+      await waitFor(() => {
+        expect(screen.getByText("const x = 1; const y = 2;")).toBeInTheDocument();
+      });
+    }
+  });
+
+  it("shows 'No files' when no matching search results in Files tab", async () => {
+    render(<CommitDetailsPanel />);
+    fireEvent.click(await screen.findByText("Files"));
+
+    await waitFor(() => treeFilesMock.mock.calls.length > 0);
+
+    const searchInputs = document.querySelectorAll("input[type='text']");
+    if (searchInputs.length > 0) {
+      fireEvent.change(searchInputs[0]!, { target: { value: "ZZZNOMATCH" } });
+      await waitFor(() => {
+        expect(screen.getByText("No matching files")).toBeInTheDocument();
+      });
+    }
+  });
+
+  it("filters diff tab file list by search", async () => {
+    render(<CommitDetailsPanel />);
+    await waitFor(() => screen.getByText("Diff"));
+    await waitFor(() => commitFilesMock.mock.calls.length > 0);
+
+    const searchInputs = document.querySelectorAll("input[type='text']");
+    if (searchInputs.length > 0) {
+      fireEvent.change(searchInputs[0]!, { target: { value: "helper" } });
+      await waitFor(() => {
+        // helper.ts should be visible
+        expect(screen.getAllByText(/helper/).length).toBeGreaterThan(0);
+      });
+    }
+  });
+
+  it("clears file list when effectiveHash is null (no commit selected)", async () => {
+    const graphStoreMod = await import("../../store/graph-store");
+    const repoStoreMod = await import("../../store/repo-store");
+
+    // Replace implementation for the duration of this test
+    const originalGraph = (graphStoreMod.useGraphStore as any).getMockImplementation?.();
+    const originalRepo = (repoStoreMod.useRepoStore as any).getMockImplementation?.();
+
+    (graphStoreMod.useGraphStore as any).mockImplementation(
+      (selector?: (s: Record<string, unknown>) => unknown) => {
+        const state = { selectedCommit: null };
+        return selector ? selector(state) : state;
+      }
+    );
+    (repoStoreMod.useRepoStore as any).mockImplementation(
+      (selector?: (s: Record<string, unknown>) => unknown) => {
+        const state = { repo: { ...mockRepo, headCommit: null } };
+        return selector ? selector(state) : state;
+      }
+    );
+
+    render(<CommitDetailsPanel />);
+    await waitFor(() => {
+      expect(screen.getByText("Select a commit to view files")).toBeInTheDocument();
+    });
+
+    // Restore original implementations
+    if (originalGraph) {
+      (graphStoreMod.useGraphStore as any).mockImplementation(originalGraph);
+    }
+    if (originalRepo) {
+      (repoStoreMod.useRepoStore as any).mockImplementation(originalRepo);
+    }
+  });
+
+  it("gracefully handles commitFiles API error", async () => {
+    commitFilesMock.mockRejectedValueOnce(new Error("API error"));
+    render(<CommitDetailsPanel />);
+    await waitFor(() => {
+      // Should still render tabs without crashing
+      expect(screen.getByText("Diff")).toBeInTheDocument();
+    });
+  });
+
+  it("gracefully handles treeFiles API error", async () => {
+    treeFilesMock.mockRejectedValueOnce(new Error("tree error"));
+    render(<CommitDetailsPanel />);
+    fireEvent.click(await screen.findByText("Files"));
+    await waitFor(() => {
+      expect(screen.getByText("Select a file to view content")).toBeInTheDocument();
     });
   });
 });

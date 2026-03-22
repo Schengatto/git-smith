@@ -1,7 +1,7 @@
 import { app, safeStorage } from "electron";
 import path from "path";
 import fs from "fs";
-import { GitAccount } from "../shared/git-types";
+import type { GitAccount } from "../shared/git-types";
 import type { AppSettings } from "../shared/settings-types";
 
 export type { AppSettings } from "../shared/settings-types";
@@ -55,6 +55,44 @@ export interface AppStoreSchema {
   defaultAccountId: string | null;
 }
 
+export const defaultCommitTemplates = [
+  { name: "Feature", prefix: "feat: ", body: "", description: "A new feature" },
+  { name: "Fix", prefix: "fix: ", body: "", description: "A bug fix" },
+  { name: "Docs", prefix: "docs: ", body: "", description: "Documentation only changes" },
+  {
+    name: "Style",
+    prefix: "style: ",
+    body: "",
+    description: "Code style changes (formatting, etc.)",
+  },
+  {
+    name: "Refactor",
+    prefix: "refactor: ",
+    body: "",
+    description: "Code change that neither fixes a bug nor adds a feature",
+  },
+  {
+    name: "Perf",
+    prefix: "perf: ",
+    body: "",
+    description: "A code change that improves performance",
+  },
+  { name: "Test", prefix: "test: ", body: "", description: "Adding or correcting tests" },
+  {
+    name: "Build",
+    prefix: "build: ",
+    body: "",
+    description: "Changes to the build system or dependencies",
+  },
+  { name: "CI", prefix: "ci: ", body: "", description: "Changes to CI configuration" },
+  {
+    name: "Chore",
+    prefix: "chore: ",
+    body: "",
+    description: "Other changes that don't modify src or test",
+  },
+];
+
 export const defaultSettings: AppSettings = {
   theme: "dark",
   language: "en",
@@ -63,6 +101,16 @@ export const defaultSettings: AppSettings = {
   fetchPruneOnAuto: false,
   defaultCommitTemplate: "",
   signCommits: false,
+  commitTemplates: [...defaultCommitTemplates],
+  commitSnippets: [
+    { label: "Co-authored-by", text: "Co-authored-by: " },
+    { label: "BREAKING CHANGE", text: "BREAKING CHANGE: " },
+    { label: "Closes #", text: "Closes #" },
+    { label: "Refs #", text: "Refs #" },
+    { label: "Signed-off-by", text: "Signed-off-by: " },
+  ],
+  notifications: { enabled: true, onFetch: true, onPush: true, onError: true },
+  issueTracker: { provider: "github", pattern: "#(\\d+)", urlTemplate: "" },
   diffContextLines: 3,
   preferSideBySideDiff: false,
   graphMaxInitialLoad: 500,
@@ -147,7 +195,11 @@ function writeStore(data: AppStoreSchema): void {
   writeTimer = setTimeout(flushStore, 500);
 }
 
-try { app.on("before-quit", flushStore); } catch { /* app not ready in test env */ }
+try {
+  app.on("before-quit", flushStore);
+} catch {
+  /* app not ready in test env */
+}
 
 export function getRecentRepos(): string[] {
   return readStore().recentRepos;
@@ -353,7 +405,10 @@ export function getRepoViewSettings(repoPath: string): RepoViewSettings {
   return { ...defaultRepoViewSettings, ...store.repoViewSettings[repoPath] };
 }
 
-export function setRepoViewSettings(repoPath: string, partial: Partial<RepoViewSettings>): void {
+export function setRepoViewSettings(
+  repoPath: string,
+  partial: Partial<RepoViewSettings>
+): void {
   const store = readStore();
   store.repoViewSettings[repoPath] = {
     ...defaultRepoViewSettings,

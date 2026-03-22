@@ -19,6 +19,7 @@ import { createMenu } from "./menu";
 import { initAutoUpdater } from "./auto-updater";
 import { IPC } from "../shared/ipc-channels";
 import { startMcpServer } from "./mcp/mcp-server";
+import { showNotification } from "./notifications/notification-service";
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -99,7 +100,10 @@ function startAutoFetch() {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(IPC.EVENTS.REPO_CHANGED);
       }
-    } catch {}
+      showNotification("Fetch Complete", "Repository updated from remote", "fetch");
+    } catch (err) {
+      showNotification("Fetch Failed", String(err), "error");
+    }
   }, settings.autoFetchInterval * 1000);
 }
 
@@ -122,61 +126,66 @@ if (app.commandLine.hasSwitch("mcp-server")) {
     });
   });
 } else {
-// ── Normal GUI mode ────────────────────────────────────────────
+  // ── Normal GUI mode ────────────────────────────────────────────
 
-app.whenReady().then(() => {
-  try {
-    registerAllHandlers();
+  app.whenReady().then(() => {
+    try {
+      registerAllHandlers();
 
-    // Settings IPC
-    ipcMain.handle(IPC.SETTINGS.GET, () => getSettings());
-    ipcMain.handle(IPC.SETTINGS.UPDATE, (_event, partial: Partial<AppSettings>) => {
-      const updated = updateSettings(partial);
-      // Restart auto-fetch if interval changed
-      if ("autoFetchInterval" in partial || "autoFetchEnabled" in partial) {
+      // Settings IPC
+      ipcMain.handle(IPC.SETTINGS.GET, () => getSettings());
+      ipcMain.handle(IPC.SETTINGS.UPDATE, (_event, partial: Partial<AppSettings>) => {
+        const updated = updateSettings(partial);
+        // Restart auto-fetch if interval changed
+        if ("autoFetchInterval" in partial || "autoFetchEnabled" in partial) {
+          startAutoFetch();
+        }
+        return updated;
+      });
+      ipcMain.handle(IPC.SETTINGS.GET_AUTO_FETCH, () => getAutoFetchInterval());
+      ipcMain.handle(IPC.SETTINGS.SET_AUTO_FETCH, (_event, seconds: number) => {
+        setAutoFetchInterval(seconds);
         startAutoFetch();
-      }
-      return updated;
-    });
-    ipcMain.handle(IPC.SETTINGS.GET_AUTO_FETCH, () => getAutoFetchInterval());
-    ipcMain.handle(IPC.SETTINGS.SET_AUTO_FETCH, (_event, seconds: number) => {
-      setAutoFetchInterval(seconds);
+      });
+
+      // Git config IPC
+      ipcMain.handle(
+        IPC.GIT_CONFIG.GET,
+        async (_event, key: string, global?: boolean) => {
+          return gitService.isOpen() ? gitService.getConfig(key, global) : "";
+        }
+      );
+      ipcMain.handle(
+        IPC.GIT_CONFIG.SET,
+        async (_event, key: string, value: string, global?: boolean) => {
+          if (gitService.isOpen()) await gitService.setConfig(key, value, global);
+        }
+      );
+      ipcMain.handle(IPC.GIT_CONFIG.LIST, async (_event, global?: boolean) => {
+        return gitService.isOpen() ? gitService.listConfig(global) : {};
+      });
+
+      createMenu();
+      createWindow();
       startAutoFetch();
-    });
+      if (mainWindow) initAutoUpdater(mainWindow);
+      console.log("[git-expansion] App initialized successfully");
+    } catch (err) {
+      console.error("[git-expansion] Failed to initialize:", err);
+    }
+  });
 
-    // Git config IPC
-    ipcMain.handle(IPC.GIT_CONFIG.GET, async (_event, key: string, global?: boolean) => {
-      return gitService.isOpen() ? gitService.getConfig(key, global) : "";
-    });
-    ipcMain.handle(IPC.GIT_CONFIG.SET, async (_event, key: string, value: string, global?: boolean) => {
-      if (gitService.isOpen()) await gitService.setConfig(key, value, global);
-    });
-    ipcMain.handle(IPC.GIT_CONFIG.LIST, async (_event, global?: boolean) => {
-      return gitService.isOpen() ? gitService.listConfig(global) : {};
-    });
+  app.on("window-all-closed", () => {
+    stopAutoFetch();
+    killTerminal();
+    if (process.platform !== "darwin") {
+      app.quit();
+    }
+  });
 
-    createMenu();
-    createWindow();
-    startAutoFetch();
-    if (mainWindow) initAutoUpdater(mainWindow);
-    console.log("[git-expansion] App initialized successfully");
-  } catch (err) {
-    console.error("[git-expansion] Failed to initialize:", err);
-  }
-});
-
-app.on("window-all-closed", () => {
-  stopAutoFetch();
-  killTerminal();
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 } // end of normal GUI mode else block

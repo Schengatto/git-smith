@@ -3,12 +3,17 @@ import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
 import { HunkStagingView } from "./HunkStagingView";
-import { runGitOperation, useGitOperationStore, GitOperationCancelledError } from "../../store/git-operation-store";
+import {
+  runGitOperation,
+  useGitOperationStore,
+  GitOperationCancelledError,
+} from "../../store/git-operation-store";
 import { SetUpstreamDialog } from "../dialogs/SetUpstreamDialog";
 import { openDialogWindow } from "../../utils/open-dialog";
 import { FileHistoryPanel } from "../details/FileHistoryPanel";
 import { BlameView } from "../details/BlameView";
 import type { GitStatus, ConflictFile } from "../../../shared/git-types";
+import type { CommitTemplate, CommitSnippet } from "../../../shared/settings-types";
 import { AiCommitMessageButton } from "../ai/AiCommitMessageButton";
 import { useAccountStore } from "../../store/account-store";
 
@@ -63,13 +68,15 @@ function buildTree(files: ChangedFile[]): TreeNode[] {
 }
 
 function sortTree(nodes: TreeNode[]): TreeNode[] {
-  return nodes.sort((a, b) => {
-    const aIsDir = a.children.length > 0 && !a.file;
-    const bIsDir = b.children.length > 0 && !b.file;
-    if (aIsDir && !bIsDir) return -1;
-    if (!aIsDir && bIsDir) return 1;
-    return a.name.localeCompare(b.name);
-  }).map((n) => ({ ...n, children: sortTree(n.children) }));
+  return nodes
+    .sort((a, b) => {
+      const aIsDir = a.children.length > 0 && !a.file;
+      const bIsDir = b.children.length > 0 && !b.file;
+      if (aIsDir && !bIsDir) return -1;
+      if (!aIsDir && bIsDir) return 1;
+      return a.name.localeCompare(b.name);
+    })
+    .map((n) => ({ ...n, children: sortTree(n.children) }));
 }
 
 export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
@@ -99,6 +106,13 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   // Commit templates dropdown
   const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
+  const [commitTemplates, setCommitTemplates] = useState<CommitTemplate[]>([]);
+
+  // Commit snippets
+  const [snippetDropdownOpen, setSnippetDropdownOpen] = useState(false);
+  const snippetDropdownRef = useRef<HTMLDivElement>(null);
+  const [commitSnippets, setCommitSnippets] = useState<CommitSnippet[]>([]);
+  const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Create branch
   const [createBranchOpen, setCreateBranchOpen] = useState(false);
@@ -132,8 +146,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         if (!prev && all.length > 0) return all[0]!.path;
         return prev;
       });
-    } catch {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -148,7 +161,20 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setNewBranchName("");
       setBranchError(null);
       // Load recent commit messages
-      window.electronAPI.commit.getRecentMessages().then(setRecentMessages).catch(() => {});
+      window.electronAPI.commit
+        .getRecentMessages()
+        .then(setRecentMessages)
+        .catch(() => {});
+      // Load commit templates and snippets from settings
+      window.electronAPI.settings
+        .get()
+        .then((s) => {
+          if (s.commitTemplates && s.commitTemplates.length > 0)
+            setCommitTemplates(s.commitTemplates);
+          if (s.commitSnippets && s.commitSnippets.length > 0)
+            setCommitSnippets(s.commitSnippets);
+        })
+        .catch(() => {});
     }
   }, [open, loadFiles]);
 
@@ -157,7 +183,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setDiff("");
       return;
     }
-    const file = files.find((f) => f.path === selectedFile && f.staged === selectedFileStaged);
+    const file = files.find(
+      (f) => f.path === selectedFile && f.staged === selectedFileStaged
+    );
     if (!file) return;
 
     const loadDiff = async () => {
@@ -178,34 +206,63 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (commitDropdownRef.current && !commitDropdownRef.current.contains(e.target as Node)) {
+      if (
+        commitDropdownRef.current &&
+        !commitDropdownRef.current.contains(e.target as Node)
+      ) {
         setCommitDropdownOpen(false);
       }
-      if (messageDropdownRef.current && !messageDropdownRef.current.contains(e.target as Node)) {
+      if (
+        messageDropdownRef.current &&
+        !messageDropdownRef.current.contains(e.target as Node)
+      ) {
         setMessageDropdownOpen(false);
       }
-      if (templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
+      if (
+        templateDropdownRef.current &&
+        !templateDropdownRef.current.contains(e.target as Node)
+      ) {
         setTemplateDropdownOpen(false);
       }
+      if (
+        snippetDropdownRef.current &&
+        !snippetDropdownRef.current.contains(e.target as Node)
+      ) {
+        setSnippetDropdownOpen(false);
+      }
     };
-    if (commitDropdownOpen || messageDropdownOpen || templateDropdownOpen) {
+    if (
+      commitDropdownOpen ||
+      messageDropdownOpen ||
+      templateDropdownOpen ||
+      snippetDropdownOpen
+    ) {
       document.addEventListener("mousedown", handleClick);
     }
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [commitDropdownOpen, messageDropdownOpen, templateDropdownOpen]);
+  }, [
+    commitDropdownOpen,
+    messageDropdownOpen,
+    templateDropdownOpen,
+    snippetDropdownOpen,
+  ]);
 
   const statusToFiles = (status: GitStatus): ChangedFile[] => {
     const all: ChangedFile[] = [];
     const conflictedPaths = new Set(status.conflicted.map((c) => c.path));
     for (const f of status.staged) {
-      if (!conflictedPaths.has(f.path)) all.push({ path: f.path, status: f.status, staged: true });
+      if (!conflictedPaths.has(f.path))
+        all.push({ path: f.path, status: f.status, staged: true });
     }
     for (const f of status.unstaged) {
-      if (!conflictedPaths.has(f.path)) all.push({ path: f.path, status: f.status, staged: false });
+      if (!conflictedPaths.has(f.path))
+        all.push({ path: f.path, status: f.status, staged: false });
     }
-    for (const p of status.untracked) all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
+    for (const p of status.untracked)
+      all.push({ path: p, status: "untracked", staged: false, isUntracked: true });
     // Show conflicted files in the unstaged section with "conflicted" status
-    for (const c of status.conflicted) all.push({ path: c.path, status: "conflicted", staged: false });
+    for (const c of status.conflicted)
+      all.push({ path: c.path, status: "conflicted", staged: false });
     return all;
   };
 
@@ -255,7 +312,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setFiles(statusToFiles(status));
       setSelectedStaged(new Set());
     } catch (err: unknown) {
-      showToast(`Unstage all failed: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(
+        `Unstage all failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -348,7 +407,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
             useGitOperationStore.getState().close();
             setSetUpstreamError({
               suggestedRemote: match?.[1] ?? "origin",
-              suggestedBranch: match?.[2] ?? (repo?.currentBranch ?? ""),
+              suggestedBranch: match?.[2] ?? repo?.currentBranch ?? "",
             });
           } else {
             setError(`Committed but push failed: ${pushMsg}`);
@@ -391,7 +450,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     try {
       await window.electronAPI.branch.create(newBranchName.trim());
       if (checkoutAfterCreate) {
-        await runGitOperation("Checkout", () => window.electronAPI.branch.checkout(newBranchName.trim()));
+        await runGitOperation("Checkout", () =>
+          window.electronAPI.branch.checkout(newBranchName.trim())
+        );
         await refreshInfo();
       }
       setCreateBranchOpen(false);
@@ -403,18 +464,17 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   };
 
-  const conventionalTypes = [
-    { type: "feat", description: "A new feature" },
-    { type: "fix", description: "A bug fix" },
-    { type: "docs", description: "Documentation only changes" },
-    { type: "style", description: "Code style changes (formatting, etc.)" },
-    { type: "refactor", description: "Code change that neither fixes a bug nor adds a feature" },
-    { type: "perf", description: "A code change that improves performance" },
-    { type: "test", description: "Adding or correcting tests" },
-    { type: "build", description: "Changes to the build system or dependencies" },
-    { type: "ci", description: "Changes to CI configuration" },
-    { type: "chore", description: "Other changes that don't modify src or test" },
-  ];
+  const applyTemplate = useCallback((tpl: CommitTemplate) => {
+    setMessage((prev) => {
+      const prefix = tpl.prefix || "";
+      const body = tpl.body || "";
+      if (prev.match(/^[a-z]+(\(.+\))?:/)) {
+        return prev.replace(/^[a-z]+(\(.+\))?:/, prefix.replace(/\s+$/, ""));
+      }
+      return body ? `${prefix}${prev}\n\n${body}` : `${prefix}${prev}`;
+    });
+    setTemplateDropdownOpen(false);
+  }, []);
 
   if (!open) return null;
 
@@ -465,11 +525,26 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             <IconGitCommit />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap" }}>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--text-primary)",
+                whiteSpace: "nowrap",
+              }}
+            >
               Commit to {repo?.currentBranch || "HEAD"}
             </span>
             {repo?.path && (
-              <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--text-muted)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
                 ({repo.path})
               </span>
             )}
@@ -488,8 +563,18 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -507,13 +592,24 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               flexShrink: 0,
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--red)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 600, flex: 1 }}>
-              Merge in progress — {conflictedFiles.length} conflicted file{conflictedFiles.length !== 1 ? "s" : ""} to resolve
+              Merge in progress — {conflictedFiles.length} conflicted file
+              {conflictedFiles.length !== 1 ? "s" : ""} to resolve
             </span>
             <button
               onClick={() => openDialogWindow({ dialog: "MergeConflictDialog" })}
@@ -556,7 +652,10 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               files={unstagedFiles}
               selectedFile={selectedFileStaged ? null : selectedFile}
               selectedPaths={selectedUnstaged}
-              onSelectFile={(path) => { setSelectedFile(path); setSelectedFileStaged(false); }}
+              onSelectFile={(path) => {
+                setSelectedFile(path);
+                setSelectedFileStaged(false);
+              }}
               onToggleSelect={(path) => {
                 setSelectedUnstaged((prev) => {
                   const next = new Set(prev);
@@ -575,6 +674,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               onAddToGitignore={handleAddToGitignore}
               onFileHistory={setHistoryFile}
               onFileBlame={setBlameFile}
+              onDropFiles={(paths) => unstageFiles(paths)}
             />
 
             {/* Stage / Unstage action buttons */}
@@ -605,7 +705,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               >
                 <IconDoubleArrowDown size={14} />
               </StageIconButton>
-              <div style={{ width: 1, height: 18, background: "var(--border-subtle)", margin: "0 3px" }} />
+              <div
+                style={{
+                  width: 1,
+                  height: 18,
+                  background: "var(--border-subtle)",
+                  margin: "0 3px",
+                }}
+              />
               <StageIconButton
                 title="Unstage selected"
                 disabled={selectedStaged.size === 0}
@@ -620,7 +727,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               >
                 <IconDoubleArrowUp size={14} />
               </StageIconButton>
-              <div style={{ width: 1, height: 18, background: "var(--border-subtle)", margin: "0 3px" }} />
+              <div
+                style={{
+                  width: 1,
+                  height: 18,
+                  background: "var(--border-subtle)",
+                  margin: "0 3px",
+                }}
+              />
               <StageIconButton
                 title="Refresh file list"
                 disabled={false}
@@ -637,7 +751,10 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               files={stagedFiles}
               selectedFile={selectedFileStaged ? selectedFile : null}
               selectedPaths={selectedStaged}
-              onSelectFile={(path) => { setSelectedFile(path); setSelectedFileStaged(true); }}
+              onSelectFile={(path) => {
+                setSelectedFile(path);
+                setSelectedFileStaged(true);
+              }}
               onToggleSelect={(path) => {
                 setSelectedStaged((prev) => {
                   const next = new Set(prev);
@@ -656,11 +773,19 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               onAddToGitignore={handleAddToGitignore}
               onFileHistory={setHistoryFile}
               onFileBlame={setBlameFile}
+              onDropFiles={(paths) => stageFiles(paths)}
             />
           </div>
 
           {/* Right: diff view (top) + commit message (bottom) */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
             {/* Diff area */}
             <div style={{ flex: 1, overflow: "auto", background: "var(--surface-0)" }}>
               {selectedFile && diff ? (
@@ -668,13 +793,21 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   rawDiff={diff}
                   fileName={selectedFile}
                   isStaged={selectedFileStaged}
-                  isConflicted={files.find((f) => f.path === selectedFile && f.staged === selectedFileStaged)?.status === "conflicted"}
+                  isConflicted={
+                    files.find(
+                      (f) => f.path === selectedFile && f.staged === selectedFileStaged
+                    )?.status === "conflicted"
+                  }
                   onStageHunk={handleStageHunk}
                   onUnstageHunk={handleUnstageHunk}
                 />
               ) : (
                 <div className="empty-state" style={{ height: "100%" }}>
-                  <span>{selectedFile ? diff || "Loading..." : "Select a file to view changes"}</span>
+                  <span>
+                    {selectedFile
+                      ? diff || "Loading..."
+                      : "Select a file to view changes"}
+                  </span>
                 </div>
               )}
             </div>
@@ -697,7 +830,10 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   <ToolbarButton
                     label="Commit message"
                     hasDropdown
-                    onClick={() => { setMessageDropdownOpen((v) => !v); setTemplateDropdownOpen(false); }}
+                    onClick={() => {
+                      setMessageDropdownOpen((v) => !v);
+                      setTemplateDropdownOpen(false);
+                    }}
                     icon={<IconHistory size={12} />}
                   />
                   {messageDropdownOpen && (
@@ -718,14 +854,23 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                       }}
                     >
                       {recentMessages.length === 0 ? (
-                        <div style={{ padding: "10px 14px", fontSize: 11, color: "var(--text-muted)" }}>
+                        <div
+                          style={{
+                            padding: "10px 14px",
+                            fontSize: 11,
+                            color: "var(--text-muted)",
+                          }}
+                        >
                           No recent commit messages
                         </div>
                       ) : (
                         recentMessages.slice(0, 5).map((msg, i) => (
                           <button
                             key={i}
-                            onClick={() => { setMessage(msg); setMessageDropdownOpen(false); }}
+                            onClick={() => {
+                              setMessage(msg);
+                              setMessageDropdownOpen(false);
+                            }}
                             style={{
                               display: "block",
                               width: "100%",
@@ -742,8 +887,12 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                               transition: "background 0.08s",
                             }}
                             title={msg}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-hover)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "var(--surface-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
                           >
                             {msg}
                           </button>
@@ -758,7 +907,10 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   <ToolbarButton
                     label="Commit templates"
                     hasDropdown
-                    onClick={() => { setTemplateDropdownOpen((v) => !v); setMessageDropdownOpen(false); }}
+                    onClick={() => {
+                      setTemplateDropdownOpen((v) => !v);
+                      setMessageDropdownOpen(false);
+                    }}
                     icon={<IconTemplate size={12} />}
                   />
                   {templateDropdownOpen && (
@@ -777,42 +929,177 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         zIndex: 10,
                       }}
                     >
-                      <div style={{ padding: "6px 12px", fontSize: 10, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                        Conventional Commits
+                      <div
+                        style={{
+                          padding: "6px 12px",
+                          fontSize: 10,
+                          color: "var(--text-muted)",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        Commit Templates
                       </div>
-                      {conventionalTypes.map((ct) => (
-                        <button
-                          key={ct.type}
-                          onClick={() => {
-                            setMessage((prev) => {
-                              if (prev.match(/^[a-z]+(\(.+\))?:/)) {
-                                return prev.replace(/^[a-z]+(\(.+\))?:/, `${ct.type}:`);
-                              }
-                              return `${ct.type}: ${prev}`;
-                            });
-                            setTemplateDropdownOpen(false);
-                          }}
+                      {commitTemplates.length === 0 ? (
+                        <div
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            width: "100%",
-                            padding: "6px 14px",
-                            border: "none",
-                            background: "transparent",
-                            color: "var(--text-primary)",
+                            padding: "10px 14px",
                             fontSize: 11,
-                            cursor: "pointer",
-                            textAlign: "left",
-                            transition: "background 0.08s",
+                            color: "var(--text-muted)",
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-hover)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                         >
-                          <span style={{ fontWeight: 600, minWidth: 60 }}>{ct.type}</span>
-                          <span style={{ color: "var(--text-muted)", fontSize: 10 }}>{ct.description}</span>
-                        </button>
-                      ))}
+                          No templates configured
+                        </div>
+                      ) : (
+                        commitTemplates.map((tpl) => (
+                          <button
+                            key={tpl.name}
+                            onClick={() => applyTemplate(tpl)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              width: "100%",
+                              padding: "6px 14px",
+                              border: "none",
+                              background: "transparent",
+                              color: "var(--text-primary)",
+                              fontSize: 11,
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "background 0.08s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "var(--surface-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
+                          >
+                            <span style={{ fontWeight: 600, minWidth: 60 }}>
+                              {tpl.name}
+                            </span>
+                            <span style={{ color: "var(--text-muted)", fontSize: 10 }}>
+                              {tpl.description}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Commit snippets dropdown */}
+                <div ref={snippetDropdownRef} style={{ position: "relative" }}>
+                  <ToolbarButton
+                    label="Snippets"
+                    hasDropdown
+                    onClick={() => {
+                      setSnippetDropdownOpen((v) => !v);
+                      setMessageDropdownOpen(false);
+                      setTemplateDropdownOpen(false);
+                    }}
+                    icon={<IconSnippet size={12} />}
+                  />
+                  {snippetDropdownOpen && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "calc(100% + 4px)",
+                        left: 0,
+                        minWidth: 220,
+                        maxHeight: 280,
+                        overflowY: "auto",
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                        zIndex: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: "6px 12px",
+                          fontSize: 10,
+                          color: "var(--text-muted)",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        Snippets
+                      </div>
+                      {commitSnippets.length === 0 ? (
+                        <div
+                          style={{
+                            padding: "10px 14px",
+                            fontSize: 11,
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          No snippets configured
+                        </div>
+                      ) : (
+                        commitSnippets.map((snip) => (
+                          <button
+                            key={snip.label}
+                            onClick={() => {
+                              const textarea = messageTextareaRef.current;
+                              if (textarea) {
+                                const start = textarea.selectionStart;
+                                const end = textarea.selectionEnd;
+                                const newMsg =
+                                  message.slice(0, start) +
+                                  snip.text +
+                                  message.slice(end);
+                                setMessage(newMsg);
+                                setTimeout(() => {
+                                  textarea.focus();
+                                  textarea.setSelectionRange(
+                                    start + snip.text.length,
+                                    start + snip.text.length
+                                  );
+                                }, 0);
+                              } else {
+                                setMessage((prev) => prev + snip.text);
+                              }
+                              setSnippetDropdownOpen(false);
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              width: "100%",
+                              padding: "6px 14px",
+                              border: "none",
+                              background: "transparent",
+                              color: "var(--text-primary)",
+                              fontSize: 11,
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "background 0.08s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "var(--surface-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
+                          >
+                            <span style={{ fontWeight: 600 }}>{snip.label}</span>
+                            <span
+                              style={{
+                                color: "var(--text-muted)",
+                                fontSize: 10,
+                                fontFamily: "var(--font-mono, monospace)",
+                              }}
+                            >
+                              {snip.text}
+                            </span>
+                          </button>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
@@ -840,7 +1127,16 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <label style={{ fontSize: 11, color: "var(--text-secondary)", minWidth: 80, flexShrink: 0 }}>Branch name</label>
+                    <label
+                      style={{
+                        fontSize: 11,
+                        color: "var(--text-secondary)",
+                        minWidth: 80,
+                        flexShrink: 0,
+                      }}
+                    >
+                      Branch name
+                    </label>
                     <input
                       type="text"
                       value={newBranchName}
@@ -856,18 +1152,45 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         fontSize: 11,
                         outline: "none",
                       }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleCreateBranch(); }}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--accent)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleCreateBranch();
+                      }}
                     />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <label style={{ fontSize: 11, color: "var(--text-secondary)", minWidth: 80, flexShrink: 0 }}>From</label>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{repo?.currentBranch || "HEAD"} ({repo?.headCommit?.slice(0, 7) || "---"})</span>
+                    <label
+                      style={{
+                        fontSize: 11,
+                        color: "var(--text-secondary)",
+                        minWidth: 80,
+                        flexShrink: 0,
+                      }}
+                    >
+                      From
+                    </label>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      {repo?.currentBranch || "HEAD"} (
+                      {repo?.headCommit?.slice(0, 7) || "---"})
+                    </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ minWidth: 80 }} />
-                    <label style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }}>
+                    <label
+                      style={{
+                        fontSize: 11,
+                        color: "var(--text-secondary)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        cursor: "pointer",
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={checkoutAfterCreate}
@@ -878,11 +1201,16 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                     </label>
                   </div>
                   {branchError && (
-                    <div style={{ fontSize: 10, color: "var(--red)", paddingLeft: 88 }}>{branchError}</div>
+                    <div style={{ fontSize: 10, color: "var(--red)", paddingLeft: 88 }}>
+                      {branchError}
+                    </div>
                   )}
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
                     <button
-                      onClick={() => { setCreateBranchOpen(false); setBranchError(null); }}
+                      onClick={() => {
+                        setCreateBranchOpen(false);
+                        setBranchError(null);
+                      }}
                       style={{
                         padding: "4px 10px",
                         borderRadius: 5,
@@ -902,11 +1230,20 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         padding: "4px 10px",
                         borderRadius: 5,
                         border: "none",
-                        background: newBranchName.trim() && !creatingBranch ? "var(--accent)" : "var(--surface-3)",
-                        color: newBranchName.trim() && !creatingBranch ? "var(--text-on-color)" : "var(--text-muted)",
+                        background:
+                          newBranchName.trim() && !creatingBranch
+                            ? "var(--accent)"
+                            : "var(--surface-3)",
+                        color:
+                          newBranchName.trim() && !creatingBranch
+                            ? "var(--text-on-color)"
+                            : "var(--text-muted)",
                         fontSize: 11,
                         fontWeight: 600,
-                        cursor: newBranchName.trim() && !creatingBranch ? "pointer" : "not-allowed",
+                        cursor:
+                          newBranchName.trim() && !creatingBranch
+                            ? "pointer"
+                            : "not-allowed",
                       }}
                     >
                       {creatingBranch ? "Creating..." : "Create branch"}
@@ -916,34 +1253,35 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               )}
 
               <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
-              <textarea
-                placeholder="Enter commit message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={4}
-                style={{
-                  width: "100%",
-                  resize: "vertical",
-                  padding: "8px 10px",
-                  borderRadius: 6,
-                  border: "1px solid var(--border)",
-                  background: "var(--surface-0)",
-                  color: "var(--text-primary)",
-                  fontSize: 12,
-                  fontFamily: "inherit",
-                  outline: "none",
-                  lineHeight: 1.5,
-                  transition: "border-color 0.15s",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                    handleCommit();
-                  }
-                }}
-              />
-              <AiCommitMessageButton onGenerated={(msg) => setMessage(msg)} />
+                <textarea
+                  ref={messageTextareaRef}
+                  placeholder="Enter commit message..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  style={{
+                    width: "100%",
+                    resize: "vertical",
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border: "1px solid var(--border)",
+                    background: "var(--surface-0)",
+                    color: "var(--text-primary)",
+                    fontSize: 12,
+                    fontFamily: "inherit",
+                    outline: "none",
+                    lineHeight: 1.5,
+                    transition: "border-color 0.15s",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                      handleCommit();
+                    }
+                  }}
+                />
+                <AiCommitMessageButton onGenerated={(msg) => setMessage(msg)} />
               </div>
 
               <AuthorInfo />
@@ -996,7 +1334,16 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         transition: "all 0.15s",
                       }}
                     >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
                     </button>
@@ -1029,14 +1376,29 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         disabled={!canCommit}
                         onClick={() => handleCommit(true)}
                       />
-                      <div style={{ height: 1, background: "var(--border-subtle)", margin: "2px 0" }} />
+                      <div
+                        style={{
+                          height: 1,
+                          background: "var(--border-subtle)",
+                          margin: "2px 0",
+                        }}
+                      />
                       <DropdownItem
                         icon={<IconAmend size={12} />}
                         label={amend ? "Disable amend" : "Amend commit"}
-                        onClick={() => { setAmend((v) => !v); setCommitDropdownOpen(false); }}
+                        onClick={() => {
+                          setAmend((v) => !v);
+                          setCommitDropdownOpen(false);
+                        }}
                         active={amend}
                       />
-                      <div style={{ height: 1, background: "var(--border-subtle)", margin: "2px 0" }} />
+                      <div
+                        style={{
+                          height: 1,
+                          background: "var(--border-subtle)",
+                          margin: "2px 0",
+                        }}
+                      />
                       <DropdownItem
                         icon={<IconStash size={12} />}
                         label="Stash staged changes"
@@ -1138,7 +1500,6 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
   );
 };
 
-
 /* ─── File List Panel (used for both Staged and Changes) ─── */
 
 const FileListPanel: React.FC<{
@@ -1160,9 +1521,31 @@ const FileListPanel: React.FC<{
   onAddToGitignore: (pattern: string) => void;
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
-}> = ({ title, count, files, selectedFile, selectedPaths, onSelectFile, onToggleSelect, accentColor, treeView, onToggleTreeView, onDiscard, onDiscardAll, showDiscard, onStageFile, onUnstageFile, onAddToGitignore, onFileHistory, onFileBlame }) => {
+  onDropFiles?: (paths: string[]) => void;
+}> = ({
+  title,
+  count,
+  files,
+  selectedFile,
+  selectedPaths,
+  onSelectFile,
+  onToggleSelect,
+  accentColor,
+  treeView,
+  onToggleTreeView,
+  onDiscard,
+  onDiscardAll,
+  showDiscard,
+  onStageFile,
+  onUnstageFile,
+  onAddToGitignore,
+  onFileHistory,
+  onFileBlame,
+  onDropFiles,
+}) => {
   const [confirmDiscardAll, setConfirmDiscardAll] = useState(false);
   const [collapsedDirs, setCollapsedDirs] = useState<Set<string>>(new Set());
+  const [dragOver, setDragOver] = useState(false);
   const tree = useMemo(() => buildTree(files), [files]);
 
   const toggleDir = (dirPath: string) => {
@@ -1189,7 +1572,15 @@ const FileListPanel: React.FC<{
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: accentColor }}>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: accentColor,
+            }}
+          >
             {title}
           </span>
           <span
@@ -1210,15 +1601,27 @@ const FileListPanel: React.FC<{
           </span>
         </div>
         <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
-          {showDiscard && files.length > 0 && (
-            confirmDiscardAll ? (
-              <span style={{ display: "flex", gap: 3, alignItems: "center", fontSize: 10 }}>
+          {showDiscard &&
+            files.length > 0 &&
+            (confirmDiscardAll ? (
+              <span
+                style={{ display: "flex", gap: 3, alignItems: "center", fontSize: 10 }}
+              >
                 <span style={{ color: "var(--red)" }}>Discard all?</span>
                 <button
-                  onClick={() => { onDiscardAll(); setConfirmDiscardAll(false); }}
+                  onClick={() => {
+                    onDiscardAll();
+                    setConfirmDiscardAll(false);
+                  }}
                   style={{
-                    fontSize: 9, color: "var(--red)", background: "var(--red-dim)",
-                    border: "none", cursor: "pointer", padding: "1px 5px", borderRadius: 3, fontWeight: 600,
+                    fontSize: 9,
+                    color: "var(--red)",
+                    background: "var(--red-dim)",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "1px 5px",
+                    borderRadius: 3,
+                    fontWeight: 600,
                   }}
                 >
                   Yes
@@ -1226,8 +1629,12 @@ const FileListPanel: React.FC<{
                 <button
                   onClick={() => setConfirmDiscardAll(false)}
                   style={{
-                    fontSize: 9, color: "var(--text-muted)", background: "none",
-                    border: "none", cursor: "pointer", padding: "1px 3px",
+                    fontSize: 9,
+                    color: "var(--text-muted)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "1px 3px",
                   }}
                 >
                   No
@@ -1240,8 +1647,7 @@ const FileListPanel: React.FC<{
               >
                 <IconDiscard size={11} />
               </IconButton>
-            )
-          )}
+            ))}
           <IconButton
             title={treeView ? "Switch to flat view" : "Switch to tree view"}
             onClick={onToggleTreeView}
@@ -1253,9 +1659,44 @@ const FileListPanel: React.FC<{
       </div>
 
       {/* File list */}
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          outline: dragOver ? "2px dashed var(--accent)" : "none",
+          outlineOffset: -2,
+          transition: "outline 0.1s",
+        }}
+        onDragOver={
+          onDropFiles
+            ? (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setDragOver(true);
+              }
+            : undefined
+        }
+        onDragLeave={onDropFiles ? () => setDragOver(false) : undefined}
+        onDrop={
+          onDropFiles
+            ? (e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const data = e.dataTransfer.getData("application/git-expansion-files");
+                if (data) onDropFiles(JSON.parse(data));
+              }
+            : undefined
+        }
+      >
         {files.length === 0 && (
-          <div style={{ padding: "12px", fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>
+          <div
+            style={{
+              padding: "12px",
+              fontSize: 11,
+              color: "var(--text-muted)",
+              textAlign: "center",
+            }}
+          >
             No files
           </div>
         )}
@@ -1295,13 +1736,17 @@ const FileListPanel: React.FC<{
                 onAddToGitignore={onAddToGitignore}
                 onFileHistory={onFileHistory}
                 onFileBlame={onFileBlame}
+                dragPaths={
+                  selectedPaths.has(f.path) && selectedPaths.size > 1
+                    ? Array.from(selectedPaths)
+                    : undefined
+                }
               />
             ))}
       </div>
     </div>
   );
 };
-
 
 /* ─── Tree Node Row ─── */
 
@@ -1321,7 +1766,23 @@ const TreeNodeRow: React.FC<{
   onAddToGitignore: (pattern: string) => void;
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
-}> = ({ node, depth, selectedFile, selectedPaths, onSelectFile, onToggleSelect, collapsedDirs, onToggleDir, showDiscard, onDiscard, onStageFile, onUnstageFile, onAddToGitignore, onFileHistory, onFileBlame }) => {
+}> = ({
+  node,
+  depth,
+  selectedFile,
+  selectedPaths,
+  onSelectFile,
+  onToggleSelect,
+  collapsedDirs,
+  onToggleDir,
+  showDiscard,
+  onDiscard,
+  onStageFile,
+  onUnstageFile,
+  onAddToGitignore,
+  onFileHistory,
+  onFileBlame,
+}) => {
   const isDir = !node.file && node.children.length > 0;
   const isCollapsed = collapsedDirs.has(node.path);
 
@@ -1342,7 +1803,9 @@ const TreeNodeRow: React.FC<{
             userSelect: "none",
           }}
           className="file-item-row"
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-hover)")}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "var(--surface-hover)")
+          }
           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
           <svg
@@ -1417,7 +1880,6 @@ const TreeNodeRow: React.FC<{
   );
 };
 
-
 /* ─── Flat File Row ─── */
 
 const FlatFileRow: React.FC<{
@@ -1433,7 +1895,22 @@ const FlatFileRow: React.FC<{
   onAddToGitignore: (pattern: string) => void;
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
-}> = ({ file, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore, onFileHistory, onFileBlame }) => {
+  dragPaths?: string[];
+}> = ({
+  file,
+  selected,
+  checked,
+  onSelect,
+  onToggleCheck,
+  showDiscard,
+  onDiscard,
+  onStage,
+  onUnstage,
+  onAddToGitignore,
+  onFileHistory,
+  onFileBlame,
+  dragPaths,
+}) => {
   const fileName = file.path.split("/").pop() || file.path;
   const dirPath = file.path.includes("/")
     ? file.path.slice(0, file.path.lastIndexOf("/"))
@@ -1456,10 +1933,10 @@ const FlatFileRow: React.FC<{
       onAddToGitignore={onAddToGitignore}
       onFileHistory={onFileHistory}
       onFileBlame={onFileBlame}
+      dragPaths={dragPaths}
     />
   );
 };
-
 
 /* ─── Shared File Row ─── */
 
@@ -1479,7 +1956,25 @@ const FileRow: React.FC<{
   onAddToGitignore: (pattern: string) => void;
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
-}> = ({ file, name, dirPath, depth, selected, checked, onSelect, onToggleCheck, showDiscard, onDiscard, onStage, onUnstage, onAddToGitignore, onFileHistory, onFileBlame }) => {
+  dragPaths?: string[];
+}> = ({
+  file,
+  name,
+  dirPath,
+  depth,
+  selected,
+  checked,
+  onSelect,
+  onToggleCheck,
+  showDiscard,
+  onDiscard,
+  onStage,
+  onUnstage,
+  onAddToGitignore,
+  onFileHistory,
+  onFileBlame,
+  dragPaths,
+}) => {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -1527,12 +2022,16 @@ const FileRow: React.FC<{
 
   const openFile = async () => {
     closeContextMenu();
-    try { await window.electronAPI.shell.openFile(file.path); } catch {}
+    try {
+      await window.electronAPI.shell.openFile(file.path);
+    } catch {}
   };
 
   const showInFolder = async () => {
     closeContextMenu();
-    try { await window.electronAPI.shell.showInFolder(file.path); } catch {}
+    try {
+      await window.electronAPI.shell.showInFolder(file.path);
+    } catch {}
   };
 
   return (
@@ -1540,6 +2039,15 @@ const FileRow: React.FC<{
       <div
         onClick={onSelect}
         onContextMenu={handleContextMenu}
+        draggable
+        onDragStart={(e) => {
+          const paths = dragPaths && dragPaths.length > 0 ? dragPaths : [file.path];
+          e.dataTransfer.setData(
+            "application/git-expansion-files",
+            JSON.stringify(paths)
+          );
+          e.dataTransfer.effectAllowed = "move";
+        }}
         className="file-item-row"
         style={{
           display: "flex",
@@ -1582,7 +2090,16 @@ const FileRow: React.FC<{
           }}
         >
           {checked && (
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--surface-0)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="8"
+              height="8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--surface-0)"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
@@ -1618,7 +2135,12 @@ const FileRow: React.FC<{
         {dirPath && (
           <span
             className="truncate"
-            style={{ color: "var(--text-muted)", fontSize: 9, flexShrink: 2, minWidth: 0 }}
+            style={{
+              color: "var(--text-muted)",
+              fontSize: 9,
+              flexShrink: 2,
+              minWidth: 0,
+            }}
           >
             {dirPath}
           </span>
@@ -1628,15 +2150,30 @@ const FileRow: React.FC<{
         {showDiscard && (
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ marginLeft: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}
+            style={{
+              marginLeft: "auto",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+            }}
           >
             {confirmDiscard ? (
               <>
                 <button
-                  onClick={() => { onDiscard(); setConfirmDiscard(false); }}
+                  onClick={() => {
+                    onDiscard();
+                    setConfirmDiscard(false);
+                  }}
                   style={{
-                    fontSize: 8, fontWeight: 600, color: "var(--red)", background: "var(--red-dim)",
-                    border: "none", cursor: "pointer", padding: "1px 4px", borderRadius: 3,
+                    fontSize: 8,
+                    fontWeight: 600,
+                    color: "var(--red)",
+                    background: "var(--red-dim)",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "1px 4px",
+                    borderRadius: 3,
                   }}
                 >
                   Discard
@@ -1644,8 +2181,12 @@ const FileRow: React.FC<{
                 <button
                   onClick={() => setConfirmDiscard(false)}
                   style={{
-                    fontSize: 8, color: "var(--text-muted)", background: "none",
-                    border: "none", cursor: "pointer", padding: "1px 3px",
+                    fontSize: 8,
+                    color: "var(--text-muted)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "1px 3px",
                   }}
                 >
                   No
@@ -1701,7 +2242,6 @@ const FileRow: React.FC<{
   );
 };
 
-
 /* ─── Dropdown menu item ─── */
 
 const DropdownItem: React.FC<{
@@ -1725,15 +2265,18 @@ const DropdownItem: React.FC<{
       color: disabled
         ? "var(--text-muted)"
         : danger
-        ? "var(--red)"
-        : "var(--text-primary)",
+          ? "var(--red)"
+          : "var(--text-primary)",
       fontSize: 11,
       cursor: disabled ? "not-allowed" : "pointer",
       textAlign: "left",
       transition: "background 0.1s",
     }}
     onMouseEnter={(e) => {
-      if (!disabled) e.currentTarget.style.background = danger ? "var(--red-dim)" : "var(--surface-hover)";
+      if (!disabled)
+        e.currentTarget.style.background = danger
+          ? "var(--red-dim)"
+          : "var(--surface-hover)";
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.background = active ? "var(--accent-dim)" : "transparent";
@@ -1743,7 +2286,6 @@ const DropdownItem: React.FC<{
     {label}
   </button>
 );
-
 
 /* ─── Small reusable components ─── */
 
@@ -1780,7 +2322,9 @@ const StageIconButton: React.FC<{
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.background = disabled ? "transparent" : "var(--surface-1)";
-      e.currentTarget.style.color = disabled ? "var(--text-muted)" : "var(--text-secondary)";
+      e.currentTarget.style.color = disabled
+        ? "var(--text-muted)"
+        : "var(--text-secondary)";
     }}
   >
     {children}
@@ -1814,7 +2358,6 @@ const IconButton: React.FC<{
   </button>
 );
 
-
 /* ─── File Context Menu ─── */
 
 const FileContextMenu: React.FC<{
@@ -1833,7 +2376,23 @@ const FileContextMenu: React.FC<{
   onAddToGitignore: (pattern: string) => void;
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
-}> = ({ x, y, file, isStaged, onClose, onStage, onUnstage, onDiscard, onOpenFile, onShowInFolder, onCopyPath, onCopyFileName, onAddToGitignore, onFileHistory, onFileBlame }) => {
+}> = ({
+  x,
+  y,
+  file,
+  isStaged,
+  onClose,
+  onStage,
+  onUnstage,
+  onDiscard,
+  onOpenFile,
+  onShowInFolder,
+  onCopyPath,
+  onCopyFileName,
+  onAddToGitignore,
+  onFileHistory,
+  onFileBlame,
+}) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
@@ -1884,7 +2443,9 @@ const FileContextMenu: React.FC<{
     transition: "background 0.08s",
   };
 
-  const separator = <div style={{ height: 1, background: "var(--border-subtle)", margin: "3px 0" }} />;
+  const separator = (
+    <div style={{ height: 1, background: "var(--border-subtle)", margin: "3px 0" }} />
+  );
 
   const handleItemHover = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.background = "var(--surface-hover)";
@@ -1914,7 +2475,10 @@ const FileContextMenu: React.FC<{
       {isStaged && onUnstage && (
         <button
           style={menuItemStyle}
-          onClick={() => { onUnstage(); onClose(); }}
+          onClick={() => {
+            onUnstage();
+            onClose();
+          }}
           onMouseEnter={handleItemHover}
           onMouseLeave={handleItemLeave}
         >
@@ -1924,7 +2488,10 @@ const FileContextMenu: React.FC<{
       {!isStaged && onStage && (
         <button
           style={menuItemStyle}
-          onClick={() => { onStage(); onClose(); }}
+          onClick={() => {
+            onStage();
+            onClose();
+          }}
           onMouseEnter={handleItemHover}
           onMouseLeave={handleItemLeave}
         >
@@ -1937,8 +2504,12 @@ const FileContextMenu: React.FC<{
         <button
           style={{ ...menuItemStyle, color: "var(--red)" }}
           onClick={() => setConfirmDiscard(true)}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--red-dim)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--red-dim)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+          }}
         >
           <IconDiscard size={13} /> Reset file changes
         </button>
@@ -1946,9 +2517,16 @@ const FileContextMenu: React.FC<{
       {onDiscard && confirmDiscard && (
         <button
           style={{ ...menuItemStyle, color: "var(--red)", fontWeight: 600 }}
-          onClick={() => { onDiscard(); onClose(); }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--red-dim)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          onClick={() => {
+            onDiscard();
+            onClose();
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--red-dim)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+          }}
         >
           <IconDiscard size={13} /> Confirm reset?
         </button>
@@ -1960,7 +2538,10 @@ const FileContextMenu: React.FC<{
       {onFileHistory && (
         <button
           style={menuItemStyle}
-          onClick={() => { onFileHistory(file.path); onClose(); }}
+          onClick={() => {
+            onFileHistory(file.path);
+            onClose();
+          }}
           onMouseEnter={handleItemHover}
           onMouseLeave={handleItemLeave}
         >
@@ -1970,7 +2551,10 @@ const FileContextMenu: React.FC<{
       {onFileBlame && (
         <button
           style={menuItemStyle}
-          onClick={() => { onFileBlame(file.path); onClose(); }}
+          onClick={() => {
+            onFileBlame(file.path);
+            onClose();
+          }}
           onMouseEnter={handleItemHover}
           onMouseLeave={handleItemLeave}
         >
@@ -2003,7 +2587,10 @@ const FileContextMenu: React.FC<{
       {/* Gitignore actions */}
       <button
         style={menuItemStyle}
-        onClick={() => { onAddToGitignore(file.path); onClose(); }}
+        onClick={() => {
+          onAddToGitignore(file.path);
+          onClose();
+        }}
         onMouseEnter={handleItemHover}
         onMouseLeave={handleItemLeave}
       >
@@ -2012,7 +2599,10 @@ const FileContextMenu: React.FC<{
       {file.path.includes("/") && (
         <button
           style={menuItemStyle}
-          onClick={() => { onAddToGitignore(file.path.slice(0, file.path.lastIndexOf("/")) + "/"); onClose(); }}
+          onClick={() => {
+            onAddToGitignore(file.path.slice(0, file.path.lastIndexOf("/")) + "/");
+            onClose();
+          }}
           onMouseEnter={handleItemHover}
           onMouseLeave={handleItemLeave}
         >
@@ -2020,12 +2610,17 @@ const FileContextMenu: React.FC<{
         </button>
       )}
       {(() => {
-        const ext = file.path.includes(".") ? file.path.slice(file.path.lastIndexOf(".")) : "";
+        const ext = file.path.includes(".")
+          ? file.path.slice(file.path.lastIndexOf("."))
+          : "";
         if (!ext) return null;
         return (
           <button
             style={menuItemStyle}
-            onClick={() => { onAddToGitignore("*" + ext); onClose(); }}
+            onClick={() => {
+              onAddToGitignore("*" + ext);
+              onClose();
+            }}
             onMouseEnter={handleItemHover}
             onMouseLeave={handleItemLeave}
           >
@@ -2057,7 +2652,6 @@ const FileContextMenu: React.FC<{
   );
 };
 
-
 /* ─── Toolbar Button ─── */
 
 const ToolbarButton: React.FC<{
@@ -2088,25 +2682,44 @@ const ToolbarButton: React.FC<{
       e.currentTarget.style.borderColor = "var(--accent)";
     }}
     onMouseLeave={(e) => {
-      e.currentTarget.style.background = active ? "var(--accent-dim)" : "var(--surface-0)";
+      e.currentTarget.style.background = active
+        ? "var(--accent-dim)"
+        : "var(--surface-0)";
       e.currentTarget.style.borderColor = "var(--border)";
     }}
   >
     {icon}
     {label}
     {hasDropdown && (
-      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="8"
+        height="8"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="6 9 12 15 18 9" />
       </svg>
     )}
   </button>
 );
 
-
 /* ─── Icons ─── */
 
 const IconGitCommit = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="var(--accent)"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="12" cy="12" r="4" />
     <line x1="1.05" y1="12" x2="7" y2="12" />
     <line x1="17.01" y1="12" x2="22.96" y2="12" />
@@ -2114,67 +2727,158 @@ const IconGitCommit = () => (
 );
 
 const IconDiscard: React.FC<{ size?: number }> = ({ size = 13 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="1 4 1 10 7 10" />
     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
   </svg>
 );
 
 const IconArrowDown: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="12" y1="5" x2="12" y2="19" />
     <polyline points="19 12 12 19 5 12" />
   </svg>
 );
 
 const IconDoubleArrowDown: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="7 7 12 12 17 7" />
     <polyline points="7 13 12 18 17 13" />
   </svg>
 );
 
 const IconArrowUp: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="12" y1="19" x2="12" y2="5" />
     <polyline points="5 12 12 5 19 12" />
   </svg>
 );
 
 const IconDoubleArrowUp: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="17 18 12 13 7 18" />
     <polyline points="17 12 12 7 7 12" />
   </svg>
 );
 
 const IconCheck: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 
 const IconAmend: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 
 const IconStash: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
   </svg>
 );
 
 const IconFolder: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="var(--yellow)" stroke="var(--yellow)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity={0.7}>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="var(--yellow)"
+    stroke="var(--yellow)"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    opacity={0.7}
+  >
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
   </svg>
 );
 
 const IconTree: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="8" y1="6" x2="21" y2="6" />
     <line x1="12" y1="12" x2="21" y2="12" />
     <line x1="12" y1="18" x2="21" y2="18" />
@@ -2185,7 +2889,16 @@ const IconTree: React.FC<{ size?: number }> = ({ size = 14 }) => (
 );
 
 const IconList: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="8" y1="6" x2="21" y2="6" />
     <line x1="8" y1="12" x2="21" y2="12" />
     <line x1="8" y1="18" x2="21" y2="18" />
@@ -2196,28 +2909,64 @@ const IconList: React.FC<{ size?: number }> = ({ size = 14 }) => (
 );
 
 const IconCopy: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </svg>
 );
 
 const IconOpenFile: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
   </svg>
 );
 
 const IconHistory: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="12" cy="12" r="10" />
     <polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
 const IconBlame: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
     <circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -2225,8 +2974,33 @@ const IconBlame: React.FC<{ size?: number }> = ({ size = 14 }) => (
   </svg>
 );
 
+const IconSnippet: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </svg>
+);
+
 const IconTemplate: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
     <line x1="16" y1="13" x2="8" y2="13" />
@@ -2236,7 +3010,16 @@ const IconTemplate: React.FC<{ size?: number }> = ({ size = 14 }) => (
 );
 
 const IconBranch: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="6" y1="3" x2="6" y2="15" />
     <circle cx="18" cy="6" r="3" />
     <circle cx="6" cy="18" r="3" />
@@ -2245,14 +3028,32 @@ const IconBranch: React.FC<{ size?: number }> = ({ size = 14 }) => (
 );
 
 const IconGitignore: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="12" cy="12" r="10" />
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
   </svg>
 );
 
 const IconRefresh: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="23 4 23 10 17 10" />
     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
   </svg>
@@ -2284,17 +3085,34 @@ const AuthorInfo: React.FC = () => {
   return (
     <div
       style={{
-        fontSize: 11, color: "var(--text-muted)", padding: "2px 2px",
-        display: "flex", alignItems: "center", gap: 4,
+        fontSize: 11,
+        color: "var(--text-muted)",
+        padding: "2px 2px",
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
       }}
     >
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+      <svg
+        width="11"
+        height="11"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
       </svg>
       <span>
-        Author: {name}{email && ` <${email}>`}
+        Author: {name}
+        {email && ` <${email}>`}
         {currentAccount && (
-          <span style={{ color: "var(--accent)", marginLeft: 6 }}>({currentAccount.label})</span>
+          <span style={{ color: "var(--accent)", marginLeft: 6 }}>
+            ({currentAccount.label})
+          </span>
         )}
       </span>
     </div>

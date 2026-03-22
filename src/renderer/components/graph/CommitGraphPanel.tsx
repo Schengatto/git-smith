@@ -1,9 +1,15 @@
 import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
-import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import type { VirtuosoHandle } from "react-virtuoso";
+import { Virtuoso } from "react-virtuoso";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
-import { ContextMenu, ContextMenuEntry } from "../layout/ContextMenu";
-import { CherryPickDialog, CreateBranchDialog, RevertDialog } from "../dialogs/BranchDialogs";
+import type { ContextMenuEntry } from "../layout/ContextMenu";
+import { ContextMenu } from "../layout/ContextMenu";
+import {
+  CherryPickDialog,
+  CreateBranchDialog,
+  RevertDialog,
+} from "../dialogs/BranchDialogs";
 import { SquashDialog } from "../dialogs/SquashDialog";
 import { SearchCommitsDialog } from "../dialogs/SearchCommitsDialog";
 import { ResetDialog } from "../dialogs/ResetDialog";
@@ -19,7 +25,10 @@ import { AiReviewDialog } from "../ai/AiReviewDialog";
 import { ArchiveDialog } from "../dialogs/ArchiveDialog";
 import { PatchCreateDialog } from "../dialogs/PatchDialog";
 import { NotesDialog } from "../dialogs/NotesDialog";
-import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
+import {
+  runGitOperation,
+  GitOperationCancelledError,
+} from "../../store/git-operation-store";
 import { useGraphDialogs } from "./useGraphDialogs";
 
 const LANE_WIDTH = 16;
@@ -27,14 +36,36 @@ const ROW_HEIGHT = 30;
 const DOT_RADIUS = 4;
 
 const LANE_PALETTE = [
-  "#89b4fa", "#a6e3a1", "#f9e2af", "#cba6f7", "#fab387",
-  "#f38ba8", "#94e2d5", "#89dceb", "#f5c2e7", "#74c7ec",
-  "#b4befe", "#eba0ac", "#a6adc8", "#f2cdcd", "#7f849c",
+  "#89b4fa",
+  "#a6e3a1",
+  "#f9e2af",
+  "#cba6f7",
+  "#fab387",
+  "#f38ba8",
+  "#94e2d5",
+  "#89dceb",
+  "#f5c2e7",
+  "#74c7ec",
+  "#b4befe",
+  "#eba0ac",
+  "#a6adc8",
+  "#f2cdcd",
+  "#7f849c",
   "#9399b2",
 ];
 
 const IconGitCommit = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ opacity: 0.4 }}
+  >
     <circle cx="12" cy="12" r="4" />
     <line x1="1.05" y1="12" x2="7" y2="12" />
     <line x1="17.01" y1="12" x2="22.96" y2="12" />
@@ -44,9 +75,24 @@ const IconGitCommit = () => (
 export const CommitGraphPanel: React.FC = () => {
   const { repo } = useRepoStore();
   const {
-    rows, loading, hasMore, loadGraph, loadMore, selectCommit, selectedCommit,
-    branchFilter, setBranchFilter, branchVisibility, setBranchVisibility,
-    restoreViewSettings, viewSettingsRestored,
+    rows,
+    loading,
+    hasMore,
+    loadGraph,
+    loadMore,
+    selectCommit,
+    selectedCommit,
+    branchFilter,
+    setBranchFilter,
+    branchVisibility,
+    setBranchVisibility,
+    restoreViewSettings,
+    viewSettingsRestored,
+    authorFilter,
+    setAuthorFilter,
+    authorFilterMode,
+    setAuthorFilterMode,
+    allCommits,
   } = useGraphStore();
 
   useEffect(() => {
@@ -72,41 +118,86 @@ export const CommitGraphPanel: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.headCommit]);
 
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; row: GraphRow } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; row: GraphRow } | null>(
+    null
+  );
   const dialogs = useGraphDialogs();
   const {
-    cherryPickTarget, setCherryPickTarget,
-    revertTarget, setRevertTarget,
-    searchDialogOpen, setSearchDialogOpen,
-    createBranchFrom, setCreateBranchFrom,
-    resetTarget, setResetTarget,
-    tagTarget, setTagTarget,
-    deleteBranchTarget, setDeleteBranchTarget,
-    deleteRemoteBranchTarget, setDeleteRemoteBranchTarget,
-    deleteTagTarget, setDeleteTagTarget,
-    deleteTagRemote, setDeleteTagRemote,
-    checkoutTarget, setCheckoutTarget,
-    mergeTarget, setMergeTarget,
-    rebaseTarget, setRebaseTarget,
-    squashTarget, setSquashTarget,
-    compareTarget, setCompareTarget,
-    aiReviewHash, setAiReviewHash,
-    archiveTarget, setArchiveTarget,
-    patchTarget, setPatchTarget,
-    notesTarget, setNotesTarget,
+    cherryPickTarget,
+    setCherryPickTarget,
+    revertTarget,
+    setRevertTarget,
+    searchDialogOpen,
+    setSearchDialogOpen,
+    createBranchFrom,
+    setCreateBranchFrom,
+    resetTarget,
+    setResetTarget,
+    tagTarget,
+    setTagTarget,
+    deleteBranchTarget,
+    setDeleteBranchTarget,
+    deleteRemoteBranchTarget,
+    setDeleteRemoteBranchTarget,
+    deleteTagTarget,
+    setDeleteTagTarget,
+    deleteTagRemote,
+    setDeleteTagRemote,
+    checkoutTarget,
+    setCheckoutTarget,
+    mergeTarget,
+    setMergeTarget,
+    rebaseTarget,
+    setRebaseTarget,
+    squashTarget,
+    setSquashTarget,
+    compareTarget,
+    setCompareTarget,
+    aiReviewHash,
+    setAiReviewHash,
+    archiveTarget,
+    setArchiveTarget,
+    patchTarget,
+    setPatchTarget,
+    notesTarget,
+    setNotesTarget,
   } = dialogs;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [branchFilterInput, setBranchFilterInput] = useState(branchFilter);
   const branchFilterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
+  const authorDropdownRef = useRef<HTMLDivElement>(null);
+  const [authorSearchInput, setAuthorSearchInput] = useState("");
+
+  const uniqueAuthors = useMemo(() => {
+    const authors = new Map<string, string>();
+    for (const c of allCommits) {
+      if (c.authorName && !authors.has(c.authorName)) {
+        authors.set(c.authorName, c.authorEmail || "");
+      }
+    }
+    return Array.from(authors.entries())
+      .map(([name, email]) => ({ name, email }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCommits]);
+
+  const authorFilteredRows = useMemo(() => {
+    if (!authorFilter || authorFilterMode !== "filter") return rows;
+    return rows.filter((r) => r.commit.authorName === authorFilter);
+  }, [rows, authorFilter, authorFilterMode]);
 
   // Branch visibility filter dropdown state
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [allBranches, setAllBranches] = useState<BranchInfo[]>([]);
   const [branchSearch, setBranchSearch] = useState("");
-  const [pendingMode, setPendingMode] = useState<"include" | "exclude">(branchVisibility?.mode || "include");
-  const [pendingBranches, setPendingBranches] = useState<Set<string>>(new Set(branchVisibility?.branches || []));
+  const [pendingMode, setPendingMode] = useState<"include" | "exclude">(
+    branchVisibility?.mode || "include"
+  );
+  const [pendingBranches, setPendingBranches] = useState<Set<string>>(
+    new Set(branchVisibility?.branches || [])
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Load branches when dropdown opens
@@ -133,6 +224,21 @@ export const CommitGraphPanel: React.FC = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [branchDropdownOpen]);
+
+  // Close author dropdown on click outside
+  useEffect(() => {
+    if (!authorDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        authorDropdownRef.current &&
+        !authorDropdownRef.current.contains(e.target as Node)
+      ) {
+        setAuthorDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [authorDropdownOpen]);
 
   const toggleBranchSelection = useCallback((name: string) => {
     setPendingBranches((prev) => {
@@ -162,21 +268,27 @@ export const CommitGraphPanel: React.FC = () => {
     loadGraph();
   }, [setBranchVisibility, loadGraph]);
 
-  const applyBranchFilter = useCallback((value: string) => {
-    setBranchFilter(value);
-    // Clear visibility filter when using text filter
-    if (value) {
-      setBranchVisibility(null);
-      setPendingBranches(new Set());
-    }
-    loadGraph();
-  }, [setBranchFilter, setBranchVisibility, loadGraph]);
+  const applyBranchFilter = useCallback(
+    (value: string) => {
+      setBranchFilter(value);
+      // Clear visibility filter when using text filter
+      if (value) {
+        setBranchVisibility(null);
+        setPendingBranches(new Set());
+      }
+      loadGraph();
+    },
+    [setBranchFilter, setBranchVisibility, loadGraph]
+  );
 
-  const handleBranchFilterChange = useCallback((value: string) => {
-    setBranchFilterInput(value);
-    if (branchFilterTimerRef.current) clearTimeout(branchFilterTimerRef.current);
-    branchFilterTimerRef.current = setTimeout(() => applyBranchFilter(value), 400);
-  }, [applyBranchFilter]);
+  const handleBranchFilterChange = useCallback(
+    (value: string) => {
+      setBranchFilterInput(value);
+      if (branchFilterTimerRef.current) clearTimeout(branchFilterTimerRef.current);
+      branchFilterTimerRef.current = setTimeout(() => applyBranchFilter(value), 400);
+    },
+    [applyBranchFilter]
+  );
 
   const handleBranchFilterClear = useCallback(() => {
     setBranchFilterInput("");
@@ -186,9 +298,10 @@ export const CommitGraphPanel: React.FC = () => {
 
   const hasActiveFilter = !!(branchVisibility && branchVisibility.branches.length > 0);
 
-  // Filter rows by search
+  // Filter rows by search (on top of author filter)
+  const baseRows = authorFilteredRows;
   const filteredRows = searchQuery.trim()
-    ? rows.filter((r) => {
+    ? baseRows.filter((r) => {
         const q = searchQuery.toLowerCase();
         const c = r.commit;
         return (
@@ -200,7 +313,7 @@ export const CommitGraphPanel: React.FC = () => {
           c.refs.some((ref) => ref.name.toLowerCase().includes(q))
         );
       })
-    : rows;
+    : baseRows;
 
   const maxGraphWidth = useMemo(() => {
     let maxLanes = 0;
@@ -214,7 +327,11 @@ export const CommitGraphPanel: React.FC = () => {
     const targetRows = searchQuery.trim() ? filteredRows : rows;
     const idx = targetRows.findIndex((r) => r.commit.hash === repo?.headCommit);
     if (idx !== -1) {
-      virtuosoRef.current?.scrollToIndex({ index: idx, behavior: "smooth", align: "center" });
+      virtuosoRef.current?.scrollToIndex({
+        index: idx,
+        behavior: "smooth",
+        align: "center",
+      });
     }
   }, [rows, filteredRows, searchQuery, repo?.headCommit]);
 
@@ -253,9 +370,10 @@ export const CommitGraphPanel: React.FC = () => {
     // Checkout option — show when there are branches or allow detached HEAD
     if (checkableBranches.length > 0) {
       items.push({
-        label: checkableBranches.length === 1
-          ? `Checkout "${checkableBranches[0]!.name}"`
-          : "Checkout...",
+        label:
+          checkableBranches.length === 1
+            ? `Checkout "${checkableBranches[0]!.name}"`
+            : "Checkout...",
         onClick: () =>
           setCheckoutTarget({
             refs: row.commit.refs,
@@ -309,7 +427,8 @@ export const CommitGraphPanel: React.FC = () => {
 
       // Add branch/tag refs as additional rebase targets
       const rebaseRefs = row.commit.refs.filter(
-        (r) => (r.type === "head" || r.type === "remote" || r.type === "tag") && !r.current
+        (r) =>
+          (r.type === "head" || r.type === "remote" || r.type === "tag") && !r.current
       );
       if (rebaseRefs.length > 0) {
         rebaseChildren.push({ divider: true });
@@ -333,12 +452,20 @@ export const CommitGraphPanel: React.FC = () => {
       {
         label: "Cherry Pick",
         onClick: () =>
-          setCherryPickTarget({ hash: row.commit.hash, subject: row.commit.subject, isMerge: isMergeCommit }),
+          setCherryPickTarget({
+            hash: row.commit.hash,
+            subject: row.commit.subject,
+            isMerge: isMergeCommit,
+          }),
       },
       {
         label: "Revert Commit",
         onClick: () =>
-          setRevertTarget({ hash: row.commit.hash, subject: row.commit.subject, isMerge: isMergeCommit }),
+          setRevertTarget({
+            hash: row.commit.hash,
+            subject: row.commit.subject,
+            isMerge: isMergeCommit,
+          }),
       },
       {
         label: "Squash Commits to Here...",
@@ -353,7 +480,7 @@ export const CommitGraphPanel: React.FC = () => {
         label: "Create Tag Here",
         onClick: () =>
           setTagTarget({ hash: row.commit.hash, subject: row.commit.subject }),
-      },
+      }
     );
 
     // Add delete options for branches on this commit
@@ -403,8 +530,12 @@ export const CommitGraphPanel: React.FC = () => {
       { divider: true },
       {
         label: "View Commit Info",
-        onClick: () => openDialogWindow({ dialog: "CommitInfoWindow", data: { commitHash: row.commit.hash } }),
-      },
+        onClick: () =>
+          openDialogWindow({
+            dialog: "CommitInfoWindow",
+            data: { commitHash: row.commit.hash },
+          }),
+      }
     );
 
     // Compare options
@@ -415,7 +546,11 @@ export const CommitGraphPanel: React.FC = () => {
         onClick: () => setCompareTarget({ commit1: row.commit, commit2: headRow.commit }),
       });
     }
-    if (selectedCommit && selectedCommit.hash !== row.commit.hash && selectedCommit.hash !== headRow?.commit.hash) {
+    if (
+      selectedCommit &&
+      selectedCommit.hash !== row.commit.hash &&
+      selectedCommit.hash !== headRow?.commit.hash
+    ) {
       items.push({
         label: `Compare with selected (${selectedCommit.abbreviatedHash})`,
         onClick: () => setCompareTarget({ commit1: row.commit, commit2: selectedCommit }),
@@ -432,7 +567,7 @@ export const CommitGraphPanel: React.FC = () => {
             dialog: "ChangelogDialog",
             data: { commitHash: row.commit.hash, commitSubject: row.commit.subject },
           }),
-      },
+      }
     );
 
     items.push(
@@ -443,21 +578,24 @@ export const CommitGraphPanel: React.FC = () => {
       { divider: true },
       {
         label: "Archive / Export...",
-        onClick: () => setArchiveTarget({ ref: row.commit.hash, label: row.commit.abbreviatedHash }),
+        onClick: () =>
+          setArchiveTarget({ ref: row.commit.hash, label: row.commit.abbreviatedHash }),
       },
       {
         label: "Create Patch...",
-        onClick: () => setPatchTarget({ hashes: [row.commit.hash], subjects: [row.commit.subject] }),
+        onClick: () =>
+          setPatchTarget({ hashes: [row.commit.hash], subjects: [row.commit.subject] }),
       },
       {
         label: "Git Notes...",
-        onClick: () => setNotesTarget({ hash: row.commit.hash, subject: row.commit.subject }),
+        onClick: () =>
+          setNotesTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
       { divider: true },
       {
         label: "AI Code Review",
         onClick: () => setAiReviewHash(row.commit.hash),
-      },
+      }
     );
 
     return items;
@@ -507,7 +645,10 @@ export const CommitGraphPanel: React.FC = () => {
         }}
       >
         {/* Branch filter */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, position: "relative" }} ref={dropdownRef}>
+        <div
+          style={{ display: "flex", alignItems: "center", gap: 4, position: "relative" }}
+          ref={dropdownRef}
+        >
           {/* Filter button */}
           <button
             onClick={() => setBranchDropdownOpen((v) => !v)}
@@ -537,7 +678,16 @@ export const CommitGraphPanel: React.FC = () => {
               }
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="6" y1="3" x2="6" y2="15" />
               <circle cx="18" cy="6" r="3" />
               <circle cx="6" cy="18" r="3" />
@@ -549,7 +699,16 @@ export const CommitGraphPanel: React.FC = () => {
                 ({branchVisibility?.branches.length || 0})
               </span>
             )}
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="8"
+              height="8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
@@ -557,8 +716,13 @@ export const CommitGraphPanel: React.FC = () => {
           {/* Active filter badge */}
           {hasActiveFilter && (
             <>
-              <span style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                {branchVisibility?.mode === "exclude" ? "Excluding" : "Showing"} {branchVisibility?.branches.length} branch{(branchVisibility?.branches.length || 0) !== 1 ? "es" : ""} — {rows.length} commits
+              <span
+                style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}
+              >
+                {branchVisibility?.mode === "exclude" ? "Excluding" : "Showing"}{" "}
+                {branchVisibility?.branches.length} branch
+                {(branchVisibility?.branches.length || 0) !== 1 ? "es" : ""} —{" "}
+                {rows.length} commits
               </span>
               <button
                 onClick={clearBranchVisibility}
@@ -574,8 +738,18 @@ export const CommitGraphPanel: React.FC = () => {
                   alignItems: "center",
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </>
@@ -589,7 +763,8 @@ export const CommitGraphPanel: React.FC = () => {
                 onChange={(e) => handleBranchFilterChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    if (branchFilterTimerRef.current) clearTimeout(branchFilterTimerRef.current);
+                    if (branchFilterTimerRef.current)
+                      clearTimeout(branchFilterTimerRef.current);
                     applyBranchFilter(branchFilterInput);
                   }
                   if (e.key === "Escape") handleBranchFilterClear();
@@ -606,7 +781,11 @@ export const CommitGraphPanel: React.FC = () => {
                   outline: "none",
                 }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = branchFilter ? "var(--accent)" : "var(--border)")}
+                onBlur={(e) =>
+                  (e.currentTarget.style.borderColor = branchFilter
+                    ? "var(--accent)"
+                    : "var(--border)")
+                }
               />
               {branchFilterInput && (
                 <button
@@ -627,15 +806,27 @@ export const CommitGraphPanel: React.FC = () => {
                   title="Clear filter"
                   aria-label="Clear filter"
                 >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               )}
             </div>
           )}
           {branchFilter && !hasActiveFilter && (
-            <span style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+            <span
+              style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}
+            >
               {rows.length} commits
             </span>
           )}
@@ -657,6 +848,185 @@ export const CommitGraphPanel: React.FC = () => {
                 setBranchDropdownOpen(false);
               }}
             />
+          )}
+        </div>
+
+        {/* Author filter */}
+        <div ref={authorDropdownRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setAuthorDropdownOpen((v) => !v)}
+            title="Filter by author"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "2px 8px",
+              borderRadius: 4,
+              border: `1px solid ${authorFilter ? "var(--accent)" : "var(--border)"}`,
+              background: authorFilter ? "var(--accent-dim)" : "var(--surface-1)",
+              color: authorFilter ? "var(--accent)" : "var(--text-secondary)",
+              fontSize: 11,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            {authorFilter || "Author"}
+            {authorFilter && (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAuthorFilter(null);
+                  setAuthorDropdownOpen(false);
+                }}
+                style={{ cursor: "pointer", marginLeft: 2 }}
+              >
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </span>
+            )}
+          </button>
+          {authorDropdownOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                left: 0,
+                zIndex: 20,
+                minWidth: 260,
+                maxHeight: 320,
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div
+                style={{
+                  padding: "6px 8px",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <input
+                  value={authorSearchInput}
+                  onChange={(e) => setAuthorSearchInput(e.target.value)}
+                  placeholder="Search authors..."
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    padding: "3px 6px",
+                    borderRadius: 4,
+                    border: "1px solid var(--border)",
+                    background: "var(--surface-0)",
+                    color: "var(--text-primary)",
+                    fontSize: 11,
+                    outline: "none",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 2 }}>
+                  {(["highlight", "filter"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setAuthorFilterMode(mode)}
+                      style={{
+                        padding: "2px 6px",
+                        borderRadius: 3,
+                        fontSize: 9,
+                        cursor: "pointer",
+                        border:
+                          authorFilterMode === mode
+                            ? "1px solid var(--accent)"
+                            : "1px solid var(--border)",
+                        background:
+                          authorFilterMode === mode ? "var(--accent-dim)" : "transparent",
+                        color:
+                          authorFilterMode === mode
+                            ? "var(--accent)"
+                            : "var(--text-muted)",
+                        fontWeight: authorFilterMode === mode ? 600 : 400,
+                      }}
+                    >
+                      {mode === "highlight" ? "Highlight" : "Filter"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ flex: 1, overflowY: "auto", maxHeight: 260 }}>
+                {uniqueAuthors
+                  .filter(
+                    (a) =>
+                      !authorSearchInput ||
+                      a.name.toLowerCase().includes(authorSearchInput.toLowerCase()) ||
+                      a.email.toLowerCase().includes(authorSearchInput.toLowerCase())
+                  )
+                  .map((a) => (
+                    <button
+                      key={a.name}
+                      onClick={() => {
+                        setAuthorFilter(a.name === authorFilter ? null : a.name);
+                        setAuthorDropdownOpen(false);
+                        setAuthorSearchInput("");
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        width: "100%",
+                        padding: "5px 10px",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        background:
+                          a.name === authorFilter ? "var(--accent-dim)" : "transparent",
+                        color: "var(--text-primary)",
+                        fontSize: 11,
+                        transition: "background 0.08s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (a.name !== authorFilter)
+                          e.currentTarget.style.background = "var(--surface-hover)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (a.name !== authorFilter)
+                          e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <span style={{ fontWeight: 500 }}>{a.name}</span>
+                      <span style={{ color: "var(--text-muted)", fontSize: 10 }}>
+                        {a.email}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            </div>
           )}
         </div>
 
@@ -686,7 +1056,16 @@ export const CommitGraphPanel: React.FC = () => {
             e.currentTarget.style.color = "var(--text-secondary)";
           }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="12" r="4" />
             <line x1="1.05" y1="12" x2="7" y2="12" />
             <line x1="17.01" y1="12" x2="22.96" y2="12" />
@@ -719,8 +1098,18 @@ export const CommitGraphPanel: React.FC = () => {
             e.currentTarget.style.color = "var(--text-secondary)";
           }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           Search
         </button>
@@ -738,8 +1127,18 @@ export const CommitGraphPanel: React.FC = () => {
             flexShrink: 0,
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--text-muted)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
             autoFocus
@@ -765,7 +1164,10 @@ export const CommitGraphPanel: React.FC = () => {
             </span>
           )}
           <button
-            onClick={() => { setSearchVisible(false); setSearchQuery(""); }}
+            onClick={() => {
+              setSearchVisible(false);
+              setSearchQuery("");
+            }}
             style={{
               background: "none",
               border: "none",
@@ -775,8 +1177,18 @@ export const CommitGraphPanel: React.FC = () => {
               display: "flex",
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -788,16 +1200,29 @@ export const CommitGraphPanel: React.FC = () => {
           totalCount={filteredRows.length}
           itemContent={(index) => {
             const row = filteredRows[index]!;
+            const dimmed =
+              authorFilter &&
+              authorFilterMode === "highlight" &&
+              row.commit.authorName !== authorFilter;
             return (
-            <GraphRowItem
-              row={row}
-              graphWidth={maxGraphWidth}
-              selected={selectedCommit?.hash === row.commit.hash}
-              isHead={row.commit.hash === repo.headCommit}
-              onClick={() => selectCommit(row.commit.hash)}
-              onDoubleClick={() => openDialogWindow({ dialog: "CommitInfoWindow", data: { commitHash: row.commit.hash } })}
-              onContextMenu={(e) => handleContextMenu(e, row)}
-            />
+              <div
+                style={dimmed ? { opacity: 0.3, transition: "opacity 0.15s" } : undefined}
+              >
+                <GraphRowItem
+                  row={row}
+                  graphWidth={maxGraphWidth}
+                  selected={selectedCommit?.hash === row.commit.hash}
+                  isHead={row.commit.hash === repo.headCommit}
+                  onClick={() => selectCommit(row.commit.hash)}
+                  onDoubleClick={() =>
+                    openDialogWindow({
+                      dialog: "CommitInfoWindow",
+                      data: { commitHash: row.commit.hash },
+                    })
+                  }
+                  onContextMenu={(e) => handleContextMenu(e, row)}
+                />
+              </div>
             );
           }}
           endReached={!searchQuery ? handleEndReached : undefined}
@@ -900,11 +1325,15 @@ export const CommitGraphPanel: React.FC = () => {
             const slashIdx = fullName.indexOf("/");
             const remote = fullName.substring(0, slashIdx);
             const branch = fullName.substring(slashIdx + 1);
-            await runGitOperation("Delete Remote Branch", () => window.electronAPI.branch.deleteRemote(remote, branch));
+            await runGitOperation("Delete Remote Branch", () =>
+              window.electronAPI.branch.deleteRemote(remote, branch)
+            );
             loadGraph();
           } catch (err) {
             if (err instanceof GitOperationCancelledError) return;
-            alert(`Failed to delete remote branch: ${err instanceof Error ? err.message : err}`);
+            alert(
+              `Failed to delete remote branch: ${err instanceof Error ? err.message : err}`
+            );
           }
           setDeleteRemoteBranchTarget(null);
         }}
@@ -933,10 +1362,7 @@ export const CommitGraphPanel: React.FC = () => {
       />
 
       {aiReviewHash && (
-        <AiReviewDialog
-          hash={aiReviewHash}
-          onClose={() => setAiReviewHash(null)}
-        />
+        <AiReviewDialog hash={aiReviewHash} onClose={() => setAiReviewHash(null)} />
       )}
 
       {archiveTarget && (
@@ -984,10 +1410,27 @@ export const CommitGraphPanel: React.FC = () => {
           setDeleteTagTarget(null);
           setDeleteTagRemote(false);
         }}
-        onCancel={() => { setDeleteTagTarget(null); setDeleteTagRemote(false); }}
+        onCancel={() => {
+          setDeleteTagTarget(null);
+          setDeleteTagRemote(false);
+        }}
       >
-        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 13, color: "var(--text-primary)", cursor: "pointer" }}>
-          <input type="checkbox" checked={deleteTagRemote} onChange={(e) => setDeleteTagRemote(e.target.checked)} />
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            marginTop: 10,
+            fontSize: 13,
+            color: "var(--text-primary)",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={deleteTagRemote}
+            onChange={(e) => setDeleteTagRemote(e.target.checked)}
+          />
           Delete tag from remote
         </label>
       </ConfirmDeleteDialog>
@@ -1003,174 +1446,196 @@ const GraphRowItem: React.FC<{
   onClick: () => void;
   onDoubleClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
-}> = React.memo(({ row, graphWidth, selected, isHead, onClick, onDoubleClick, onContextMenu }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+}> = React.memo(
+  ({ row, graphWidth, selected, isHead, onClick, onDoubleClick, onContextMenu }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = graphWidth * dpr;
-    canvas.height = ROW_HEIGHT * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, graphWidth, ROW_HEIGHT);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = graphWidth * dpr;
+      canvas.height = ROW_HEIGHT * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, graphWidth, ROW_HEIGHT);
 
-    const midY = ROW_HEIGHT / 2;
+      const midY = ROW_HEIGHT / 2;
 
-    // Draw edges (extend 1px beyond canvas bounds to avoid anti-aliasing gaps between rows)
-    const TOP = -1;
-    const BOTTOM = ROW_HEIGHT + 1;
+      // Draw edges (extend 1px beyond canvas bounds to avoid anti-aliasing gaps between rows)
+      const TOP = -1;
+      const BOTTOM = ROW_HEIGHT + 1;
 
-    for (const edge of row.edges) {
-      const fromX = edge.fromLane * LANE_WIDTH + LANE_WIDTH / 2;
-      const toX = edge.toLane * LANE_WIDTH + LANE_WIDTH / 2;
-      ctx.strokeStyle = LANE_PALETTE[edge.color % LANE_PALETTE.length] as string;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
+      for (const edge of row.edges) {
+        const fromX = edge.fromLane * LANE_WIDTH + LANE_WIDTH / 2;
+        const toX = edge.toLane * LANE_WIDTH + LANE_WIDTH / 2;
+        ctx.strokeStyle = LANE_PALETTE[edge.color % LANE_PALETTE.length] as string;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
 
-      if (edge.type === "straight") {
-        ctx.moveTo(fromX, TOP);
-        ctx.lineTo(toX, BOTTOM);
-      } else if (edge.type === "start") {
-        // Branch tip: line from commit dot downward
-        ctx.moveTo(fromX, midY);
-        ctx.lineTo(toX, BOTTOM);
-      } else if (edge.type === "end") {
-        // Root commit: line from top of row to commit dot
-        ctx.moveTo(fromX, TOP);
-        ctx.lineTo(toX, midY);
-      } else if (edge.type === "converge-left" || edge.type === "converge-right") {
-        // Lane converging into commit from above: line from top curves to commit dot
-        ctx.moveTo(fromX, TOP);
-        ctx.bezierCurveTo(fromX, midY - 10, toX, midY + 10, toX, midY);
-      } else {
-        // fork-left, fork-right, merge-left, merge-right: line from commit dot curves downward
-        ctx.moveTo(fromX, midY);
-        ctx.bezierCurveTo(fromX, midY + 10, toX, midY - 10, toX, BOTTOM);
+        if (edge.type === "straight") {
+          ctx.moveTo(fromX, TOP);
+          ctx.lineTo(toX, BOTTOM);
+        } else if (edge.type === "start") {
+          // Branch tip: line from commit dot downward
+          ctx.moveTo(fromX, midY);
+          ctx.lineTo(toX, BOTTOM);
+        } else if (edge.type === "end") {
+          // Root commit: line from top of row to commit dot
+          ctx.moveTo(fromX, TOP);
+          ctx.lineTo(toX, midY);
+        } else if (edge.type === "converge-left" || edge.type === "converge-right") {
+          // Lane converging into commit from above: line from top curves to commit dot
+          ctx.moveTo(fromX, TOP);
+          ctx.bezierCurveTo(fromX, midY - 10, toX, midY + 10, toX, midY);
+        } else {
+          // fork-left, fork-right, merge-left, merge-right: line from commit dot curves downward
+          ctx.moveTo(fromX, midY);
+          ctx.bezierCurveTo(fromX, midY + 10, toX, midY - 10, toX, BOTTOM);
+        }
+        ctx.stroke();
       }
+
+      // Commit dot
+      const dotX = row.laneIndex * LANE_WIDTH + LANE_WIDTH / 2;
+      const colorIdx = row.edges.find((e) => e.fromLane === row.laneIndex)?.color ?? 0;
+      const color = LANE_PALETTE[colorIdx % LANE_PALETTE.length] as string;
+      const radius = isHead ? DOT_RADIUS + 1.5 : DOT_RADIUS;
+
+      // Glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur = isHead ? 10 : 6;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(dotX, midY, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Clean border
+      ctx.shadowBlur = 0;
+      const surface0 = getComputedStyle(document.documentElement)
+        .getPropertyValue("--surface-0")
+        .trim();
+      ctx.strokeStyle = isHead
+        ? getComputedStyle(document.documentElement)
+            .getPropertyValue("--text-on-color")
+            .trim()
+        : surface0;
+      ctx.lineWidth = isHead ? 2 : 1.5;
+      ctx.beginPath();
+      ctx.arc(dotX, midY, radius + 0.5, 0, Math.PI * 2);
       ctx.stroke();
-    }
+    }, [row, graphWidth, isHead]);
 
-    // Commit dot
-    const dotX = row.laneIndex * LANE_WIDTH + LANE_WIDTH / 2;
-    const colorIdx =
-      row.edges.find((e) => e.fromLane === row.laneIndex)?.color ?? 0;
-    const color = LANE_PALETTE[colorIdx % LANE_PALETTE.length] as string;
-    const radius = isHead ? DOT_RADIUS + 1.5 : DOT_RADIUS;
+    const { commit } = row;
 
-    // Glow
-    ctx.shadowColor = color;
-    ctx.shadowBlur = isHead ? 10 : 6;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(dotX, midY, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Clean border
-    ctx.shadowBlur = 0;
-    const surface0 = getComputedStyle(document.documentElement).getPropertyValue("--surface-0").trim();
-    ctx.strokeStyle = isHead ? getComputedStyle(document.documentElement).getPropertyValue("--text-on-color").trim() : surface0;
-    ctx.lineWidth = isHead ? 2 : 1.5;
-    ctx.beginPath();
-    ctx.arc(dotX, midY, radius + 0.5, 0, Math.PI * 2);
-    ctx.stroke();
-  }, [row, graphWidth, isHead]);
-
-  const { commit } = row;
-
-  return (
-    <div
-      className="flex items-center cursor-pointer"
-      style={{
-        height: ROW_HEIGHT,
-        background: selected
-          ? "var(--accent-dim)"
-          : isHead
-          ? "color-mix(in srgb, var(--accent) 10%, transparent)"
-          : "transparent",
-        borderLeft: selected
-          ? "2px solid var(--accent)"
-          : isHead
-          ? "2px solid var(--accent)"
-          : "2px solid transparent",
-        transition: "background 0.1s ease",
-      }}
-      onMouseEnter={(e) => {
-        if (!selected) e.currentTarget.style.background = isHead
-          ? "color-mix(in srgb, var(--accent) 16%, transparent)"
-          : "var(--surface-hover)";
-      }}
-      onMouseLeave={(e) => {
-        if (!selected) e.currentTarget.style.background = isHead
-          ? "color-mix(in srgb, var(--accent) 10%, transparent)"
-          : "transparent";
-      }}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
-      onContextMenu={onContextMenu}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{ width: graphWidth, height: ROW_HEIGHT }}
-        className="shrink-0"
-      />
-      <div className="flex items-center gap-1.5 min-w-0 px-1">
-        {commit.refs.map((ref) => (
+    return (
+      <div
+        className="flex items-center cursor-pointer"
+        style={{
+          height: ROW_HEIGHT,
+          background: selected
+            ? "var(--accent-dim)"
+            : isHead
+              ? "color-mix(in srgb, var(--accent) 10%, transparent)"
+              : "transparent",
+          borderLeft: selected
+            ? "2px solid var(--accent)"
+            : isHead
+              ? "2px solid var(--accent)"
+              : "2px solid transparent",
+          transition: "background 0.1s ease",
+        }}
+        onMouseEnter={(e) => {
+          if (!selected)
+            e.currentTarget.style.background = isHead
+              ? "color-mix(in srgb, var(--accent) 16%, transparent)"
+              : "var(--surface-hover)";
+        }}
+        onMouseLeave={(e) => {
+          if (!selected)
+            e.currentTarget.style.background = isHead
+              ? "color-mix(in srgb, var(--accent) 10%, transparent)"
+              : "transparent";
+        }}
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        onContextMenu={onContextMenu}
+      >
+        <canvas
+          ref={canvasRef}
+          style={{ width: graphWidth, height: ROW_HEIGHT }}
+          className="shrink-0"
+        />
+        <div className="flex items-center gap-1.5 min-w-0 px-1">
+          {commit.refs.map((ref) => (
+            <span
+              key={ref.name}
+              title={ref.name}
+              className={`badge ${
+                ref.type === "head"
+                  ? ref.current
+                    ? "badge-head-current"
+                    : "badge-head"
+                  : ref.type === "remote"
+                    ? "badge-remote"
+                    : "badge-tag"
+              }`}
+            >
+              {ref.name}
+            </span>
+          ))}
           <span
-            key={ref.name}
-            title={ref.name}
-            className={`badge ${
-              ref.type === "head"
-                ? ref.current
-                  ? "badge-head-current"
-                  : "badge-head"
-                : ref.type === "remote"
-                ? "badge-remote"
-                : "badge-tag"
-            }`}
+            className="truncate text-xs"
+            style={{
+              color: isHead ? "var(--accent)" : "var(--text-primary)",
+              fontWeight: isHead ? 700 : 400,
+            }}
           >
-            {ref.name}
-          </span>
-        ))}
-        <span className="truncate text-xs" style={{ color: isHead ? "var(--accent)" : "var(--text-primary)", fontWeight: isHead ? 700 : 400 }}>
-          {commit.subject}
-        </span>
-      </div>
-      <div className="ml-auto flex items-center gap-3 px-3 shrink-0">
-        <div className="flex items-center gap-1.5" style={{ width: 120 }}>
-          {commit.gravatarHash && (
-            <img
-              src={`https://www.gravatar.com/avatar/${commit.gravatarHash}?s=40&d=retro`}
-              alt=""
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: "50%",
-                flexShrink: 0,
-              }}
-              loading="lazy"
-            />
-          )}
-          <span
-            className="truncate"
-            style={{ color: "var(--text-secondary)", fontSize: 11 }}
-          >
-            {commit.authorName}
+            {commit.subject}
           </span>
         </div>
-        <span style={{ color: "var(--text-muted)", fontSize: 11, width: 110, textAlign: "right" }}>
-          {formatDate(commit.authorDate)}
-        </span>
-        <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11 }}>
-          {commit.abbreviatedHash}
-        </span>
+        <div className="ml-auto flex items-center gap-3 px-3 shrink-0">
+          <div className="flex items-center gap-1.5" style={{ width: 120 }}>
+            {commit.gravatarHash && (
+              <img
+                src={`https://www.gravatar.com/avatar/${commit.gravatarHash}?s=40&d=retro`}
+                alt=""
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                }}
+                loading="lazy"
+              />
+            )}
+            <span
+              className="truncate"
+              style={{ color: "var(--text-secondary)", fontSize: 11 }}
+            >
+              {commit.authorName}
+            </span>
+          </div>
+          <span
+            style={{
+              color: "var(--text-muted)",
+              fontSize: 11,
+              width: 110,
+              textAlign: "right",
+            }}
+          >
+            {formatDate(commit.authorDate)}
+          </span>
+          <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11 }}>
+            {commit.abbreviatedHash}
+          </span>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 const ConfirmDeleteDialog: React.FC<{
   open: boolean;
@@ -1202,13 +1667,27 @@ const BranchFilterDropdown: React.FC<{
   onToggle: (name: string) => void;
   onApply: () => void;
   onClear: () => void;
-}> = ({ branches, search, onSearchChange, mode, onModeChange, selected, onToggle, onApply, onClear }) => {
+}> = ({
+  branches,
+  search,
+  onSearchChange,
+  mode,
+  onModeChange,
+  selected,
+  onToggle,
+  onApply,
+  onClear,
+}) => {
   const localBranches = branches.filter((b) => !b.remote);
   const remoteBranches = branches.filter((b) => b.remote);
 
   const q = search.toLowerCase();
-  const filteredLocal = q ? localBranches.filter((b) => b.name.toLowerCase().includes(q)) : localBranches;
-  const filteredRemote = q ? remoteBranches.filter((b) => b.name.toLowerCase().includes(q)) : remoteBranches;
+  const filteredLocal = q
+    ? localBranches.filter((b) => b.name.toLowerCase().includes(q))
+    : localBranches;
+  const filteredRemote = q
+    ? remoteBranches.filter((b) => b.name.toLowerCase().includes(q))
+    : remoteBranches;
 
   return (
     <div
@@ -1230,7 +1709,13 @@ const BranchFilterDropdown: React.FC<{
       }}
     >
       {/* Mode toggle */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          borderBottom: "1px solid var(--border-subtle)",
+          flexShrink: 0,
+        }}
+      >
         <button
           onClick={() => onModeChange("include")}
           style={{
@@ -1239,7 +1724,8 @@ const BranchFilterDropdown: React.FC<{
             fontSize: 11,
             fontWeight: mode === "include" ? 600 : 400,
             border: "none",
-            borderBottom: mode === "include" ? "2px solid var(--accent)" : "2px solid transparent",
+            borderBottom:
+              mode === "include" ? "2px solid var(--accent)" : "2px solid transparent",
             background: mode === "include" ? "var(--accent-dim)" : "transparent",
             color: mode === "include" ? "var(--accent)" : "var(--text-secondary)",
             cursor: "pointer",
@@ -1255,8 +1741,12 @@ const BranchFilterDropdown: React.FC<{
             fontSize: 11,
             fontWeight: mode === "exclude" ? 600 : 400,
             border: "none",
-            borderBottom: mode === "exclude" ? "2px solid var(--red)" : "2px solid transparent",
-            background: mode === "exclude" ? "color-mix(in srgb, var(--red) 10%, transparent)" : "transparent",
+            borderBottom:
+              mode === "exclude" ? "2px solid var(--red)" : "2px solid transparent",
+            background:
+              mode === "exclude"
+                ? "color-mix(in srgb, var(--red) 10%, transparent)"
+                : "transparent",
             color: mode === "exclude" ? "var(--red)" : "var(--text-secondary)",
             cursor: "pointer",
           }}
@@ -1266,7 +1756,13 @@ const BranchFilterDropdown: React.FC<{
       </div>
 
       {/* Search */}
-      <div style={{ padding: "6px 8px", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
+      <div
+        style={{
+          padding: "6px 8px",
+          borderBottom: "1px solid var(--border-subtle)",
+          flexShrink: 0,
+        }}
+      >
         <input
           autoFocus
           value={search}
@@ -1292,7 +1788,16 @@ const BranchFilterDropdown: React.FC<{
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
         {filteredLocal.length > 0 && (
           <>
-            <div style={{ padding: "4px 12px 2px", fontSize: 10, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div
+              style={{
+                padding: "4px 12px 2px",
+                fontSize: 10,
+                color: "var(--text-muted)",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
               Local Branches
             </div>
             {filteredLocal.map((b) => (
@@ -1308,7 +1813,16 @@ const BranchFilterDropdown: React.FC<{
         )}
         {filteredRemote.length > 0 && (
           <>
-            <div style={{ padding: "8px 12px 2px", fontSize: 10, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div
+              style={{
+                padding: "8px 12px 2px",
+                fontSize: 10,
+                color: "var(--text-muted)",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
               Remote Branches
             </div>
             {filteredRemote.map((b) => (
@@ -1323,21 +1837,30 @@ const BranchFilterDropdown: React.FC<{
           </>
         )}
         {filteredLocal.length === 0 && filteredRemote.length === 0 && (
-          <div style={{ padding: "12px", fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>
+          <div
+            style={{
+              padding: "12px",
+              fontSize: 11,
+              color: "var(--text-muted)",
+              textAlign: "center",
+            }}
+          >
             No branches found
           </div>
         )}
       </div>
 
       {/* Actions */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "6px 8px",
-        borderTop: "1px solid var(--border-subtle)",
-        flexShrink: 0,
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "6px 8px",
+          borderTop: "1px solid var(--border-subtle)",
+          flexShrink: 0,
+        }}
+      >
         <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
           {selected.size} selected
         </span>
@@ -1416,7 +1939,16 @@ const BranchCheckboxItem: React.FC<{
       }}
     >
       {checked && (
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--base)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--base)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="20 6 9 17 4 12" />
         </svg>
       )}
@@ -1425,7 +1957,11 @@ const BranchCheckboxItem: React.FC<{
       {name}
     </span>
     {current && (
-      <span style={{ fontSize: 9, color: "var(--accent)", fontWeight: 600, flexShrink: 0 }}>HEAD</span>
+      <span
+        style={{ fontSize: 9, color: "var(--accent)", fontWeight: 600, flexShrink: 0 }}
+      >
+        HEAD
+      </span>
     )}
   </div>
 );
