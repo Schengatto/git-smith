@@ -73,6 +73,7 @@
     "@types/react-dom": "18.3.5",
     "@typescript-eslint/eslint-plugin": "8.19.1",
     "@typescript-eslint/parser": "8.19.1",
+    "@vitest/coverage-v8": "^4.1.0",
     "autoprefixer": "10.4.20",
     "electron": "41.0.2",
     "eslint": "8.57.1",
