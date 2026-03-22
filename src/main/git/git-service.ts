@@ -3099,19 +3099,22 @@ export class GitService {
       const detection = await this.detectProvider();
       const { execSync } = await import("child_process");
 
+      // Escape a string for safe use as a shell argument
+      const shellEscape = (s: string): string => "'" + s.replace(/'/g, "'\\''") + "'";
+
       if (detection.provider === "github") {
         const args = [
           "gh",
           "pr",
           "create",
           "--title",
-          JSON.stringify(options.title),
+          shellEscape(options.title),
           "--body",
-          JSON.stringify(options.body),
+          shellEscape(options.body),
           "--base",
-          options.targetBranch,
+          shellEscape(options.targetBranch),
           "--head",
-          options.sourceBranch,
+          shellEscape(options.sourceBranch),
         ];
         if (options.draft) args.push("--draft");
         try {
@@ -3133,13 +3136,13 @@ export class GitService {
           "mr",
           "create",
           "--title",
-          JSON.stringify(options.title),
+          shellEscape(options.title),
           "--description",
-          JSON.stringify(options.body),
+          shellEscape(options.body),
           "--target-branch",
-          options.targetBranch,
+          shellEscape(options.targetBranch),
           "--source-branch",
-          options.sourceBranch,
+          shellEscape(options.sourceBranch),
         ];
         if (options.draft) args.push("--draft");
         args.push("--yes");
