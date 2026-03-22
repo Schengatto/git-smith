@@ -137,11 +137,20 @@ if (app.commandLine.hasSwitch("mcp-server")) {
 
       // Settings IPC
       ipcMain.handle(IPC.SETTINGS.GET, () => getSettings());
-      ipcMain.handle(IPC.SETTINGS.UPDATE, (_event, partial: Partial<AppSettings>) => {
+      ipcMain.handle(IPC.SETTINGS.UPDATE, (event, partial: Partial<AppSettings>) => {
         const updated = updateSettings(partial);
         // Restart auto-fetch if interval changed
         if ("autoFetchInterval" in partial || "autoFetchEnabled" in partial) {
           startAutoFetch();
+        }
+        // Broadcast theme change to all windows except the sender
+        if ("theme" in partial) {
+          const senderWcId = event.sender.id;
+          for (const wc of BrowserWindow.getAllWindows()
+            .map((w) => w.webContents)
+            .filter((wc) => wc.id !== senderWcId)) {
+            wc.send(IPC.SETTINGS.THEME_CHANGED, partial.theme);
+          }
         }
         return updated;
       });

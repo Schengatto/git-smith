@@ -192,3 +192,13 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
+
+// Listen for theme changes broadcast from other windows
+if (typeof window !== "undefined" && window.electronAPI?.settings?.onThemeChanged) {
+  window.electronAPI.settings.onThemeChanged((theme) => {
+    if (theme === "dark" || theme === "light") {
+      applyTheme(theme);
+      useUIStore.setState({ theme });
+    }
+  });
+}

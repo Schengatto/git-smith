@@ -284,6 +284,11 @@ const electronAPI = {
     getAutoFetch: (): Promise<number> => ipcRenderer.invoke(IPC.SETTINGS.GET_AUTO_FETCH),
     setAutoFetch: (seconds: number): Promise<void> =>
       ipcRenderer.invoke(IPC.SETTINGS.SET_AUTO_FETCH, seconds),
+    onThemeChanged: (cb: (theme: string) => void): (() => void) => {
+      const handler = (_e: Electron.IpcRendererEvent, theme: string) => cb(theme);
+      ipcRenderer.on(IPC.SETTINGS.THEME_CHANGED, handler);
+      return () => ipcRenderer.removeListener(IPC.SETTINGS.THEME_CHANGED, handler);
+    },
   },
   gitConfig: {
     get: (key: string, global?: boolean): Promise<string> =>

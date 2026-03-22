@@ -132,6 +132,7 @@ export const IPC = {
     UPDATE: "git:settings:update",
     GET_AUTO_FETCH: "git:settings:get-auto-fetch",
     SET_AUTO_FETCH: "git:settings:set-auto-fetch",
+    THEME_CHANGED: "git:settings:theme-changed",
   },
   GIT_CONFIG: {
     GET: "git:config:get",
