@@ -67,12 +67,12 @@ jobs:
           draft: true
           generate_release_notes: true
 
-      - name: Upload Windows installer (.exe)
+      - name: Upload Windows installer (.msi)
         if: runner.os == 'Windows'
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            out/make/squirrel.windows/x64/*.exe
+            out/make/wix/x64/*.msi
           draft: true
           generate_release_notes: true
 
