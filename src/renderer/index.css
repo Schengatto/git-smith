@@ -8,9 +8,9 @@
   --surface-2: #252540;
   --surface-3: #30304e;
   --surface-hover: #282845;
-  --accent: #93bbff;
-  --accent-hover: #7eadff;
-  --accent-dim: rgba(147, 187, 255, 0.16);
+  --accent: #e8853a;
+  --accent-hover: #d4742e;
+  --accent-dim: rgba(232, 133, 58, 0.16);
   --border: #4e5170;
   --border-subtle: #3a3a5c;
   --text-primary: #f0f2ff;
@@ -32,8 +32,8 @@
   --diff-del-bg-strong: rgba(200, 50, 60, 0.30);
   --diff-del-color: #ffe0e6;
   --text-on-color: #1e1e2e;
-  --info-bg: rgba(137, 180, 250, 0.06);
-  --selection-bg: rgba(147, 187, 255, 0.3);
+  --info-bg: rgba(232, 133, 58, 0.06);
+  --selection-bg: rgba(232, 133, 58, 0.3);
   --overlay-dim: rgba(0, 0, 0, 0.2);
 }
 
@@ -44,9 +44,9 @@
   --surface-2: #dfe2ec;
   --surface-3: #ced2e0;
   --surface-hover: #d8dce8;
-  --accent: #1450d8;
-  --accent-hover: #0f3fc0;
-  --accent-dim: rgba(20, 80, 216, 0.1);
+  --accent: #c4600a;
+  --accent-hover: #a85008;
+  --accent-dim: rgba(196, 96, 10, 0.1);
   --border: #a8adc0;
   --border-subtle: #c0c4d4;
   --text-primary: #1e2038;
@@ -68,8 +68,8 @@
   --diff-del-bg-strong: rgba(184, 10, 48, 0.18);
   --diff-del-color: #b80a30;
   --text-on-color: #ffffff;
-  --info-bg: rgba(20, 80, 216, 0.06);
-  --selection-bg: rgba(20, 80, 216, 0.2);
+  --info-bg: rgba(196, 96, 10, 0.06);
+  --selection-bg: rgba(196, 96, 10, 0.2);
   --overlay-dim: rgba(0, 0, 0, 0.12);
 }
 
@@ -195,7 +195,7 @@
   --d2h-file-header-border-color: var(--border-subtle);
   --d2h-empty-placeholder-bg-color: var(--surface-1);
   --d2h-empty-placeholder-border-color: var(--border-subtle);
-  --d2h-info-bg-color: rgba(137, 180, 250, 0.06);
+  --d2h-info-bg-color: rgba(232, 133, 58, 0.06);
   --d2h-info-border-color: var(--border-subtle);
   --d2h-line-border-color: var(--border-subtle);
   --d2h-change-del-color: var(--diff-del-bg);
@@ -276,7 +276,7 @@
 
 .diff2html-wrapper .d2h-info .d2h-code-linenumber,
 .diff2html-wrapper .d2h-info .d2h-code-line-ctn {
-  background: rgba(137,180,250,0.06);
+  background: rgba(232,133,58,0.06);
   color: var(--accent);
 }
 
@@ -331,7 +331,7 @@
   }
 
   .toolbar-btn-primary:hover {
-    background: rgba(137, 180, 250, 0.2);
+    background: rgba(232, 133, 58, 0.2);
     color: var(--accent-hover);
   }
 
@@ -386,9 +386,9 @@
   }
 
   .badge-head-current {
-    background: rgba(137, 180, 250, 0.2);
+    background: rgba(232, 133, 58, 0.2);
     color: var(--accent);
-    box-shadow: inset 0 0 0 1px rgba(137, 180, 250, 0.3);
+    box-shadow: inset 0 0 0 1px rgba(232, 133, 58, 0.3);
   }
 
   .badge-remote {

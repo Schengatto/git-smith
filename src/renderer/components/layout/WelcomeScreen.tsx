@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRepoStore } from "../../store/repo-store";
 import { useUIStore } from "../../store/ui-store";
+import logoUrl from "../../../../assets/gitsmith.png";
 
 /* ------------------------------------------------------------------ */
 /*  Icons                                                              */
@@ -714,21 +715,13 @@ export const WelcomeScreen: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="6" y1="3" x2="6" y2="15" />
-              <circle cx="18" cy="6" r="3" />
-              <circle cx="6" cy="18" r="3" />
-              <path d="M18 9a9 9 0 0 1-9 9" />
-            </svg>
+            <img
+              src={logoUrl}
+              alt="GitSmith"
+              width="20"
+              height="20"
+              style={{ objectFit: "contain" }}
+            />
           </div>
           <div>
             <div
