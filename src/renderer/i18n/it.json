@@ -1004,7 +1004,10 @@
     "thirtyMinutes": "30 minuti",
     "languageDescription": "Seleziona la lingua dell'interfaccia",
     "languageEnglish": "English",
-    "languageItalian": "Italiano"
+    "languageItalian": "Italiano",
+    "languageSpanish": "Español",
+    "languageFrench": "Français",
+    "languageGerman": "Deutsch"
   },
   "shortcuts": {
     "title": "Scorciatoie da tastiera",
