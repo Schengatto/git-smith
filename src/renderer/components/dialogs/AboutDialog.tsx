@@ -80,6 +80,9 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({
           <InfoRow label={t("about.author")}>
             <ExternalLink href="https://enricoschintu.com">Enrico Schintu</ExternalLink>
           </InfoRow>
+          <InfoRow label={t("about.macOsTester")}>
+            <ExternalLink href="https://github.com/amritpal1011">amritpal1011</ExternalLink>
+          </InfoRow>
         </div>
 
         {/* Donate button */}

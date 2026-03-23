@@ -417,7 +417,8 @@
     "version": "Version",
     "license": "Lizenz",
     "author": "Autor",
-    "donateViaPaypal": "Über PayPal spenden"
+    "donateViaPaypal": "Über PayPal spenden",
+    "macOsTester": "macOS-Tester"
   },
   "clone": {
     "title": "Repository klonen",
