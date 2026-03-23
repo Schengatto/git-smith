@@ -27,8 +27,8 @@ const config: ForgeConfig = {
     extraResource: ["./USER_MANUAL.pdf"],
   },
   rebuildConfig: {
-    // node-pty ships prebuilt NAPI binaries — skip native rebuild (no VS C++ needed)
-    onlyModules: [],
+    // Rebuild node-pty against Electron's ABI so the terminal works on all platforms
+    onlyModules: ["node-pty"],
   },
   makers: [
     new MakerWix({
