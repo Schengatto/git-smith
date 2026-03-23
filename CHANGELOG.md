@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.1](https://github.com/Schengatto/git-smith/compare/v0.5.0...v0.5.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* fixed first scan issue on mac ([#16](https://github.com/Schengatto/git-smith/issues/16)) ([cebb1e7](https://github.com/Schengatto/git-smith/commit/cebb1e74c17a1e39b6b433e7cc517adbc3348c33))
+* restore correct git-smith repository name and publish non-draft releases ([2e5b970](https://github.com/Schengatto/git-smith/commit/2e5b9704e2fa09328c3c8a72b7fb2902f4042edb))
+
 ### [0.3.2](https://github.com/Schengatto/git-smith/compare/v0.3.1...v0.3.2) (2026-03-18)
 
 
