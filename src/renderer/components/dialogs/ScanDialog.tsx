@@ -92,7 +92,9 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
     cleanupRef.current = unsub;
 
     try {
-      await window.electronAPI.repo.scanForRepos(rootPath.trim(), maxDepth);
+      const result = await window.electronAPI.repo.scanForRepos(rootPath.trim(), maxDepth);
+      setFoundRepos(result ?? []);
+      setPhase("done");
       await loadRecentRepos();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
