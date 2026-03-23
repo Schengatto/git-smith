@@ -381,6 +381,9 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
           options={[
             { value: "en", label: t("settings.languageEnglish") },
             { value: "it", label: t("settings.languageItalian") },
+            { value: "es", label: t("settings.languageSpanish") },
+            { value: "fr", label: t("settings.languageFrench") },
+            { value: "de", label: t("settings.languageGerman") },
           ]}
           onChange={(v) => onChange("language", v)}
         />
