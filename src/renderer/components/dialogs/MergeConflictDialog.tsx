@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import type { ConflictFile, ConflictFileContent } from "../../../shared/git-types";
 
@@ -32,6 +33,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
   onResolved,
   mode = "overlay",
 }) => {
+  const { t } = useTranslation();
   const [files, setFiles] = useState<ConflictFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [content, setContent] = useState<ConflictFileContent | null>(null);
@@ -389,9 +391,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
           })
         );
       } else {
-        setError(
-          "Could not extract AI resolutions — try the toolbar 'Resolve with AI' button for manual review."
-        );
+        setError(t("mergeConflict.aiCouldNotExtract"));
       }
     } catch (e: unknown) {
       if (aiRequestFileRef.current === selectedFile)
@@ -587,10 +587,12 @@ export const MergeConflictDialog: React.FC<Props> = ({
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-              Resolve merge conflicts
+              {t("mergeConflict.resolveMergeConflicts")}
             </span>
             <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-              {unresolvedFileCount} unresolved {unresolvedFileCount === 1 ? "file" : "files"}
+              {unresolvedFileCount === 1
+                ? t("mergeConflict.unresolvedFile", { count: unresolvedFileCount })
+                : t("mergeConflict.unresolvedFiles", { count: unresolvedFileCount })}
             </span>
           </div>
           <button onClick={onClose} style={closeBtnStyle}>
@@ -646,13 +648,13 @@ export const MergeConflictDialog: React.FC<Props> = ({
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
                 <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-                  Waiting for {mergeToolDisplayName(mergeTool)}...
+                  {t("mergeConflict.waitingForTool", { tool: mergeToolDisplayName(mergeTool, t) })}
                 </span>
                 <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
                   {selectedFile}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                  Resolve the conflict in the external tool, then save and close it.
+                  {t("mergeConflict.resolveInExternalTool")}
                 </span>
                 <button
                   onClick={() => {
@@ -670,7 +672,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                     marginTop: 8,
                   }}
                 >
-                  Use internal editor instead
+                  {t("mergeConflict.useInternalEditorInstead")}
                 </button>
               </div>
             ) : selectedFile && content && sections.length > 0 ? (
@@ -692,7 +694,9 @@ export const MergeConflictDialog: React.FC<Props> = ({
                           fontWeight: 500,
                         }}
                       >
-                        {unresolvedCount} {unresolvedCount === 1 ? "conflict" : "conflicts"}
+                        {unresolvedCount === 1
+                          ? t("mergeConflict.conflict", { count: unresolvedCount })
+                          : t("mergeConflict.conflicts", { count: unresolvedCount })}
                       </span>
                     ) : (
                       <span
@@ -705,7 +709,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                           fontWeight: 500,
                         }}
                       >
-                        No conflicts remaining
+                        {t("mergeConflict.noConflictsRemaining")}
                       </span>
                     )}
                   </div>
@@ -723,7 +727,11 @@ export const MergeConflictDialog: React.FC<Props> = ({
                             <button
                               key={s.id}
                               onClick={() => scrollToConflictById(s.id)}
-                              title={`Conflict ${i + 1}${isDone ? " (resolved)" : ""}`}
+                              title={
+                                isDone
+                                  ? t("mergeConflict.conflictResolved", { index: i + 1 })
+                                  : t("mergeConflict.conflictNumber", { index: i + 1 })
+                              }
                               style={{
                                 width: 20,
                                 height: 20,
@@ -754,25 +762,25 @@ export const MergeConflictDialog: React.FC<Props> = ({
                       </div>
                     )}
                     <NavBtn
-                      label="Prev conflict"
+                      label={t("mergeConflict.prevConflict")}
                       icon="up"
                       onClick={() => scrollToConflict("prev")}
                       disabled={unresolvedCount === 0}
                     />
                     <NavBtn
-                      label="Next conflict"
+                      label={t("mergeConflict.nextConflict")}
                       icon="down"
                       onClick={() => scrollToConflict("next")}
                       disabled={unresolvedCount === 0}
                     />
                     <span style={separatorStyle} />
                     <QuickBtn
-                      label="Accept all LOCAL"
+                      label={t("mergeConflict.acceptAllLocal")}
                       color="var(--accent)"
                       onClick={() => resolveAllAs("ours")}
                     />
                     <QuickBtn
-                      label="Accept all REMOTE"
+                      label={t("mergeConflict.acceptAllRemote")}
                       color="var(--mauve)"
                       onClick={() => resolveAllAs("theirs")}
                     />
@@ -792,7 +800,9 @@ export const MergeConflictDialog: React.FC<Props> = ({
                             color: "var(--green)",
                           }}
                         >
-                          Open in {mergeToolDisplayName(mergeTool)}
+                          {t("mergeConflict.openInTool", {
+                            tool: mergeToolDisplayName(mergeTool, t),
+                          })}
                         </button>
                       </>
                     )}
@@ -839,10 +849,10 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                   strokeLinecap="round"
                                 />
                               </svg>
-                              Resolving...
+                              {t("mergeConflict.resolving")}
                             </>
                           ) : (
-                            "Resolve with AI"
+                            t("mergeConflict.resolveWithAi")
                           )}
                         </button>
                       </>
@@ -859,16 +869,22 @@ export const MergeConflictDialog: React.FC<Props> = ({
                   }}
                 >
                   <div style={{ ...colHeaderStyle, borderRight: "1px solid var(--border-subtle)" }}>
-                    <span style={{ color: "var(--accent)", fontWeight: 600 }}>LOCAL</span>
-                    <span style={{ color: "var(--text-muted)" }}>(ours)</span>
+                    <span style={{ color: "var(--accent)", fontWeight: 600 }}>
+                      {t("mergeConflict.localOurs")}
+                    </span>
+                    <span style={{ color: "var(--text-muted)" }}>{t("mergeConflict.ours")}</span>
                   </div>
                   <div style={colHeaderStyle}>
-                    <span style={{ color: "var(--green)", fontWeight: 600 }}>MERGED</span>
-                    <span style={{ color: "var(--text-muted)" }}>(result)</span>
+                    <span style={{ color: "var(--green)", fontWeight: 600 }}>
+                      {t("mergeConflict.merged")}
+                    </span>
+                    <span style={{ color: "var(--text-muted)" }}>{t("mergeConflict.result")}</span>
                   </div>
                   <div style={{ ...colHeaderStyle, borderLeft: "1px solid var(--border-subtle)" }}>
-                    <span style={{ color: "var(--mauve)", fontWeight: 600 }}>REMOTE</span>
-                    <span style={{ color: "var(--text-muted)" }}>(theirs)</span>
+                    <span style={{ color: "var(--mauve)", fontWeight: 600 }}>
+                      {t("mergeConflict.remoteTheirs")}
+                    </span>
+                    <span style={{ color: "var(--text-muted)" }}>{t("mergeConflict.theirs")}</span>
                   </div>
                 </div>
 
@@ -957,22 +973,25 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                   <span
                                     style={{ fontSize: 10, fontWeight: 600, color: "var(--green)" }}
                                   >
-                                    ✓ Resolved ({section.resolution})
+                                    ✓{" "}
+                                    {t("mergeConflict.resolvedLabel", {
+                                      resolution: section.resolution,
+                                    })}
                                   </span>
                                   <div style={{ display: "flex", gap: 4 }}>
                                     <button
                                       onClick={() => setEditingConflictId(section.id)}
                                       style={{ ...tinyBtnStyle, color: "var(--text-muted)" }}
-                                      title="Edit resolution"
+                                      title={t("mergeConflict.editResolution")}
                                     >
-                                      Edit
+                                      {t("mergeConflict.edit")}
                                     </button>
                                     <button
                                       onClick={() => unresolveConflict(section.id)}
                                       style={{ ...tinyBtnStyle, color: "var(--text-muted)" }}
-                                      title="Undo resolution"
+                                      title={t("mergeConflict.undoResolution")}
                                     >
-                                      ↩ Undo
+                                      ↩ {t("mergeConflict.undoLabel")}
                                     </button>
                                   </div>
                                 </div>
@@ -985,24 +1004,24 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                   />
                                 ))}
                                 {(section.resolvedLines || []).length === 0 && (
-                                  <EmptyLine label="(empty — both sides removed)" />
+                                  <EmptyLine label={t("mergeConflict.emptyBothSidesRemoved")} />
                                 )}
                               </div>
                             ) : (
                               <div>
                                 <div style={conflictActionBarStyle}>
                                   <ConflictPickBtn
-                                    label="Accept Current"
+                                    label={t("mergeConflict.acceptCurrent")}
                                     color="var(--accent)"
                                     onClick={() => resolveConflict(section.id, "ours")}
                                   />
                                   <ConflictPickBtn
-                                    label="Accept Incoming"
+                                    label={t("mergeConflict.acceptIncoming")}
                                     color="var(--mauve)"
                                     onClick={() => resolveConflict(section.id, "theirs")}
                                   />
                                   <ConflictPickBtn
-                                    label="Accept Both"
+                                    label={t("mergeConflict.acceptBoth")}
                                     color="var(--green)"
                                     onClick={() => resolveConflict(section.id, "both")}
                                   />
@@ -1014,7 +1033,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                       color: "var(--text-secondary)",
                                     }}
                                   >
-                                    Edit
+                                    {t("mergeConflict.edit")}
                                   </button>
                                   {aiConfigured && (
                                     <button
@@ -1027,7 +1046,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                         opacity: aiLoading ? 0.5 : 1,
                                       }}
                                     >
-                                      AI
+                                      {t("ai.aiButtonLabel")}
                                     </button>
                                   )}
                                 </div>
@@ -1046,7 +1065,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                         letterSpacing: "0.05em",
                                       }}
                                     >
-                                      CURRENT
+                                      {t("mergeConflict.current")}
                                     </span>
                                     <span
                                       style={{
@@ -1056,7 +1075,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                         opacity: 0.7,
                                       }}
                                     >
-                                      (ours)
+                                      {t("mergeConflict.ours")}
                                     </span>
                                   </div>
                                   {(section.ours || []).map((line, i) => (
@@ -1082,7 +1101,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                         letterSpacing: "0.05em",
                                       }}
                                     >
-                                      INCOMING
+                                      {t("mergeConflict.incoming")}
                                     </span>
                                     <span
                                       style={{
@@ -1092,7 +1111,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                                         opacity: 0.7,
                                       }}
                                     >
-                                      (theirs)
+                                      {t("mergeConflict.theirs")}
                                     </span>
                                   </div>
                                   {(section.theirs || []).map((line, i) => (
@@ -1162,7 +1181,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                         marginRight: "auto",
                       }}
                     >
-                      Resolve all conflicts, then mark as resolved
+                      {t("mergeConflict.resolveAllThenMark")}
                     </span>
                   )}
                   <button
@@ -1192,7 +1211,7 @@ export const MergeConflictDialog: React.FC<Props> = ({
                       cursor: "pointer",
                     }}
                   >
-                    Recheck conflicts
+                    {t("mergeConflict.recheckConflicts")}
                   </button>
                   <button
                     onClick={handleSaveAndResolve}
@@ -1208,12 +1227,12 @@ export const MergeConflictDialog: React.FC<Props> = ({
                       cursor: saving ? "not-allowed" : "pointer",
                     }}
                   >
-                    {saving ? "Saving..." : "Mark as resolved"}
+                    {saving ? t("mergeConflict.saving") : t("mergeConflict.markAsResolved")}
                   </button>
                 </div>
               </>
             ) : loading ? (
-              <CenteredMsg text="Loading..." />
+              <CenteredMsg text={t("dialogs.loading")} />
             ) : allFilesResolved ? (
               <div
                 style={{
@@ -1238,15 +1257,19 @@ export const MergeConflictDialog: React.FC<Props> = ({
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 <span style={{ fontSize: 14, color: "var(--green)", fontWeight: 600 }}>
-                  All conflicts resolved!
+                  {t("mergeConflict.allConflictsResolvedMessage")}
                 </span>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                  You can now continue the operation.
+                  {t("mergeConflict.continueOperation")}
                 </span>
               </div>
             ) : (
               <CenteredMsg
-                text={files.length === 0 ? "No conflicted files found" : "Select a file to resolve"}
+                text={
+                  files.length === 0
+                    ? t("mergeConflict.noConflictedFiles")
+                    : t("mergeConflict.selectFileToResolve")
+                }
               />
             )}
           </div>
@@ -1255,7 +1278,10 @@ export const MergeConflictDialog: React.FC<Props> = ({
         {/* Footer */}
         <div style={footerStyle}>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-            {resolvedFiles.size} of {files.length} files resolved
+            {t("mergeConflict.filesResolvedCount", {
+              resolved: resolvedFiles.size,
+              total: files.length,
+            })}
           </div>
           {error && (
             <span
@@ -1273,11 +1299,11 @@ export const MergeConflictDialog: React.FC<Props> = ({
           )}
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={onClose} style={secondaryBtnStyle}>
-              Close
+              {t("dialogs.close")}
             </button>
             {allFilesResolved && onResolved && (
               <button onClick={onResolved} style={primaryBtnStyle}>
-                Continue
+                {t("mergeConflict.continue")}
               </button>
             )}
           </div>
@@ -1299,96 +1325,99 @@ const FileList: React.FC<{
   selectedFile: string | null;
   resolvedFiles: Set<string>;
   onSelect: (path: string) => void;
-}> = React.memo(({ files, selectedFile, resolvedFiles, onSelect }) => (
-  <div
-    style={{
-      width: 200,
-      borderRight: "1px solid var(--border-subtle)",
-      overflowY: "auto",
-      flexShrink: 0,
-    }}
-  >
+}> = React.memo(({ files, selectedFile, resolvedFiles, onSelect }) => {
+  const { t } = useTranslation();
+  return (
     <div
       style={{
-        padding: "8px 12px",
-        fontSize: 10,
-        fontWeight: 600,
-        color: "var(--text-muted)",
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
-        borderBottom: "1px solid var(--border-subtle)",
+        width: 200,
+        borderRight: "1px solid var(--border-subtle)",
+        overflowY: "auto",
+        flexShrink: 0,
       }}
     >
-      Unresolved merge conflicts
-    </div>
-    {files.map((f) => {
-      const done = resolvedFiles.has(f.path),
-        sel = f.path === selectedFile;
-      return (
-        <div
-          key={f.path}
-          onClick={() => !done && onSelect(f.path)}
-          style={{
-            padding: "6px 12px",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            cursor: done ? "default" : "pointer",
-            background: sel ? "var(--accent-dim)" : "transparent",
-            borderLeft: sel ? "2px solid var(--accent)" : "2px solid transparent",
-            opacity: done ? 0.5 : 1,
-          }}
-          onMouseEnter={(e) => {
-            if (!sel && !done) e.currentTarget.style.background = "var(--surface-hover)";
-          }}
-          onMouseLeave={(e) => {
-            if (!sel) e.currentTarget.style.background = "transparent";
-          }}
-        >
-          {done ? (
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--green)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--red)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-          )}
-          <span
-            className="truncate mono"
+      <div
+        style={{
+          padding: "8px 12px",
+          fontSize: 10,
+          fontWeight: 600,
+          color: "var(--text-muted)",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          borderBottom: "1px solid var(--border-subtle)",
+        }}
+      >
+        {t("mergeConflict.unresolvedMergeConflicts")}
+      </div>
+      {files.map((f) => {
+        const done = resolvedFiles.has(f.path),
+          sel = f.path === selectedFile;
+        return (
+          <div
+            key={f.path}
+            onClick={() => !done && onSelect(f.path)}
             style={{
-              fontSize: 11,
-              color: done ? "var(--text-muted)" : "var(--text-primary)",
-              textDecoration: done ? "line-through" : "none",
+              padding: "6px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              cursor: done ? "default" : "pointer",
+              background: sel ? "var(--accent-dim)" : "transparent",
+              borderLeft: sel ? "2px solid var(--accent)" : "2px solid transparent",
+              opacity: done ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!sel && !done) e.currentTarget.style.background = "var(--surface-hover)";
+            }}
+            onMouseLeave={(e) => {
+              if (!sel) e.currentTarget.style.background = "transparent";
             }}
           >
-            {f.path.split("/").pop()}
-          </span>
-        </div>
-      );
-    })}
-  </div>
-));
+            {done ? (
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--green)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--red)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            )}
+            <span
+              className="truncate mono"
+              style={{
+                fontSize: 11,
+                color: done ? "var(--text-muted)" : "var(--text-primary)",
+                textDecoration: done ? "line-through" : "none",
+              }}
+            >
+              {f.path.split("/").pop()}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
 
 /* ═══════════════ Small Components ═══════════════ */
 
@@ -1472,6 +1501,7 @@ const ConflictEditor: React.FC<{
   onSave: (text: string) => void;
   onCancel: () => void;
 }> = ({ initialText, onSave, onCancel }) => {
+  const { t } = useTranslation();
   const [text, setText] = useState(initialText);
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1486,7 +1516,7 @@ const ConflictEditor: React.FC<{
         }}
       >
         <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-secondary)" }}>
-          Custom edit
+          {t("mergeConflict.customEdit")}
         </span>
         <div style={{ display: "flex", gap: 4 }}>
           <button
@@ -1497,7 +1527,7 @@ const ConflictEditor: React.FC<{
               border: "1px solid var(--border)",
             }}
           >
-            Cancel
+            {t("dialogs.cancel")}
           </button>
           <button
             onClick={() => onSave(text)}
@@ -1507,7 +1537,7 @@ const ConflictEditor: React.FC<{
               border: "1px solid var(--green)60",
             }}
           >
-            Done
+            {t("mergeConflict.done")}
           </button>
         </div>
       </div>
@@ -1621,6 +1651,7 @@ const AiSuggestionOverlay: React.FC<{
   onApply: () => void;
   onDismiss: () => void;
 }> = ({ currentText, suggestion, filePath, onApply, onDismiss }) => {
+  const { t } = useTranslation();
   const MAX_DIFF_LINES = 2000;
   const tooLarge =
     currentText.split("\n").length + suggestion.split("\n").length > MAX_DIFF_LINES * 2;
@@ -1658,7 +1689,7 @@ const AiSuggestionOverlay: React.FC<{
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mauve)" }}>
-            AI Suggestion
+            {t("mergeConflict.aiSuggestion")}
           </span>
           <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>
             {filePath}
@@ -1686,8 +1717,7 @@ const AiSuggestionOverlay: React.FC<{
               color: "var(--yellow)",
             }}
           >
-            File too large for inline diff ({suggestion.split("\n").length} lines). Showing AI
-            output directly — click Apply to resolve all conflicts.
+            {t("mergeConflict.fileTooLarge", { count: suggestion.split("\n").length })}
           </div>
         )}
         {diffLines
@@ -1769,10 +1799,10 @@ const AiSuggestionOverlay: React.FC<{
         }}
       >
         <button onClick={onDismiss} style={secondaryBtnStyle}>
-          Dismiss
+          {t("mergeConflict.dismiss")}
         </button>
         <button onClick={onApply} style={{ ...primaryBtnStyle, background: "var(--mauve)" }}>
-          Apply
+          {t("dialogs.apply")}
         </button>
       </div>
     </div>
@@ -1781,8 +1811,9 @@ const AiSuggestionOverlay: React.FC<{
 
 /* ═══════════════ Helpers ═══════════════ */
 
-function mergeToolDisplayName(tool: MergeToolSettings): string {
-  if (!tool.mergeToolName || tool.mergeToolName === "custom") return "external tool";
+function mergeToolDisplayName(tool: MergeToolSettings, t: (key: string) => string): string {
+  if (!tool.mergeToolName || tool.mergeToolName === "custom")
+    return t("mergeConflict.externalTool");
   return tool.mergeToolName;
 }
 

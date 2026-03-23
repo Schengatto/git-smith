@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type { CIStatus } from "../../../shared/git-types";
 import { useRepoStore } from "../../store/repo-store";
@@ -51,6 +52,7 @@ const StatusBadge: React.FC<{ status: CIStatus["status"] }> = ({ status }) => {
 };
 
 export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const { repo } = useRepoStore();
   const [runs, setRuns] = useState<CIStatus[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,8 +96,8 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const conclusionLabel = (run: CIStatus): string => {
     if (run.conclusion) return run.conclusion;
-    if (run.status === "running") return "In progress";
-    if (run.status === "pending") return "Waiting";
+    if (run.status === "running") return t("cicd.inProgress");
+    if (run.status === "pending") return t("cicd.waiting");
     return run.status;
   };
 
@@ -109,7 +111,7 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="CI/CD Pipeline Status" onClose={onClose} width={600}>
+    <ModalDialog open={open} title={t("cicd.title")} onClose={onClose} width={600}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "4px 0" }}>
         {/* Commit SHA + Refresh */}
         <div
@@ -131,7 +133,7 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
             }}
             title={sha ?? ""}
           >
-            {sha ? `HEAD: ${sha.slice(0, 12)}` : "No commit loaded"}
+            {sha ? `HEAD: ${sha.slice(0, 12)}` : t("cicd.noCommitLoaded")}
           </span>
           <button
             onClick={loadStatus}
@@ -173,7 +175,7 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
               <path d="M3 22v-6h6" />
               <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
             </svg>
-            Refresh
+            {t("cicd.refresh")}
           </button>
         </div>
 
@@ -187,7 +189,7 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
               textAlign: "center",
             }}
           >
-            Loading CI runs...
+            {t("cicd.loadingCiRuns")}
           </div>
         ) : error ? (
           <div style={{ fontSize: 12, color: "var(--red)", padding: "12px 0" }}>{error}</div>
@@ -200,7 +202,7 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
               textAlign: "center",
             }}
           >
-            No CI runs found for this commit
+            {t("cicd.noRunsFound")}
           </div>
         ) : (
           <div
@@ -218,7 +220,7 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
                 onClick={() => {
                   if (run.url) window.electronAPI.shell.openFile(run.url);
                 }}
-                title={run.url ? "Click to open in browser" : undefined}
+                title={run.url ? t("cicd.clickToOpen") : undefined}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -252,10 +254,10 @@ export const CIStatusDialog: React.FC<Props> = ({ open, onClose }) => {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {run.name || "Unnamed run"}
+                    {run.name || t("cicd.unnamedRun")}
                   </div>
                   <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>
-                    Started: {formatDate(run.startedAt)}
+                    {t("cicd.started")} {formatDate(run.startedAt)}
                   </div>
                 </div>
 

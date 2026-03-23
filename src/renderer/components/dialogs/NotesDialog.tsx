@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) => {
+  const { t } = useTranslation();
   const [note, setNote] = useState("");
   const [originalNote, setOriginalNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,10 +58,10 @@ export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) =
   };
 
   return (
-    <ModalDialog open={open} title="Git Notes" onClose={onClose}>
+    <ModalDialog open={open} title={t("notes.title")} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          Note for{" "}
+          {t("notes.noteFor")}{" "}
           <span className="mono" style={{ color: "var(--accent)" }}>
             {hash.slice(0, 7)}
           </span>{" "}
@@ -70,13 +72,13 @@ export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) =
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}
           >
-            Loading...
+            {t("dialogs.loading")}
           </div>
         ) : (
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Add a note to this commit..."
+            placeholder={t("notes.placeholder")}
             rows={6}
             style={{
               width: "100%",
@@ -103,7 +105,7 @@ export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) =
               onClick={handleRemove}
               style={{ fontSize: 11, padding: "4px 12px", color: "var(--red)" }}
             >
-              Remove Note
+              {t("notes.removeNote")}
             </button>
           )}
         </div>
@@ -113,7 +115,7 @@ export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) =
             onClick={onClose}
             style={{ fontSize: 11, padding: "4px 12px" }}
           >
-            Cancel
+            {t("dialogs.cancel")}
           </button>
           <button
             className="toolbar-btn"
@@ -125,7 +127,7 @@ export const NotesDialog: React.FC<Props> = ({ open, onClose, hash, subject }) =
               color: "var(--text-on-color)",
             }}
           >
-            Save
+            {t("dialogs.save")}
           </button>
         </div>
       </div>

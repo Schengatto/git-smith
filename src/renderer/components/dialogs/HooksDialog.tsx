@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogError } from "./ModalDialog";
 import type { GitHookInfo } from "../../../shared/git-types";
 
@@ -18,6 +19,7 @@ const COMMON_HOOKS = [
 ];
 
 export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [hooks, setHooks] = useState<GitHookInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleDelete = async (name: string) => {
-    if (!window.confirm(`Delete hook "${name}"? This action cannot be undone.`)) return;
+    if (!window.confirm(t("hooks.deleteHookConfirm", { name }))) return;
     setDeletingHook(name);
     setError(null);
     try {
@@ -113,7 +115,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
   const hasContent = (hook: GitHookInfo) => hook.content.trim() !== "";
 
   return (
-    <ModalDialog open={open} title="Git Hooks Manager" onClose={onClose} width={700}>
+    <ModalDialog open={open} title={t("hooks.title")} onClose={onClose} width={700}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", gap: 10, minHeight: 320 }}>
           {/* Hook list */}
@@ -140,7 +142,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                   textAlign: "center",
                 }}
               >
-                Loading...
+                {t("dialogs.loading")}
               </div>
             ) : visibleHooks.length === 0 ? (
               <div
@@ -151,7 +153,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                   textAlign: "center",
                 }}
               >
-                No hooks found
+                {t("hooks.noHooks")}
               </div>
             ) : (
               visibleHooks.map((hook) => {
@@ -260,9 +262,9 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                   >
                     {hasContent(selectedHookInfo)
                       ? selectedHookInfo.active
-                        ? "active"
-                        : "inactive"
-                      : "no content"}
+                        ? t("hooks.active")
+                        : t("hooks.inactive")
+                      : t("hooks.noContent")}
                   </span>
 
                   {/* Toggle button */}
@@ -271,10 +273,10 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                     disabled={togglingHook === selectedHook || !hasContent(selectedHookInfo)}
                     title={
                       !hasContent(selectedHookInfo)
-                        ? "Save content first to enable this hook"
+                        ? t("hooks.saveContentFirst")
                         : selectedHookInfo.active
-                          ? "Disable hook"
-                          : "Enable hook"
+                          ? t("hooks.disableHook")
+                          : t("hooks.enableHook")
                     }
                     style={{
                       padding: "3px 10px",
@@ -295,15 +297,15 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                     {togglingHook === selectedHook
                       ? "..."
                       : selectedHookInfo.active
-                        ? "Disable"
-                        : "Enable"}
+                        ? t("hooks.disable")
+                        : t("hooks.enable")}
                   </button>
 
                   {/* Delete button */}
                   <button
                     onClick={() => handleDelete(selectedHook)}
                     disabled={deletingHook === selectedHook || !hasContent(selectedHookInfo)}
-                    title="Delete hook"
+                    title={t("hooks.deleteHook")}
                     style={{
                       padding: "3px 10px",
                       fontSize: 11,
@@ -316,7 +318,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                       opacity: !hasContent(selectedHookInfo) ? 0.5 : 1,
                     }}
                   >
-                    {deletingHook === selectedHook ? "..." : "Delete"}
+                    {deletingHook === selectedHook ? "..." : t("dialogs.delete")}
                   </button>
                 </div>
 
@@ -361,7 +363,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                       cursor: saving ? "not-allowed" : "pointer",
                     }}
                   >
-                    {saving ? "Saving..." : "Save"}
+                    {saving ? t("hooks.saving") : t("dialogs.save")}
                   </button>
                 </div>
               </>
@@ -379,7 +381,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
                   padding: 16,
                 }}
               >
-                Select a hook from the list to view or edit its content
+                {t("hooks.selectHookPrompt")}
               </div>
             )}
           </div>
@@ -402,7 +404,7 @@ export const HooksDialog: React.FC<Props> = ({ open, onClose }) => {
               cursor: "pointer",
             }}
           >
-            Close
+            {t("dialogs.close")}
           </button>
         </div>
       </div>

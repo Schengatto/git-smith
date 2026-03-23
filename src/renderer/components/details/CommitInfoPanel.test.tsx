@@ -4,6 +4,13 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 // --- Mutable store state ---
 let mockSelectedCommit: { hash: string } | null = null;
 let mockRepo: { path: string; name: string; headCommit?: string } | null = null;
@@ -66,13 +73,13 @@ const makeFullInfo = (overrides: Record<string, unknown> = {}) => ({
 describe("CommitInfoPanel", () => {
   it("renders empty state when no commit is selected and no repo", () => {
     render(<CommitInfoPanel />);
-    expect(screen.getByText("Select a commit to view info")).toBeInTheDocument();
+    expect(screen.getByText("details.selectCommitToViewInfo")).toBeInTheDocument();
   });
 
   it("renders empty state when repo has no headCommit and no selectedCommit", () => {
     mockRepo = { path: "/repo", name: "test-repo" };
     render(<CommitInfoPanel />);
-    expect(screen.getByText("Select a commit to view info")).toBeInTheDocument();
+    expect(screen.getByText("details.selectCommitToViewInfo")).toBeInTheDocument();
   });
 
   it("uses repo headCommit as fallback when no commit is selected", async () => {
@@ -100,7 +107,7 @@ describe("CommitInfoPanel", () => {
     gpgVerifyMock.mockReturnValue(new Promise(() => {}));
     notesGetMock.mockReturnValue(new Promise(() => {}));
     render(<CommitInfoPanel />);
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByText("details.loading")).toBeInTheDocument();
   });
 
   it("renders commit author information", async () => {
@@ -174,7 +181,7 @@ describe("CommitInfoPanel", () => {
     fullInfoMock.mockResolvedValue(makeFullInfo({ containedInBranches: [] }));
     render(<CommitInfoPanel />);
     await waitFor(() => {
-      expect(screen.getByText("No branches")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.noBranches")).toBeInTheDocument();
     });
   });
 
@@ -192,7 +199,7 @@ describe("CommitInfoPanel", () => {
     fullInfoMock.mockResolvedValue(makeFullInfo({ containedInTags: [] }));
     render(<CommitInfoPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Contained in no tag")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.containedInNoTag")).toBeInTheDocument();
     });
   });
 
@@ -202,7 +209,7 @@ describe("CommitInfoPanel", () => {
     render(<CommitInfoPanel />);
     await waitFor(() => {
       // derivesFromTag label present
-      expect(screen.getByText("Derives from tag:")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.derivesFromTag:")).toBeInTheDocument();
     });
   });
 
@@ -211,7 +218,7 @@ describe("CommitInfoPanel", () => {
     fullInfoMock.mockResolvedValue(makeFullInfo({ derivesFromTag: "" }));
     render(<CommitInfoPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Derives from no tag")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.derivesFromNoTag")).toBeInTheDocument();
     });
   });
 
@@ -286,7 +293,7 @@ describe("CommitInfoPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("feat: add new feature")).toBeInTheDocument();
     });
-    expect(screen.queryByText("Note")).not.toBeInTheDocument();
+    expect(screen.queryByText("commitInfo.note")).not.toBeInTheDocument();
   });
 
   it("renders gravatar image when gravatarHash is present", async () => {

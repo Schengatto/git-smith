@@ -187,6 +187,93 @@ vi.mock("../dialogs/PrDialog", () => ({
     open ? <div data-testid="pr-dialog">PrDialog</div> : null,
 }));
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "toolbar.fetch": "Fetch",
+        "toolbar.fetchAll": "Fetch all",
+        "toolbar.fetchPrune": "Fetch & prune",
+        "toolbar.fetchSublabel": "Fetch from default remote",
+        "toolbar.fetchAllSublabel": "git fetch --all",
+        "toolbar.fetchPruneSublabel": "git fetch --all --prune",
+        "toolbar.batchFetchAll": "Batch Fetch All Repos",
+        "toolbar.batchFetchAllSublabel": "Fetch all recent repositories",
+        "toolbar.batchFetchResult": "Fetched {{fetched}} of {{total}} repositories",
+        "toolbar.pull": "Pull",
+        "toolbar.pullSublabel": "Default strategy from git config",
+        "toolbar.pullMerge": "Pull (merge)",
+        "toolbar.pullMergeSublabel": "git pull --no-rebase",
+        "toolbar.pullRebase": "Pull (rebase)",
+        "toolbar.pullRebaseSublabel": "git pull --rebase",
+        "toolbar.push": "Push",
+        "toolbar.pushSublabel": "git push",
+        "toolbar.forcePush": "Force Push",
+        "toolbar.forcePushSublabel": "git push --force (rewrites remote history!)",
+        "toolbar.commit": "Commit",
+        "toolbar.commitShortcut": "Commit (Ctrl+K)",
+        "toolbar.stash": "Stash",
+        "toolbar.stashSublabel": "Stash all modified files",
+        "toolbar.stashStaged": "Stash staged",
+        "toolbar.stashStagedSublabel": "Stash only staged files",
+        "toolbar.stashPop": "Stash pop",
+        "toolbar.stashPopSublabel": "Restore the most recent stash",
+        "toolbar.manageStashes": "Manage stashes...",
+        "toolbar.manageStashesSublabel": "View and manage all stashes",
+        "toolbar.createStash": "Create a stash...",
+        "toolbar.createStashSublabel": "Stash with message and options",
+        "toolbar.remotes": "Remotes",
+        "toolbar.manageRemotes": "Manage Remotes",
+        "toolbar.bisect": "Bisect",
+        "toolbar.gitBisect": "Git Bisect",
+        "toolbar.worktrees": "Worktrees",
+        "toolbar.manageWorktrees": "Manage Worktrees",
+        "toolbar.patch": "Patch",
+        "toolbar.applyPatch": "Apply Patch",
+        "toolbar.submodules": "Submodules",
+        "toolbar.manageSubmodules": "Manage Submodules",
+        "toolbar.lfs": "LFS",
+        "toolbar.gitLfs": "Git LFS",
+        "toolbar.pullRequests": "Pull Requests",
+        "toolbar.pullRequestsMergeRequests": "Pull Requests / Merge Requests",
+        "toolbar.prs": "PRs",
+        "toolbar.settings": "Settings",
+        "toolbar.keyboardShortcuts": "Keyboard Shortcuts",
+        "toolbar.keyboardShortcutsShortcut": "Keyboard Shortcuts (?)",
+        "toolbar.refresh": "Refresh",
+        "toolbar.currentRepo": "Current Repository",
+        "toolbar.recentRepos": "Recent Repositories",
+        "toolbar.noOtherRecentRepos": "No other recent repositories",
+        "toolbar.open": "Open...",
+        "toolbar.clone": "Clone...",
+        "toolbar.closeRepo": "Close repository",
+        "toolbar.noAccount": "No account",
+        "toolbar.noAccountAssigned": "No account assigned",
+        "toolbar.setForThisRepo": "Set for this repo",
+        "toolbar.noneDefault": "None (use git config default)",
+        "toolbar.setAsGlobalDefault": "Set as global default",
+        "toolbar.manageAccounts": "Manage accounts...",
+        "toolbar.destructiveAction": "This action is destructive",
+        "toolbar.forcePushWarningPre": "Force pushing will ",
+        "toolbar.forcePushWarningStrong": "overwrite the remote branch history",
+        "toolbar.forcePushWarningPost":
+          ". Any commits pushed by other collaborators that are not in your local branch will be permanently lost.",
+        "toolbar.cancel": "Cancel",
+        "toolbar.pushing": "Pushing...",
+        "toolbar.switchToTheme": "Switch to {{theme}} theme",
+      };
+      let result = translations[key] ?? key;
+      if (opts) {
+        Object.entries(opts).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 /* ---------- Import under test (after all mocks) ---------- */
 
 import { Toolbar } from "./Toolbar";
@@ -483,8 +570,8 @@ describe("Toolbar", () => {
   it("opens Fetch dropdown on click and shows Fetch All and Fetch & Prune options", () => {
     render(<Toolbar />);
     fireEvent.click(screen.getByText("Fetch"));
-    expect(screen.getByText("Fetch All")).toBeInTheDocument();
-    expect(screen.getByText("Fetch & Prune")).toBeInTheDocument();
+    expect(screen.getByText("Fetch all")).toBeInTheDocument();
+    expect(screen.getByText("Fetch & prune")).toBeInTheDocument();
   });
 
   it("calls electronAPI.remote.fetch when Fetch item is selected from dropdown", async () => {
@@ -511,8 +598,8 @@ describe("Toolbar", () => {
   it("opens Pull dropdown and shows all pull variants", () => {
     render(<Toolbar />);
     fireEvent.click(screen.getByText("Pull"));
-    expect(screen.getByText("Pull (Merge)")).toBeInTheDocument();
-    expect(screen.getByText("Pull (Rebase)")).toBeInTheDocument();
+    expect(screen.getByText("Pull (merge)")).toBeInTheDocument();
+    expect(screen.getByText("Pull (rebase)")).toBeInTheDocument();
   });
 
   /* ---- Push dropdown ---- */
@@ -776,7 +863,7 @@ describe("Toolbar", () => {
     });
     render(<Toolbar />);
     fireEvent.click(screen.getByText("Fetch"));
-    fireEvent.click(screen.getByText("Fetch All"));
+    fireEvent.click(screen.getByText("Fetch all"));
     await waitFor(() => {
       expect(mockElectronAPI.remote.fetchAll).toHaveBeenCalledTimes(1);
     });
@@ -788,7 +875,7 @@ describe("Toolbar", () => {
     });
     render(<Toolbar />);
     fireEvent.click(screen.getByText("Fetch"));
-    fireEvent.click(screen.getByText("Fetch & Prune"));
+    fireEvent.click(screen.getByText("Fetch & prune"));
     await waitFor(() => {
       expect(mockElectronAPI.remote.fetchPrune).toHaveBeenCalledTimes(1);
     });
@@ -800,7 +887,7 @@ describe("Toolbar", () => {
     });
     render(<Toolbar />);
     fireEvent.click(screen.getByText("Pull"));
-    fireEvent.click(screen.getByText("Pull (Merge)"));
+    fireEvent.click(screen.getByText("Pull (merge)"));
     await waitFor(() => {
       expect(mockElectronAPI.remote.pullMerge).toHaveBeenCalledTimes(1);
     });
@@ -812,7 +899,7 @@ describe("Toolbar", () => {
     });
     render(<Toolbar />);
     fireEvent.click(screen.getByText("Pull"));
-    fireEvent.click(screen.getByText("Pull (Rebase)"));
+    fireEvent.click(screen.getByText("Pull (rebase)"));
     await waitFor(() => {
       expect(mockElectronAPI.remote.pullRebase).toHaveBeenCalledTimes(1);
     });

@@ -5,6 +5,25 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { BranchCompareDialog } from "./BranchCompareDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "branchCompare.title": "Compare Branch Commit Ranges",
+        "branchCompare.branchA": "Branch A",
+        "branchCompare.branchB": "Branch B",
+        "branchCompare.swapBranches": "Swap branches",
+        "branchCompare.comparing": "Comparing...",
+        "branchCompare.compare": "Compare",
+        "branchCompare.selectBranchesPrompt":
+          "Select two branches and click Compare to see exclusive commits.",
+        "branchCompare.noExclusiveCommits": "No exclusive commits",
+      };
+      return translations[key] ?? key;
+    },
+  }),
+}));
+
 const mockElectronAPI = {
   branch: {
     list: vi.fn().mockResolvedValue([]),

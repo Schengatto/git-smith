@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch }) => {
+  const { t } = useTranslation();
   const { repo, refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -94,10 +96,10 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
   const currentBranch = repo?.currentBranch || "HEAD";
 
   return (
-    <ModalDialog open={open} title="Merge branches" onClose={onClose} width={480}>
+    <ModalDialog open={open} title={t("mergeDialog.title")} onClose={onClose} width={480}>
       {/* Merge branch selector */}
       <div style={{ marginBottom: 10 }}>
-        <label style={fieldLabelStyle}>Merge branch</label>
+        <label style={fieldLabelStyle}>{t("mergeDialog.mergeBranch")}</label>
         <select
           value={selectedBranch}
           onChange={(e) => setSelectedBranch(e.target.value)}
@@ -115,7 +117,9 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
 
       {/* Into current branch */}
       <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Into current branch</span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {t("mergeDialog.intoCurrentBranch")}
+        </span>
         <span
           style={{
             fontSize: 12,
@@ -139,7 +143,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
             onChange={() => setMergeStrategy("ff")}
             style={radioStyle}
           />
-          Keep a single branch line if possible (fast forward)
+          {t("mergeDialog.fastForward")}
         </label>
         <label style={radioLabelStyle}>
           <input
@@ -148,7 +152,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
             onChange={() => setMergeStrategy("no-ff")}
             style={radioStyle}
           />
-          Always create a new merge commit
+          {t("mergeDialog.alwaysMergeCommit")}
         </label>
       </div>
 
@@ -160,7 +164,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
           onChange={(e) => setNoCommit(e.target.checked)}
           style={checkboxStyle}
         />
-        Do not commit
+        {t("mergeDialog.doNotCommit")}
       </label>
 
       {/* Show advanced options */}
@@ -171,7 +175,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
           onChange={(e) => setShowAdvanced(e.target.checked)}
           style={checkboxStyle}
         />
-        Show advanced options
+        {t("mergeDialog.showAdvancedOptions")}
       </label>
 
       {/* Advanced options */}
@@ -201,7 +205,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
               disabled={squashDisabled}
               style={checkboxStyle}
             />
-            Squash commits
+            {t("mergeDialog.squashCommits")}
           </label>
 
           <label style={checkboxLabelStyle}>
@@ -211,7 +215,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
               onChange={(e) => setAllowUnrelatedHistories(e.target.checked)}
               style={checkboxStyle}
             />
-            Allow unrelated histories
+            {t("mergeDialog.allowUnrelatedHistories")}
           </label>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -222,7 +226,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
                 onChange={(e) => setAddLogMessages(e.target.checked)}
                 style={checkboxStyle}
               />
-              Add log messages
+              {t("mergeDialog.addLogMessages")}
             </label>
             {addLogMessages && (
               <input
@@ -252,13 +256,13 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
               onChange={(e) => setSpecifyMessage(e.target.checked)}
               style={checkboxStyle}
             />
-            Specify merge message
+            {t("mergeDialog.specifyMergeMessage")}
           </label>
           {specifyMessage && (
             <textarea
               value={mergeMessage}
               onChange={(e) => setMergeMessage(e.target.value)}
-              placeholder="Enter merge commit message..."
+              placeholder={t("mergeDialog.mergeMessagePlaceholder")}
               rows={3}
               style={{
                 width: "100%",
@@ -284,7 +288,7 @@ export const MergeDialog: React.FC<Props> = ({ open, onClose, preselectedBranch 
       <DialogActions
         onCancel={onClose}
         onConfirm={handleMerge}
-        confirmLabel="Merge"
+        confirmLabel={t("mergeDialog.merge")}
         loading={loading}
         disabled={!selectedBranch}
       />

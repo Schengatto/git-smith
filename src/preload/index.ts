@@ -77,6 +77,7 @@ const electronAPI = {
       ipcRenderer.invoke(IPC.REPO.BROWSE_FILE, title),
     scanForRepos: (rootPath: string, maxDepth?: number): Promise<string[]> =>
       ipcRenderer.invoke(IPC.REPO.SCAN_FOR_REPOS, rootPath, maxDepth ?? 4),
+    scanCancel: (): Promise<void> => ipcRenderer.invoke(IPC.REPO.SCAN_CANCEL),
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke(IPC.REPO.OPEN_EXTERNAL, url),
     getLastOpened: (): Promise<string | null> => ipcRenderer.invoke(IPC.REPO.GET_LAST_OPENED),
     getViewSettings: (
@@ -289,6 +290,8 @@ const electronAPI = {
       ipcRenderer.on(IPC.SETTINGS.THEME_CHANGED, handler);
       return () => ipcRenderer.removeListener(IPC.SETTINGS.THEME_CHANGED, handler);
     },
+    reset: (): Promise<AppSettings> => ipcRenderer.invoke(IPC.SETTINGS.RESET),
+    clearAll: (): Promise<void> => ipcRenderer.invoke(IPC.SETTINGS.CLEAR_ALL),
   },
   gitConfig: {
     get: (key: string, global?: boolean): Promise<string> =>

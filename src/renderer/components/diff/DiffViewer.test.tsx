@@ -22,6 +22,21 @@ vi.mock("diff2html/lib/types", () => ({
   ColorSchemeType: { DARK: "dark" },
 }));
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      if (opts) {
+        return Object.entries(opts).reduce(
+          (str, [k, v]) => str.replace(`{{${k}}}`, String(v)),
+          key
+        );
+      }
+      return key;
+    },
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 import { DiffViewer } from "./DiffViewer";
 import { ImageDiffViewer, isImageFile } from "./ImageDiffViewer";
 
@@ -46,7 +61,7 @@ describe("DiffViewer", () => {
 
   it("renders 'No diff available' when rawDiff is empty", () => {
     render(<DiffViewer rawDiff="" />);
-    expect(screen.getByText("No diff available")).toBeInTheDocument();
+    expect(screen.getByText("diff.noDiffAvailable")).toBeInTheDocument();
   });
 
   it("renders the diff message when rawDiff starts with '('", () => {
@@ -66,60 +81,60 @@ describe("DiffViewer", () => {
 
   it("renders format toggle buttons when showFormatToggle is true (default)", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} />);
-    expect(screen.getByText("Unified")).toBeInTheDocument();
-    expect(screen.getByText("Split")).toBeInTheDocument();
+    expect(screen.getByText("diff.unified")).toBeInTheDocument();
+    expect(screen.getByText("diff.split")).toBeInTheDocument();
   });
 
   it("does not render format toggle buttons when showFormatToggle is false", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} showFormatToggle={false} />);
-    expect(screen.queryByText("Unified")).not.toBeInTheDocument();
-    expect(screen.queryByText("Split")).not.toBeInTheDocument();
+    expect(screen.queryByText("diff.unified")).not.toBeInTheDocument();
+    expect(screen.queryByText("diff.split")).not.toBeInTheDocument();
   });
 
   it("renders syntax highlight toggle button", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} />);
-    expect(screen.getByText("Syntax")).toBeInTheDocument();
+    expect(screen.getByText("diff.syntax")).toBeInTheDocument();
   });
 
   it("toggles syntax highlighting when Syntax button is clicked", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} />);
-    const btn = screen.getByText("Syntax");
+    const btn = screen.getByText("diff.syntax");
     expect(btn).toBeInTheDocument();
     // Initially enabled; click to disable
     fireEvent.click(btn);
     // After click syntax highlight is off → button title changes
-    expect(btn.closest("button")).toHaveAttribute("title", "Enable syntax highlighting");
+    expect(btn.closest("button")).toHaveAttribute("title", "diff.enableSyntaxHighlighting");
   });
 
   it("toggles back to syntax highlighting when clicked again", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} />);
-    const btn = screen.getByText("Syntax");
+    const btn = screen.getByText("diff.syntax");
     fireEvent.click(btn); // disable
     fireEvent.click(btn); // re-enable
-    expect(btn.closest("button")).toHaveAttribute("title", "Disable syntax highlighting");
+    expect(btn.closest("button")).toHaveAttribute("title", "diff.disableSyntaxHighlighting");
   });
 
   it("switches to side-by-side format when Split button is clicked", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} />);
-    const splitBtn = screen.getByText("Split");
+    const splitBtn = screen.getByText("diff.split");
     fireEvent.click(splitBtn);
     // Unified button should not be active (no accent background via inline style)
-    const unifiedBtn = screen.getByText("Unified");
+    const unifiedBtn = screen.getByText("diff.unified");
     expect(unifiedBtn).toBeInTheDocument();
   });
 
   it("switches back to unified when Unified button is clicked after Split", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} />);
-    fireEvent.click(screen.getByText("Split"));
-    fireEvent.click(screen.getByText("Unified"));
-    expect(screen.getByText("Unified")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("diff.split"));
+    fireEvent.click(screen.getByText("diff.unified"));
+    expect(screen.getByText("diff.unified")).toBeInTheDocument();
   });
 
   it("respects initialFormat prop 'side-by-side'", () => {
     render(<DiffViewer rawDiff={SAMPLE_DIFF} outputFormat="side-by-side" />);
     // Both buttons should render; Split should be active
-    expect(screen.getByText("Split")).toBeInTheDocument();
-    expect(screen.getByText("Unified")).toBeInTheDocument();
+    expect(screen.getByText("diff.split")).toBeInTheDocument();
+    expect(screen.getByText("diff.unified")).toBeInTheDocument();
   });
 
   it("renders the diff container div", () => {
@@ -153,27 +168,27 @@ describe("ImageDiffViewer", () => {
 
   it("renders 'Binary image file' label", () => {
     render(<ImageDiffViewer commitHash="abc123" filePath="test.jpg" />);
-    expect(screen.getByText("Binary image file")).toBeInTheDocument();
+    expect(screen.getByText("imageDiff.binaryImageFile")).toBeInTheDocument();
   });
 
   it("renders mode selector buttons", () => {
     render(<ImageDiffViewer commitHash="abc123" filePath="test.png" />);
-    expect(screen.getByText("Side by Side")).toBeInTheDocument();
-    expect(screen.getByText("Slider")).toBeInTheDocument();
-    expect(screen.getByText("Onion Skin")).toBeInTheDocument();
+    expect(screen.getByText("imageDiff.sideBySide")).toBeInTheDocument();
+    expect(screen.getByText("imageDiff.slider")).toBeInTheDocument();
+    expect(screen.getByText("imageDiff.onionSkin")).toBeInTheDocument();
   });
 
   it("shows slider input when Slider mode is selected", () => {
     render(<ImageDiffViewer commitHash="abc123" filePath="test.png" />);
-    fireEvent.click(screen.getByText("Slider"));
+    fireEvent.click(screen.getByText("imageDiff.slider"));
     const slider = document.querySelector("input[type=range]");
     expect(slider).toBeInTheDocument();
   });
 
   it("shows opacity slider when Onion Skin mode is selected", () => {
     render(<ImageDiffViewer commitHash="abc123" filePath="test.png" />);
-    fireEvent.click(screen.getByText("Onion Skin"));
-    expect(screen.getByText(/Opacity:/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText("imageDiff.onionSkin"));
+    expect(screen.getByText(/imageDiff\.opacity/)).toBeInTheDocument();
   });
 
   it("does not show slider in default side-by-side mode", () => {
@@ -183,18 +198,18 @@ describe("ImageDiffViewer", () => {
 
   it("updates slider percentage label on input change", () => {
     render(<ImageDiffViewer commitHash="abc123" filePath="test.png" />);
-    fireEvent.click(screen.getByText("Slider"));
+    fireEvent.click(screen.getByText("imageDiff.slider"));
     const slider = document.querySelector("input[type=range]") as HTMLInputElement;
     fireEvent.change(slider, { target: { value: "30" } });
-    expect(screen.getByText(/Old 30%/)).toBeInTheDocument();
+    expect(screen.getByText(/imageDiff\.oldNewSlider/)).toBeInTheDocument();
   });
 
   it("updates opacity label on input change", () => {
     render(<ImageDiffViewer commitHash="abc123" filePath="test.png" />);
-    fireEvent.click(screen.getByText("Onion Skin"));
+    fireEvent.click(screen.getByText("imageDiff.onionSkin"));
     const slider = document.querySelector("input[type=range]") as HTMLInputElement;
     fireEvent.change(slider, { target: { value: "75" } });
-    expect(screen.getByText(/Opacity: 75%/)).toBeInTheDocument();
+    expect(screen.getByText(/imageDiff\.opacity/)).toBeInTheDocument();
   });
 });
 

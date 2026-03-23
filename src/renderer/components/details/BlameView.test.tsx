@@ -3,6 +3,30 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "blame.title": "Blame",
+        "blame.lines": "{{count}} lines",
+        "blame.showInGraph": "Show in graph",
+        "blame.loadingBlame": "Loading blame...",
+        "blame.noBlameData": "No blame data",
+        "blame.older": "older",
+        "blame.newer": "newer",
+      };
+      let result = translations[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 import { BlameView } from "./BlameView";
 
 // ─── mocks ────────────────────────────────────────────────────────────────────

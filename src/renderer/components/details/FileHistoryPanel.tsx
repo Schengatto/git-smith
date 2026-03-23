@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { DiffViewer } from "../diff/DiffViewer";
 import { useGraphStore } from "../../store/graph-store";
 import type { CommitInfo } from "../../../shared/git-types";
@@ -12,6 +13,7 @@ interface Props {
 type Mode = "single" | "compare";
 
 export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) => {
+  const { t } = useTranslation();
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [selectedHash, setSelectedHash] = useState<string | null>(null);
   const [compareFrom, setCompareFrom] = useState<string | null>(null);
@@ -120,10 +122,10 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
     mode === "single"
       ? selectedHash
         ? ""
-        : "Select a commit to view changes"
+        : t("fileHistory.selectCommitToView")
       : compareReady
         ? ""
-        : "Select two commits (A and B) to compare";
+        : t("fileHistory.selectTwoCommits");
 
   return (
     <div
@@ -183,7 +185,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
               <polyline points="12 6 12 12 16 14" />
             </svg>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
-              File History
+              {t("fileHistory.title")}
             </span>
             {!loading && commits.length > 0 && (
               <span
@@ -195,7 +197,9 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                   borderRadius: 8,
                 }}
               >
-                {commits.length} commit{commits.length !== 1 ? "s" : ""}
+                {commits.length !== 1
+                  ? t("fileHistory.commitsPlural", { count: commits.length })
+                  : t("fileHistory.commits", { count: commits.length })}
               </span>
             )}
             <span
@@ -222,7 +226,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                 gap: 4,
                 transition: "all 0.15s",
               }}
-              title="Compare two versions"
+              title={t("fileHistory.compareTwoVersions")}
             >
               <svg
                 width="12"
@@ -238,11 +242,11 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                 <line x1="12" y1="20" x2="12" y2="4" />
                 <line x1="6" y1="20" x2="6" y2="14" />
               </svg>
-              Compare
+              {t("fileHistory.compare")}
             </button>
             <button
               onClick={onClose}
-              aria-label="Close file history"
+              aria-label={t("fileHistory.closeFileHistory")}
               style={{
                 background: "none",
                 border: "none",
@@ -290,7 +294,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                 {compareFrom.slice(0, 7)}
               </span>
             ) : (
-              <span>select older</span>
+              <span>{t("fileHistory.selectOlder")}</span>
             )}
             <span style={{ color: "var(--text-muted)" }}>&rarr;</span>
             <span style={{ color: "var(--green)", fontWeight: 600 }}>B</span>
@@ -299,7 +303,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                 {compareTo.slice(0, 7)}
               </span>
             ) : (
-              <span>select newer</span>
+              <span>{t("fileHistory.selectNewer")}</span>
             )}
             {compareFrom && (
               <button
@@ -318,7 +322,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                   textDecoration: "underline",
                 }}
               >
-                Reset
+                {t("fileHistory.reset")}
               </button>
             )}
           </div>
@@ -344,7 +348,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                   textAlign: "center",
                 }}
               >
-                Loading...
+                {t("fileHistory.loading")}
               </div>
             )}
             {!loading && commits.length === 0 && (
@@ -356,7 +360,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                   textAlign: "center",
                 }}
               >
-                No history found
+                {t("fileHistory.noHistoryFound")}
               </div>
             )}
             {commits.map((c, i) => {
@@ -481,7 +485,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
                           e.stopPropagation();
                           handleNavigateToCommit(c.hash);
                         }}
-                        title="Show in graph"
+                        title={t("fileHistory.showInGraph")}
                         style={{
                           marginLeft: "auto",
                           background: "none",
@@ -528,7 +532,7 @@ export const FileHistoryPanel: React.FC<Props> = ({ open, onClose, filePath }) =
               <DiffViewer rawDiff={diff} />
             ) : (
               <div className="empty-state">
-                <span>{diffHint || "Loading diff..."}</span>
+                <span>{diffHint || t("fileHistory.loadingDiff")}</span>
               </div>
             )}
           </div>

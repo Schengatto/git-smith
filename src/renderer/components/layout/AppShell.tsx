@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useUIStore } from "../../store/ui-store";
 import { setAppLanguage } from "../../i18n";
 import type { DockviewReadyEvent, IDockviewPanelProps, DockviewApi } from "dockview";
@@ -55,6 +56,7 @@ const components: Record<string, React.FC<IDockviewPanelProps>> = {
 };
 
 export const AppShell: React.FC = () => {
+  const { t } = useTranslation();
   const { repo, loadRecentRepos } = useRepoStore();
   const status = useRepoStore((s) => s.status);
   const { addTab, updateTab } = useWorkspaceStore();
@@ -263,46 +265,46 @@ export const AppShell: React.FC = () => {
     const sidebarPanel = api.addPanel({
       id: "sidebar",
       component: "sidebar",
-      title: "Explorer",
+      title: t("panels.explorer"),
     });
     const graphPanel = api.addPanel({
       id: "graph",
       component: "graph",
-      title: "Commit Graph",
+      title: t("panels.commitGraph"),
       position: { referencePanel: sidebarPanel, direction: "right" },
     });
     api.addPanel({
       id: "commitInfo",
       component: "commitInfo",
-      title: "Commit Info",
+      title: t("panels.commitInfo"),
       position: { referencePanel: graphPanel, direction: "right" },
     });
     const detailsPanel = api.addPanel({
       id: "details",
       component: "details",
-      title: "Diff / Files",
+      title: t("panels.diffFiles"),
       position: { referencePanel: graphPanel, direction: "below" },
     });
     api.addPanel({
       id: "commandLog",
       component: "commandLog",
-      title: "Command Log",
+      title: t("panels.commandLog"),
       position: { referencePanel: detailsPanel, direction: "within" },
     });
     api.addPanel({
       id: "console",
       component: "console",
-      title: "Console",
+      title: t("panels.console"),
       position: { referencePanel: detailsPanel, direction: "within" },
     });
     api.addPanel({
       id: "stats",
       component: "stats",
-      title: "Author Statistics",
+      title: t("panels.authorStats"),
       position: { referencePanel: detailsPanel, direction: "within" },
     });
     sidebarPanel.api.setSize({ width: 220 });
-  }, []);
+  }, [t]);
 
   const onReady = useCallback(
     (event: DockviewReadyEvent) => {
@@ -320,7 +322,7 @@ export const AppShell: React.FC = () => {
               event.api.addPanel({
                 id: "commitInfo",
                 component: "commitInfo",
-                title: "Commit Info",
+                title: t("panels.commitInfo"),
                 position: { referencePanel: graphPanel, direction: "right" },
               });
             }
@@ -335,7 +337,7 @@ export const AppShell: React.FC = () => {
               event.api.addPanel({
                 id: "console",
                 component: "console",
-                title: "Console",
+                title: t("panels.console"),
                 position: { referencePanel: referencePanel, direction: "within" },
               });
             }
@@ -351,7 +353,7 @@ export const AppShell: React.FC = () => {
               event.api.addPanel({
                 id: "stats",
                 component: "stats",
-                title: "Author Statistics",
+                title: t("panels.authorStats"),
                 position: { referencePanel: referencePanel, direction: "within" },
               });
             }
@@ -368,7 +370,7 @@ export const AppShell: React.FC = () => {
               event.api.addPanel({
                 id: "codebaseStats",
                 component: "codebaseStats",
-                title: "Codebase Stats",
+                title: t("panels.codebaseStats"),
                 position: { referencePanel: ref, direction: "within" },
               });
             }
@@ -386,55 +388,55 @@ export const AppShell: React.FC = () => {
       const sidebarPanel = event.api.addPanel({
         id: "sidebar",
         component: "sidebar",
-        title: "Explorer",
+        title: t("panels.explorer"),
       });
 
       const graphPanel = event.api.addPanel({
         id: "graph",
         component: "graph",
-        title: "Commit Graph",
+        title: t("panels.commitGraph"),
         position: { referencePanel: sidebarPanel, direction: "right" },
       });
 
       event.api.addPanel({
         id: "commitInfo",
         component: "commitInfo",
-        title: "Commit Info",
+        title: t("panels.commitInfo"),
         position: { referencePanel: graphPanel, direction: "right" },
       });
 
       const detailsPanel = event.api.addPanel({
         id: "details",
         component: "details",
-        title: "Diff / Files",
+        title: t("panels.diffFiles"),
         position: { referencePanel: graphPanel, direction: "below" },
       });
 
       event.api.addPanel({
         id: "commandLog",
         component: "commandLog",
-        title: "Command Log",
+        title: t("panels.commandLog"),
         position: { referencePanel: detailsPanel, direction: "within" },
       });
 
       event.api.addPanel({
         id: "console",
         component: "console",
-        title: "Console",
+        title: t("panels.console"),
         position: { referencePanel: detailsPanel, direction: "within" },
       });
 
       event.api.addPanel({
         id: "stats",
         component: "stats",
-        title: "Author Statistics",
+        title: t("panels.authorStats"),
         position: { referencePanel: detailsPanel, direction: "within" },
       });
 
       event.api.addPanel({
         id: "codebaseStats",
         component: "codebaseStats",
-        title: "Codebase Stats",
+        title: t("panels.codebaseStats"),
         position: { referencePanel: detailsPanel, direction: "within" },
       });
 
@@ -443,7 +445,7 @@ export const AppShell: React.FC = () => {
       // Subscribe to layout changes for persistence
       event.api.onDidLayoutChange(() => saveLayout());
     },
-    [saveLayout]
+    [saveLayout, t]
   );
 
   if (initializing) {
@@ -462,7 +464,7 @@ export const AppShell: React.FC = () => {
         >
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
-        <p style={{ marginTop: 16, fontSize: 14, opacity: 0.7 }}>Loading GitSmith…</p>
+        <p style={{ marginTop: 16, fontSize: 14, opacity: 0.7 }}>{t("app.loading")}</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -501,7 +503,7 @@ export const AppShell: React.FC = () => {
           />
         ) : repo && !layoutLoaded ? (
           <div className="flex items-center justify-center h-full bg-surface-0 text-text-secondary">
-            <p style={{ fontSize: 14, opacity: 0.7 }}>Loading layout…</p>
+            <p style={{ fontSize: 14, opacity: 0.7 }}>{t("app.loadingLayout")}</p>
           </div>
         ) : (
           <WelcomeScreen />

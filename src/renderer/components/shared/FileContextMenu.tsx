@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface FileContextMenuProps {
   x: number;
@@ -17,6 +18,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
   onHistory,
   onBlame,
 }) => {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x, y });
 
@@ -108,7 +110,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onMouseEnter={handleItemHover}
         onMouseLeave={handleItemLeave}
       >
-        <IconHistory size={13} /> File history
+        <IconHistory size={13} /> {t("fileContextMenu.fileHistory")}
       </button>
 
       {/* Blame */}
@@ -122,7 +124,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           onMouseEnter={handleItemHover}
           onMouseLeave={handleItemLeave}
         >
-          <IconBlame size={13} /> Blame
+          <IconBlame size={13} /> {t("fileContextMenu.blame")}
         </button>
       )}
 
@@ -138,7 +140,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onMouseEnter={handleItemHover}
         onMouseLeave={handleItemLeave}
       >
-        <IconOpenFile size={13} /> Open file
+        <IconOpenFile size={13} /> {t("fileContextMenu.openFile")}
       </button>
       <button
         style={menuItemStyle}
@@ -149,7 +151,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onMouseEnter={handleItemHover}
         onMouseLeave={handleItemLeave}
       >
-        <IconFolder size={13} /> Show in folder
+        <IconFolder size={13} /> {t("fileContextMenu.showInFolder")}
       </button>
 
       {separator}
@@ -164,7 +166,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onMouseEnter={handleItemHover}
         onMouseLeave={handleItemLeave}
       >
-        <IconCopy size={13} /> Copy path
+        <IconCopy size={13} /> {t("fileContextMenu.copyPath")}
       </button>
       <button
         style={menuItemStyle}
@@ -175,7 +177,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onMouseEnter={handleItemHover}
         onMouseLeave={handleItemLeave}
       >
-        <IconCopy size={13} /> Copy file name
+        <IconCopy size={13} /> {t("fileContextMenu.copyFileName")}
       </button>
     </div>
   );

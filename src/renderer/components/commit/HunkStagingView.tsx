@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   rawDiff: string;
@@ -138,6 +139,7 @@ export const HunkStagingView: React.FC<Props> = ({
   onStageHunk,
   onUnstageHunk,
 }) => {
+  const { t } = useTranslation();
   const { header, hunks } = useMemo(() => parseHunks(rawDiff), [rawDiff]);
   const [selectedLines, setSelectedLines] = useState<Record<number, Set<number>>>({});
 
@@ -179,7 +181,7 @@ export const HunkStagingView: React.FC<Props> = ({
     return (
       <div className="empty-state" style={{ height: "100%" }}>
         <span style={{ color: "var(--text-muted)", fontSize: 12 }}>
-          {rawDiff?.startsWith("(") ? rawDiff : "No diff available"}
+          {rawDiff?.startsWith("(") ? rawDiff : t("hunkStaging.noDiffAvailable")}
         </span>
       </div>
     );
@@ -235,11 +237,11 @@ export const HunkStagingView: React.FC<Props> = ({
               >
                 {isStaged
                   ? selectedLines[hunkIdx]?.size
-                    ? `Unstage ${selectedLines[hunkIdx].size} lines`
-                    : "Unstage Hunk"
+                    ? t("hunkStaging.unstageLines", { count: selectedLines[hunkIdx].size })
+                    : t("hunkStaging.unstageHunk")
                   : selectedLines[hunkIdx]?.size
-                    ? `Stage ${selectedLines[hunkIdx].size} lines`
-                    : "Stage Hunk"}
+                    ? t("hunkStaging.stageLines", { count: selectedLines[hunkIdx].size })
+                    : t("hunkStaging.stageHunk")}
               </button>
             )}
           </div>

@@ -5,6 +5,13 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { FileContextMenu } from "./FileContextMenu";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const openFileMock = vi.fn().mockResolvedValue(undefined);
 const showInFolderMock = vi.fn().mockResolvedValue(undefined);
 const writeTextMock = vi.fn().mockResolvedValue(undefined);
@@ -35,45 +42,45 @@ const defaultProps = {
 describe("FileContextMenu", () => {
   it("renders menu with File history option", () => {
     render(<FileContextMenu {...defaultProps} />);
-    expect(screen.getByText("File history")).toBeInTheDocument();
+    expect(screen.getByText("fileContextMenu.fileHistory")).toBeInTheDocument();
   });
 
   it("renders Open file option", () => {
     render(<FileContextMenu {...defaultProps} />);
-    expect(screen.getByText("Open file")).toBeInTheDocument();
+    expect(screen.getByText("fileContextMenu.openFile")).toBeInTheDocument();
   });
 
   it("renders Show in folder option", () => {
     render(<FileContextMenu {...defaultProps} />);
-    expect(screen.getByText("Show in folder")).toBeInTheDocument();
+    expect(screen.getByText("fileContextMenu.showInFolder")).toBeInTheDocument();
   });
 
   it("renders Copy path option", () => {
     render(<FileContextMenu {...defaultProps} />);
-    expect(screen.getByText("Copy path")).toBeInTheDocument();
+    expect(screen.getByText("fileContextMenu.copyPath")).toBeInTheDocument();
   });
 
   it("renders Copy file name option", () => {
     render(<FileContextMenu {...defaultProps} />);
-    expect(screen.getByText("Copy file name")).toBeInTheDocument();
+    expect(screen.getByText("fileContextMenu.copyFileName")).toBeInTheDocument();
   });
 
   it("does not render Blame button when onBlame is not provided", () => {
     render(<FileContextMenu {...defaultProps} />);
-    expect(screen.queryByText("Blame")).not.toBeInTheDocument();
+    expect(screen.queryByText("fileContextMenu.blame")).not.toBeInTheDocument();
   });
 
   it("renders Blame button when onBlame prop is provided", () => {
     const onBlame = vi.fn();
     render(<FileContextMenu {...defaultProps} onBlame={onBlame} />);
-    expect(screen.getByText("Blame")).toBeInTheDocument();
+    expect(screen.getByText("fileContextMenu.blame")).toBeInTheDocument();
   });
 
   it("calls onHistory and onClose when File history is clicked", () => {
     const onHistory = vi.fn();
     const onClose = vi.fn();
     render(<FileContextMenu {...defaultProps} onHistory={onHistory} onClose={onClose} />);
-    fireEvent.click(screen.getByText("File history"));
+    fireEvent.click(screen.getByText("fileContextMenu.fileHistory"));
     expect(onHistory).toHaveBeenCalledWith("/repo/src/main.ts");
     expect(onClose).toHaveBeenCalled();
   });
@@ -82,7 +89,7 @@ describe("FileContextMenu", () => {
     const onBlame = vi.fn();
     const onClose = vi.fn();
     render(<FileContextMenu {...defaultProps} onBlame={onBlame} onClose={onClose} />);
-    fireEvent.click(screen.getByText("Blame"));
+    fireEvent.click(screen.getByText("fileContextMenu.blame"));
     expect(onBlame).toHaveBeenCalledWith("/repo/src/main.ts");
     expect(onClose).toHaveBeenCalled();
   });
@@ -90,7 +97,7 @@ describe("FileContextMenu", () => {
   it("calls shell.openFile and onClose when Open file is clicked", () => {
     const onClose = vi.fn();
     render(<FileContextMenu {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByText("Open file"));
+    fireEvent.click(screen.getByText("fileContextMenu.openFile"));
     expect(openFileMock).toHaveBeenCalledWith("/repo/src/main.ts");
     expect(onClose).toHaveBeenCalled();
   });
@@ -98,7 +105,7 @@ describe("FileContextMenu", () => {
   it("calls shell.showInFolder and onClose when Show in folder is clicked", () => {
     const onClose = vi.fn();
     render(<FileContextMenu {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByText("Show in folder"));
+    fireEvent.click(screen.getByText("fileContextMenu.showInFolder"));
     expect(showInFolderMock).toHaveBeenCalledWith("/repo/src/main.ts");
     expect(onClose).toHaveBeenCalled();
   });
@@ -106,7 +113,7 @@ describe("FileContextMenu", () => {
   it("copies full path to clipboard when Copy path is clicked", () => {
     const onClose = vi.fn();
     render(<FileContextMenu {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByText("Copy path"));
+    fireEvent.click(screen.getByText("fileContextMenu.copyPath"));
     expect(writeTextMock).toHaveBeenCalledWith("/repo/src/main.ts");
     expect(onClose).toHaveBeenCalled();
   });
@@ -114,7 +121,7 @@ describe("FileContextMenu", () => {
   it("copies only file name when Copy file name is clicked", () => {
     const onClose = vi.fn();
     render(<FileContextMenu {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByText("Copy file name"));
+    fireEvent.click(screen.getByText("fileContextMenu.copyFileName"));
     expect(writeTextMock).toHaveBeenCalledWith("main.ts");
     expect(onClose).toHaveBeenCalled();
   });

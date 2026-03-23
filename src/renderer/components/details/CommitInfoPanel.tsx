@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGraphStore } from "../../store/graph-store";
 import { useRepoStore } from "../../store/repo-store";
 import type { CommitFullInfo } from "../../../shared/git-types";
@@ -22,6 +23,7 @@ const IconInfo = () => (
 );
 
 export const CommitInfoPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { selectedCommit } = useGraphStore();
   const repo = useRepoStore((s) => s.repo);
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
@@ -63,13 +65,17 @@ export const CommitInfoPanel: React.FC = () => {
         <div className="empty-state-icon">
           <IconInfo />
         </div>
-        <span>Select a commit to view info</span>
+        <span>{t("details.selectCommitToViewInfo")}</span>
       </div>
     );
   }
 
   if (!info) {
-    return <div style={{ padding: 12, fontSize: 11, color: "var(--text-muted)" }}>Loading...</div>;
+    return (
+      <div style={{ padding: 12, fontSize: 11, color: "var(--text-muted)" }}>
+        {t("details.loading")}
+      </div>
+    );
   }
 
   return (
@@ -90,29 +96,29 @@ export const CommitInfoPanel: React.FC = () => {
           />
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <MetaRow label="Author">
+          <MetaRow label={t("commitInfo.author")}>
             {info.authorName} &lt;{info.authorEmail}&gt;
           </MetaRow>
-          <MetaRow label="Date">{formatDate(info.authorDate)}</MetaRow>
+          <MetaRow label={t("commitInfo.date")}>{formatDate(info.authorDate)}</MetaRow>
           {(info.committerName !== info.authorName || info.committerEmail !== info.authorEmail) && (
-            <MetaRow label="Committer">
+            <MetaRow label={t("commitInfo.committer")}>
               {info.committerName} &lt;{info.committerEmail}&gt;
             </MetaRow>
           )}
-          <MetaRow label="Commit hash">
+          <MetaRow label={t("commitInfo.commitHash")}>
             <span style={{ fontFamily: "monospace", fontSize: 11, userSelect: "all" }}>
               {info.hash}
             </span>
           </MetaRow>
           {info.childHashes.length > 0 && (
-            <MetaRow label="Child">
+            <MetaRow label={t("commitInfo.child")}>
               <span style={{ fontFamily: "monospace", fontSize: 11, color: "var(--accent)" }}>
                 {info.childHashes.map((h) => h.slice(0, 10)).join(", ")}
               </span>
             </MetaRow>
           )}
           {info.parentHashes.length > 0 && (
-            <MetaRow label="Parent">
+            <MetaRow label={t("commitInfo.parent")}>
               <span style={{ fontFamily: "monospace", fontSize: 11, color: "var(--accent)" }}>
                 {info.parentHashes.map((h) => h.slice(0, 10)).join(", ")}
               </span>
@@ -204,7 +210,7 @@ export const CommitInfoPanel: React.FC = () => {
           <div
             style={{ fontWeight: 600, color: "var(--text-muted)", marginBottom: 2, fontSize: 10 }}
           >
-            Note
+            {t("commitInfo.note")}
           </div>
           <div style={{ color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}>{noteText}</div>
         </div>
@@ -212,25 +218,25 @@ export const CommitInfoPanel: React.FC = () => {
 
       {/* Branches, Tags */}
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 3 }}>
-        <MetaRow label="Contained in branches">
+        <MetaRow label={t("commitInfo.containedInBranches")}>
           {info.containedInBranches.length > 0 ? (
             <BadgeList items={info.containedInBranches} />
           ) : (
-            <MutedText>No branches</MutedText>
+            <MutedText>{t("commitInfo.noBranches")}</MutedText>
           )}
         </MetaRow>
-        <MetaRow label="Contained in tags">
+        <MetaRow label={t("commitInfo.containedInTags")}>
           {info.containedInTags.length > 0 ? (
             <BadgeList items={info.containedInTags} />
           ) : (
-            <MutedText>Contained in no tag</MutedText>
+            <MutedText>{t("commitInfo.containedInNoTag")}</MutedText>
           )}
         </MetaRow>
-        <MetaRow label="Derives from tag">
+        <MetaRow label={t("commitInfo.derivesFromTag")}>
           {info.derivesFromTag ? (
             <Badge>{info.derivesFromTag}</Badge>
           ) : (
-            <MutedText>Derives from no tag</MutedText>
+            <MutedText>{t("commitInfo.derivesFromNoTag")}</MutedText>
           )}
         </MetaRow>
       </div>

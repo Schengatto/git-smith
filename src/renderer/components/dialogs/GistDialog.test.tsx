@@ -4,6 +4,37 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { GistDialog } from "./GistDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "gist.title": "Create Gist / Snippet",
+        "gist.filename": "Filename",
+        "gist.filenamePlaceholder": "snippet.txt",
+        "gist.description": "Description",
+        "gist.descriptionPlaceholder": "Optional description...",
+        "gist.content": "Content",
+        "gist.contentPlaceholder": "Paste or type your snippet here...",
+        "gist.visibility": "Visibility",
+        "gist.secret": "Secret",
+        "gist.public": "Public",
+        "gist.secretDescription": "Only people with the URL can view this gist.",
+        "gist.publicDescription": "Anyone can discover and view this gist.",
+        "gist.createGist": "Create Gist",
+        "gist.creating": "Creating...",
+        "gist.createdSuccessfully": "Gist created successfully!",
+        "gist.gistUrl": "Gist URL",
+        "gist.copyUrl": "Copy URL",
+        "gist.openInBrowser": "Open in Browser",
+        "dialogs.close": "Close",
+        "dialogs.cancel": "Cancel",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockElectronAPI = {
   gist: {
     create: vi.fn().mockResolvedValue({ url: "https://gist.github.com/abc123" }),

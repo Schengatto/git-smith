@@ -278,13 +278,13 @@ describe("Sidebar", () => {
 
   it("shows 'Open a repository' prompt when no repo is open", () => {
     render(<Sidebar />);
-    expect(screen.getByText("Open a repository")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.openARepository")).toBeInTheDocument();
   });
 
   it("does not show section headers when no repo is open", () => {
     render(<Sidebar />);
-    expect(screen.queryByText("Branches")).not.toBeInTheDocument();
-    expect(screen.queryByText("Remotes")).not.toBeInTheDocument();
+    expect(screen.queryByText("sidebar.branches")).not.toBeInTheDocument();
+    expect(screen.queryByText("sidebar.remoteBranches")).not.toBeInTheDocument();
   });
 
   /* ---- Repo open: sections are rendered ---- */
@@ -293,11 +293,11 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
     await waitFor(() => {
-      expect(screen.getByText("Branches")).toBeInTheDocument();
-      expect(screen.getByText("Remotes")).toBeInTheDocument();
-      expect(screen.getByText("Tags")).toBeInTheDocument();
-      expect(screen.getByText("Submodules")).toBeInTheDocument();
-      expect(screen.getByText("Stashes")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.branches")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.remoteBranches")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.tags")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.submodules")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.stashes")).toBeInTheDocument();
     });
   });
 
@@ -340,7 +340,7 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
     await waitFor(() => {
-      expect(screen.getByText("No local branches")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.noLocalBranches")).toBeInTheDocument();
     });
   });
 
@@ -371,7 +371,7 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
     await waitFor(() => {
-      expect(screen.getByText("No remote branches")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.noRemoteBranches")).toBeInTheDocument();
     });
   });
 
@@ -401,7 +401,7 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
     await waitFor(() => {
-      expect(screen.getByText("No tags")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.noTags")).toBeInTheDocument();
     });
   });
 
@@ -410,10 +410,10 @@ describe("Sidebar", () => {
   it("shows 'No stashes' when stash list is empty (after expanding section)", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Stashes"));
-    fireEvent.click(screen.getByText("Stashes"));
+    await waitFor(() => screen.getByText("sidebar.stashes"));
+    fireEvent.click(screen.getByText("sidebar.stashes"));
     await waitFor(() => {
-      expect(screen.getByText("No stashes")).toBeInTheDocument();
+      expect(screen.getByText("sidebar.noStashes")).toBeInTheDocument();
     });
   });
 
@@ -421,8 +421,8 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     mocks.stashList.mockResolvedValue([makeStash(0, "WIP: my changes")]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Stashes"));
-    fireEvent.click(screen.getByText("Stashes"));
+    await waitFor(() => screen.getByText("sidebar.stashes"));
+    fireEvent.click(screen.getByText("sidebar.stashes"));
     await waitFor(() => {
       expect(screen.getByText("WIP: my changes")).toBeInTheDocument();
     });
@@ -435,7 +435,7 @@ describe("Sidebar", () => {
     mocks.branchList.mockResolvedValue([makeLocalBranch("main", true)]);
     render(<Sidebar />);
     await waitFor(() => screen.getByText("main"));
-    fireEvent.click(screen.getByText("Branches"));
+    fireEvent.click(screen.getByText("sidebar.branches"));
     await waitFor(() => {
       expect(screen.queryByText("main")).not.toBeInTheDocument();
     });
@@ -446,8 +446,8 @@ describe("Sidebar", () => {
     mocks.branchList.mockResolvedValue([makeLocalBranch("main", true)]);
     render(<Sidebar />);
     await waitFor(() => screen.getByText("main"));
-    fireEvent.click(screen.getByText("Branches"));
-    fireEvent.click(screen.getByText("Branches"));
+    fireEvent.click(screen.getByText("sidebar.branches"));
+    fireEvent.click(screen.getByText("sidebar.branches"));
     await waitFor(() => {
       expect(screen.getByText("main")).toBeInTheDocument();
     });
@@ -458,7 +458,7 @@ describe("Sidebar", () => {
     mocks.branchList.mockResolvedValue([makeRemoteBranch("origin/main")]);
     render(<Sidebar />);
     await waitFor(() => screen.getByText("origin/main"));
-    fireEvent.click(screen.getByText("Remotes"));
+    fireEvent.click(screen.getByText("sidebar.remoteBranches"));
     await waitFor(() => {
       expect(screen.queryByText("origin/main")).not.toBeInTheDocument();
     });
@@ -469,7 +469,7 @@ describe("Sidebar", () => {
     mocks.tagList.mockResolvedValue([makeTag("v1.0.0")]);
     render(<Sidebar />);
     await waitFor(() => screen.getByText("v1.0.0"));
-    fireEvent.click(screen.getByText("Tags"));
+    fireEvent.click(screen.getByText("sidebar.tags"));
     await waitFor(() => {
       expect(screen.queryByText("v1.0.0")).not.toBeInTheDocument();
     });
@@ -481,7 +481,7 @@ describe("Sidebar", () => {
       { name: "libfoo", path: "libfoo", url: "https://example.com/foo", hash: "abc1234" },
     ]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Submodules"));
+    await waitFor(() => screen.getByText("sidebar.submodules"));
     expect(screen.queryByText("libfoo")).not.toBeInTheDocument();
   });
 
@@ -491,8 +491,8 @@ describe("Sidebar", () => {
       { name: "libfoo", path: "libfoo", url: "https://example.com/foo", hash: "abc1234" },
     ]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Submodules"));
-    fireEvent.click(screen.getByText("Submodules"));
+    await waitFor(() => screen.getByText("sidebar.submodules"));
+    fireEvent.click(screen.getByText("sidebar.submodules"));
     await waitFor(() => {
       expect(screen.getByText("libfoo")).toBeInTheDocument();
     });
@@ -503,7 +503,7 @@ describe("Sidebar", () => {
   it("renders a filter input", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    expect(screen.getByPlaceholderText("Filter...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("sidebar.filter")).toBeInTheDocument();
   });
 
   it("filters branches by search query", async () => {
@@ -514,7 +514,7 @@ describe("Sidebar", () => {
     ]);
     render(<Sidebar />);
     await waitFor(() => screen.getByText("main"));
-    fireEvent.change(screen.getByPlaceholderText("Filter..."), {
+    fireEvent.change(screen.getByPlaceholderText("sidebar.filter"), {
       target: { value: "login" },
     });
     await waitFor(() => {
@@ -528,18 +528,18 @@ describe("Sidebar", () => {
     mocks.branchList.mockResolvedValue([makeLocalBranch("main", true)]);
     render(<Sidebar />);
     await waitFor(() => screen.getByText("main"));
-    fireEvent.change(screen.getByPlaceholderText("Filter..."), {
+    fireEvent.change(screen.getByPlaceholderText("sidebar.filter"), {
       target: { value: "zzznomatch" },
     });
     await waitFor(() => {
-      expect(screen.getAllByText("No matches").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("sidebar.noMatches").length).toBeGreaterThan(0);
     });
   });
 
   it("shows a clear button when search query is non-empty and clears input on click", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    const input = screen.getByPlaceholderText("Filter...");
+    const input = screen.getByPlaceholderText("sidebar.filter");
     fireEvent.change(input, { target: { value: "test" } });
     const clearBtn = screen.getByText("×");
     expect(clearBtn).toBeInTheDocument();
@@ -564,7 +564,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("feature/ctx"));
     fireEvent.contextMenu(screen.getByText("feature/ctx").closest(".list-item")!);
-    expect(screen.getByText("Checkout")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.checkout")).toBeInTheDocument();
   });
 
   it("context menu for non-current local branch includes Delete option", async () => {
@@ -573,7 +573,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("feature/ctx"));
     fireEvent.contextMenu(screen.getByText("feature/ctx").closest(".list-item")!);
-    expect(screen.getByText("Delete")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.delete")).toBeInTheDocument();
   });
 
   it("context menu for current branch does not include Checkout or Delete", async () => {
@@ -582,8 +582,8 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("main"));
     fireEvent.contextMenu(screen.getByText("main").closest(".list-item")!);
-    expect(screen.queryByText("Checkout")).not.toBeInTheDocument();
-    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+    expect(screen.queryByText("sidebar.checkout")).not.toBeInTheDocument();
+    expect(screen.queryByText("sidebar.delete")).not.toBeInTheDocument();
   });
 
   it("context menu for non-current local branch includes Rename option", async () => {
@@ -592,7 +592,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("feature/ren"));
     fireEvent.contextMenu(screen.getByText("feature/ren").closest(".list-item")!);
-    expect(screen.getByText("Rename")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.rename")).toBeInTheDocument();
   });
 
   it("context menu for remote branch includes Delete Remote Branch", async () => {
@@ -601,7 +601,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("origin/feature"));
     fireEvent.contextMenu(screen.getByText("origin/feature").closest(".list-item")!);
-    expect(screen.getByText("Delete Remote Branch")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.deleteRemoteBranch")).toBeInTheDocument();
   });
 
   /* ---- Context menu on tags ---- */
@@ -621,8 +621,8 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("v1.0.0"));
     fireEvent.contextMenu(screen.getByText("v1.0.0").closest(".list-item")!);
-    expect(screen.getByText("Push to Remote")).toBeInTheDocument();
-    expect(screen.getByText("Delete")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.pushToRemote")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.delete")).toBeInTheDocument();
   });
 
   /* ---- Context menu on stashes ---- */
@@ -631,8 +631,8 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     mocks.stashList.mockResolvedValue([makeStash(0, "WIP: context test")]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Stashes"));
-    fireEvent.click(screen.getByText("Stashes"));
+    await waitFor(() => screen.getByText("sidebar.stashes"));
+    fireEvent.click(screen.getByText("sidebar.stashes"));
     await waitFor(() => screen.getByText("WIP: context test"));
     fireEvent.contextMenu(screen.getByText("WIP: context test").closest(".list-item")!);
     expect(screen.getByTestId("context-menu")).toBeInTheDocument();
@@ -642,13 +642,13 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     mocks.stashList.mockResolvedValue([makeStash(0, "WIP: stash menu")]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Stashes"));
-    fireEvent.click(screen.getByText("Stashes"));
+    await waitFor(() => screen.getByText("sidebar.stashes"));
+    fireEvent.click(screen.getByText("sidebar.stashes"));
     await waitFor(() => screen.getByText("WIP: stash menu"));
     fireEvent.contextMenu(screen.getByText("WIP: stash menu").closest(".list-item")!);
-    expect(screen.getByText("Pop")).toBeInTheDocument();
-    expect(screen.getByText("Apply")).toBeInTheDocument();
-    expect(screen.getByText("Drop")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.pop")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.apply")).toBeInTheDocument();
+    expect(screen.getByText("sidebar.drop")).toBeInTheDocument();
   });
 
   /* ---- Context menu on section headers ---- */
@@ -656,25 +656,25 @@ describe("Sidebar", () => {
   it("Branches section header context menu shows Create New Branch option", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Branches"));
-    fireEvent.contextMenu(screen.getByText("Branches").closest(".section-header")!);
-    expect(screen.getByText("Create New Branch...")).toBeInTheDocument();
+    await waitFor(() => screen.getByText("sidebar.branches"));
+    fireEvent.contextMenu(screen.getByText("sidebar.branches").closest(".section-header")!);
+    expect(screen.getByText("sidebar.createNewBranch")).toBeInTheDocument();
   });
 
   it("Tags section header context menu shows Create New Tag option", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Tags"));
-    fireEvent.contextMenu(screen.getByText("Tags").closest(".section-header")!);
-    expect(screen.getByText("Create New Tag...")).toBeInTheDocument();
+    await waitFor(() => screen.getByText("sidebar.tags"));
+    fireEvent.contextMenu(screen.getByText("sidebar.tags").closest(".section-header")!);
+    expect(screen.getByText("sidebar.createNewTag")).toBeInTheDocument();
   });
 
   it("Stashes section header context menu shows Stash Changes option", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Stashes"));
-    fireEvent.contextMenu(screen.getByText("Stashes").closest(".section-header")!);
-    expect(screen.getByText("Stash Changes...")).toBeInTheDocument();
+    await waitFor(() => screen.getByText("sidebar.stashes"));
+    fireEvent.contextMenu(screen.getByText("sidebar.stashes").closest(".section-header")!);
+    expect(screen.getByText("sidebar.stashChanges")).toBeInTheDocument();
   });
 
   /* ---- Dialog opening from context menu actions ---- */
@@ -682,27 +682,27 @@ describe("Sidebar", () => {
   it("opens CreateBranchDialog when context menu Create New Branch is clicked", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Branches"));
-    fireEvent.contextMenu(screen.getByText("Branches").closest(".section-header")!);
-    fireEvent.click(screen.getByText("Create New Branch..."));
+    await waitFor(() => screen.getByText("sidebar.branches"));
+    fireEvent.contextMenu(screen.getByText("sidebar.branches").closest(".section-header")!);
+    fireEvent.click(screen.getByText("sidebar.createNewBranch"));
     expect(screen.getByTestId("create-branch-dialog")).toBeInTheDocument();
   });
 
   it("opens CreateTagDialog when context menu Create New Tag is clicked", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Tags"));
-    fireEvent.contextMenu(screen.getByText("Tags").closest(".section-header")!);
-    fireEvent.click(screen.getByText("Create New Tag..."));
+    await waitFor(() => screen.getByText("sidebar.tags"));
+    fireEvent.contextMenu(screen.getByText("sidebar.tags").closest(".section-header")!);
+    fireEvent.click(screen.getByText("sidebar.createNewTag"));
     expect(screen.getByTestId("create-tag-dialog")).toBeInTheDocument();
   });
 
   it("opens CreateStashDialog when context menu Stash Changes is clicked", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Stashes"));
-    fireEvent.contextMenu(screen.getByText("Stashes").closest(".section-header")!);
-    fireEvent.click(screen.getByText("Stash Changes..."));
+    await waitFor(() => screen.getByText("sidebar.stashes"));
+    fireEvent.contextMenu(screen.getByText("sidebar.stashes").closest(".section-header")!);
+    fireEvent.click(screen.getByText("sidebar.stashChanges"));
     expect(screen.getByTestId("create-stash-dialog")).toBeInTheDocument();
   });
 
@@ -712,7 +712,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("feature/test"));
     fireEvent.contextMenu(screen.getByText("feature/test").closest(".list-item")!);
-    fireEvent.click(screen.getByText("Checkout"));
+    fireEvent.click(screen.getByText("sidebar.checkout"));
     expect(screen.getByTestId("checkout-dialog")).toBeInTheDocument();
   });
 
@@ -722,7 +722,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("feature/del"));
     fireEvent.contextMenu(screen.getByText("feature/del").closest(".list-item")!);
-    fireEvent.click(screen.getByText("Delete"));
+    fireEvent.click(screen.getByText("sidebar.delete"));
     expect(screen.getByTestId("delete-branch-dialog")).toBeInTheDocument();
   });
 
@@ -732,7 +732,7 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("feature/ren"));
     fireEvent.contextMenu(screen.getByText("feature/ren").closest(".list-item")!);
-    fireEvent.click(screen.getByText("Rename"));
+    fireEvent.click(screen.getByText("sidebar.rename"));
     expect(screen.getByTestId("rename-branch-dialog")).toBeInTheDocument();
   });
 
@@ -764,10 +764,10 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     await waitFor(() => screen.getByText("v1.0.0"));
     fireEvent.contextMenu(screen.getByText("v1.0.0").closest(".list-item")!);
-    fireEvent.click(screen.getByText("Delete"));
+    fireEvent.click(screen.getByText("sidebar.delete"));
     await waitFor(() => {
       const modal = screen.getByTestId("modal-dialog");
-      expect(modal).toHaveAttribute("data-title", "Delete Tag");
+      expect(modal).toHaveAttribute("data-title", "sidebar.deleteTagTitle");
     });
   });
 
@@ -780,8 +780,8 @@ describe("Sidebar", () => {
       makeLocalBranch("feature/a"),
     ]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Branches"));
-    const header = screen.getByText("Branches").closest(".section-header")!;
+    await waitFor(() => screen.getByText("sidebar.branches"));
+    const header = screen.getByText("sidebar.branches").closest(".section-header")!;
     expect(header.textContent).toContain("2");
   });
 
@@ -789,16 +789,16 @@ describe("Sidebar", () => {
     mocks.repoState.repo = makeRepo();
     mocks.tagList.mockResolvedValue([makeTag("v1.0.0"), makeTag("v1.1.0"), makeTag("v2.0.0")]);
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Tags"));
-    const header = screen.getByText("Tags").closest(".section-header")!;
+    await waitFor(() => screen.getByText("sidebar.tags"));
+    const header = screen.getByText("sidebar.tags").closest(".section-header")!;
     expect(header.textContent).toContain("3");
   });
 
   it("Submodules section header context menu shows Add Submodule option", async () => {
     mocks.repoState.repo = makeRepo();
     render(<Sidebar />);
-    await waitFor(() => screen.getByText("Submodules"));
-    fireEvent.contextMenu(screen.getByText("Submodules").closest(".section-header")!);
-    expect(screen.getByText("Add Submodule...")).toBeInTheDocument();
+    await waitFor(() => screen.getByText("sidebar.submodules"));
+    fireEvent.contextMenu(screen.getByText("sidebar.submodules").closest(".section-header")!);
+    expect(screen.getByText("sidebar.addSubmodule")).toBeInTheDocument();
   });
 });

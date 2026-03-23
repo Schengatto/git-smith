@@ -5,6 +5,31 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { AdvancedStatsDialog } from "./AdvancedStatsDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "advancedStats.title": "Advanced Statistics",
+        "advancedStats.period": "Period",
+        "advancedStats.day": "Day",
+        "advancedStats.week": "Week",
+        "advancedStats.month": "Month",
+        "advancedStats.commitsTimeline": "Commits Timeline",
+        "advancedStats.codeChurn": "Code Churn",
+        "advancedStats.contributors": "Contributors",
+        "advancedStats.showingLast30": "Showing last 30 periods",
+        "advancedStats.noDataForPeriod": "No data for this period.",
+        "advancedStats.additions": "Additions",
+        "advancedStats.deletions": "Deletions",
+        "advancedStats.author": "Author",
+        "advancedStats.total": "Total",
+        "dialogs.loading": "Loading...",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 const mockElectronAPI = {
   statsAdvanced: {
     timeline: vi.fn().mockResolvedValue([]),

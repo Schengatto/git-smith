@@ -5,6 +5,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { InteractiveRebaseDialog } from "./InteractiveRebaseDialog";
 import { runGitOperation } from "../../store/git-operation-store";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: Object.assign(
     () => ({
@@ -71,7 +78,7 @@ describe("InteractiveRebaseDialog", () => {
 
   it("renders the dialog heading when open", () => {
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
-    expect(screen.getByText("Interactive Rebase")).toBeInTheDocument();
+    expect(screen.getByText("interactiveRebase.title")).toBeInTheDocument();
   });
 
   it("shows the onto ref in the header", () => {
@@ -94,8 +101,8 @@ describe("InteractiveRebaseDialog", () => {
 
   it("renders Start Rebase and Cancel buttons", () => {
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
-    expect(screen.getByText("Start Rebase")).toBeInTheDocument();
-    expect(screen.getByText("Cancel")).toBeInTheDocument();
+    expect(screen.getByText("interactiveRebase.startRebase")).toBeInTheDocument();
+    expect(screen.getByText("dialogs.cancel")).toBeInTheDocument();
   });
 
   it("renders action legend labels", () => {
@@ -108,20 +115,22 @@ describe("InteractiveRebaseDialog", () => {
   it("calls onClose when Cancel is clicked", () => {
     const onClose = vi.fn();
     render(<InteractiveRebaseDialog open={true} onClose={onClose} onto="main" />);
-    fireEvent.click(screen.getByText("Cancel"));
+    fireEvent.click(screen.getByText("dialogs.cancel"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("Start Rebase button is disabled while commits are loading", () => {
     mockElectronAPI.branch.rebaseCommits.mockReturnValueOnce(new Promise(() => {}));
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
-    expect((screen.getByText("Start Rebase") as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByText("interactiveRebase.startRebase") as HTMLButtonElement).disabled).toBe(
+      true
+    );
   });
 
   it("shows commit count in footer after loading", async () => {
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
     await vi.waitFor(() => {
-      expect(screen.getByText("2 commits")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.commits")).toBeInTheDocument();
     });
   });
 
@@ -145,7 +154,7 @@ describe("InteractiveRebaseDialog", () => {
     mockElectronAPI.branch.rebaseCommits.mockResolvedValueOnce([]);
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
     await vi.waitFor(() => {
-      expect(screen.getByText("No commits to rebase")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.noCommitsToRebase")).toBeInTheDocument();
     });
   });
 
@@ -153,16 +162,18 @@ describe("InteractiveRebaseDialog", () => {
     mockElectronAPI.branch.rebaseCommits.mockResolvedValueOnce([]);
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
     await vi.waitFor(() => {
-      expect(screen.getByText("No commits to rebase")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.noCommitsToRebase")).toBeInTheDocument();
     });
-    expect((screen.getByText("Start Rebase") as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByText("interactiveRebase.startRebase") as HTMLButtonElement).disabled).toBe(
+      true
+    );
   });
 
   it("shows 0 commits in footer when commits list is empty", async () => {
     mockElectronAPI.branch.rebaseCommits.mockResolvedValueOnce([]);
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
     await vi.waitFor(() => {
-      expect(screen.getByText("0 commits")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.commits")).toBeInTheDocument();
     });
   });
 
@@ -192,7 +203,7 @@ describe("InteractiveRebaseDialog", () => {
     });
     const selects = screen.getAllByRole("combobox");
     fireEvent.change(selects[0]!, { target: { value: "drop" } });
-    expect(screen.getByText("1 dropped")).toBeInTheDocument();
+    expect(screen.getByText("interactiveRebase.dropped")).toBeInTheDocument();
   });
 
   it("shows squash count in footer after setting action to squash", async () => {
@@ -202,12 +213,12 @@ describe("InteractiveRebaseDialog", () => {
     });
     const selects = screen.getAllByRole("combobox");
     fireEvent.change(selects[0]!, { target: { value: "squash" } });
-    expect(screen.getByText("1 squashed")).toBeInTheDocument();
+    expect(screen.getByText("interactiveRebase.squashed")).toBeInTheDocument();
   });
 
   it("renders in window mode without overlay", () => {
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" mode="window" />);
-    expect(screen.getByText("Interactive Rebase")).toBeInTheDocument();
+    expect(screen.getByText("interactiveRebase.title")).toBeInTheDocument();
   });
 
   it("shows error when rebase operation fails", async () => {
@@ -216,7 +227,7 @@ describe("InteractiveRebaseDialog", () => {
       expect(screen.getByText("fix: bug one")).toBeInTheDocument();
     });
     mockRunGitOperation.mockRejectedValueOnce(new Error("rebase failed"));
-    fireEvent.click(screen.getByText("Start Rebase"));
+    fireEvent.click(screen.getByText("interactiveRebase.startRebase"));
     await waitFor(() => {
       expect(screen.getByText("rebase failed")).toBeInTheDocument();
     });
@@ -260,7 +271,7 @@ describe("InteractiveRebaseDialog", () => {
     await vi.waitFor(() => {
       expect(screen.getByText("fix: bug one")).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText("Start Rebase"));
+    fireEvent.click(screen.getByText("interactiveRebase.startRebase"));
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
     });
@@ -271,7 +282,7 @@ describe("InteractiveRebaseDialog", () => {
     await vi.waitFor(() => expect(screen.getAllByRole("combobox").length).toBe(2));
     const selects = screen.getAllByRole("combobox");
     fireEvent.change(selects[0]!, { target: { value: "fixup" } });
-    expect(screen.getByText("1 squashed")).toBeInTheDocument();
+    expect(screen.getByText("interactiveRebase.squashed")).toBeInTheDocument();
   });
 
   it("keyboard shortcut 'd' sets action to drop on selected commit", async () => {
@@ -283,7 +294,7 @@ describe("InteractiveRebaseDialog", () => {
     fireEvent.keyDown(window, { key: "d" });
     // Should show 1 dropped in footer
     await waitFor(() => {
-      expect(screen.getByText("1 dropped")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.dropped")).toBeInTheDocument();
     });
   });
 
@@ -293,7 +304,7 @@ describe("InteractiveRebaseDialog", () => {
     fireEvent.click(screen.getByText("fix: bug one").closest("div[draggable]")!);
     fireEvent.keyDown(window, { key: "s" });
     await waitFor(() => {
-      expect(screen.getByText("1 squashed")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.squashed")).toBeInTheDocument();
     });
   });
 
@@ -365,7 +376,7 @@ describe("InteractiveRebaseDialog", () => {
     await vi.waitFor(() => expect(screen.getByText("fix: bug one")).toBeInTheDocument());
     // Press 'd' without selecting a row first — should not change anything
     fireEvent.keyDown(window, { key: "d" });
-    expect(screen.queryByText("1 dropped")).not.toBeInTheDocument();
+    expect(screen.queryByText("interactiveRebase.dropped")).not.toBeInTheDocument();
   });
 
   it("does not load commits when open=false", () => {
@@ -386,7 +397,7 @@ describe("InteractiveRebaseDialog", () => {
     render(<InteractiveRebaseDialog open={true} onClose={vi.fn()} onto="main" />);
     await waitFor(() => {
       // No error shown, no crash
-      expect(screen.getByText("Interactive Rebase")).toBeInTheDocument();
+      expect(screen.getByText("interactiveRebase.title")).toBeInTheDocument();
     });
     expect(screen.queryByText("cancelled")).not.toBeInTheDocument();
   });

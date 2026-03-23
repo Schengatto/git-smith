@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useStatsStore } from "../../store/stats-store";
 import { useRepoStore } from "../../store/repo-store";
 import { AuthorDetailExpander } from "./AuthorDetailExpander";
@@ -9,13 +10,14 @@ function formatNumber(n: number): string {
   return String(n);
 }
 
-const TIMEFRAME_OPTIONS: { label: string; value: Timeframe }[] = [
-  { label: "All Time", value: "all" },
-  { label: "Month", value: "month" },
-  { label: "Week", value: "week" },
+const TIMEFRAME_OPTIONS: { labelKey: string; value: Timeframe }[] = [
+  { labelKey: "stats.allTime", value: "all" },
+  { labelKey: "stats.month", value: "month" },
+  { labelKey: "stats.week", value: "week" },
 ];
 
 export const StatsPanel: React.FC = () => {
+  const { t } = useTranslation();
   const repo = useRepoStore((s) => s.repo);
   const {
     leaderboard,
@@ -123,7 +125,7 @@ export const StatsPanel: React.FC = () => {
           fontSize: 13,
         }}
       >
-        Open a repository to view statistics.
+        {t("stats.openRepoToViewStats")}
       </div>
     );
   }
@@ -151,7 +153,9 @@ export const StatsPanel: React.FC = () => {
           flexWrap: "wrap",
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: 13, flex: "0 0 auto" }}>Author Statistics</span>
+        <span style={{ fontWeight: 600, fontSize: 13, flex: "0 0 auto" }}>
+          {t("stats.authorStatistics")}
+        </span>
 
         <div style={{ flex: 1 }} />
 
@@ -167,7 +171,7 @@ export const StatsPanel: React.FC = () => {
           {TIMEFRAME_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              aria-label={opt.label}
+              aria-label={t(opt.labelKey)}
               onClick={() => handleTimeframe(opt.value)}
               style={{
                 padding: "3px 10px",
@@ -181,16 +185,16 @@ export const StatsPanel: React.FC = () => {
                 transition: "background-color 0.15s",
               }}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
 
         {/* Refresh button */}
         <button
-          aria-label="Refresh"
+          aria-label={t("stats.refresh")}
           onClick={handleRefresh}
-          title="Refresh statistics"
+          title={t("stats.refreshStatistics")}
           style={{
             padding: "4px 8px",
             fontSize: 12,
@@ -245,7 +249,7 @@ export const StatsPanel: React.FC = () => {
           >
             <span style={{ color: "var(--red)", fontSize: 13 }}>{error}</span>
             <button
-              aria-label="Retry"
+              aria-label={t("dialogs.retry")}
               onClick={handleRefresh}
               style={{
                 padding: "4px 14px",
@@ -257,7 +261,7 @@ export const StatsPanel: React.FC = () => {
                 cursor: "pointer",
               }}
             >
-              Retry
+              {t("dialogs.retry")}
             </button>
           </div>
         ) : sorted.length === 0 ? (
@@ -271,7 +275,7 @@ export const StatsPanel: React.FC = () => {
               fontSize: 13,
             }}
           >
-            No data for this timeframe.
+            {t("stats.noDataForTimeframe")}
           </div>
         ) : (
           <table
@@ -310,7 +314,7 @@ export const StatsPanel: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
-                  Author
+                  {t("stats.author")}
                 </th>
                 <th
                   onClick={() => handleSort("commits")}
@@ -324,7 +328,7 @@ export const StatsPanel: React.FC = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Commits <SortIcon field="commits" />
+                  {t("stats.commits")} <SortIcon field="commits" />
                 </th>
                 <th
                   onClick={() => handleSort("linesAdded")}
@@ -338,7 +342,7 @@ export const StatsPanel: React.FC = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  +Lines <SortIcon field="linesAdded" />
+                  {t("stats.plusLines")} <SortIcon field="linesAdded" />
                 </th>
                 <th
                   onClick={() => handleSort("linesRemoved")}
@@ -352,7 +356,7 @@ export const StatsPanel: React.FC = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  -Lines <SortIcon field="linesRemoved" />
+                  {t("stats.minusLines")} <SortIcon field="linesRemoved" />
                 </th>
                 <th
                   onClick={() => handleSort("longestStreak")}
@@ -366,7 +370,7 @@ export const StatsPanel: React.FC = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Streak <SortIcon field="longestStreak" />
+                  {t("stats.streak")} <SortIcon field="longestStreak" />
                 </th>
               </tr>
             </thead>

@@ -12,6 +12,7 @@ vi.mock("electron", () => ({
 
 import {
   scanForRepos,
+  cancelScan,
   addMultipleRecentRepos,
   getRecentRepos,
   clearRecentRepos,
@@ -123,6 +124,60 @@ describe("scanForRepos", () => {
 
     const found = await scanForRepos(tmpDir, 3, () => {});
     expect(found).toHaveLength(0);
+  });
+
+  it("skips macOS/Linux heavy directories like Library", async () => {
+    const libRepo = path.join(tmpDir, "Library", "deep", "repo");
+    fs.mkdirSync(path.join(libRepo, ".git"), { recursive: true });
+
+    const found = await scanForRepos(tmpDir, 5, () => {});
+    expect(found).toHaveLength(0);
+  });
+
+  it("skips Applications directory", async () => {
+    const appRepo = path.join(tmpDir, "Applications", "MyApp", "repo");
+    fs.mkdirSync(path.join(appRepo, ".git"), { recursive: true });
+
+    const found = await scanForRepos(tmpDir, 5, () => {});
+    expect(found).toHaveLength(0);
+  });
+
+  it("detects symlink loops without hanging", async () => {
+    const dirA = path.join(tmpDir, "dirA");
+    fs.mkdirSync(dirA);
+    // Create a symlink that points back to the parent (loop)
+    try {
+      fs.symlinkSync(tmpDir, path.join(dirA, "loop"), "dir");
+    } catch {
+      // Symlinks may not be supported (e.g. Windows without elevation)
+      return;
+    }
+    // Create a repo elsewhere so we know the scan completes
+    fs.mkdirSync(path.join(tmpDir, "real-repo", ".git"), { recursive: true });
+
+    const found = await scanForRepos(tmpDir, 10, () => {});
+    expect(found).toHaveLength(1);
+  });
+
+  it("can be cancelled mid-scan", async () => {
+    // Create many nested dirs to ensure scan takes some time
+    for (let i = 0; i < 20; i++) {
+      fs.mkdirSync(path.join(tmpDir, `dir${i}`, "sub", "deep"), { recursive: true });
+    }
+    fs.mkdirSync(path.join(tmpDir, "dir19", "sub", "deep", "repo", ".git"), { recursive: true });
+
+    const progressCalls: unknown[] = [];
+    const scanPromise = scanForRepos(tmpDir, 5, (p) => progressCalls.push(p));
+
+    // Cancel almost immediately
+    cancelScan();
+
+    const found = await scanPromise;
+    // The scan should have stopped — last progress should be "done"
+    const lastProgress = progressCalls[progressCalls.length - 1] as { phase: string };
+    expect(lastProgress.phase).toBe("done");
+    // It may or may not have found the repo depending on timing, but it should finish
+    expect(found.length).toBeLessThanOrEqual(1);
   });
 });
 

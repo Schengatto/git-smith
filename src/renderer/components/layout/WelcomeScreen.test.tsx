@@ -51,6 +51,13 @@ vi.mock("../../store/ui-store", () => ({
   },
 }));
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 import { WelcomeScreen } from "./WelcomeScreen";
 
 const mockElectronAPI = {
@@ -67,45 +74,45 @@ beforeEach(() => {
 describe("WelcomeScreen", () => {
   it("renders without crashing", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText(/Open repository/i)).toBeInTheDocument();
+    expect(screen.getByText("welcome.openRepoAction")).toBeInTheDocument();
   });
 
   it("shows 'Create new repository' action", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText(/Create new repository/i)).toBeInTheDocument();
+    expect(screen.getByText("welcome.createNewRepo")).toBeInTheDocument();
   });
 
   it("shows 'Clone repository' action", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText(/Clone repository/i)).toBeInTheDocument();
+    expect(screen.getByText("welcome.cloneRepoAction")).toBeInTheDocument();
   });
 
   it("shows 'Scan for repositories' action", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText(/Scan for repositories/i)).toBeInTheDocument();
+    expect(screen.getByText("welcome.scanForRepos")).toBeInTheDocument();
   });
 
   it("calls openRepoDialog when 'Open repository' is clicked", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText(/Open repository/i));
+    fireEvent.click(screen.getByText("welcome.openRepoAction"));
     expect(mockOpenRepoDialog).toHaveBeenCalledTimes(1);
   });
 
   it("calls initRepo when 'Create new repository' is clicked", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText(/Create new repository/i));
+    fireEvent.click(screen.getByText("welcome.createNewRepo"));
     expect(mockInitRepo).toHaveBeenCalledTimes(1);
   });
 
   it("calls openCloneDialog when 'Clone repository' is clicked", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText(/Clone repository/i));
+    fireEvent.click(screen.getByText("welcome.cloneRepoAction"));
     expect(mockOpenCloneDialog).toHaveBeenCalledTimes(1);
   });
 
   it("calls openScanDialog when 'Scan for repositories' is clicked", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText(/Scan for repositories/i));
+    fireEvent.click(screen.getByText("welcome.scanForRepos"));
     expect(mockOpenScanDialog).toHaveBeenCalledTimes(1);
   });
 
@@ -129,19 +136,19 @@ describe("WelcomeScreen", () => {
 
   it("shows 'No recent repositories' empty state when recentRepos is empty", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText("No recent repositories")).toBeInTheDocument();
+    expect(screen.getByText("welcome.noRecentRepos")).toBeInTheDocument();
   });
 
   it("shows the search input placeholder", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    expect(screen.getByPlaceholderText("Search repositories...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("welcome.searchRepos")).toBeInTheDocument();
   });
 
   it("filters repos by search query", () => {
     mockRecentRepos = ["/home/user/projects/my-app", "/home/user/projects/other-project"];
     render(<WelcomeScreen />);
-    const input = screen.getByPlaceholderText("Search repositories...");
+    const input = screen.getByPlaceholderText("welcome.searchRepos");
     fireEvent.change(input, { target: { value: "my-app" } });
     expect(screen.getByText("my-app")).toBeInTheDocument();
     expect(screen.queryByText("other-project")).not.toBeInTheDocument();
@@ -150,15 +157,15 @@ describe("WelcomeScreen", () => {
   it("shows no-results message when search matches nothing", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    const input = screen.getByPlaceholderText("Search repositories...");
+    const input = screen.getByPlaceholderText("welcome.searchRepos");
     fireEvent.change(input, { target: { value: "xyznonexistent" } });
-    expect(screen.getByText(/No repositories match/i)).toBeInTheDocument();
+    expect(screen.getByText(/welcome\.noReposMatch/)).toBeInTheDocument();
   });
 
   it("clears search when X button is clicked", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    const input = screen.getByPlaceholderText("Search repositories...");
+    const input = screen.getByPlaceholderText("welcome.searchRepos");
     fireEvent.change(input, { target: { value: "filter-text" } });
     // Clear the input value programmatically
     fireEvent.change(input, { target: { value: "" } });
@@ -188,14 +195,14 @@ describe("WelcomeScreen", () => {
 
   it("shows the Contribute section with Develop, Donate, Issues links", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText("Develop")).toBeInTheDocument();
-    expect(screen.getByText("Donate")).toBeInTheDocument();
-    expect(screen.getByText("Issues")).toBeInTheDocument();
+    expect(screen.getByText("welcome.develop")).toBeInTheDocument();
+    expect(screen.getByText("welcome.donate")).toBeInTheDocument();
+    expect(screen.getByText("welcome.issues")).toBeInTheDocument();
   });
 
   it("calls openExternal for Develop link", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText("Develop"));
+    fireEvent.click(screen.getByText("welcome.develop"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
       "https://github.com/Schengatto/git-smith"
     );
@@ -203,7 +210,7 @@ describe("WelcomeScreen", () => {
 
   it("calls openExternal for Issues link", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText("Issues"));
+    fireEvent.click(screen.getByText("welcome.issues"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
       "https://github.com/Schengatto/git-smith/issues"
     );
@@ -222,8 +229,8 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     mockRepoCategories = {};
     render(<WelcomeScreen />);
-    // The section header renders text "Recent repositories" (CSS applies uppercase visually)
-    expect(screen.getByText("Recent repositories")).toBeInTheDocument();
+    // The section header renders the i18n key (CSS applies uppercase visually)
+    expect(screen.getByText("welcome.recentRepositories")).toBeInTheDocument();
   });
 
   it("shows section count badge next to section header", () => {
@@ -236,8 +243,8 @@ describe("WelcomeScreen", () => {
   it("collapses a section when section header is clicked", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    // "Recent repositories" is the DOM text (CSS applies uppercase visually only)
-    const sectionText = screen.getByText("Recent repositories");
+    // The i18n key is used as the DOM text (CSS applies uppercase visually only)
+    const sectionText = screen.getByText("welcome.recentRepositories");
     // Walk up to find the click-handler div
     const toggleDiv = sectionText.closest("div[style*='flex']") ?? sectionText.parentElement!;
     fireEvent.click(toggleDiv!);
@@ -250,7 +257,7 @@ describe("WelcomeScreen", () => {
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
     // The "Actions" button triggers context menu
-    const actionsEls = screen.getAllByText("Actions");
+    const actionsEls = screen.getAllByText("welcome.actions");
     expect(actionsEls.length).toBeGreaterThan(0);
   });
 
@@ -260,8 +267,8 @@ describe("WelcomeScreen", () => {
     const repoItem = screen.getByText("my-app").closest("div[style*='cursor: pointer']");
     expect(repoItem).not.toBeNull();
     fireEvent.contextMenu(repoItem!);
-    // Context menu "Open repository" is a fixed-position overlay element
-    const openRepoItems = screen.getAllByText("Open repository");
+    // Context menu "welcome.openRepository" is a fixed-position overlay element
+    const openRepoItems = screen.getAllByText("welcome.openRepository");
     expect(openRepoItems.length).toBeGreaterThan(0);
   });
 
@@ -270,8 +277,8 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("my-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    // Find the "Open repository" inside the context menu (fixed overlay, not the sidebar action)
-    const openRepoItems = screen.getAllByText("Open repository");
+    // Find the "welcome.openRepository" inside the context menu (fixed overlay, not the sidebar action)
+    const openRepoItems = screen.getAllByText("welcome.openRepository");
     // Click the last one (the context menu item, rendered after the sidebar button)
     fireEvent.click(openRepoItems[openRepoItems.length - 1]!);
     expect(mockOpenRepo).toHaveBeenCalledWith("/home/user/projects/my-app");
@@ -282,7 +289,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("my-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    expect(screen.getByText("Remove from list")).toBeInTheDocument();
+    expect(screen.getByText("welcome.removeFromList")).toBeInTheDocument();
   });
 
   it("calls removeRecentRepo when 'Remove from list' is clicked", () => {
@@ -290,39 +297,39 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("my-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    fireEvent.click(screen.getByText("Remove from list"));
+    fireEvent.click(screen.getByText("welcome.removeFromList"));
     expect(mockRemoveRecentRepo).toHaveBeenCalledWith("/home/user/projects/my-app");
   });
 
   it("shows recent actions menu on Actions click (uncategorized section)", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    const actionsEl = screen.getByText("Actions");
+    const actionsEl = screen.getByText("welcome.actions");
     fireEvent.click(actionsEl);
-    expect(screen.getByText("Clear all recent repositories")).toBeInTheDocument();
-    expect(screen.getByText("Remove missing projects from the list")).toBeInTheDocument();
+    expect(screen.getByText("welcome.clearAllRecentRepos")).toBeInTheDocument();
+    expect(screen.getByText("welcome.removeMissingProjects")).toBeInTheDocument();
   });
 
   it("calls clearRecentRepos when 'Clear all recent repositories' is clicked", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText("Actions"));
-    fireEvent.click(screen.getByText("Clear all recent repositories"));
+    fireEvent.click(screen.getByText("welcome.actions"));
+    fireEvent.click(screen.getByText("welcome.clearAllRecentRepos"));
     expect(mockClearRecentRepos).toHaveBeenCalledTimes(1);
   });
 
   it("calls removeMissingRepos when 'Remove missing projects from the list' is clicked", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText("Actions"));
-    fireEvent.click(screen.getByText("Remove missing projects from the list"));
+    fireEvent.click(screen.getByText("welcome.actions"));
+    fireEvent.click(screen.getByText("welcome.removeMissingProjects"));
     expect(mockRemoveMissingRepos).toHaveBeenCalledTimes(1);
   });
 
   it("shows X clear button in search bar when query is non-empty", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    const input = screen.getByPlaceholderText("Search repositories...");
+    const input = screen.getByPlaceholderText("welcome.searchRepos");
     fireEvent.change(input, { target: { value: "my-app" } });
     // XIcon is rendered when searchQuery is truthy — the container div with onClick should be present
     // We test this by clearing it via its click
@@ -333,7 +340,7 @@ describe("WelcomeScreen", () => {
   it("clicking X icon clears search query", () => {
     mockRecentRepos = ["/home/user/projects/my-app"];
     render(<WelcomeScreen />);
-    const input = screen.getByPlaceholderText("Search repositories...");
+    const input = screen.getByPlaceholderText("welcome.searchRepos");
     fireEvent.change(input, { target: { value: "my-app" } });
     expect(input).toHaveValue("my-app");
     // The clear button (XIcon container) — find it by its parent div in the search bar
@@ -344,7 +351,7 @@ describe("WelcomeScreen", () => {
 
   it("calls openExternal for Donate link", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText("Donate"));
+    fireEvent.click(screen.getByText("welcome.donate"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
       expect.stringContaining("paypal")
     );
@@ -352,12 +359,12 @@ describe("WelcomeScreen", () => {
 
   it("shows 'Git GUI' subtitle in the logo area", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText("Git GUI")).toBeInTheDocument();
+    expect(screen.getByText("welcome.gitGui")).toBeInTheDocument();
   });
 
   it("shows 'Contribute' section heading", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText("Contribute")).toBeInTheDocument();
+    expect(screen.getByText("welcome.contribute")).toBeInTheDocument();
   });
 
   it("multiple repos in different categories show their sections", () => {
@@ -378,7 +385,7 @@ describe("WelcomeScreen", () => {
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
     // Actions appears as the category context menu trigger
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     expect(allActions.length).toBeGreaterThan(0);
   });
 
@@ -386,19 +393,19 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     fireEvent.click(allActions[0]!);
-    expect(screen.getByText("Rename category")).toBeInTheDocument();
-    expect(screen.getByText("Delete category")).toBeInTheDocument();
+    expect(screen.getByText("welcome.renameCategory")).toBeInTheDocument();
+    expect(screen.getByText("welcome.deleteCategory")).toBeInTheDocument();
   });
 
   it("Delete category calls deleteCategory with the category name", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     fireEvent.click(allActions[0]!);
-    fireEvent.click(screen.getByText("Delete category"));
+    fireEvent.click(screen.getByText("welcome.deleteCategory"));
     expect(mockDeleteCategory).toHaveBeenCalledWith("Work");
   });
 
@@ -406,9 +413,9 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     fireEvent.click(allActions[0]!);
-    fireEvent.click(screen.getByText("Rename category"));
+    fireEvent.click(screen.getByText("welcome.renameCategory"));
     // An inline input should appear for renaming
     expect(screen.getByDisplayValue("Work")).toBeInTheDocument();
   });
@@ -417,9 +424,9 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     fireEvent.click(allActions[0]!);
-    fireEvent.click(screen.getByText("Rename category"));
+    fireEvent.click(screen.getByText("welcome.renameCategory"));
     const renameInput = screen.getByDisplayValue("Work");
     fireEvent.change(renameInput, { target: { value: "New Work" } });
     fireEvent.keyDown(renameInput, { key: "Enter" });
@@ -430,9 +437,9 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     fireEvent.click(allActions[0]!);
-    fireEvent.click(screen.getByText("Rename category"));
+    fireEvent.click(screen.getByText("welcome.renameCategory"));
     const renameInput = screen.getByDisplayValue("Work");
     fireEvent.change(renameInput, { target: { value: "Work Updated" } });
     fireEvent.blur(renameInput);
@@ -443,9 +450,9 @@ describe("WelcomeScreen", () => {
     mockRecentRepos = ["/home/user/projects/work-app"];
     mockRepoCategories = { "/home/user/projects/work-app": "Work" };
     render(<WelcomeScreen />);
-    const allActions = screen.getAllByText("Actions");
+    const allActions = screen.getAllByText("welcome.actions");
     fireEvent.click(allActions[0]!);
-    fireEvent.click(screen.getByText("Rename category"));
+    fireEvent.click(screen.getByText("welcome.renameCategory"));
     const renameInput = screen.getByDisplayValue("Work");
     fireEvent.keyDown(renameInput, { key: "Escape" });
     expect(mockRenameCategory).not.toHaveBeenCalled();
@@ -467,7 +474,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("my-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    expect(screen.getByText("Assign category")).toBeInTheDocument();
+    expect(screen.getByText("welcome.assignCategory")).toBeInTheDocument();
   });
 
   it("'Assign category' sets assigningCategory state (no crash)", () => {
@@ -475,7 +482,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("my-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    fireEvent.click(screen.getByText("Assign category"));
+    fireEvent.click(screen.getByText("welcome.assignCategory"));
     // No crash expected
     expect(screen.getByText("my-app")).toBeInTheDocument();
   });
@@ -486,7 +493,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("work-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    expect(screen.getByText("Remove from category")).toBeInTheDocument();
+    expect(screen.getByText("welcome.removeFromCategory")).toBeInTheDocument();
   });
 
   it("clicking 'Remove from category' calls setRepoCategory with null", () => {
@@ -495,15 +502,13 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     const repoItem = screen.getByText("work-app").closest("div[style*='cursor: pointer']");
     fireEvent.contextMenu(repoItem!);
-    fireEvent.click(screen.getByText("Remove from category"));
+    fireEvent.click(screen.getByText("welcome.removeFromCategory"));
     expect(mockSetRepoCategory).toHaveBeenCalledWith("/home/user/projects/work-app", null);
   });
 
   it("shows 'Create, open, or clone a repository to get started' hint in empty state", () => {
     render(<WelcomeScreen />);
-    expect(
-      screen.getByText(/Create, open, or clone a repository to get started/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText("welcome.getStartedHint")).toBeInTheDocument();
   });
 
   it("search box is not shown when recentRepos is empty", () => {
@@ -511,6 +516,6 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     // The search box is always in the DOM (in top bar area) even when empty
     // but repo list is empty state — verify empty state message is shown
-    expect(screen.getByText("No recent repositories")).toBeInTheDocument();
+    expect(screen.getByText("welcome.noRecentRepos")).toBeInTheDocument();
   });
 });

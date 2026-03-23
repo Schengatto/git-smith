@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogInput } from "./ModalDialog";
 import type { WorktreeInfo } from "../../../shared/git-types";
 import { useRepoStore } from "../../store/repo-store";
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const { refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
   const [worktrees, setWorktrees] = useState<WorktreeInfo[]>([]);
@@ -41,7 +43,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const handleAdd = async () => {
     if (!newPath.trim()) {
-      setError("Path is required");
+      setError(t("worktree.pathRequired"));
       return;
     }
     setError("");
@@ -72,7 +74,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleBrowse = async () => {
-    const dir = await window.electronAPI.repo.browseDirectory("Select worktree path");
+    const dir = await window.electronAPI.repo.browseDirectory(t("worktree.selectWorktreePath"));
     if (dir) setNewPath(dir);
   };
 
@@ -81,13 +83,13 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Worktrees" onClose={onClose} width={520}>
+    <ModalDialog open={open} title={t("worktree.title")} onClose={onClose} width={520}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         {loading && (
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}
           >
-            Loading...
+            {t("worktree.loading")}
           </div>
         )}
 
@@ -95,7 +97,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}
           >
-            No worktrees found
+            {t("worktree.noWorktreesFound")}
           </div>
         )}
 
@@ -114,7 +116,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
-                {wt.branch || "(detached)"}
+                {wt.branch || t("worktree.detached")}
                 {wt.isMain && (
                   <span style={{ fontSize: 10, color: "var(--accent)", marginLeft: 6 }}>main</span>
                 )}
@@ -141,19 +143,19 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
               <button
                 className="toolbar-btn"
                 onClick={() => handleOpen(wt.path)}
-                title="Open in file manager"
+                title={t("worktree.openInFileManager")}
                 style={{ fontSize: 10, padding: "3px 8px" }}
               >
-                Open
+                {t("worktree.open")}
               </button>
               {!wt.isMain && (
                 <button
                   className="toolbar-btn"
                   onClick={() => handleRemove(wt.path)}
-                  title="Remove worktree"
+                  title={t("worktree.removeWorktree")}
                   style={{ fontSize: 10, padding: "3px 8px", color: "var(--red)" }}
                 >
-                  Remove
+                  {t("worktree.remove")}
                 </button>
               )}
             </div>
@@ -176,10 +178,10 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
             <div style={{ display: "flex", gap: 4, alignItems: "flex-end" }}>
               <div style={{ flex: 1 }}>
                 <DialogInput
-                  label="Path"
+                  label={t("worktree.path")}
                   value={newPath}
                   onChange={(e) => setNewPath(e.target.value)}
-                  placeholder="/path/to/worktree"
+                  placeholder={t("worktree.pathPlaceholder")}
                 />
               </div>
               <button
@@ -187,14 +189,14 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
                 onClick={handleBrowse}
                 style={{ fontSize: 11, padding: "5px 10px", marginBottom: 2 }}
               >
-                Browse
+                {t("dialogs.browse")}
               </button>
             </div>
             <DialogInput
-              label="Branch"
+              label={t("worktree.branch")}
               value={newBranch}
               onChange={(e) => setNewBranch(e.target.value)}
-              placeholder="branch-name (optional)"
+              placeholder={t("worktree.branchPlaceholder")}
             />
             <label
               style={{
@@ -211,7 +213,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
                 checked={createBranch}
                 onChange={(e) => setCreateBranch(e.target.checked)}
               />
-              Create new branch
+              {t("worktree.createNewBranch")}
             </label>
             <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
               <button
@@ -219,7 +221,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
                 onClick={() => setShowAdd(false)}
                 style={{ fontSize: 11, padding: "4px 12px" }}
               >
-                Cancel
+                {t("dialogs.cancel")}
               </button>
               <button
                 className="toolbar-btn"
@@ -231,7 +233,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
                   color: "var(--text-on-color)",
                 }}
               >
-                Add
+                {t("dialogs.add")}
               </button>
             </div>
           </div>
@@ -241,7 +243,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
             onClick={() => setShowAdd(true)}
             style={{ fontSize: 12, padding: "6px 14px", alignSelf: "flex-start" }}
           >
-            + Add Worktree
+            {t("worktree.addWorktreeButton")}
           </button>
         )}
 
@@ -256,7 +258,7 @@ export const WorktreeDialog: React.FC<Props> = ({ open, onClose }) => {
           onClick={onClose}
           style={{ fontSize: 12, padding: "6px 14px" }}
         >
-          Close
+          {t("dialogs.close")}
         </button>
       </div>
     </ModalDialog>

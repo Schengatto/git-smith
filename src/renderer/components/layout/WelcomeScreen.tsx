@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useUIStore } from "../../store/ui-store";
 import logoUrl from "../../../../assets/gitsmith.png";
@@ -533,6 +534,7 @@ const SectionHeader: React.FC<{
 /*  Main WelcomeScreen                                                 */
 /* ------------------------------------------------------------------ */
 export const WelcomeScreen: React.FC = () => {
+  const { t } = useTranslation();
   const {
     openRepo,
     openRepoDialog,
@@ -607,12 +609,12 @@ export const WelcomeScreen: React.FC = () => {
       y: e.clientY,
       items: [
         {
-          label: "Open repository",
+          label: t("welcome.openRepository"),
           icon: <FolderOpenIcon size={14} />,
           onClick: () => openRepo(repoPath),
         },
         {
-          label: "Assign category",
+          label: t("welcome.assignCategory"),
           icon: <TagIcon />,
           separator: true,
           onClick: () => setAssigningCategory(repoPath),
@@ -621,14 +623,14 @@ export const WelcomeScreen: React.FC = () => {
         ...(currentCategory
           ? [
               {
-                label: "Remove from category",
+                label: t("welcome.removeFromCategory"),
                 onClick: () => setRepoCategory(repoPath, null),
                 separator: categoryItems.length > 0,
               },
             ]
           : []),
         {
-          label: "Remove from list",
+          label: t("welcome.removeFromList"),
           icon: <XIcon />,
           separator: true,
           danger: true,
@@ -646,12 +648,12 @@ export const WelcomeScreen: React.FC = () => {
       y: e.clientY,
       items: [
         {
-          label: "Rename category",
+          label: t("welcome.renameCategory"),
           icon: <EditIcon />,
           onClick: () => setRenamingCategory(categoryName),
         },
         {
-          label: "Delete category",
+          label: t("welcome.deleteCategory"),
           icon: <TrashIcon />,
           danger: true,
           onClick: () => deleteCategory(categoryName),
@@ -668,7 +670,7 @@ export const WelcomeScreen: React.FC = () => {
       y: e.clientY,
       items: [
         {
-          label: "Remove missing projects from the list",
+          label: t("welcome.removeMissingProjects"),
           icon: <TrashIcon />,
           onClick: async () => {
             const removed = await removeMissingRepos();
@@ -678,7 +680,7 @@ export const WelcomeScreen: React.FC = () => {
           },
         },
         {
-          label: "Clear all recent repositories",
+          label: t("welcome.clearAllRecentRepos"),
           icon: <TrashIcon />,
           danger: true,
           separator: true,
@@ -734,7 +736,7 @@ export const WelcomeScreen: React.FC = () => {
             >
               GitSmith
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-muted)" }}>Git GUI</div>
+            <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{t("welcome.gitGui")}</div>
           </div>
         </div>
 
@@ -746,22 +748,22 @@ export const WelcomeScreen: React.FC = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <SidebarAction
             icon={<PlusIcon size={15} />}
-            label="Create new repository"
+            label={t("welcome.createNewRepo")}
             onClick={initRepo}
           />
           <SidebarAction
             icon={<FolderOpenIcon size={15} />}
-            label="Open repository"
+            label={t("welcome.openRepoAction")}
             onClick={openRepoDialog}
           />
           <SidebarAction
             icon={<DownloadIcon size={15} />}
-            label="Clone repository"
+            label={t("welcome.cloneRepoAction")}
             onClick={openCloneDialog}
           />
           <SidebarAction
             icon={<ScanIcon size={15} />}
-            label="Scan for repositories"
+            label={t("welcome.scanForRepos")}
             onClick={openScanDialog}
           />
         </div>
@@ -784,28 +786,26 @@ export const WelcomeScreen: React.FC = () => {
               marginBottom: 8,
             }}
           >
-            Contribute
+            {t("welcome.contribute")}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {(
-              [
-                {
-                  icon: <CodeIcon size={13} />,
-                  label: "Develop",
-                  url: "https://github.com/Schengatto/git-smith",
-                },
-                {
-                  icon: <HeartIcon size={13} />,
-                  label: "Donate",
-                  url: "https://www.paypal.com/donate?business=schintu.enrico@gmail.com&currency_code=EUR",
-                },
-                {
-                  icon: <BugIcon size={13} />,
-                  label: "Issues",
-                  url: "https://github.com/Schengatto/git-smith/issues",
-                },
-              ] as const
-            ).map((item) => (
+            {[
+              {
+                icon: <CodeIcon size={13} />,
+                label: t("welcome.develop"),
+                url: "https://github.com/Schengatto/git-smith",
+              },
+              {
+                icon: <HeartIcon size={13} />,
+                label: t("welcome.donate"),
+                url: "https://www.paypal.com/donate?business=schintu.enrico@gmail.com&currency_code=EUR",
+              },
+              {
+                icon: <BugIcon size={13} />,
+                label: t("welcome.issues"),
+                url: "https://github.com/Schengatto/git-smith/issues",
+              },
+            ].map((item) => (
               <div
                 key={item.label}
                 onClick={() => window.electronAPI.repo.openExternal(item.url)}
@@ -861,7 +861,7 @@ export const WelcomeScreen: React.FC = () => {
               >
                 Ctrl+O
               </kbd>
-              <span style={{ marginLeft: 6 }}>Open</span>
+              <span style={{ marginLeft: 6 }}>{t("welcome.open")}</span>
             </div>
             <div>
               <kbd
@@ -874,7 +874,7 @@ export const WelcomeScreen: React.FC = () => {
               >
                 Ctrl+N
               </kbd>
-              <span style={{ marginLeft: 6 }}>Create new</span>
+              <span style={{ marginLeft: 6 }}>{t("welcome.createNew")}</span>
             </div>
           </div>
         </div>
@@ -909,7 +909,7 @@ export const WelcomeScreen: React.FC = () => {
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search repositories..."
+              placeholder={t("welcome.searchRepos")}
               style={{
                 flex: 1,
                 background: "transparent",
@@ -946,10 +946,8 @@ export const WelcomeScreen: React.FC = () => {
               }}
             >
               <FolderIcon size={48} color="var(--surface-3)" />
-              <div style={{ fontSize: 14, fontWeight: 500 }}>No recent repositories</div>
-              <div style={{ fontSize: 12 }}>
-                Create, open, or clone a repository to get started.
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 500 }}>{t("welcome.noRecentRepos")}</div>
+              <div style={{ fontSize: 12 }}>{t("welcome.getStartedHint")}</div>
             </div>
           ) : (
             <>
@@ -957,7 +955,7 @@ export const WelcomeScreen: React.FC = () => {
               {uncategorizedRepos.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
                   <SectionHeader
-                    title="Recent repositories"
+                    title={t("welcome.recentRepositories")}
                     count={uncategorizedRepos.length}
                     open={!collapsedSections.has("recent")}
                     onToggle={() => toggleSection("recent")}
@@ -976,7 +974,7 @@ export const WelcomeScreen: React.FC = () => {
                         }
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
-                        Actions
+                        {t("welcome.actions")}
                       </div>
                     }
                   />
@@ -1028,7 +1026,7 @@ export const WelcomeScreen: React.FC = () => {
                         }
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
-                        Actions
+                        {t("welcome.actions")}
                       </div>
                     }
                   />
@@ -1041,7 +1039,7 @@ export const WelcomeScreen: React.FC = () => {
                           setRenamingCategory(null);
                         }}
                         onCancel={() => setRenamingCategory(null)}
-                        placeholder="Category name"
+                        placeholder={t("welcome.categoryName")}
                       />
                     </div>
                   )}
@@ -1076,7 +1074,7 @@ export const WelcomeScreen: React.FC = () => {
                     fontSize: 13,
                   }}
                 >
-                  No repositories match &ldquo;{searchQuery}&rdquo;
+                  {t("welcome.noReposMatch")} &ldquo;{searchQuery}&rdquo;
                 </div>
               )}
             </>
@@ -1117,7 +1115,7 @@ export const WelcomeScreen: React.FC = () => {
                 marginBottom: 12,
               }}
             >
-              Assign category
+              {t("welcome.assignCategory")}
             </div>
 
             {/* Existing categories */}
@@ -1163,7 +1161,7 @@ export const WelcomeScreen: React.FC = () => {
 
             {/* New category */}
             <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>
-              Or create a new category:
+              {t("welcome.orCreateNewCategory")}
             </div>
             <InlineInput
               initialValue=""
@@ -1172,7 +1170,7 @@ export const WelcomeScreen: React.FC = () => {
                 setAssigningCategory(null);
               }}
               onCancel={() => setAssigningCategory(null)}
-              placeholder="New category name"
+              placeholder={t("welcome.newCategoryName")}
             />
           </div>
         </div>

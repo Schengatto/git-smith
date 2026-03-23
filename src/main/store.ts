@@ -321,17 +321,73 @@ export interface ScanProgress {
   found: string[];
 }
 
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "__pycache__",
+  ".cache",
+  ".venv",
+  "venv",
+  ".tox",
+  "dist",
+  "build",
+  // Windows
+  "$RECYCLE.BIN",
+  "System Volume Information",
+  // macOS
+  "Library",
+  "Applications",
+  "System",
+  "Photos Library.photoslibrary",
+  "Music",
+  "Movies",
+  ".Trash",
+  // Linux
+  "snap",
+  "proc",
+  "sys",
+  "run",
+  "dev",
+  "lost+found",
+]);
+
+let activeScanAbort: AbortController | null = null;
+
+export function cancelScan(): void {
+  if (activeScanAbort) {
+    activeScanAbort.abort();
+    activeScanAbort = null;
+  }
+}
+
 export async function scanForRepos(
   rootPath: string,
   maxDepth: number,
   onProgress: (progress: ScanProgress) => void
 ): Promise<string[]> {
+  // Cancel any previously running scan
+  cancelScan();
+  const abort = new AbortController();
+  activeScanAbort = abort;
+
   const found: string[] = [];
   const store = readStore();
   const existingSet = new Set(store.recentRepos);
+  const visited = new Set<string>();
 
   async function walk(dir: string, depth: number): Promise<void> {
+    if (abort.signal.aborted) return;
     if (depth > maxDepth) return;
+
+    // Resolve real path to detect symlink loops
+    let realDir: string;
+    try {
+      realDir = fs.realpathSync(dir);
+    } catch {
+      return;
+    }
+    if (visited.has(realDir)) return;
+    visited.add(realDir);
 
     let entries: fs.Dirent[];
     try {
@@ -349,7 +405,6 @@ export async function scanForRepos(
         found.push(dir);
       }
       onProgress({ phase: "scanning", currentDir: dir, found: [...found] });
-      // Don't recurse into git repos (nested repos are submodules or separate)
       return;
     }
 
@@ -357,29 +412,25 @@ export async function scanForRepos(
 
     // Recurse into subdirectories
     for (const entry of entries) {
+      if (abort.signal.aborted) return;
       if (!entry.isDirectory()) continue;
-      // Skip common non-project directories
-      if (
-        entry.name === "node_modules" ||
-        entry.name === ".git" ||
-        entry.name === "__pycache__" ||
-        entry.name === ".cache" ||
-        entry.name === ".venv" ||
-        entry.name === "venv" ||
-        entry.name === ".tox" ||
-        entry.name === "dist" ||
-        entry.name === "build" ||
-        entry.name === "$RECYCLE.BIN" ||
-        entry.name === "System Volume Information" ||
-        entry.name.startsWith(".")
-      ) {
+      if (entry.isSymbolicLink()) continue;
+      // Skip common non-project and OS-heavy directories
+      if (SKIP_DIRS.has(entry.name) || entry.name.startsWith(".")) {
         continue;
       }
+      // Yield to event loop periodically to avoid blocking the main process
+      await new Promise((resolve) => setImmediate(resolve));
       await walk(path.join(dir, entry.name), depth + 1);
     }
   }
 
   await walk(rootPath, 0);
+  activeScanAbort = null;
+  if (abort.signal.aborted) {
+    onProgress({ phase: "done", currentDir: "", found: [...found] });
+    return found;
+  }
   onProgress({ phase: "done", currentDir: "", found: [...found] });
   return found;
 }
@@ -489,6 +540,23 @@ export function getPlatformTokenForRepo(repoPath: string): string | null {
   if (!accountId) return null;
   const account = store.gitAccounts.find((a) => a.id === accountId);
   return account?.platformToken || null;
+}
+
+export function resetSettings(): AppSettings {
+  const store = readStore();
+  store.settings = { ...defaultSettings };
+  writeStore(store);
+  return store.settings;
+}
+
+export function clearAllData(): void {
+  cachedStore = null;
+  try {
+    fs.unlinkSync(getStorePath());
+  } catch {
+    // file may not exist
+  }
+  cachedStore = { ...defaults, settings: { ...defaultSettings } };
 }
 
 // Legacy compat

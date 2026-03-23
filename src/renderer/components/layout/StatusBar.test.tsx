@@ -30,6 +30,13 @@ vi.mock("../../store/repo-store", () => ({
 
 import { StatusBar } from "./StatusBar";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const makeRepo = (overrides: Partial<MockRepo> = {}): MockRepo => ({
   path: "/repos/my-repo",
   name: "my-repo",
@@ -55,7 +62,7 @@ beforeEach(() => {
 describe("StatusBar", () => {
   it("shows 'No repository open' when repo is null", () => {
     render(<StatusBar />);
-    expect(screen.getByText("No repository open")).toBeInTheDocument();
+    expect(screen.getByText("statusBar.noRepositoryOpen")).toBeInTheDocument();
   });
 
   it("shows branch name when a repo is open", () => {
@@ -76,7 +83,7 @@ describe("StatusBar", () => {
     mockRepo = makeRepo({ isDirty: false });
     mockStatus = makeStatus();
     render(<StatusBar />);
-    expect(screen.getByText("clean")).toBeInTheDocument();
+    expect(screen.getByText("statusBar.clean")).toBeInTheDocument();
   });
 
   it("shows change count when files are staged and unstaged", () => {
@@ -92,6 +99,6 @@ describe("StatusBar", () => {
     mockStatus = makeStatus({ staged: ["a.ts"] });
     render(<StatusBar />);
     expect(screen.getByText("1")).toBeInTheDocument();
-    expect(screen.getByText("change")).toBeInTheDocument();
+    expect(screen.getByText("statusBar.change")).toBeInTheDocument();
   });
 });

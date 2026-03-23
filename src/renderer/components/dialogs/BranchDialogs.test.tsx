@@ -14,6 +14,56 @@ import {
 } from "./BranchDialogs";
 import { runGitOperation } from "../../store/git-operation-store";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      const translations: Record<string, string> = {
+        "branchDialogs.createBranch": "Create Branch",
+        "branchDialogs.branchName": "Branch name",
+        "branchDialogs.branchNamePlaceholder": "feature/my-branch",
+        "branchDialogs.fromLabel": "From:",
+        "branchDialogs.checkoutAfterCreating": "Checkout after creating",
+        "branchDialogs.create": "Create",
+        "branchDialogs.deleteBranch": "Delete Branch",
+        "branchDialogs.forceDelete": "Force delete (even if not fully merged)",
+        "branchDialogs.forceDeleteButton": "Force Delete",
+        "branchDialogs.branchNotFullyMerged":
+          "Branch is not fully merged. Enable force delete to proceed.",
+        "branchDialogs.renameBranch": "Rename Branch",
+        "branchDialogs.currentLabel": "Current:",
+        "branchDialogs.newName": "New name",
+        "branchDialogs.mergeBranch": "Merge Branch",
+        "branchDialogs.mergeConflictsResult":
+          "Merge resulted in conflicts. Resolve them and commit manually.",
+        "branchDialogs.rebase": "Rebase",
+        "branchDialogs.rebaseDescription": `This will replay your commits on top of "${params?.target ?? ""}".`,
+        "branchDialogs.cherryPick": "Cherry Pick",
+        "branchDialogs.cherryPickCommit": "Cherry-pick commit:",
+        "branchDialogs.noCommitStageOnly": "No commit (stage changes only)",
+        "branchDialogs.parentNumber": "Parent number (mainline):",
+        "branchDialogs.firstParent": "1 (first parent)",
+        "branchDialogs.secondParent": "2 (second parent)",
+        "branchDialogs.mergeCommitHint":
+          "This is a merge commit. Select which parent to diff against.",
+        "branchDialogs.revertCommit": "Revert Commit",
+        "branchDialogs.revertCommitLabel": "Revert commit:",
+        "branchDialogs.revertDescription":
+          "This will create a new commit that undoes the changes from the selected commit.",
+        "branchDialogs.revertButton": "Revert",
+        "dialogs.delete": "Delete",
+        "dialogs.rename": "Rename",
+        "dialogs.cancel": "Cancel",
+        "toolbar.merge": "Merge",
+      };
+      if (key === "branchDialogs.deleteBranchConfirm" && params?.branch) {
+        return `Are you sure you want to delete branch "${params.branch}"?`;
+      }
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     refreshInfo: vi.fn().mockResolvedValue(undefined),
@@ -129,7 +179,7 @@ describe("DeleteBranchDialog", () => {
 
   it("shows branch name in confirmation message", () => {
     render(<DeleteBranchDialog open={true} onClose={vi.fn()} branchName="feature/x" />);
-    expect(screen.getByText("feature/x")).toBeInTheDocument();
+    expect(screen.getByText(/feature\/x/)).toBeInTheDocument();
   });
 
   it("shows Delete and Cancel buttons", () => {

@@ -52,6 +52,13 @@ vi.mock("../../store/graph-store", () => ({
 
 import { TabBar } from "./TabBar";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const makeTabs = (count: number): Tab[] =>
   Array.from({ length: count }, (_, i) => ({
     id: `tab-${i + 1}`,
@@ -75,7 +82,7 @@ describe("TabBar", () => {
 
   it("renders close buttons for each tab", () => {
     render(<TabBar />);
-    const closeButtons = screen.getAllByTitle("Close tab");
+    const closeButtons = screen.getAllByTitle("tabBar.closeTab");
     expect(closeButtons).toHaveLength(2);
   });
 
@@ -93,7 +100,7 @@ describe("TabBar", () => {
 
   it("calls removeTab when close button is clicked", () => {
     render(<TabBar />);
-    const closeButtons = screen.getAllByTitle("Close tab");
+    const closeButtons = screen.getAllByTitle("tabBar.closeTab");
     fireEvent.click(closeButtons[0]!);
     expect(mockRemoveTab).toHaveBeenCalledWith("tab-1");
   });

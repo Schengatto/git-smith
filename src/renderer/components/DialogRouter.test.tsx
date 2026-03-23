@@ -3,6 +3,25 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import React from "react";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "dialogRouter.loading": "Loading...",
+        "dialogRouter.unknownDialog": "Unknown dialog: {{name}}",
+      };
+      let result = translations[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("./dialogs/MergeConflictDialog", () => ({
   MergeConflictDialog: (props: Record<string, unknown>) => (
     <div data-testid="merge-conflict-dialog" data-mode={props.mode as string}>

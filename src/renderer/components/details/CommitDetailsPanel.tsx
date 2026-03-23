@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useGraphStore } from "../../store/graph-store";
 import { useRepoStore } from "../../store/repo-store";
 import { FileTree } from "./FileTree";
@@ -28,6 +29,7 @@ const IconFiles = () => (
 );
 
 export const CommitDetailsPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { selectedCommit } = useGraphStore();
   const repo = useRepoStore((s) => s.repo);
   const [activeTab, setActiveTab] = useState<TabId>("diff");
@@ -84,7 +86,7 @@ export const CommitDetailsPanel: React.FC = () => {
     window.electronAPI.diff
       .commitFile(effectiveHash, selectedFile)
       .then(setFileDiff)
-      .catch(() => setFileDiff("(Could not load diff)"));
+      .catch(() => setFileDiff(t("details.couldNotLoadDiff")));
   }, [effectiveHash, selectedFile]);
 
   // Load file content for selected tree file (files tab)
@@ -96,7 +98,7 @@ export const CommitDetailsPanel: React.FC = () => {
     window.electronAPI.log
       .showFile(effectiveHash, selectedTreeFile)
       .then(setTreeFileContent)
-      .catch(() => setTreeFileContent("(Could not load file)"));
+      .catch(() => setTreeFileContent(t("details.couldNotLoadFile")));
   }, [effectiveHash, selectedTreeFile]);
 
   if (!effectiveHash) {
@@ -105,7 +107,7 @@ export const CommitDetailsPanel: React.FC = () => {
         <div className="empty-state-icon">
           <IconFiles />
         </div>
-        <span>Select a commit to view files</span>
+        <span>{t("details.selectCommitToViewFiles")}</span>
       </div>
     );
   }
@@ -127,11 +129,11 @@ export const CommitDetailsPanel: React.FC = () => {
         }}
       >
         <TabButton active={activeTab === "diff"} onClick={() => setActiveTab("diff")}>
-          Diff
+          {t("details.diff")}
           {files.length > 0 && <span style={tabBadgeStyle}>{files.length}</span>}
         </TabButton>
         <TabButton active={activeTab === "files"} onClick={() => setActiveTab("files")}>
-          Files
+          {t("details.files")}
           {treeFiles.length > 0 && <span style={tabBadgeStyle}>{treeFiles.length}</span>}
         </TabButton>
       </div>
@@ -200,6 +202,7 @@ const DiffTab: React.FC<{
   onSelect: (path: string) => void;
   diff: string;
 }> = ({ files, selectedFile, onSelect, diff }) => {
+  const { t } = useTranslation();
   const [historyFile, setHistoryFile] = useState<string | null>(null);
   const [blameFile, setBlameFile] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -222,7 +225,7 @@ const DiffTab: React.FC<{
           flexDirection: "column",
         }}
       >
-        <SearchBar value={search} onChange={setSearch} placeholder="Search files..." />
+        <SearchBar value={search} onChange={setSearch} placeholder={t("details.searchFiles")} />
         <div style={{ flex: 1, overflowY: "auto" }}>
           <FileTree
             files={filteredFiles}
@@ -242,8 +245,12 @@ const DiffTab: React.FC<{
               flexShrink: 0,
             }}
           >
-            <SmallButton onClick={() => setHistoryFile(selectedFile)}>History</SmallButton>
-            <SmallButton onClick={() => setBlameFile(selectedFile)}>Blame</SmallButton>
+            <SmallButton onClick={() => setHistoryFile(selectedFile)}>
+              {t("details.history")}
+            </SmallButton>
+            <SmallButton onClick={() => setBlameFile(selectedFile)}>
+              {t("details.blame")}
+            </SmallButton>
           </div>
         )}
       </div>
@@ -253,7 +260,7 @@ const DiffTab: React.FC<{
           <DiffViewer rawDiff={diff} />
         ) : (
           <div className="empty-state">
-            <span>Select a file to view diff</span>
+            <span>{t("details.selectFileToViewDiff")}</span>
           </div>
         )}
       </div>
@@ -331,6 +338,7 @@ const FilesTab: React.FC<{
   onSelect: (path: string) => void;
   content: string;
 }> = ({ files, selectedFile, onSelect, content }) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [historyFile, setHistoryFile] = useState<string | null>(null);
   const [blameFile, setBlameFile] = useState<string | null>(null);
@@ -358,10 +366,10 @@ const FilesTab: React.FC<{
           flexDirection: "column",
         }}
       >
-        <SearchBar value={search} onChange={setSearch} placeholder="Search files..." />
+        <SearchBar value={search} onChange={setSearch} placeholder={t("details.searchFiles")} />
         {filteredFiles.length === 0 ? (
           <div style={{ padding: 12, fontSize: 11, color: "var(--text-muted)" }}>
-            {search ? "No matching files" : "No files"}
+            {search ? t("details.noMatchingFiles") : t("details.noFiles")}
           </div>
         ) : (
           <div style={{ flex: 1, overflowY: "auto" }}>
@@ -399,7 +407,7 @@ const FilesTab: React.FC<{
           </pre>
         ) : (
           <div className="empty-state">
-            <span>Select a file to view content</span>
+            <span>{t("details.selectFileToViewContent")}</span>
           </div>
         )}
       </div>

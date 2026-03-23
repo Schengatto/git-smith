@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogError } from "./ModalDialog";
 import type { SshKeyInfo } from "../../../shared/git-types";
 
@@ -100,6 +101,7 @@ function FieldInput({
 }
 
 function CopyableText({ text, label }: { text: string; label?: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -138,7 +140,7 @@ function CopyableText({ text, label }: { text: string; label?: string }) {
           {text}
         </pre>
         <button style={copyBtnStyle(copied)} onClick={handleCopy}>
-          {copied ? "Copied!" : "Copy"}
+          {copied ? t("ssh.copied") : t("ssh.copy")}
         </button>
       </div>
     </div>
@@ -152,6 +154,7 @@ function KeyCard({
   keyInfo: SshKeyInfo;
   onCopyPublic: (name: string) => Promise<string>;
 }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
 
@@ -211,7 +214,7 @@ function KeyCard({
         </span>
         {keyInfo.hasPublicKey && (
           <button style={copyBtnStyle(copied)} onClick={handleCopy}>
-            {copied ? "Copied!" : "Copy public key"}
+            {copied ? t("ssh.copied") : t("ssh.copyPublicKey")}
           </button>
         )}
       </div>
@@ -226,7 +229,7 @@ function KeyCard({
         }}
         title={keyInfo.fingerprint}
       >
-        {keyInfo.fingerprint || "No fingerprint available"}
+        {keyInfo.fingerprint || t("ssh.noFingerprintAvailable")}
       </div>
       <div
         style={{
@@ -248,6 +251,7 @@ function KeyCard({
 }
 
 export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   // Keys list
   const [keys, setKeys] = useState<SshKeyInfo[]>([]);
   const [loadingKeys, setLoadingKeys] = useState(false);
@@ -351,7 +355,7 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="SSH Key Manager" onClose={onClose} width={650}>
+    <ModalDialog open={open} title={t("ssh.title")} onClose={onClose} width={650}>
       <div
         style={{
           display: "flex",
@@ -363,7 +367,7 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
         <div style={{ overflowY: "auto", paddingRight: 2 }}>
           {/* Existing keys */}
           <div style={{ marginBottom: 4 }}>
-            <div style={sectionTitleStyle}>SSH Keys</div>
+            <div style={sectionTitleStyle}>{t("ssh.sshKeys")}</div>
             {loadingKeys ? (
               <div
                 style={{
@@ -373,7 +377,7 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
                   textAlign: "center",
                 }}
               >
-                Loading keys...
+                {t("ssh.loadingKeys")}
               </div>
             ) : keysError ? (
               <DialogError error={keysError} />
@@ -386,7 +390,7 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
                   textAlign: "center",
                 }}
               >
-                No SSH keys found in ~/.ssh
+                {t("ssh.noKeysFound")}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -405,11 +409,11 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
 
           {/* Generate new key */}
           <div>
-            <div style={sectionTitleStyle}>Generate New Key</div>
+            <div style={sectionTitleStyle}>{t("ssh.generateNewKey")}</div>
 
             {/* Key type selector */}
             <div style={{ marginBottom: 10 }}>
-              <div style={labelStyle}>Key Type</div>
+              <div style={labelStyle}>{t("ssh.keyType")}</div>
               <div style={{ display: "flex", gap: 6 }}>
                 {(["ed25519", "rsa"] as KeyType[]).map((t) => (
                   <button
@@ -436,13 +440,13 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
               <FieldInput
-                label="Comment (email)"
+                label={t("ssh.commentEmail")}
                 value={comment}
                 onChange={setComment}
-                placeholder="you@example.com"
+                placeholder={t("ssh.commentPlaceholder")}
               />
               <FieldInput
-                label="Filename"
+                label={t("ssh.filename")}
                 value={filename}
                 onChange={handleFilenameChange}
                 placeholder={DEFAULT_FILENAME[keyType]}
@@ -450,11 +454,11 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
             </div>
 
             <FieldInput
-              label="Passphrase"
+              label={t("ssh.passphrase")}
               value={passphrase}
               onChange={setPassphrase}
               type="password"
-              placeholder="Leave empty for no passphrase"
+              placeholder={t("ssh.passphrasePlaceholder")}
             />
 
             <button
@@ -462,13 +466,13 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
               disabled={generating || !filename.trim()}
               style={actionBtnStyle(true, generating || !filename.trim())}
             >
-              {generating ? "Generating..." : "Generate Key"}
+              {generating ? t("ssh.generating") : t("ssh.generateKey")}
             </button>
 
             <DialogError error={generateError} />
 
             {generatedPublicKey && (
-              <CopyableText text={generatedPublicKey} label="Public Key (generated)" />
+              <CopyableText text={generatedPublicKey} label={t("ssh.publicKeyGenerated")} />
             )}
           </div>
 
@@ -476,11 +480,11 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
 
           {/* Test connection */}
           <div>
-            <div style={sectionTitleStyle}>Test Connection</div>
+            <div style={sectionTitleStyle}>{t("ssh.testConnection")}</div>
             <div style={{ display: "flex", gap: 6, alignItems: "flex-end", marginBottom: 8 }}>
               <div style={{ flex: 1 }}>
                 <FieldInput
-                  label="Host"
+                  label={t("ssh.host")}
                   value={testHost}
                   onChange={setTestHost}
                   placeholder="git@github.com"
@@ -492,7 +496,7 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
                   disabled={testing || !testHost.trim()}
                   style={actionBtnStyle(false, testing || !testHost.trim())}
                 >
-                  {testing ? "Testing..." : "Test"}
+                  {testing ? t("ssh.testing") : t("ssh.test")}
                 </button>
               </div>
             </div>
@@ -529,7 +533,7 @@ export const SSHDialog: React.FC<Props> = ({ open, onClose }) => {
           }}
         >
           <button onClick={onClose} style={actionBtnStyle(false)}>
-            Close
+            {t("dialogs.close")}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useUIStore } from "../../store/ui-store";
 import { useAccountStore } from "../../store/account-store";
 import type { GitAccount, SshHostEntry } from "../../../shared/git-types";
@@ -32,19 +33,20 @@ interface Props {
   mode?: "overlay" | "window";
 }
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "general", label: "General", icon: <IconSettings /> },
-  { id: "accounts", label: "Accounts", icon: <IconAccount /> },
-  { id: "git", label: "Git Config", icon: <IconGit /> },
-  { id: "fetch", label: "Fetch", icon: <IconFetch /> },
-  { id: "commit", label: "Commit", icon: <IconCommit /> },
-  { id: "diff", label: "Diff & Graph", icon: <IconDiff /> },
-  { id: "mergetool", label: "Merge Tool", icon: <IconMergeTool /> },
-  { id: "advanced", label: "Advanced", icon: <IconAdvanced /> },
-  { id: "ai", label: "AI / MCP", icon: <IconAi /> },
+const TABS: { id: Tab; labelKey: string; icon: React.ReactNode }[] = [
+  { id: "general", labelKey: "settings.general", icon: <IconSettings /> },
+  { id: "accounts", labelKey: "settings.accounts", icon: <IconAccount /> },
+  { id: "git", labelKey: "settings.gitConfig", icon: <IconGit /> },
+  { id: "fetch", labelKey: "settings.fetchTab", icon: <IconFetch /> },
+  { id: "commit", labelKey: "settings.commitTab", icon: <IconCommit /> },
+  { id: "diff", labelKey: "settings.diffAndGraph", icon: <IconDiff /> },
+  { id: "mergetool", labelKey: "settings.mergeTool", icon: <IconMergeTool /> },
+  { id: "advanced", labelKey: "settings.advanced", icon: <IconAdvanced /> },
+  { id: "ai", labelKey: "settings.aiMcp", icon: <IconAi /> },
 ];
 
 export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }) => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("general");
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [gitConfig, setGitConfig] = useState<GitConfig | null>(null);
@@ -180,7 +182,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-            Settings
+            {t("settings.title")}
           </span>
           <button
             onClick={onClose}
@@ -221,10 +223,10 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
               overflowY: "auto",
             }}
           >
-            {TABS.map((t) => (
+            {TABS.map((tabDef) => (
               <div
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                key={tabDef.id}
+                onClick={() => setTab(tabDef.id)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -232,15 +234,16 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
                   padding: "7px 14px",
                   fontSize: 12,
                   cursor: "pointer",
-                  color: tab === t.id ? "var(--accent)" : "var(--text-secondary)",
-                  background: tab === t.id ? "var(--accent-dim)" : "transparent",
-                  borderLeft: tab === t.id ? "2px solid var(--accent)" : "2px solid transparent",
+                  color: tab === tabDef.id ? "var(--accent)" : "var(--text-secondary)",
+                  background: tab === tabDef.id ? "var(--accent-dim)" : "transparent",
+                  borderLeft:
+                    tab === tabDef.id ? "2px solid var(--accent)" : "2px solid transparent",
                   transition: "all 0.1s",
-                  fontWeight: tab === t.id ? 600 : 400,
+                  fontWeight: tab === tabDef.id ? 600 : 400,
                 }}
               >
-                {t.icon}
-                {t.label}
+                {tabDef.icon}
+                {t(tabDef.labelKey)}
               </div>
             ))}
           </div>
@@ -269,7 +272,22 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
               />
             )}
             {settings && tab === "advanced" && (
-              <AdvancedTab settings={settings} onChange={updateSetting} />
+              <AdvancedTab
+                settings={settings}
+                onChange={updateSetting}
+                onResetSettings={async () => {
+                  if (!confirm(t("settings.resetConfirm"))) return;
+                  const defaults = await window.electronAPI.settings.reset();
+                  setSettings(defaults);
+                  useUIStore.getState().setTheme(defaults.theme as "dark" | "light");
+                  setDirty(false);
+                }}
+                onClearAllData={async () => {
+                  if (!confirm(t("settings.clearAllConfirm"))) return;
+                  await window.electronAPI.settings.clearAll();
+                  window.location.reload();
+                }}
+              />
             )}
             {settings && tab === "ai" && <AiTab settings={settings} onChange={updateSetting} />}
           </div>
@@ -297,7 +315,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
               cursor: "pointer",
             }}
           >
-            Close
+            {t("settings.close")}
           </button>
           {dirty && (
             <button
@@ -314,7 +332,7 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
                 cursor: "pointer",
               }}
             >
-              {saving ? "Saving..." : "Save Settings"}
+              {saving ? t("settings.saving") : t("settings.saveSettings")}
             </button>
           )}
         </div>
@@ -335,6 +353,7 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
   settings,
   onChange,
 }) => {
+  const { t } = useTranslation();
   const handleBrowseGit = async () => {
     const selected = await window.electronAPI.repo.browseFile("Select Git executable");
     if (selected) onChange("gitBinaryPath", selected);
@@ -342,24 +361,27 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
 
   return (
     <div>
-      <SectionTitle>Appearance</SectionTitle>
-      <SettingRow label="Theme" description="Application color theme">
+      <SectionTitle>{t("settings.appearance")}</SectionTitle>
+      <SettingRow label={t("settings.theme")} description={t("settings.themeDescription")}>
         <Select
           value={settings.theme}
           options={[
-            { value: "dark", label: "Dark (Catppuccin Mocha)" },
-            { value: "light", label: "Light (Catppuccin Latte)" },
+            { value: "dark", label: t("settings.darkTheme") },
+            { value: "light", label: t("settings.lightTheme") },
           ]}
           onChange={(v) => onChange("theme", v as "dark" | "light")}
         />
       </SettingRow>
-      <SectionTitle>Git</SectionTitle>
-      <SettingRow label="Git binary path" description="Leave empty to use git from system PATH">
+      <SectionTitle>{t("settings.git")}</SectionTitle>
+      <SettingRow
+        label={t("settings.gitBinaryPath")}
+        description={t("settings.gitBinaryPathDescription")}
+      >
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           <input
             value={settings.gitBinaryPath}
             onChange={(e) => onChange("gitBinaryPath", e.target.value)}
-            placeholder="git"
+            placeholder={t("settings.gitPlaceholder")}
             style={{
               padding: "4px 8px",
               borderRadius: 6,
@@ -384,14 +406,14 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
               cursor: "pointer",
             }}
           >
-            Browse
+            {t("dialogs.browse")}
           </button>
         </div>
       </SettingRow>
-      <SectionTitle>Notifications</SectionTitle>
+      <SectionTitle>{t("settings.notifications")}</SectionTitle>
       <SettingRow
-        label="Enable desktop notifications"
-        description="Show native notifications for git operations"
+        label={t("settings.enableDesktopNotifications")}
+        description={t("settings.showNativeNotifications")}
       >
         <Toggle
           checked={settings.notifications?.enabled ?? true}
@@ -401,21 +423,27 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
       {settings.notifications?.enabled && (
         <>
           <SettingRow
-            label="On fetch"
-            description="Notify when auto-fetch completes with new changes"
+            label={t("settings.onFetch")}
+            description={t("settings.notifyOnFetchDescription")}
           >
             <Toggle
               checked={settings.notifications?.onFetch ?? true}
               onChange={(v) => onChange("notifications", { ...settings.notifications, onFetch: v })}
             />
           </SettingRow>
-          <SettingRow label="On push" description="Notify when push completes successfully">
+          <SettingRow
+            label={t("settings.onPush")}
+            description={t("settings.notifyOnPushDescription")}
+          >
             <Toggle
               checked={settings.notifications?.onPush ?? true}
               onChange={(v) => onChange("notifications", { ...settings.notifications, onPush: v })}
             />
           </SettingRow>
-          <SettingRow label="On error" description="Notify when a git operation fails">
+          <SettingRow
+            label={t("settings.onError")}
+            description={t("settings.notifyOnErrorDescription")}
+          >
             <Toggle
               checked={settings.notifications?.onError ?? true}
               onChange={(v) => onChange("notifications", { ...settings.notifications, onError: v })}
@@ -430,51 +458,58 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
 const FetchTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
   settings,
   onChange,
-}) => (
-  <div>
-    <SectionTitle>Auto Fetch</SectionTitle>
-    <SettingRow
-      label="Enable auto fetch"
-      description="Periodically fetch from all remotes in the background"
-    >
-      <Toggle
-        checked={settings.autoFetchEnabled}
-        onChange={(v) => onChange("autoFetchEnabled", v)}
-      />
-    </SettingRow>
-    {settings.autoFetchEnabled && (
-      <>
-        <SettingRow label="Fetch interval" description="Time between automatic fetches">
-          <Select
-            value={String(settings.autoFetchInterval)}
-            options={[
-              { value: "60", label: "1 minute" },
-              { value: "120", label: "2 minutes" },
-              { value: "300", label: "5 minutes" },
-              { value: "600", label: "10 minutes" },
-              { value: "1800", label: "30 minutes" },
-            ]}
-            onChange={(v) => onChange("autoFetchInterval", Number(v))}
-          />
-        </SettingRow>
-        <SettingRow
-          label="Prune on auto fetch"
-          description="Remove remote-tracking branches that no longer exist on the remote"
-        >
-          <Toggle
-            checked={settings.fetchPruneOnAuto}
-            onChange={(v) => onChange("fetchPruneOnAuto", v)}
-          />
-        </SettingRow>
-      </>
-    )}
-  </div>
-);
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <SectionTitle>{t("settings.autoFetch")}</SectionTitle>
+      <SettingRow
+        label={t("settings.enableAutoFetch")}
+        description={t("settings.autoFetchDescription")}
+      >
+        <Toggle
+          checked={settings.autoFetchEnabled}
+          onChange={(v) => onChange("autoFetchEnabled", v)}
+        />
+      </SettingRow>
+      {settings.autoFetchEnabled && (
+        <>
+          <SettingRow
+            label={t("settings.fetchInterval")}
+            description={t("settings.timeBetweenFetches")}
+          >
+            <Select
+              value={String(settings.autoFetchInterval)}
+              options={[
+                { value: "60", label: t("settings.oneMinute") },
+                { value: "120", label: t("settings.twoMinutes") },
+                { value: "300", label: t("settings.fiveMinutes") },
+                { value: "600", label: t("settings.tenMinutes") },
+                { value: "1800", label: t("settings.thirtyMinutes") },
+              ]}
+              onChange={(v) => onChange("autoFetchInterval", Number(v))}
+            />
+          </SettingRow>
+          <SettingRow
+            label={t("settings.pruneOnAutoFetch")}
+            description={t("settings.removeRemoteTrackingBranches")}
+          >
+            <Toggle
+              checked={settings.fetchPruneOnAuto}
+              onChange={(v) => onChange("fetchPruneOnAuto", v)}
+            />
+          </SettingRow>
+        </>
+      )}
+    </div>
+  );
+};
 
 const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
   settings,
   onChange,
 }) => {
+  const { t } = useTranslation();
   const templates = settings.commitTemplates || [];
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState<CommitTemplate>({
@@ -539,16 +574,16 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
 
   return (
     <div>
-      <SectionTitle>Commit</SectionTitle>
+      <SectionTitle>{t("settings.commitSection")}</SectionTitle>
       <SettingRow
-        label="Sign commits (GPG)"
-        description="Automatically sign commits with your GPG key"
+        label={t("settings.signCommits")}
+        description={t("settings.signCommitsDescription")}
       >
         <Toggle checked={settings.signCommits} onChange={(v) => onChange("signCommits", v)} />
       </SettingRow>
       <SettingRow
-        label="Default commit template"
-        description="Pre-fill the commit message with this template"
+        label={t("settings.defaultCommitTemplate")}
+        description={t("settings.defaultCommitTemplateDescription")}
       >
         <textarea
           value={settings.defaultCommitTemplate}
@@ -566,13 +601,13 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
             resize: "vertical",
             outline: "none",
           }}
-          placeholder="e.g. [JIRA-XXX] "
+          placeholder={t("settings.templatePrefixPlaceholder")}
         />
       </SettingRow>
 
-      <SectionTitle>Commit Templates</SectionTitle>
+      <SectionTitle>{t("settings.commitTemplates")}</SectionTitle>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>
-        Customizable templates selectable from the Commit dialog dropdown.
+        {t("settings.templateCustomizable")}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -640,26 +675,26 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
             <input
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              placeholder="Name (e.g. Feature)"
+              placeholder={t("settings.templateNamePlaceholder")}
               style={{ ...inputStyle, flex: 1 }}
             />
             <input
               value={draft.prefix}
               onChange={(e) => setDraft({ ...draft, prefix: e.target.value })}
-              placeholder="Prefix (e.g. feat: )"
+              placeholder={t("settings.templatePrefixInputPlaceholder")}
               style={{ ...inputStyle, flex: 1 }}
             />
           </div>
           <input
             value={draft.description}
             onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-            placeholder="Description"
+            placeholder={t("settings.templateDescriptionPlaceholder")}
             style={inputStyle}
           />
           <textarea
             value={draft.body}
             onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-            placeholder="Body template (optional)"
+            placeholder={t("settings.templateBodyPlaceholder")}
             rows={2}
             style={{ ...inputStyle, fontFamily: "inherit", resize: "vertical" }}
           />
@@ -676,7 +711,7 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
                 cursor: "pointer",
               }}
             >
-              Cancel
+              {t("dialogs.cancel")}
             </button>
             <button
               onClick={saveDraft}
@@ -692,7 +727,7 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
                 opacity: draft.name.trim() ? 1 : 0.5,
               }}
             >
-              {editing === -1 ? "Add" : "Save"}
+              {editing === -1 ? t("dialogs.add") : t("dialogs.save")}
             </button>
           </div>
         </div>
@@ -712,13 +747,13 @@ const CommitTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
             cursor: "pointer",
           }}
         >
-          + Add Template
+          {t("settings.addTemplate")}
         </button>
       )}
 
-      <SectionTitle>Commit Snippets</SectionTitle>
+      <SectionTitle>{t("settings.commitSnippets")}</SectionTitle>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>
-        Short text fragments insertable at cursor position in the commit message.
+        {t("settings.snippetInsertable")}
       </div>
       <SnippetManager
         snippets={settings.commitSnippets || []}
@@ -732,6 +767,7 @@ const SnippetManager: React.FC<{
   snippets: CommitSnippet[];
   onChange: (s: CommitSnippet[]) => void;
 }> = ({ snippets, onChange }) => {
+  const { t } = useTranslation();
   const [addLabel, setAddLabel] = useState("");
   const [addText, setAddText] = useState("");
   const inputStyle: React.CSSProperties = {
@@ -785,13 +821,13 @@ const SnippetManager: React.FC<{
         <input
           value={addLabel}
           onChange={(e) => setAddLabel(e.target.value)}
-          placeholder="Label"
+          placeholder={t("settings.snippetLabelPlaceholder")}
           style={{ ...inputStyle, flex: 1 }}
         />
         <input
           value={addText}
           onChange={(e) => setAddText(e.target.value)}
-          placeholder="Text to insert"
+          placeholder={t("settings.snippetTextPlaceholder")}
           style={{ ...inputStyle, flex: 2 }}
         />
         <button
@@ -814,7 +850,7 @@ const SnippetManager: React.FC<{
             opacity: addLabel.trim() && addText.trim() ? 1 : 0.5,
           }}
         >
-          Add
+          {t("dialogs.add")}
         </button>
       </div>
     </div>
@@ -835,54 +871,69 @@ const iconBtnStyle: React.CSSProperties = {
 const DiffTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
   settings,
   onChange,
-}) => (
-  <div>
-    <SectionTitle>Diff</SectionTitle>
-    <SettingRow label="Default view" description="Default diff display format">
-      <Select
-        value={settings.preferSideBySideDiff ? "split" : "unified"}
-        options={[
-          { value: "unified", label: "Unified (line-by-line)" },
-          { value: "split", label: "Split (side-by-side)" },
-        ]}
-        onChange={(v) => onChange("preferSideBySideDiff", v === "split")}
-      />
-    </SettingRow>
-    <SettingRow label="Context lines" description="Number of unchanged lines shown around changes">
-      <NumberInput
-        value={settings.diffContextLines}
-        min={0}
-        max={20}
-        onChange={(v) => onChange("diffContextLines", v)}
-      />
-    </SettingRow>
-    <SectionTitle>Graph</SectionTitle>
-    <SettingRow label="Initial load count" description="Number of commits loaded on first open">
-      <Select
-        value={String(settings.graphMaxInitialLoad)}
-        options={[
-          { value: "200", label: "200" },
-          { value: "500", label: "500" },
-          { value: "1000", label: "1000" },
-          { value: "2000", label: "2000" },
-        ]}
-        onChange={(v) => onChange("graphMaxInitialLoad", Number(v))}
-      />
-    </SettingRow>
-    <SettingRow
-      label="Show remote branches"
-      description="Display remote branches in the commit graph"
-    >
-      <Toggle
-        checked={settings.showRemoteBranchesInGraph}
-        onChange={(v) => onChange("showRemoteBranchesInGraph", v)}
-      />
-    </SettingRow>
-  </div>
-);
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <SectionTitle>{t("settings.diffSection")}</SectionTitle>
+      <SettingRow label={t("settings.defaultView")} description={t("settings.defaultDiffFormat")}>
+        <Select
+          value={settings.preferSideBySideDiff ? "split" : "unified"}
+          options={[
+            { value: "unified", label: t("settings.unifiedLineByLine") },
+            { value: "split", label: t("settings.splitSideBySide") },
+          ]}
+          onChange={(v) => onChange("preferSideBySideDiff", v === "split")}
+        />
+      </SettingRow>
+      <SettingRow
+        label={t("settings.contextLines")}
+        description={t("settings.contextLinesDescription")}
+      >
+        <NumberInput
+          value={settings.diffContextLines}
+          min={0}
+          max={20}
+          onChange={(v) => onChange("diffContextLines", v)}
+        />
+      </SettingRow>
+      <SectionTitle>{t("settings.graphSection")}</SectionTitle>
+      <SettingRow
+        label={t("settings.initialLoadCount")}
+        description={t("settings.commitsOnFirstOpen")}
+      >
+        <Select
+          value={String(settings.graphMaxInitialLoad)}
+          options={[
+            { value: "200", label: "200" },
+            { value: "500", label: "500" },
+            { value: "1000", label: "1000" },
+            { value: "2000", label: "2000" },
+          ]}
+          onChange={(v) => onChange("graphMaxInitialLoad", Number(v))}
+        />
+      </SettingRow>
+      <SettingRow
+        label={t("settings.showRemoteBranches")}
+        description={t("settings.showRemoteBranchesDescription")}
+      >
+        <Toggle
+          checked={settings.showRemoteBranchesInGraph}
+          onChange={(v) => onChange("showRemoteBranchesInGraph", v)}
+        />
+      </SettingRow>
+    </div>
+  );
+};
 
-const MERGE_TOOL_PRESETS: { name: string; label: string; path: string; args: string }[] = [
-  { name: "", label: "None (use internal editor)", path: "", args: "" },
+const MERGE_TOOL_PRESETS: {
+  name: string;
+  labelKey?: string;
+  label?: string;
+  path: string;
+  args: string;
+}[] = [
+  { name: "", labelKey: "settings.noneUseInternalEditor", path: "", args: "" },
   {
     name: "kdiff3",
     label: "KDiff3",
@@ -925,7 +976,7 @@ const MERGE_TOOL_PRESETS: { name: string; label: string; path: string; args: str
     path: "WinMergeU",
     args: '"$LOCAL" "$REMOTE" "$MERGED"',
   },
-  { name: "custom", label: "Custom...", path: "", args: "" },
+  { name: "custom", labelKey: "settings.custom", path: "", args: "" },
 ];
 
 const MergeToolTab: React.FC<{
@@ -933,6 +984,7 @@ const MergeToolTab: React.FC<{
   onChange: OnChange;
   onBatchChange: (partial: Partial<AppSettings>) => void;
 }> = ({ settings, onChange, onBatchChange }) => {
+  const { t } = useTranslation();
   const handlePresetChange = (presetName: string) => {
     const preset = MERGE_TOOL_PRESETS.find((p) => p.name === presetName);
     if (!preset) return;
@@ -957,26 +1009,34 @@ const MergeToolTab: React.FC<{
 
   return (
     <div>
-      <SectionTitle>External Merge Tool</SectionTitle>
+      <SectionTitle>{t("settings.externalMergeTool")}</SectionTitle>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
-        Configure an external tool for resolving merge conflicts. If none is set, the built-in
-        editor will be used.
+        {t("settings.mergeToolConfigDescription")}
       </div>
-      <SettingRow label="Merge tool" description="Select a preset or choose Custom">
+      <SettingRow
+        label={t("settings.mergeToolLabel")}
+        description={t("settings.mergeToolSelectPreset")}
+      >
         <Select
           value={settings.mergeToolName}
-          options={MERGE_TOOL_PRESETS.map((p) => ({ value: p.name, label: p.label }))}
+          options={MERGE_TOOL_PRESETS.map((p) => ({
+            value: p.name,
+            label: p.labelKey ? t(p.labelKey) : p.label!,
+          }))}
           onChange={handlePresetChange}
         />
       </SettingRow>
       {hasToolConfigured && (
         <>
-          <SettingRow label="Executable path" description="Path to the merge tool binary">
+          <SettingRow
+            label={t("settings.executablePath")}
+            description={t("settings.executablePathDescription")}
+          >
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
               <input
                 value={settings.mergeToolPath}
                 onChange={(e) => onChange("mergeToolPath", e.target.value)}
-                placeholder="e.g. kdiff3 or /usr/bin/meld"
+                placeholder={t("settings.executablePathPlaceholder")}
                 style={{
                   padding: "4px 8px",
                   borderRadius: 6,
@@ -1001,19 +1061,19 @@ const MergeToolTab: React.FC<{
                     cursor: "pointer",
                   }}
                 >
-                  Browse
+                  {t("dialogs.browse")}
                 </button>
               )}
             </div>
           </SettingRow>
           <SettingRow
-            label="Arguments"
-            description="Use $BASE $LOCAL $REMOTE $MERGED as placeholders"
+            label={t("settings.arguments")}
+            description={t("settings.argumentsDescription")}
           >
             <input
               value={settings.mergeToolArgs}
               onChange={(e) => onChange("mergeToolArgs", e.target.value)}
-              placeholder={"$BASE $LOCAL $REMOTE -o $MERGED"}
+              placeholder={t("settings.argumentsPlaceholder")}
               style={{
                 padding: "4px 8px",
                 borderRadius: 6,
@@ -1033,43 +1093,89 @@ const MergeToolTab: React.FC<{
   );
 };
 
-const AdvancedTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
-  settings,
-  onChange,
-}) => (
-  <div>
-    <SectionTitle>Performance</SectionTitle>
-    <SettingRow
-      label="Max concurrent git processes"
-      description="Number of git commands that can run in parallel"
-    >
-      <NumberInput
-        value={settings.maxConcurrentGitProcesses}
-        min={1}
-        max={20}
-        onChange={(v) => onChange("maxConcurrentGitProcesses", v)}
-      />
-    </SettingRow>
-  </div>
-);
+const AdvancedTab: React.FC<{
+  settings: AppSettings;
+  onChange: OnChange;
+  onResetSettings?: () => void;
+  onClearAllData?: () => void;
+}> = ({ settings, onChange, onResetSettings, onClearAllData }) => {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <SectionTitle>{t("settings.performance")}</SectionTitle>
+      <SettingRow
+        label={t("settings.maxConcurrentGitProcesses")}
+        description={t("settings.maxConcurrentDescription")}
+      >
+        <NumberInput
+          value={settings.maxConcurrentGitProcesses}
+          min={1}
+          max={20}
+          onChange={(v) => onChange("maxConcurrentGitProcesses", v)}
+        />
+      </SettingRow>
+
+      <SectionTitle>{t("settings.data")}</SectionTitle>
+      <SettingRow
+        label={t("settings.resetSettingsLabel")}
+        description={t("settings.resetSettingsDescription")}
+      >
+        <button
+          onClick={onResetSettings}
+          style={{
+            padding: "6px 14px",
+            borderRadius: 6,
+            border: "1px solid var(--border)",
+            background: "transparent",
+            color: "var(--text-secondary)",
+            fontSize: 12,
+            cursor: "pointer",
+          }}
+        >
+          {t("settings.resetSettingsButton")}
+        </button>
+      </SettingRow>
+      <SettingRow
+        label={t("settings.clearAllData")}
+        description={t("settings.clearAllDataDescription")}
+      >
+        <button
+          onClick={onClearAllData}
+          style={{
+            padding: "6px 14px",
+            borderRadius: 6,
+            border: "1px solid var(--red, #e06c75)",
+            background: "transparent",
+            color: "var(--red, #e06c75)",
+            fontSize: 12,
+            cursor: "pointer",
+          }}
+        >
+          {t("settings.clearAllDataButton")}
+        </button>
+      </SettingRow>
+    </div>
+  );
+};
 
 const GitConfigTab: React.FC<{
   local: GitConfig;
   global: GitConfig;
   onSave: (key: string, value: string, global: boolean) => Promise<void>;
 }> = ({ local, global, onSave }) => {
+  const { t } = useTranslation();
   const [editKey, setEditKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editGlobal, setEditGlobal] = useState(false);
 
   const importantKeys = [
-    { key: "user.name", label: "User Name" },
-    { key: "user.email", label: "User Email" },
-    { key: "core.autocrlf", label: "Auto CRLF" },
-    { key: "core.editor", label: "Default Editor" },
-    { key: "pull.rebase", label: "Pull Rebase" },
-    { key: "push.default", label: "Push Default" },
-    { key: "merge.ff", label: "Merge Fast-Forward" },
+    { key: "user.name", label: t("settings.userName") },
+    { key: "user.email", label: t("settings.userEmail") },
+    { key: "core.autocrlf", label: t("settings.autoCrlf") },
+    { key: "core.editor", label: t("settings.defaultEditor") },
+    { key: "pull.rebase", label: t("settings.pullRebase") },
+    { key: "push.default", label: t("settings.pushDefault") },
+    { key: "merge.ff", label: t("settings.mergeFf") },
   ];
 
   const startEdit = (key: string, isGlobal: boolean) => {
@@ -1087,7 +1193,7 @@ const GitConfigTab: React.FC<{
 
   return (
     <div>
-      <SectionTitle>User Identity (Global)</SectionTitle>
+      <SectionTitle>{t("settings.userIdentityGlobal")}</SectionTitle>
       {importantKeys.slice(0, 2).map(({ key, label }) => (
         <SettingRow key={key} label={label} description={key}>
           {editKey === key ? (
@@ -1121,7 +1227,7 @@ const GitConfigTab: React.FC<{
                   cursor: "pointer",
                 }}
               >
-                Save
+                {t("dialogs.save")}
               </button>
               <button
                 onClick={() => setEditKey(null)}
@@ -1135,7 +1241,7 @@ const GitConfigTab: React.FC<{
                   cursor: "pointer",
                 }}
               >
-                Cancel
+                {t("dialogs.cancel")}
               </button>
             </div>
           ) : (
@@ -1155,14 +1261,16 @@ const GitConfigTab: React.FC<{
               title="Click to edit"
             >
               {global[key] || (
-                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>not set</span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                  {t("settings.notSet")}
+                </span>
               )}
             </div>
           )}
         </SettingRow>
       ))}
 
-      <SectionTitle>Repository Config</SectionTitle>
+      <SectionTitle>{t("settings.repositoryConfig")}</SectionTitle>
       {importantKeys.slice(2).map(({ key, label }) => (
         <SettingRow key={key} label={label} description={key}>
           {editKey === key ? (
@@ -1196,7 +1304,7 @@ const GitConfigTab: React.FC<{
                   cursor: "pointer",
                 }}
               >
-                Save
+                {t("dialogs.save")}
               </button>
               <button
                 onClick={() => setEditKey(null)}
@@ -1210,7 +1318,7 @@ const GitConfigTab: React.FC<{
                   cursor: "pointer",
                 }}
               >
-                Cancel
+                {t("dialogs.cancel")}
               </button>
             </div>
           ) : (
@@ -1230,7 +1338,9 @@ const GitConfigTab: React.FC<{
               title="Click to edit"
             >
               {local[key] || global[key] || (
-                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>not set</span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                  {t("settings.notSet")}
+                </span>
               )}
             </div>
           )}
@@ -1541,12 +1651,13 @@ function IconAccount() {
 /* ---------- AI / MCP Tab ---------- */
 
 const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settings, onChange }) => {
+  const { t } = useTranslation();
   const providerOptions = [
-    { value: "none", label: "Disabled" },
-    { value: "anthropic", label: "Anthropic (Claude)" },
-    { value: "openai", label: "OpenAI" },
-    { value: "gemini", label: "Google Gemini" },
-    { value: "custom-mcp", label: "Custom MCP Server" },
+    { value: "none", label: t("settings.disabled") },
+    { value: "anthropic", label: t("settings.anthropicClaude") },
+    { value: "openai", label: t("settings.openai") },
+    { value: "gemini", label: t("settings.googleGemini") },
+    { value: "custom-mcp", label: t("settings.customMcpServer") },
   ];
 
   const modelOptions: Record<string, { value: string; label: string }[]> = {
@@ -1569,8 +1680,8 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
 
   return (
     <div>
-      <SectionTitle>AI Provider</SectionTitle>
-      <SettingRow label="Provider" description="Select AI provider for code assistance features">
+      <SectionTitle>{t("settings.aiProviderSection")}</SectionTitle>
+      <SettingRow label={t("settings.provider")} description={t("settings.providerDescription")}>
         <Select
           value={settings.aiProvider}
           options={providerOptions}
@@ -1582,7 +1693,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
 
       {settings.aiProvider !== "none" && (
         <>
-          <SettingRow label="API Key" description="Your API key (stored locally)">
+          <SettingRow label={t("settings.apiKey")} description={t("settings.apiKeyDescription")}>
             <input
               type="password"
               value={settings.aiApiKey}
@@ -1603,7 +1714,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
           </SettingRow>
 
           {modelOptions[settings.aiProvider] && (
-            <SettingRow label="Model" description="AI model to use for generation">
+            <SettingRow label={t("settings.model")} description={t("settings.modelDescription")}>
               <Select
                 value={settings.aiModel || modelOptions[settings.aiProvider]?.[0]?.value || ""}
                 options={modelOptions[settings.aiProvider] ?? []}
@@ -1614,8 +1725,8 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
 
           {settings.aiProvider === "openai" && (
             <SettingRow
-              label="Base URL"
-              description="Custom API base URL (leave empty for default)"
+              label={t("settings.baseUrl")}
+              description={t("settings.baseUrlDescription")}
             >
               <input
                 value={settings.aiBaseUrl}
@@ -1638,9 +1749,9 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
         </>
       )}
 
-      <SectionTitle>AI Features</SectionTitle>
+      <SectionTitle>{t("settings.aiFeatures")}</SectionTitle>
       <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-        When an AI provider is configured, the following features become available:
+        {t("settings.aiFeaturesDescription")}
       </div>
       <div
         style={{
@@ -1650,16 +1761,16 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
           lineHeight: 1.6,
         }}
       >
-        <div style={{ padding: "2px 0" }}>&#8226; Generate commit messages from staged changes</div>
-        <div style={{ padding: "2px 0" }}>&#8226; AI-assisted merge conflict resolution</div>
-        <div style={{ padding: "2px 0" }}>&#8226; Code review of commits</div>
-        <div style={{ padding: "2px 0" }}>&#8226; PR description generation</div>
+        <div style={{ padding: "2px 0" }}>&#8226; {t("settings.aiFeaturesItem1")}</div>
+        <div style={{ padding: "2px 0" }}>&#8226; {t("settings.aiFeaturesItem2")}</div>
+        <div style={{ padding: "2px 0" }}>&#8226; {t("settings.aiFeaturesItem3")}</div>
+        <div style={{ padding: "2px 0" }}>&#8226; {t("settings.aiFeaturesItem4")}</div>
       </div>
 
-      <SectionTitle>MCP Server</SectionTitle>
+      <SectionTitle>{t("settings.mcpServer")}</SectionTitle>
       <SettingRow
-        label="Enable MCP Server"
-        description="Expose git operations as MCP tools for AI assistants"
+        label={t("settings.enableMcpServer")}
+        description={t("settings.enableMcpServerDescription")}
       >
         <Toggle
           checked={settings.mcpServerEnabled}
@@ -1675,7 +1786,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
             lineHeight: 1.5,
           }}
         >
-          Start with:{" "}
+          {t("settings.mcpStartWith")}{" "}
           <code style={{ fontSize: 11, color: "var(--accent)" }}>
             gitsmith --mcp-server --repo /path/to/repo
           </code>
@@ -1697,6 +1808,7 @@ const emptyAccount = {
 };
 
 const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overlay" }) => {
+  const { t } = useTranslation();
   const { accounts, loadAccounts, addAccount, updateAccount, deleteAccount } = useAccountStore();
   const [form, setForm] = useState(emptyAccount);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1783,7 +1895,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
 
   return (
     <div>
-      <SectionTitle>Git Accounts</SectionTitle>
+      <SectionTitle>{t("settings.gitAccounts")}</SectionTitle>
       <div
         style={{
           fontSize: 12,
@@ -1792,8 +1904,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
           lineHeight: 1.5,
         }}
       >
-        Configure named Git identities. Assign an account to a repository to set its local
-        user.name, user.email, and SSH key.
+        {t("settings.gitAccountsDescription")}
       </div>
 
       {accounts.length === 0 && !showForm && (
@@ -1805,7 +1916,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
             textAlign: "center",
           }}
         >
-          No accounts configured yet.
+          {t("settings.noAccountsConfigured")}
         </div>
       )}
 
@@ -1848,7 +1959,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               cursor: "pointer",
             }}
           >
-            Edit
+            {t("dialogs.edit")}
           </button>
           <button
             onClick={() => handleDelete(account.id)}
@@ -1862,7 +1973,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               cursor: "pointer",
             }}
           >
-            Delete
+            {t("dialogs.delete")}
           </button>
         </div>
       ))}
@@ -1885,7 +1996,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               marginBottom: 10,
             }}
           >
-            {editingId ? "Edit Account" : "New Account"}
+            {editingId ? t("settings.editAccount") : t("settings.newAccount")}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div>
@@ -1897,7 +2008,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   marginBottom: 3,
                 }}
               >
-                Label *
+                {t("settings.labelRequired")}
               </label>
               <input
                 style={inputStyle}
@@ -1915,7 +2026,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   marginBottom: 3,
                 }}
               >
-                Name *
+                {t("settings.nameRequired")}
               </label>
               <input
                 style={inputStyle}
@@ -1933,7 +2044,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   marginBottom: 3,
                 }}
               >
-                Email *
+                {t("settings.emailRequired")}
               </label>
               <input
                 style={inputStyle}
@@ -1951,7 +2062,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   marginBottom: 3,
                 }}
               >
-                Signing Key
+                {t("settings.signingKey")}
               </label>
               <input
                 style={inputStyle}
@@ -1969,7 +2080,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   marginBottom: 3,
                 }}
               >
-                SSH Private Key
+                {t("settings.sshPrivateKey")}
               </label>
               <div style={{ display: "flex", gap: 6 }}>
                 <input
@@ -1991,7 +2102,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Browse
+                  {t("dialogs.browse")}
                 </button>
               </div>
             </div>
@@ -2004,7 +2115,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                   marginBottom: 4,
                 }}
               >
-                Platform Token (GitHub / GitLab)
+                {t("settings.platformToken")}
               </label>
               <input
                 style={inputStyle}
@@ -2014,7 +2125,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                 placeholder="ghp_... or glpat-... (optional)"
               />
               <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>
-                Used for PR operations and CI status. Stored encrypted.
+                {t("settings.platformTokenDescription")}
               </div>
             </div>
           </div>
@@ -2031,7 +2142,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                 cursor: "pointer",
               }}
             >
-              Cancel
+              {t("dialogs.cancel")}
             </button>
             <button
               onClick={handleSave}
@@ -2048,7 +2159,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                 opacity: !form.label.trim() || !form.name.trim() || !form.email.trim() ? 0.5 : 1,
               }}
             >
-              {editingId ? "Update" : "Add Account"}
+              {editingId ? t("settings.update") : t("settings.addAccountButton")}
             </button>
           </div>
         </div>
@@ -2071,7 +2182,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               cursor: "pointer",
             }}
           >
-            + Add Account
+            {t("settings.addAccountLabel")}
           </button>
           <button
             onClick={handleLoadSshConfig}
@@ -2086,7 +2197,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
               cursor: "pointer",
             }}
           >
-            Import from SSH Config
+            {t("settings.importFromSshConfig")}
           </button>
         </div>
       )}
@@ -2111,7 +2222,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
             }}
           >
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
-              SSH Config Entries (~/.ssh/config)
+              {t("settings.sshConfigEntries")}
             </div>
             <button
               onClick={() => setShowSshImport(false)}
@@ -2123,7 +2234,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                 fontSize: 11,
               }}
             >
-              Close
+              {t("dialogs.close")}
             </button>
           </div>
           {sshEntries.length === 0 ? (
@@ -2135,7 +2246,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                 textAlign: "center",
               }}
             >
-              No SSH host entries with IdentityFile found in ~/.ssh/config
+              {t("settings.noSshHostEntries")}
             </div>
           ) : (
             sshEntries.map((entry, i) => (
@@ -2181,7 +2292,7 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
                     cursor: "pointer",
                   }}
                 >
-                  Import
+                  {t("settings.import")}
                 </button>
               </div>
             ))

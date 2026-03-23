@@ -5,6 +5,47 @@ import { render, screen, waitFor, fireEvent, act } from "@testing-library/react"
 import React from "react";
 import { PrDialog } from "./PrDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      const translations: Record<string, string> = {
+        "pr.github": "GitHub",
+        "pr.gitlab": "GitLab",
+        "pr.unknown": "Unknown",
+        "pr.pullRequest": "Pull Request",
+        "pr.mergeRequest": "Merge Request",
+        "pr.providerUnknown":
+          "Could not detect GitHub or GitLab from remote URL. Make sure 'gh' or 'glab' CLI is installed.",
+        "pr.list": "List",
+        "pr.createNew": "Create New",
+        "pr.backToList": "Back to list",
+        "pr.openInBrowser": "Open in Browser",
+        "pr.noPrsFound": "No {{prLabel}}s found",
+        "pr.source": "Source:",
+        "pr.target": "Target:",
+        "pr.titlePlaceholder": "{{prLabel}} title...",
+        "pr.descriptionPlaceholder": "Description (optional)...",
+        "pr.createAsDraft": "Create as draft",
+        "pr.creating": "Creating...",
+        "pr.createPrButton": "Create {{prLabel}}",
+        "pr.generating": "Generating...",
+        "pr.aiGenerate": "AI Generate",
+        "pr.aiGenerateTitle": "Generate title and description with AI",
+        "pr.failedToLoadDetails": "Failed to load details.",
+        "dialogs.loading": "Loading...",
+        "dialogs.cancel": "Cancel",
+      };
+      let result = translations[key] || key;
+      if (params) {
+        for (const [k, v] of Object.entries(params)) {
+          result = result.replace(`{{${k}}}`, v);
+        }
+      }
+      return result;
+    },
+  }),
+}));
+
 const mockDetectProvider = vi.fn();
 const mockListPrs = vi.fn();
 const mockViewPr = vi.fn();

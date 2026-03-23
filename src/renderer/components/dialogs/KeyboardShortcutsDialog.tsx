@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 
 interface ShortcutEntry {
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export const KeyboardShortcutsDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState("");
 
   const filtered = filter.trim()
@@ -51,13 +53,13 @@ export const KeyboardShortcutsDialog: React.FC<Props> = ({ open, onClose }) => {
   const categories = [...new Set(filtered.map((s) => s.category))];
 
   return (
-    <ModalDialog open={open} title="Keyboard Shortcuts" onClose={onClose} width={480}>
+    <ModalDialog open={open} title={t("shortcuts.title")} onClose={onClose} width={480}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
         <input
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter shortcuts..."
+          placeholder={t("shortcuts.filterPlaceholder")}
           autoFocus
           style={{
             padding: "6px 10px",
@@ -122,7 +124,7 @@ export const KeyboardShortcutsDialog: React.FC<Props> = ({ open, onClose }) => {
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 16 }}
           >
-            No shortcuts match your filter
+            {t("shortcuts.noShortcutsMatch")}
           </div>
         )}
       </div>
@@ -133,7 +135,7 @@ export const KeyboardShortcutsDialog: React.FC<Props> = ({ open, onClose }) => {
           onClick={onClose}
           style={{ fontSize: 12, padding: "6px 14px" }}
         >
-          Close
+          {t("dialogs.close")}
         </button>
       </div>
     </ModalDialog>

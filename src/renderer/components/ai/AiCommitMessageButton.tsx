@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMcpStore } from "../../store/mcp-store";
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
 }
 
 export const AiCommitMessageButton: React.FC<Props> = ({ onGenerated }) => {
+  const { t } = useTranslation();
   const { generating, generateCommitMessage } = useMcpStore();
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -15,7 +17,7 @@ export const AiCommitMessageButton: React.FC<Props> = ({ onGenerated }) => {
       const msg = await generateCommitMessage();
       onGenerated(msg);
     } catch (err: unknown) {
-      setAiError(err instanceof Error ? err.message : "AI generation failed");
+      setAiError(err instanceof Error ? err.message : t("ai.aiGenerationFailed"));
     }
   };
 
@@ -24,7 +26,7 @@ export const AiCommitMessageButton: React.FC<Props> = ({ onGenerated }) => {
       <button
         onClick={handleClick}
         disabled={generating}
-        title={aiError || "Generate commit message with AI"}
+        title={aiError || t("ai.generateCommitMessage")}
         style={{
           padding: "4px 8px",
           borderRadius: 6,
@@ -56,7 +58,7 @@ export const AiCommitMessageButton: React.FC<Props> = ({ onGenerated }) => {
           <path d="M2 17l10 5 10-5" />
           <path d="M2 12l10 5 10-5" />
         </svg>
-        {generating ? "..." : "AI"}
+        {generating ? "..." : t("ai.aiButtonLabel")}
       </button>
     </div>
   );

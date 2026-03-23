@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,40 +59,40 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       // Repository
       {
         id: "repo:open",
-        label: "Open Repository...",
-        category: "Repository",
+        label: t("commandPalette.openRepo"),
+        category: t("commandPalette.categoryRepository"),
         shortcut: "Ctrl+O",
         action: () => openRepoDialog(),
       },
       {
         id: "repo:init",
-        label: "Create New Repository...",
-        category: "Repository",
+        label: t("commandPalette.createNewRepo"),
+        category: t("commandPalette.categoryRepository"),
         action: () => initRepo(),
       },
       {
         id: "repo:clone",
-        label: "Clone Repository...",
-        category: "Repository",
+        label: t("commandPalette.cloneRepo"),
+        category: t("commandPalette.categoryRepository"),
         action: () => openCloneDialog(),
       },
       {
         id: "repo:scan",
-        label: "Scan for Repositories...",
-        category: "Repository",
+        label: t("commandPalette.scanRepos"),
+        category: t("commandPalette.categoryRepository"),
         action: () => openScanDialog(),
       },
       {
         id: "repo:close",
-        label: "Close Repository",
-        category: "Repository",
+        label: t("commandPalette.closeRepo"),
+        category: t("commandPalette.categoryRepository"),
         needsRepo: true,
         action: () => closeRepo(),
       },
       {
         id: "repo:refresh",
-        label: "Refresh",
-        category: "Repository",
+        label: t("commandPalette.refresh"),
+        category: t("commandPalette.categoryRepository"),
         shortcut: "F5",
         needsRepo: true,
         action: () => refresh(),
@@ -99,8 +101,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       // Git Operations
       {
         id: "git:fetch",
-        label: "Fetch",
-        category: "Git",
+        label: t("commandPalette.fetch"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Fetch", () => window.electronAPI.remote.fetch());
@@ -109,8 +111,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:fetch-all",
-        label: "Fetch All",
-        category: "Git",
+        label: t("commandPalette.fetchAll"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Fetch All", () => window.electronAPI.remote.fetchAll());
@@ -119,8 +121,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:fetch-prune",
-        label: "Fetch & Prune",
-        category: "Git",
+        label: t("commandPalette.fetchPrune"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Fetch & Prune", () => window.electronAPI.remote.fetchPrune());
@@ -129,8 +131,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:pull",
-        label: "Pull",
-        category: "Git",
+        label: t("commandPalette.pull"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Pull", () => window.electronAPI.remote.pull());
@@ -139,8 +141,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:pull-rebase",
-        label: "Pull (Rebase)",
-        category: "Git",
+        label: t("commandPalette.pullRebase"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Pull (Rebase)", () => window.electronAPI.remote.pullRebase());
@@ -149,8 +151,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:pull-merge",
-        label: "Pull (Merge)",
-        category: "Git",
+        label: t("commandPalette.pullMerge"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Pull (Merge)", () => window.electronAPI.remote.pullMerge());
@@ -159,8 +161,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:push",
-        label: "Push",
-        category: "Git",
+        label: t("commandPalette.push"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Push", () => window.electronAPI.remote.push());
@@ -169,8 +171,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:stash",
-        label: "Stash Changes",
-        category: "Git",
+        label: t("commandPalette.stashChanges"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Stash", () => window.electronAPI.stash.create());
@@ -179,8 +181,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "git:stash-pop",
-        label: "Stash Pop",
-        category: "Git",
+        label: t("commandPalette.stashPop"),
+        category: t("commandPalette.categoryGit"),
         needsRepo: true,
         action: async () => {
           await runGitOperation("Stash Pop", () => window.electronAPI.stash.pop(0));
@@ -191,8 +193,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       // Dialogs
       {
         id: "dialog:commit",
-        label: "Open Commit Dialog",
-        category: "Dialogs",
+        label: t("commandPalette.openCommitDialog"),
+        category: t("commandPalette.categoryDialogs"),
         shortcut: "Ctrl+K",
         needsRepo: true,
         action: () => {
@@ -202,15 +204,15 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "dialog:stash-manager",
-        label: "Manage Stashes...",
-        category: "Dialogs",
+        label: t("commandPalette.manageStashes"),
+        category: t("commandPalette.categoryDialogs"),
         needsRepo: true,
         action: () => openDialogWindow({ dialog: "StashDialog" }),
       },
       {
         id: "dialog:remotes",
-        label: "Manage Remotes...",
-        category: "Dialogs",
+        label: t("commandPalette.manageRemotes"),
+        category: t("commandPalette.categoryDialogs"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-remotes"));
@@ -218,8 +220,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "dialog:search",
-        label: "Search Commits...",
-        category: "Dialogs",
+        label: t("commandPalette.searchCommits"),
+        category: t("commandPalette.categoryDialogs"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-search"));
@@ -227,92 +229,92 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "dialog:settings",
-        label: "Open Settings...",
-        category: "Settings",
+        label: t("commandPalette.openSettings"),
+        category: t("commandPalette.categorySettings"),
         shortcut: "Ctrl+,",
         action: () => openDialogWindow({ dialog: "SettingsDialog" }),
       },
       {
         id: "dialog:stale-branches",
-        label: "Stale Remote Branches...",
-        category: "Tools",
+        label: t("commandPalette.staleBranches"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openStaleBranchesDialog(),
       },
       {
         id: "dialog:gitignore",
-        label: ".gitignore Editor...",
-        category: "Tools",
+        label: t("commandPalette.gitignoreEditor"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openGitignoreDialog(),
       },
       {
         id: "dialog:grep",
-        label: "Code Search (grep)...",
-        category: "Tools",
+        label: t("commandPalette.codeSearchGrep"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openGrepDialog(),
         shortcut: "Ctrl+Shift+F",
       },
       {
         id: "dialog:branch-diff",
-        label: "Branch Diff Comparison...",
-        category: "Tools",
+        label: t("commandPalette.branchDiffComparison"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openBranchDiffDialog(),
       },
       {
         id: "dialog:branch-compare",
-        label: "Branch Commit Range Compare...",
-        category: "Tools",
+        label: t("commandPalette.branchCommitRangeCompare"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openBranchCompareDialog(),
       },
       {
         id: "dialog:hooks",
-        label: "Git Hooks Manager...",
-        category: "Tools",
+        label: t("commandPalette.gitHooksManager"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openHooksDialog(),
       },
       {
         id: "dialog:undo",
-        label: "Undo Git Operations...",
-        category: "Tools",
+        label: t("commandPalette.undoGitOps"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openUndoDialog(),
       },
       {
         id: "dialog:ci-status",
-        label: "CI/CD Pipeline Status...",
-        category: "Tools",
+        label: t("commandPalette.cicdPipelineStatus"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openCIStatusDialog(),
       },
       {
         id: "dialog:gist",
-        label: "Create Gist...",
-        category: "Tools",
+        label: t("commandPalette.createGist"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openGistDialog(),
       },
       {
         id: "dialog:advanced-stats",
-        label: "Advanced Statistics...",
-        category: "Tools",
+        label: t("commandPalette.advancedStats"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => openAdvancedStatsDialog(),
       },
       {
         id: "dialog:ssh",
-        label: "SSH Key Manager...",
-        category: "Tools",
+        label: t("commandPalette.sshKeyManager"),
+        category: t("commandPalette.categoryTools"),
         action: () => openSshDialog(),
       },
       {
         id: "dialog:reflog",
-        label: "Git Reflog...",
-        category: "Tools",
+        label: t("commandPalette.gitReflog"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-reflog"));
@@ -322,8 +324,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       // New tools
       {
         id: "tool:bisect",
-        label: "Git Bisect...",
-        category: "Tools",
+        label: t("commandPalette.gitBisect"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-bisect"));
@@ -331,8 +333,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "tool:worktrees",
-        label: "Manage Worktrees...",
-        category: "Tools",
+        label: t("commandPalette.manageWorktrees"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-worktrees"));
@@ -340,8 +342,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "tool:patch-apply",
-        label: "Apply Patch...",
-        category: "Tools",
+        label: t("commandPalette.applyPatch"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-patch-apply"));
@@ -349,8 +351,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "tool:shortcuts",
-        label: "Keyboard Shortcuts",
-        category: "Help",
+        label: t("commandPalette.keyboardShortcuts"),
+        category: t("commandPalette.categoryHelp"),
         shortcut: "?",
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-shortcuts"));
@@ -358,8 +360,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "tool:submodules",
-        label: "Manage Submodules...",
-        category: "Tools",
+        label: t("commandPalette.manageSubmodules"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-submodules"));
@@ -367,8 +369,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "tool:lfs",
-        label: "Git LFS...",
-        category: "Tools",
+        label: t("commandPalette.gitLfs"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-lfs"));
@@ -376,8 +378,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "tool:pr",
-        label: "Pull Requests / Merge Requests...",
-        category: "Tools",
+        label: t("commandPalette.pullRequestsMergeRequests"),
+        category: t("commandPalette.categoryTools"),
         needsRepo: true,
         action: () => {
           window.dispatchEvent(new CustomEvent("command-palette:open-pr"));
@@ -387,18 +389,18 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       // View
       {
         id: "view:toggle-theme",
-        label: "Toggle Dark/Light Theme",
-        category: "View",
+        label: t("commandPalette.toggleTheme"),
+        category: t("commandPalette.categoryView"),
         action: () => toggleTheme(),
       },
       {
         id: "view:about",
-        label: "About GitSmith",
-        category: "Help",
+        label: t("commandPalette.aboutGitSmith"),
+        category: t("commandPalette.categoryHelp"),
         action: () => openAboutDialog(),
       },
     ];
-  }, []);
+  }, [t]);
 
   const filtered = useMemo(() => {
     const available = commands.filter((c) => !c.needsRepo || hasRepo);
@@ -528,7 +530,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Type a command..."
+            placeholder={t("commandPalette.placeholder")}
             style={{
               flex: 1,
               border: "none",
@@ -571,7 +573,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
                 color: "var(--text-muted)",
               }}
             >
-              No commands found
+              {t("commandPalette.noCommandsFound")}
             </div>
           ) : (
             filtered.map((cmd, i) => (

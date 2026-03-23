@@ -5,6 +5,26 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { CreateTagDialog } from "./TagDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "tag.createTitle": "Create Tag",
+        "tag.tagName": "Tag name",
+        "tag.tagNamePlaceholder": "v1.0.0",
+        "tag.annotatedTag": "Annotated tag",
+        "tag.messageLabel": "Message",
+        "tag.messagePlaceholder": "Tag message...",
+        "tag.pushAfterCreating": "Push tag to remote after creating",
+        "tag.createAndPush": "Create & Push",
+        "tag.createTag": "Create Tag",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/graph-store", () => ({
   useGraphStore: () => ({
     loadGraph: vi.fn().mockResolvedValue(undefined),

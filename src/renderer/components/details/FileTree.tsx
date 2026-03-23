@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { CommitFileInfo } from "../../../shared/git-types";
 import { FileContextMenu } from "../shared/FileContextMenu";
 
@@ -81,6 +82,7 @@ export const FileTree: React.FC<Props> = ({
   onFileHistory,
   onFileBlame,
 }) => {
+  const { t } = useTranslation();
   const tree = useMemo(() => buildTree(files), [files]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(
     null
@@ -88,7 +90,9 @@ export const FileTree: React.FC<Props> = ({
 
   if (files.length === 0) {
     return (
-      <div style={{ padding: 12, fontSize: 11, color: "var(--text-muted)" }}>No changed files</div>
+      <div style={{ padding: 12, fontSize: 11, color: "var(--text-muted)" }}>
+        {t("fileTree.noChangedFiles")}
+      </div>
     );
   }
 

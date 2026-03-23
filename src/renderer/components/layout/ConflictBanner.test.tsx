@@ -6,6 +6,35 @@ import React from "react";
 import { ConflictBanner } from "./ConflictBanner";
 import type { GitStatus } from "../../../shared/git-types";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "conflictBanner.merge": "Merge",
+        "conflictBanner.rebase": "Rebase",
+        "conflictBanner.cherryPick": "Cherry-pick",
+        "conflictBanner.allConflictsResolved": "All conflicts resolved",
+        "conflictBanner.inProgress": "in progress",
+        "conflictBanner.conflictsResolved": "conflicts resolved",
+        "conflictBanner.resolveConflicts": "Resolve Conflicts",
+        "conflictBanner.skipCommit": "Skip Commit",
+        "conflictBanner.abortButton": "Abort",
+      };
+      if (key === "conflictBanner.abort" && opts?.operation) {
+        return `Abort ${opts.operation}`;
+      }
+      if (key === "conflictBanner.continue" && opts?.operation) {
+        return `Continue ${opts.operation}`;
+      }
+      if (key === "conflictBanner.abortConfirm" && opts?.operation) {
+        return `Are you sure you want to abort the ${opts.operation}?`;
+      }
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 // Mock openDialogWindow
 vi.mock("../../utils/open-dialog", () => ({
   openDialogWindow: vi.fn(),

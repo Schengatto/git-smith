@@ -5,6 +5,186 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { SettingsDialog } from "./SettingsDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "settings.title": "Settings",
+        "settings.general": "General",
+        "settings.accounts": "Accounts",
+        "settings.gitConfig": "Git Config",
+        "settings.fetchTab": "Fetch",
+        "settings.commitTab": "Commit",
+        "settings.diffAndGraph": "Diff & Graph",
+        "settings.mergeTool": "Merge Tool",
+        "settings.advanced": "Advanced",
+        "settings.aiMcp": "AI / MCP",
+        "settings.saving": "Saving...",
+        "settings.saveSettings": "Save Settings",
+        "settings.close": "Close",
+        "settings.appearance": "Appearance",
+        "settings.theme": "Theme",
+        "settings.themeDescription": "Application color theme",
+        "settings.darkTheme": "Dark (Catppuccin Mocha)",
+        "settings.lightTheme": "Light (Catppuccin Latte)",
+        "settings.git": "Git",
+        "settings.gitBinaryPath": "Git binary path",
+        "settings.gitBinaryPathDescription": "Leave empty to use git from system PATH",
+        "settings.gitPlaceholder": "git",
+        "settings.notifications": "Notifications",
+        "settings.enableDesktopNotifications": "Enable desktop notifications",
+        "settings.showNativeNotifications": "Show native notifications for git operations",
+        "settings.onFetch": "On fetch",
+        "settings.notifyOnFetchDescription": "Notify when auto-fetch completes with new changes",
+        "settings.onPush": "On push",
+        "settings.notifyOnPushDescription": "Notify when push completes successfully",
+        "settings.onError": "On error",
+        "settings.notifyOnErrorDescription": "Notify when a git operation fails",
+        "settings.autoFetch": "Auto Fetch",
+        "settings.enableAutoFetch": "Enable auto fetch",
+        "settings.autoFetchDescription": "Periodically fetch from all remotes in the background",
+        "settings.fetchInterval": "Fetch interval",
+        "settings.timeBetweenFetches": "Time between automatic fetches",
+        "settings.pruneOnAutoFetch": "Prune on auto fetch",
+        "settings.removeRemoteTrackingBranches":
+          "Remove remote-tracking branches that no longer exist on the remote",
+        "settings.commitSection": "Commit",
+        "settings.signCommits": "Sign commits (GPG)",
+        "settings.signCommitsDescription": "Automatically sign commits with your GPG key",
+        "settings.defaultCommitTemplate": "Default commit template",
+        "settings.defaultCommitTemplateDescription":
+          "Pre-fill the commit message with this template",
+        "settings.templatePrefixPlaceholder": "e.g. [JIRA-XXX] ",
+        "settings.commitTemplates": "Commit Templates",
+        "settings.templateCustomizable":
+          "Customizable templates selectable from the Commit dialog dropdown.",
+        "settings.templateNamePlaceholder": "Name (e.g. Feature)",
+        "settings.templatePrefixInputPlaceholder": "Prefix (e.g. feat: )",
+        "settings.templateDescriptionPlaceholder": "Description",
+        "settings.templateBodyPlaceholder": "Body template (optional)",
+        "settings.addTemplate": "+ Add Template",
+        "settings.commitSnippets": "Commit Snippets",
+        "settings.snippetInsertable":
+          "Short text fragments insertable at cursor position in the commit message.",
+        "settings.snippetLabelPlaceholder": "Label",
+        "settings.snippetTextPlaceholder": "Text to insert",
+        "settings.diffSection": "Diff",
+        "settings.defaultView": "Default view",
+        "settings.defaultDiffFormat": "Default diff display format",
+        "settings.unifiedLineByLine": "Unified (line-by-line)",
+        "settings.splitSideBySide": "Split (side-by-side)",
+        "settings.contextLines": "Context lines",
+        "settings.contextLinesDescription": "Number of unchanged lines shown around changes",
+        "settings.graphSection": "Graph",
+        "settings.initialLoadCount": "Initial load count",
+        "settings.commitsOnFirstOpen": "Number of commits loaded on first open",
+        "settings.showRemoteBranches": "Show remote branches",
+        "settings.showRemoteBranchesDescription": "Display remote branches in the commit graph",
+        "settings.externalMergeTool": "External Merge Tool",
+        "settings.mergeToolLabel": "Merge tool",
+        "settings.mergeToolConfigDescription":
+          "Configure an external tool for resolving merge conflicts. If none is set, the built-in editor will be used.",
+        "settings.mergeToolSelectPreset": "Select a preset or choose Custom",
+        "settings.noneUseInternalEditor": "None (use internal editor)",
+        "settings.custom": "Custom...",
+        "settings.executablePath": "Executable path",
+        "settings.executablePathDescription": "Path to the merge tool binary",
+        "settings.executablePathPlaceholder": "e.g. kdiff3 or /usr/bin/meld",
+        "settings.arguments": "Arguments",
+        "settings.argumentsDescription": "Use $BASE $LOCAL $REMOTE $MERGED as placeholders",
+        "settings.argumentsPlaceholder": "$BASE $LOCAL $REMOTE -o $MERGED",
+        "settings.performance": "Performance",
+        "settings.maxConcurrentGitProcesses": "Max concurrent git processes",
+        "settings.maxConcurrentDescription": "Number of git commands that can run in parallel",
+        "settings.data": "Data",
+        "settings.resetSettingsLabel": "Reset settings",
+        "settings.resetSettingsDescription":
+          "Restore all settings to their default values. Repositories and accounts are kept.",
+        "settings.resetSettingsButton": "Reset Settings",
+        "settings.clearAllData": "Clear all data",
+        "settings.clearAllDataDescription":
+          "Delete all application data including settings, repositories and accounts. The app will reload.",
+        "settings.clearAllDataButton": "Clear All Data",
+        "settings.resetConfirm":
+          "Reset all settings to their default values? Repositories and accounts will be kept.",
+        "settings.clearAllConfirm":
+          "Delete all application data (settings, repositories, accounts)? The app will reload.",
+        "settings.userIdentityGlobal": "User Identity (Global)",
+        "settings.repositoryConfig": "Repository Config",
+        "settings.userName": "User Name",
+        "settings.userEmail": "User Email",
+        "settings.autoCrlf": "Auto CRLF",
+        "settings.defaultEditor": "Default Editor",
+        "settings.pullRebase": "Pull Rebase",
+        "settings.pushDefault": "Push Default",
+        "settings.mergeFf": "Merge Fast-Forward",
+        "settings.notSet": "not set",
+        "settings.aiProviderSection": "AI Provider",
+        "settings.provider": "Provider",
+        "settings.providerDescription": "Select AI provider for code assistance features",
+        "settings.disabled": "Disabled",
+        "settings.anthropicClaude": "Anthropic (Claude)",
+        "settings.openai": "OpenAI",
+        "settings.googleGemini": "Google Gemini",
+        "settings.customMcpServer": "Custom MCP Server",
+        "settings.apiKey": "API Key",
+        "settings.apiKeyDescription": "Your API key (stored locally)",
+        "settings.model": "Model",
+        "settings.modelDescription": "AI model to use for generation",
+        "settings.baseUrl": "Base URL",
+        "settings.baseUrlDescription": "Custom API base URL (leave empty for default)",
+        "settings.aiFeatures": "AI Features",
+        "settings.aiFeaturesDescription":
+          "When an AI provider is configured, the following features become available:",
+        "settings.aiFeaturesItem1": "Generate commit messages from staged changes",
+        "settings.aiFeaturesItem2": "AI-assisted merge conflict resolution",
+        "settings.aiFeaturesItem3": "Code review of commits",
+        "settings.aiFeaturesItem4": "PR description generation",
+        "settings.mcpServer": "MCP Server",
+        "settings.enableMcpServer": "Enable MCP Server",
+        "settings.enableMcpServerDescription":
+          "Expose git operations as MCP tools for AI assistants",
+        "settings.mcpStartWith": "Start with:",
+        "settings.gitAccounts": "Git Accounts",
+        "settings.gitAccountsDescription":
+          "Configure named Git identities. Assign an account to a repository to set its local user.name, user.email, and SSH key.",
+        "settings.noAccountsConfigured": "No accounts configured yet.",
+        "settings.editAccount": "Edit Account",
+        "settings.newAccount": "New Account",
+        "settings.labelRequired": "Label *",
+        "settings.nameRequired": "Name *",
+        "settings.emailRequired": "Email *",
+        "settings.signingKey": "Signing Key",
+        "settings.sshPrivateKey": "SSH Private Key",
+        "settings.platformToken": "Platform Token (GitHub / GitLab)",
+        "settings.platformTokenDescription":
+          "Used for PR operations and CI status. Stored encrypted.",
+        "settings.addAccountButton": "Add Account",
+        "settings.addAccountLabel": "+ Add Account",
+        "settings.update": "Update",
+        "settings.importFromSshConfig": "Import from SSH Config",
+        "settings.sshConfigEntries": "SSH Config Entries (~/.ssh/config)",
+        "settings.noSshHostEntries": "No SSH host entries with IdentityFile found in ~/.ssh/config",
+        "settings.import": "Import",
+        "settings.oneMinute": "1 minute",
+        "settings.twoMinutes": "2 minutes",
+        "settings.fiveMinutes": "5 minutes",
+        "settings.tenMinutes": "10 minutes",
+        "settings.thirtyMinutes": "30 minutes",
+        "dialogs.close": "Close",
+        "dialogs.cancel": "Cancel",
+        "dialogs.save": "Save",
+        "dialogs.add": "Add",
+        "dialogs.edit": "Edit",
+        "dialogs.delete": "Delete",
+        "dialogs.browse": "Browse",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockSetTheme = vi.fn();
 
 vi.mock("../../store/ui-store", () => {
@@ -93,6 +273,8 @@ const mockElectronAPI = {
     get: vi.fn().mockResolvedValue(defaultSettings),
     update: vi.fn().mockResolvedValue(undefined),
     set: vi.fn().mockResolvedValue(undefined),
+    reset: vi.fn().mockResolvedValue(defaultSettings),
+    clearAll: vi.fn().mockResolvedValue(undefined),
   },
   gitConfig: {
     list: vi.fn().mockResolvedValue({}),
@@ -837,6 +1019,56 @@ describe("SettingsDialog", () => {
     fireEvent.click(deleteBtns[0]!);
     await waitFor(() => {
       expect(screen.queryByText("TICKET")).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows Reset Settings and Clear All Data buttons in Advanced tab", async () => {
+    render(<SettingsDialog open={true} onClose={vi.fn()} />);
+    await waitFor(() => expect(mockElectronAPI.settings.get).toHaveBeenCalled());
+    fireEvent.click(screen.getByText("Advanced"));
+    await waitFor(() => {
+      expect(screen.getByText("Reset Settings")).toBeInTheDocument();
+      expect(screen.getByText("Clear All Data")).toBeInTheDocument();
+    });
+  });
+
+  it("Reset Settings calls settings.reset after confirm", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<SettingsDialog open={true} onClose={vi.fn()} />);
+    await waitFor(() => expect(mockElectronAPI.settings.get).toHaveBeenCalled());
+    fireEvent.click(screen.getByText("Advanced"));
+    await waitFor(() => expect(screen.getByText("Reset Settings")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Reset Settings"));
+    await waitFor(() => {
+      expect(mockElectronAPI.settings.reset).toHaveBeenCalled();
+    });
+  });
+
+  it("Reset Settings does nothing if confirm is cancelled", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<SettingsDialog open={true} onClose={vi.fn()} />);
+    await waitFor(() => expect(mockElectronAPI.settings.get).toHaveBeenCalled());
+    fireEvent.click(screen.getByText("Advanced"));
+    await waitFor(() => expect(screen.getByText("Reset Settings")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Reset Settings"));
+    expect(mockElectronAPI.settings.reset).not.toHaveBeenCalled();
+  });
+
+  it("Clear All Data calls settings.clearAll after confirm", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    // Mock reload to prevent jsdom error
+    const mockReload = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { ...window.location, reload: mockReload },
+      writable: true,
+    });
+    render(<SettingsDialog open={true} onClose={vi.fn()} />);
+    await waitFor(() => expect(mockElectronAPI.settings.get).toHaveBeenCalled());
+    fireEvent.click(screen.getByText("Advanced"));
+    await waitFor(() => expect(screen.getByText("Clear All Data")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Clear All Data"));
+    await waitFor(() => {
+      expect(mockElectronAPI.settings.clearAll).toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type { UndoEntry } from "../../../shared/git-types";
 import { useRepoStore } from "../../store/repo-store";
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const UndoDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<UndoEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [reverting, setReverting] = useState<number | null>(null);
@@ -34,20 +36,15 @@ export const UndoDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [open, load]);
 
   const handleUndo = async (entry: UndoEntry) => {
-    if (
-      !confirm(
-        `Reset HEAD to "${entry.description}"?\n\nThis will use git reset --hard and cannot be easily undone.`
-      )
-    )
-      return;
+    if (!confirm(t("undo.resetConfirm", { description: entry.description }))) return;
     setReverting(entry.index);
     try {
       await window.electronAPI.undo.revert(entry.index);
-      showToast(`Reverted to: ${entry.description}`, "info");
+      showToast(t("undo.revertedTo", { description: entry.description }), "info");
       await Promise.all([refreshInfo(), refreshStatus(), loadGraph()]);
       await load();
     } catch (err) {
-      showToast(`Undo failed: ${err}`, "error");
+      showToast(t("undo.undoFailed", { error: String(err) }), "error");
     } finally {
       setReverting(null);
     }
@@ -71,7 +68,7 @@ export const UndoDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Undo Git Operations" onClose={onClose} width={600}>
+    <ModalDialog open={open} title={t("undo.title")} onClose={onClose} width={600}>
       <div style={{ padding: "0 16px 16px", maxHeight: "60vh", overflowY: "auto" }}>
         {loading && entries.length === 0 && (
           <div
@@ -82,7 +79,7 @@ export const UndoDialog: React.FC<Props> = ({ open, onClose }) => {
               color: "var(--text-muted)",
             }}
           >
-            Loading...
+            {t("dialogs.loading")}
           </div>
         )}
         {!loading && entries.length === 0 && (
@@ -94,7 +91,7 @@ export const UndoDialog: React.FC<Props> = ({ open, onClose }) => {
               color: "var(--text-muted)",
             }}
           >
-            No reflog entries
+            {t("undo.noReflogEntries")}
           </div>
         )}
         {entries.map((entry, idx) => (
@@ -169,7 +166,7 @@ export const UndoDialog: React.FC<Props> = ({ open, onClose }) => {
                   opacity: reverting === entry.index ? 0.5 : 1,
                 }}
               >
-                {reverting === entry.index ? "..." : "Undo"}
+                {reverting === entry.index ? "..." : t("undo.undoButton")}
               </button>
             )}
           </div>

@@ -4,6 +4,28 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { RemoteDialog } from "./RemoteDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "remote.title": "Manage Remotes",
+        "remote.noRemotesConfigured": "No remotes configured",
+        "remote.removeRemote": "Remove remote",
+        "remote.remoteName": "Remote name",
+        "remote.namePlaceholder": "origin",
+        "remote.url": "URL",
+        "remote.urlPlaceholder": "https://github.com/user/repo.git",
+        "remote.addRemote": "Add Remote",
+        "remote.done": "Done",
+        "dialogs.cancel": "Cancel",
+        "dialogs.add": "Add",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/ui-store", () => ({
   useUIStore: Object.assign(
     (selector: (s: { showToast: ReturnType<typeof vi.fn> }) => unknown) =>

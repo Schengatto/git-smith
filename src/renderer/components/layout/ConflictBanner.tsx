@@ -1,4 +1,5 @@
 import React, { useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { GitStatus, GitOperation } from "../../../shared/git-types";
 import { openDialogWindow } from "../../utils/open-dialog";
 import { useRepoStore } from "../../store/repo-store";
@@ -8,13 +9,14 @@ interface ConflictBannerProps {
   status: GitStatus;
 }
 
-const operationLabel: Record<NonNullable<GitOperation>, string> = {
-  merge: "Merge",
-  rebase: "Rebase",
-  "cherry-pick": "Cherry-pick",
+const operationLabelKey: Record<NonNullable<GitOperation>, string> = {
+  merge: "conflictBanner.merge",
+  rebase: "conflictBanner.rebase",
+  "cherry-pick": "conflictBanner.cherryPick",
 };
 
 export const ConflictBanner: React.FC<ConflictBannerProps> = ({ status }) => {
+  const { t } = useTranslation();
   const { operationInProgress, conflicted, rebaseStep } = status;
 
   // Track total conflicts for progress display (updated synchronously during render)
@@ -48,8 +50,8 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({ status }) => {
 
   const handleAbort = useCallback(async () => {
     if (!operationInProgress) return;
-    const label = operationLabel[operationInProgress];
-    if (!window.confirm(`Are you sure you want to abort the ${label.toLowerCase()}?`)) return;
+    const operation = t(operationLabelKey[operationInProgress]).toLowerCase();
+    if (!window.confirm(t("conflictBanner.abortConfirm", { operation }))) return;
 
     const api = window.electronAPI.branch;
     if (operationInProgress === "merge") await api.mergeAbort();
@@ -83,7 +85,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({ status }) => {
   const hasConflicts = conflicted.length > 0;
   const total = totalConflictsRef.current;
   const resolved = total - conflicted.length;
-  const label = operationLabel[operationInProgress];
+  const label = t(operationLabelKey[operationInProgress]);
   const isGreen = !hasConflicts;
 
   const accentVar = isGreen ? "var(--green)" : "var(--red)";
@@ -94,13 +96,13 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({ status }) => {
   // Build status text
   let statusText: string;
   if (isGreen) {
-    statusText = "All conflicts resolved";
+    statusText = t("conflictBanner.allConflictsResolved");
   } else {
-    let prefix = `${label} in progress`;
+    let prefix = `${label} ${t("conflictBanner.inProgress")}`;
     if (operationInProgress === "rebase" && rebaseStep) {
-      prefix = `${label} in progress (step ${rebaseStep.current}/${rebaseStep.total})`;
+      prefix = `${label} ${t("conflictBanner.inProgress")} (step ${rebaseStep.current}/${rebaseStep.total})`;
     }
-    statusText = `${prefix} — ${resolved}/${total} conflicts resolved`;
+    statusText = `${prefix} — ${resolved}/${total} ${t("conflictBanner.conflictsResolved")}`;
   }
 
   const containerStyle: React.CSSProperties = {
@@ -180,24 +182,24 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({ status }) => {
       {hasConflicts ? (
         <>
           <button style={primaryButtonStyle} onClick={handleResolveConflicts}>
-            Resolve Conflicts
+            {t("conflictBanner.resolveConflicts")}
           </button>
           {operationInProgress === "rebase" && (
             <button style={secondaryButtonStyle} onClick={handleSkip}>
-              Skip Commit
+              {t("conflictBanner.skipCommit")}
             </button>
           )}
           <button style={secondaryButtonStyle} onClick={handleAbort}>
-            Abort {label}
+            {t("conflictBanner.abort", { operation: label })}
           </button>
         </>
       ) : (
         <>
           <button style={primaryButtonStyle} onClick={handleContinue}>
-            Continue {label}
+            {t("conflictBanner.continue", { operation: label })}
           </button>
           <button style={secondaryButtonStyle} onClick={handleAbort}>
-            Abort
+            {t("conflictBanner.abortButton")}
           </button>
         </>
       )}

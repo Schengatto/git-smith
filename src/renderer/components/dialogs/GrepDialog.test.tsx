@@ -4,6 +4,30 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { GrepDialog } from "./GrepDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "grep.title": "Git Grep / Code Search",
+        "grep.searchPlaceholder": "Search pattern...",
+        "grep.searching": "Searching...",
+        "grep.search": "Search",
+        "grep.caseInsensitive": "Case insensitive",
+        "grep.regex": "Regex",
+        "grep.wholeWord": "Whole word",
+        "grep.noMatchesFoundFor": "No matches found for",
+        "grep.openFile": "Open file",
+        "grep.match": "match",
+        "grep.matches": "matches",
+        "grep.limitedResults": "(limited to 500 results)",
+        "dialogs.close": "Close",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockElectronAPI = {
   grep: {
     search: vi.fn().mockResolvedValue({ matches: [], totalCount: 0 }),

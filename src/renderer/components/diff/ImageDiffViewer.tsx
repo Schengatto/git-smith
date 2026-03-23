@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   commitHash: string;
@@ -8,6 +9,7 @@ interface Props {
 type DiffMode = "side-by-side" | "slider" | "onion";
 
 export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, filePath }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<DiffMode>("side-by-side");
   const [sliderPos, setSliderPos] = useState(50);
   const [onionOpacity, setOnionOpacity] = useState(50);
@@ -26,7 +28,9 @@ export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, file
           marginBottom: 12,
         }}
       >
-        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Image diff:</span>
+        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+          {t("imageDiff.imageDiff")}
+        </span>
         <div
           style={{
             display: "flex",
@@ -50,7 +54,11 @@ export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, file
                 textTransform: "capitalize",
               }}
             >
-              {m === "side-by-side" ? "Side by Side" : m === "slider" ? "Slider" : "Onion Skin"}
+              {m === "side-by-side"
+                ? t("imageDiff.sideBySide")
+                : m === "slider"
+                  ? t("imageDiff.slider")
+                  : t("imageDiff.onionSkin")}
             </button>
           ))}
         </div>
@@ -81,7 +89,7 @@ export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, file
           <polyline points="21 15 16 10 5 21" />
         </svg>
         <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 4 }}>
-          Binary image file
+          {t("imageDiff.binaryImageFile")}
         </div>
         <div className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>
           {filePath}
@@ -97,7 +105,7 @@ export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, file
               style={{ width: 200 }}
             />
             <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
-              Old {sliderPos}% / New {100 - sliderPos}%
+              {t("imageDiff.oldNewSlider", { old: sliderPos, new: 100 - sliderPos })}
             </div>
           </div>
         )}
@@ -111,7 +119,9 @@ export const ImageDiffViewer: React.FC<Props> = ({ commitHash: _commitHash, file
               onChange={(e) => setOnionOpacity(Number(e.target.value))}
               style={{ width: 200 }}
             />
-            <div style={{ fontSize: 10, color: "var(--text-muted)" }}>Opacity: {onionOpacity}%</div>
+            <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
+              {t("imageDiff.opacity", { value: onionOpacity })}
+            </div>
           </div>
         )}
       </div>

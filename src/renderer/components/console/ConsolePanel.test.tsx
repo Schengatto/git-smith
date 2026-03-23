@@ -24,6 +24,21 @@ const { MockTerminal, MockFitAddon } = vi.hoisted(() => {
   return { MockTerminal, MockFitAddon };
 });
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      if (opts) {
+        return Object.entries(opts).reduce(
+          (str, [k, v]) => str.replace(`{{${k}}}`, String(v)),
+          key
+        );
+      }
+      return key;
+    },
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 vi.mock("@xterm/xterm", () => ({
   Terminal: MockTerminal,
 }));

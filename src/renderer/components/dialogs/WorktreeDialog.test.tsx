@@ -5,6 +5,37 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { WorktreeDialog } from "./WorktreeDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "worktree.title": "Worktrees",
+        "worktree.loading": "Loading...",
+        "worktree.noWorktreesFound": "No worktrees found",
+        "worktree.detached": "(detached)",
+        "worktree.open": "Open",
+        "worktree.remove": "Remove",
+        "worktree.openInFileManager": "Open in file manager",
+        "worktree.removeWorktree": "Remove worktree",
+        "worktree.path": "Path",
+        "worktree.pathPlaceholder": "/path/to/worktree",
+        "worktree.branch": "Branch",
+        "worktree.branchPlaceholder": "branch-name (optional)",
+        "worktree.createNewBranch": "Create new branch",
+        "worktree.pathRequired": "Path is required",
+        "worktree.selectWorktreePath": "Select worktree path",
+        "worktree.addWorktreeButton": "+ Add Worktree",
+        "dialogs.close": "Close",
+        "dialogs.cancel": "Cancel",
+        "dialogs.add": "Add",
+        "dialogs.browse": "Browse",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockElectronAPI = {
   worktree: {
     list: vi.fn().mockResolvedValue([]),

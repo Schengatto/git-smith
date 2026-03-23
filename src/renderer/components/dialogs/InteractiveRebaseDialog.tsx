@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import type { CommitInfo } from "../../../shared/git-types";
@@ -33,6 +34,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({
   onto,
   mode = "overlay",
 }) => {
+  const { t } = useTranslation();
   const { refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -192,10 +194,10 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({
             <path d="M21 13v2a4 4 0 0 1-4 4H3" />
           </svg>
           <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-            Interactive Rebase
+            {t("interactiveRebase.title")}
           </span>
           <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>
-            onto {onto}
+            {t("interactiveRebase.onto")} {onto}
           </span>
         </div>
         <button
@@ -263,18 +265,20 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({
             <span style={{ color: a.color, fontWeight: 500 }}>{a.label}</span>
           </span>
         ))}
-        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Alt+{"\u2191\u2193"} move</span>
+        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
+          Alt+{"\u2191\u2193"} {t("interactiveRebase.move")}
+        </span>
       </div>
 
       {/* Commit list */}
       <div style={{ flex: 1, overflowY: "auto" }}>
         {loading ? (
           <div className="empty-state">
-            <span>Loading commits...</span>
+            <span>{t("interactiveRebase.loadingCommits")}</span>
           </div>
         ) : entries.length === 0 ? (
           <div className="empty-state">
-            <span>No commits to rebase</span>
+            <span>{t("interactiveRebase.noCommitsToRebase")}</span>
           </div>
         ) : (
           entries.map((entry, i) => (
@@ -307,10 +311,16 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({
         }}
       >
         <div style={{ display: "flex", gap: 12, fontSize: 11, color: "var(--text-muted)" }}>
-          <span>{entries.length} commits</span>
-          {dropCount > 0 && <span style={{ color: "var(--red)" }}>{dropCount} dropped</span>}
+          <span>{t("interactiveRebase.commits", { count: entries.length })}</span>
+          {dropCount > 0 && (
+            <span style={{ color: "var(--red)" }}>
+              {t("interactiveRebase.dropped", { count: dropCount })}
+            </span>
+          )}
           {squashCount > 0 && (
-            <span style={{ color: "var(--yellow)" }}>{squashCount} squashed</span>
+            <span style={{ color: "var(--yellow)" }}>
+              {t("interactiveRebase.squashed", { count: squashCount })}
+            </span>
           )}
         </div>
 
@@ -342,7 +352,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({
               cursor: "pointer",
             }}
           >
-            Cancel
+            {t("dialogs.cancel")}
           </button>
           <button
             onClick={handleExecute}
@@ -359,7 +369,7 @@ export const InteractiveRebaseDialog: React.FC<Props> = ({
               cursor: executing || entries.length === 0 ? "not-allowed" : "pointer",
             }}
           >
-            {executing ? "Rebasing..." : "Start Rebase"}
+            {executing ? t("interactiveRebase.rebasing") : t("interactiveRebase.startRebase")}
           </button>
         </div>
       </div>

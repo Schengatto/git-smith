@@ -4,6 +4,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 import { CommitDetailsPanel } from "./CommitDetailsPanel";
 import type { CommitFileInfo } from "../../../shared/git-types";
 
@@ -84,8 +92,8 @@ describe("CommitDetailsPanel", () => {
   it("renders Diff and Files tabs", async () => {
     render(<CommitDetailsPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Diff")).toBeInTheDocument();
-      expect(screen.getByText("Files")).toBeInTheDocument();
+      expect(screen.getByText("details.diff")).toBeInTheDocument();
+      expect(screen.getByText("details.files")).toBeInTheDocument();
     });
   });
 
@@ -106,18 +114,18 @@ describe("CommitDetailsPanel", () => {
   it("switches to Files tab and shows file tree", async () => {
     render(<CommitDetailsPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Files")).toBeInTheDocument();
+      expect(screen.getByText("details.files")).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText("Files"));
+    fireEvent.click(screen.getByText("details.files"));
     await waitFor(() => {
-      expect(screen.getByText("Select a file to view content")).toBeInTheDocument();
+      expect(screen.getByText("details.selectFileToViewContent")).toBeInTheDocument();
     });
   });
 
   it("defaults to Diff tab showing file diff placeholder", async () => {
     render(<CommitDetailsPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Select a file to view diff")).toBeInTheDocument();
+      expect(screen.getByText("details.selectFileToViewDiff")).toBeInTheDocument();
     });
   });
 
@@ -141,7 +149,7 @@ describe("CommitDetailsPanel", () => {
 
   it("loads diff for selected file in Diff tab", async () => {
     render(<CommitDetailsPanel />);
-    await waitFor(() => screen.getByText("Diff"));
+    await waitFor(() => screen.getByText("details.diff"));
 
     // Wait for files to load; in the diff tab the FileTree receives mockFiles
     // The test just needs to verify commitFileMock gets called when a file is selected
@@ -162,8 +170,8 @@ describe("CommitDetailsPanel", () => {
 
   it("loads file content when a file is selected in Files tab", async () => {
     render(<CommitDetailsPanel />);
-    await waitFor(() => screen.getByText("Files"));
-    fireEvent.click(screen.getByText("Files"));
+    await waitFor(() => screen.getByText("details.files"));
+    fireEvent.click(screen.getByText("details.files"));
 
     await waitFor(() => {
       expect(treeFilesMock).toHaveBeenCalledWith("abc123");
@@ -183,7 +191,7 @@ describe("CommitDetailsPanel", () => {
   it("shows file content in pre element after file selected in Files tab", async () => {
     showFileMock.mockResolvedValueOnce("const x = 1; const y = 2;");
     render(<CommitDetailsPanel />);
-    fireEvent.click(await screen.findByText("Files"));
+    fireEvent.click(await screen.findByText("details.files"));
 
     await waitFor(() => treeFilesMock.mock.calls.length > 0);
 
@@ -199,7 +207,7 @@ describe("CommitDetailsPanel", () => {
 
   it("shows 'No files' when no matching search results in Files tab", async () => {
     render(<CommitDetailsPanel />);
-    fireEvent.click(await screen.findByText("Files"));
+    fireEvent.click(await screen.findByText("details.files"));
 
     await waitFor(() => treeFilesMock.mock.calls.length > 0);
 
@@ -207,14 +215,14 @@ describe("CommitDetailsPanel", () => {
     if (searchInputs.length > 0) {
       fireEvent.change(searchInputs[0]!, { target: { value: "ZZZNOMATCH" } });
       await waitFor(() => {
-        expect(screen.getByText("No matching files")).toBeInTheDocument();
+        expect(screen.getByText("details.noMatchingFiles")).toBeInTheDocument();
       });
     }
   });
 
   it("filters diff tab file list by search", async () => {
     render(<CommitDetailsPanel />);
-    await waitFor(() => screen.getByText("Diff"));
+    await waitFor(() => screen.getByText("details.diff"));
     await waitFor(() => commitFilesMock.mock.calls.length > 0);
 
     const searchInputs = document.querySelectorAll("input[type='text']");
@@ -250,7 +258,7 @@ describe("CommitDetailsPanel", () => {
 
     render(<CommitDetailsPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Select a commit to view files")).toBeInTheDocument();
+      expect(screen.getByText("details.selectCommitToViewFiles")).toBeInTheDocument();
     });
 
     // Restore original implementations
@@ -267,16 +275,16 @@ describe("CommitDetailsPanel", () => {
     render(<CommitDetailsPanel />);
     await waitFor(() => {
       // Should still render tabs without crashing
-      expect(screen.getByText("Diff")).toBeInTheDocument();
+      expect(screen.getByText("details.diff")).toBeInTheDocument();
     });
   });
 
   it("gracefully handles treeFiles API error", async () => {
     treeFilesMock.mockRejectedValueOnce(new Error("tree error"));
     render(<CommitDetailsPanel />);
-    fireEvent.click(await screen.findByText("Files"));
+    fireEvent.click(await screen.findByText("details.files"));
     await waitFor(() => {
-      expect(screen.getByText("Select a file to view content")).toBeInTheDocument();
+      expect(screen.getByText("details.selectFileToViewContent")).toBeInTheDocument();
     });
   });
 });

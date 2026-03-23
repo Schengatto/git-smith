@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ModalDialog,
   DialogInput,
@@ -33,6 +34,7 @@ export const CreateBranchDialog: React.FC<BaseProps & { startPoint?: string }> =
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -61,29 +63,33 @@ export const CreateBranchDialog: React.FC<BaseProps & { startPoint?: string }> =
   };
 
   return (
-    <ModalDialog open={open} title="Create Branch" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.createBranch")} onClose={onClose}>
       <DialogInput
-        label="Branch name"
+        label={t("branchDialogs.branchName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="feature/my-branch"
+        placeholder={t("branchDialogs.branchNamePlaceholder")}
         autoFocus
         onKeyDown={(e) => e.key === "Enter" && handleCreate()}
       />
       {startPoint && (
         <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>
-          From:{" "}
+          {t("branchDialogs.fromLabel")}{" "}
           <span className="mono" style={{ color: "var(--text-secondary)" }}>
             {startPoint}
           </span>
         </div>
       )}
-      <DialogCheckbox label="Checkout after creating" checked={checkout} onChange={setCheckout} />
+      <DialogCheckbox
+        label={t("branchDialogs.checkoutAfterCreating")}
+        checked={checkout}
+        onChange={setCheckout}
+      />
       <DialogError error={error} />
       <DialogActions
         onCancel={onClose}
         onConfirm={handleCreate}
-        confirmLabel="Create"
+        confirmLabel={t("branchDialogs.create")}
         disabled={!name.trim()}
         loading={loading}
       />
@@ -100,6 +106,7 @@ export const DeleteBranchDialog: React.FC<BaseProps & { branchName: string }> = 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -119,7 +126,7 @@ export const DeleteBranchDialog: React.FC<BaseProps & { branchName: string }> = 
       if (err instanceof GitOperationCancelledError) return;
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("not fully merged")) {
-        setError("Branch is not fully merged. Enable force delete to proceed.");
+        setError(t("branchDialogs.branchNotFullyMerged"));
       } else {
         setError(msg);
       }
@@ -129,24 +136,16 @@ export const DeleteBranchDialog: React.FC<BaseProps & { branchName: string }> = 
   };
 
   return (
-    <ModalDialog open={open} title="Delete Branch" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.deleteBranch")} onClose={onClose}>
       <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
-        Delete branch{" "}
-        <span className="mono" style={{ color: "var(--red)", fontWeight: 600 }}>
-          {branchName}
-        </span>
-        ?
+        {t("branchDialogs.deleteBranchConfirm", { branch: branchName })}
       </div>
-      <DialogCheckbox
-        label="Force delete (even if not fully merged)"
-        checked={force}
-        onChange={setForce}
-      />
+      <DialogCheckbox label={t("branchDialogs.forceDelete")} checked={force} onChange={setForce} />
       <DialogError error={error} />
       <DialogActions
         onCancel={onClose}
         onConfirm={handleDelete}
-        confirmLabel={force ? "Force Delete" : "Delete"}
+        confirmLabel={force ? t("branchDialogs.forceDeleteButton") : t("dialogs.delete")}
         confirmColor="var(--red)"
         loading={loading}
       />
@@ -163,6 +162,7 @@ export const RenameBranchDialog: React.FC<BaseProps & { branchName: string }> = 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -188,15 +188,15 @@ export const RenameBranchDialog: React.FC<BaseProps & { branchName: string }> = 
   };
 
   return (
-    <ModalDialog open={open} title="Rename Branch" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.renameBranch")} onClose={onClose}>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>
-        Current:{" "}
+        {t("branchDialogs.currentLabel")}{" "}
         <span className="mono" style={{ color: "var(--text-secondary)" }}>
           {branchName}
         </span>
       </div>
       <DialogInput
-        label="New name"
+        label={t("branchDialogs.newName")}
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
         autoFocus
@@ -206,7 +206,7 @@ export const RenameBranchDialog: React.FC<BaseProps & { branchName: string }> = 
       <DialogActions
         onCancel={onClose}
         onConfirm={handleRename}
-        confirmLabel="Rename"
+        confirmLabel={t("dialogs.rename")}
         disabled={!newName.trim() || newName.trim() === branchName}
         loading={loading}
       />
@@ -224,6 +224,7 @@ export const MergeBranchDialog: React.FC<BaseProps & { branchName: string }> = (
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -251,7 +252,7 @@ export const MergeBranchDialog: React.FC<BaseProps & { branchName: string }> = (
   };
 
   return (
-    <ModalDialog open={open} title="Merge Branch" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.mergeBranch")} onClose={onClose}>
       <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
         Merge{" "}
         <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>
@@ -273,14 +274,14 @@ export const MergeBranchDialog: React.FC<BaseProps & { branchName: string }> = (
             marginBottom: 8,
           }}
         >
-          Merge resulted in conflicts. Resolve them and commit manually.
+          {t("branchDialogs.mergeConflictsResult")}
         </div>
       )}
       <DialogError error={error} />
       <DialogActions
         onCancel={onClose}
         onConfirm={handleMerge}
-        confirmLabel="Merge"
+        confirmLabel={t("toolbar.merge")}
         loading={loading}
       />
     </ModalDialog>
@@ -296,6 +297,7 @@ export const RebaseBranchDialog: React.FC<BaseProps & { onto: string }> = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -319,7 +321,7 @@ export const RebaseBranchDialog: React.FC<BaseProps & { onto: string }> = ({
   };
 
   return (
-    <ModalDialog open={open} title="Rebase" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.rebase")} onClose={onClose}>
       <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
         Rebase{" "}
         <span className="mono" style={{ color: "var(--green)", fontWeight: 600 }}>
@@ -331,13 +333,13 @@ export const RebaseBranchDialog: React.FC<BaseProps & { onto: string }> = ({
         </span>
       </div>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
-        This will replay your commits on top of {onto}.
+        {t("branchDialogs.rebaseDescription", { target: onto })}
       </div>
       <DialogError error={error} />
       <DialogActions
         onCancel={onClose}
         onConfirm={handleRebase}
-        confirmLabel="Rebase"
+        confirmLabel={t("branchDialogs.rebase")}
         confirmColor="var(--peach)"
         loading={loading}
       />
@@ -353,6 +355,7 @@ export const CherryPickDialog: React.FC<
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -384,9 +387,9 @@ export const CherryPickDialog: React.FC<
   };
 
   return (
-    <ModalDialog open={open} title="Cherry Pick" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.cherryPick")} onClose={onClose}>
       <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 4 }}>
-        Cherry-pick commit:
+        {t("branchDialogs.cherryPickCommit")}
       </div>
       <div
         className="mono"
@@ -398,7 +401,7 @@ export const CherryPickDialog: React.FC<
         {commitSubject}
       </div>
       <DialogCheckbox
-        label="No commit (stage changes only)"
+        label={t("branchDialogs.noCommitStageOnly")}
         checked={noCommit}
         onChange={setNoCommit}
       />
@@ -413,7 +416,7 @@ export const CherryPickDialog: React.FC<
               gap: 8,
             }}
           >
-            Parent number (mainline):
+            {t("branchDialogs.parentNumber")}
             <select
               value={mainline}
               onChange={(e) => setMainline(Number(e.target.value))}
@@ -426,12 +429,12 @@ export const CherryPickDialog: React.FC<
                 fontSize: 12,
               }}
             >
-              <option value={1}>1 (first parent)</option>
-              <option value={2}>2 (second parent)</option>
+              <option value={1}>{t("branchDialogs.firstParent")}</option>
+              <option value={2}>{t("branchDialogs.secondParent")}</option>
             </select>
           </label>
           <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>
-            This is a merge commit. Select which parent to diff against.
+            {t("branchDialogs.mergeCommitHint")}
           </div>
         </div>
       )}
@@ -439,7 +442,7 @@ export const CherryPickDialog: React.FC<
       <DialogActions
         onCancel={onClose}
         onConfirm={handleCherryPick}
-        confirmLabel="Cherry Pick"
+        confirmLabel={t("branchDialogs.cherryPick")}
         confirmColor="var(--mauve)"
         loading={loading}
       />
@@ -455,6 +458,7 @@ export const RevertDialog: React.FC<
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const refresh = useRefreshAfter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -486,9 +490,9 @@ export const RevertDialog: React.FC<
   };
 
   return (
-    <ModalDialog open={open} title="Revert Commit" onClose={onClose}>
+    <ModalDialog open={open} title={t("branchDialogs.revertCommit")} onClose={onClose}>
       <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 4 }}>
-        Revert commit:
+        {t("branchDialogs.revertCommitLabel")}
       </div>
       <div
         className="mono"
@@ -500,10 +504,10 @@ export const RevertDialog: React.FC<
         {commitSubject}
       </div>
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
-        This will create a new commit that undoes the changes from the selected commit.
+        {t("branchDialogs.revertDescription")}
       </div>
       <DialogCheckbox
-        label="No commit (stage changes only)"
+        label={t("branchDialogs.noCommitStageOnly")}
         checked={noCommit}
         onChange={setNoCommit}
       />
@@ -518,7 +522,7 @@ export const RevertDialog: React.FC<
               gap: 8,
             }}
           >
-            Parent number (mainline):
+            {t("branchDialogs.parentNumber")}
             <select
               value={mainline}
               onChange={(e) => setMainline(Number(e.target.value))}
@@ -531,12 +535,12 @@ export const RevertDialog: React.FC<
                 fontSize: 12,
               }}
             >
-              <option value={1}>1 (first parent)</option>
-              <option value={2}>2 (second parent)</option>
+              <option value={1}>{t("branchDialogs.firstParent")}</option>
+              <option value={2}>{t("branchDialogs.secondParent")}</option>
             </select>
           </label>
           <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>
-            This is a merge commit. Select which parent to diff against.
+            {t("branchDialogs.mergeCommitHint")}
           </div>
         </div>
       )}
@@ -544,7 +548,7 @@ export const RevertDialog: React.FC<
       <DialogActions
         onCancel={onClose}
         onConfirm={handleRevert}
-        confirmLabel="Revert"
+        confirmLabel={t("branchDialogs.revertButton")}
         confirmColor="var(--peach)"
         loading={loading}
       />

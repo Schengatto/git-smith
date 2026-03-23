@@ -13,6 +13,8 @@ import {
   updateSettings,
   getAutoFetchInterval,
   setAutoFetchInterval,
+  resetSettings,
+  clearAllData,
 } from "./store";
 import type { AppSettings } from "./store";
 import { createMenu } from "./menu";
@@ -158,6 +160,17 @@ if (app.commandLine.hasSwitch("mcp-server")) {
       ipcMain.handle(IPC.SETTINGS.SET_AUTO_FETCH, (_event, seconds: number) => {
         setAutoFetchInterval(seconds);
         startAutoFetch();
+      });
+      ipcMain.handle(IPC.SETTINGS.RESET, () => {
+        const defaults = resetSettings();
+        startAutoFetch();
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send(IPC.SETTINGS.THEME_CHANGED, defaults.theme);
+        }
+        return defaults;
+      });
+      ipcMain.handle(IPC.SETTINGS.CLEAR_ALL, () => {
+        clearAllData();
       });
 
       // Git config IPC

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type { CommitFullInfo } from "../../../shared/git-types";
 
@@ -100,6 +101,7 @@ export const CommitInfoDialog: React.FC<Props> = ({
   commitHash,
   onNavigateToCommit,
 }) => {
+  const { t } = useTranslation();
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,10 +148,10 @@ export const CommitInfoDialog: React.FC<Props> = ({
   };
 
   return (
-    <ModalDialog open={open} title="Commit Information" onClose={onClose} width={560}>
+    <ModalDialog open={open} title={t("commitInfoDialog.title")} onClose={onClose} width={560}>
       {loading && (
         <div style={{ textAlign: "center", padding: 20, color: "var(--text-muted)", fontSize: 12 }}>
-          Loading commit info...
+          {t("commitInfoDialog.loadingInfo")}
         </div>
       )}
       {error && <div style={{ color: "var(--red)", fontSize: 12, padding: 8 }}>{error}</div>}
@@ -171,14 +173,16 @@ export const CommitInfoDialog: React.FC<Props> = ({
               />
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <LabelValue label="Author">
+              <LabelValue label={t("commitInfo.author")}>
                 {info.authorName} &lt;{info.authorEmail}&gt;
               </LabelValue>
-              <LabelValue label="Date">{formatFullDate(info.authorDate)}</LabelValue>
-              <LabelValue label="Committer">
+              <LabelValue label={t("commitInfo.date")}>
+                {formatFullDate(info.authorDate)}
+              </LabelValue>
+              <LabelValue label={t("commitInfo.committer")}>
                 {info.committerName} &lt;{info.committerEmail}&gt;
               </LabelValue>
-              <LabelValue label="Commit hash">
+              <LabelValue label={t("commitInfo.commitHash")}>
                 <span style={{ fontFamily: "monospace", fontSize: 11 }}>{info.hash}</span>
               </LabelValue>
             </div>
@@ -186,7 +190,7 @@ export const CommitInfoDialog: React.FC<Props> = ({
 
           {/* Parent / Child hashes */}
           {info.parentHashes.length > 0 && (
-            <LabelValue label="Parent">
+            <LabelValue label={t("commitInfo.parent")}>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {info.parentHashes.map((ph) => (
                   <HashLink key={ph} hash={ph} onClick={onNavigateToCommit} />
@@ -195,7 +199,7 @@ export const CommitInfoDialog: React.FC<Props> = ({
             </LabelValue>
           )}
           {info.childHashes.length > 0 && (
-            <LabelValue label="Child">
+            <LabelValue label={t("commitInfo.child")}>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {info.childHashes.map((ch) => (
                   <HashLink key={ch} hash={ch} onClick={onNavigateToCommit} />
@@ -235,23 +239,23 @@ export const CommitInfoDialog: React.FC<Props> = ({
           </div>
 
           {/* Contained in branches */}
-          <SectionHeader>Contained in branches</SectionHeader>
+          <SectionHeader>{t("commitInfo.containedInBranches")}</SectionHeader>
           <BadgeList
             items={info.containedInBranches}
-            emptyText="No branches"
+            emptyText={t("commitInfo.noBranches")}
             color="var(--surface-2)"
           />
 
           {/* Contained in tags */}
-          <SectionHeader>Contained in tags</SectionHeader>
+          <SectionHeader>{t("commitInfo.containedInTags")}</SectionHeader>
           <BadgeList
             items={info.containedInTags}
-            emptyText="Contained in no tag"
+            emptyText={t("commitInfo.containedInNoTag")}
             color="var(--surface-2)"
           />
 
           {/* Derives from tag */}
-          <SectionHeader>Derives from tag</SectionHeader>
+          <SectionHeader>{t("commitInfo.derivesFromTag")}</SectionHeader>
           {info.derivesFromTag ? (
             <span
               style={{
@@ -267,7 +271,7 @@ export const CommitInfoDialog: React.FC<Props> = ({
             </span>
           ) : (
             <span style={{ fontSize: 12, color: "var(--text-muted)", fontStyle: "italic" }}>
-              Derives from no tag
+              {t("commitInfo.derivesFromNoTag")}
             </span>
           )}
         </div>

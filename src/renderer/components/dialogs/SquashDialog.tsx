@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export const SquashDialog: React.FC<Props> = ({ open, onClose, targetHash, targetSubject }) => {
+  const { t } = useTranslation();
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export const SquashDialog: React.FC<Props> = ({ open, onClose, targetHash, targe
 
   const handleSquash = async () => {
     if (!message.trim()) {
-      setError("Commit message cannot be empty");
+      setError(t("squash.messageCannotBeEmpty"));
       return;
     }
     setLoading(true);
@@ -72,13 +74,13 @@ export const SquashDialog: React.FC<Props> = ({ open, onClose, targetHash, targe
   const totalCommits = commits.length + 1; // includes the target commit
 
   return (
-    <ModalDialog open={open} title="Squash Commits" onClose={onClose} width={560}>
+    <ModalDialog open={open} title={t("squash.title")} onClose={onClose} width={560}>
       <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 8 }}>
-        Squash <strong>{totalCommits} commits</strong> into one
+        {t("squash.squashCount", { count: totalCommits })}
       </div>
 
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
-        From HEAD down to{" "}
+        {t("squash.fromHeadTo")}{" "}
         <span className="mono" style={{ color: "var(--accent)" }}>
           {targetHash.slice(0, 10)}
         </span>{" "}
@@ -100,7 +102,7 @@ export const SquashDialog: React.FC<Props> = ({ open, onClose, targetHash, targe
           <div
             style={{ padding: 16, textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}
           >
-            Loading commits...
+            {t("squash.loadingCommits")}
           </div>
         ) : (
           <>
@@ -164,7 +166,7 @@ export const SquashDialog: React.FC<Props> = ({ open, onClose, targetHash, targe
 
       {/* Combined commit message editor */}
       <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>
-        Squashed commit message:
+        {t("squash.squashedMessage")}
       </div>
       <textarea
         ref={textareaRef}
@@ -189,14 +191,14 @@ export const SquashDialog: React.FC<Props> = ({ open, onClose, targetHash, targe
       />
 
       <div style={{ fontSize: 10, color: "var(--peach)", marginTop: 6, marginBottom: 4 }}>
-        This operation rewrites history. Only use on commits that have not been pushed.
+        {t("squash.historyWarning")}
       </div>
 
       <DialogError error={error} />
       <DialogActions
         onCancel={onClose}
         onConfirm={handleSquash}
-        confirmLabel="Squash"
+        confirmLabel={t("squash.squashButton")}
         confirmColor="var(--mauve)"
         loading={loading}
       />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 
 interface LfsStatus {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<LfsStatus | null>(null);
   const [info, setInfo] = useState<{ storagePath: string; endpoint: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [open]);
 
   const handleInstall = async () => {
-    setActionInProgress("Installing LFS...");
+    setActionInProgress(t("lfs.installingLfs"));
     setError(null);
     try {
       await window.electronAPI.lfs.install();
@@ -62,7 +64,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const handleTrack = async () => {
     if (!newPattern.trim()) return;
-    setActionInProgress(`Tracking ${newPattern}...`);
+    setActionInProgress(t("lfs.tracking", { pattern: newPattern }));
     setError(null);
     try {
       await window.electronAPI.lfs.track(newPattern.trim());
@@ -76,7 +78,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleUntrack = async (pattern: string) => {
-    setActionInProgress(`Untracking ${pattern}...`);
+    setActionInProgress(t("lfs.untracking", { pattern }));
     setError(null);
     try {
       await window.electronAPI.lfs.untrack(pattern);
@@ -89,13 +91,13 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Git LFS" onClose={onClose} width={560}>
+    <ModalDialog open={open} title={t("lfs.title")} onClose={onClose} width={560}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         {loading ? (
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}
           >
-            Loading...
+            {t("dialogs.loading")}
           </div>
         ) : !status?.installed ? (
           <div
@@ -108,7 +110,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
             }}
           >
             <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-              Git LFS is not installed in this repository
+              {t("lfs.notInstalled")}
             </div>
             <button
               className="toolbar-btn"
@@ -121,7 +123,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
                 color: "var(--text-on-color)",
               }}
             >
-              Install Git LFS
+              {t("lfs.installLfs")}
             </button>
           </div>
         ) : (
@@ -138,7 +140,9 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
             >
               <span>{status.version}</span>
               {info?.endpoint && (
-                <span title={info.endpoint}>Endpoint: {info.endpoint.slice(0, 40)}...</span>
+                <span title={info.endpoint}>
+                  {t("lfs.endpoint")} {info.endpoint.slice(0, 40)}...
+                </span>
               )}
             </div>
 
@@ -146,25 +150,26 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
             <div
               style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border-subtle)" }}
             >
-              {(["overview", "files"] as const).map((t) => (
+              {(["overview", "files"] as const).map((tabKey) => (
                 <button
-                  key={t}
-                  onClick={() => setTab(t)}
+                  key={tabKey}
+                  onClick={() => setTab(tabKey)}
                   style={{
                     padding: "6px 14px",
                     fontSize: 11,
                     fontWeight: 500,
                     border: "none",
-                    borderBottom: tab === t ? "2px solid var(--accent)" : "2px solid transparent",
+                    borderBottom:
+                      tab === tabKey ? "2px solid var(--accent)" : "2px solid transparent",
                     background: "transparent",
-                    color: tab === t ? "var(--accent)" : "var(--text-muted)",
+                    color: tab === tabKey ? "var(--accent)" : "var(--text-muted)",
                     cursor: "pointer",
                     textTransform: "capitalize",
                   }}
                 >
-                  {t === "overview"
-                    ? `Tracked Patterns (${status.tracked.length})`
-                    : `LFS Files (${status.files.length})`}
+                  {tabKey === "overview"
+                    ? `${t("lfs.trackedPatterns")} (${status.tracked.length})`
+                    : `${t("lfs.lfsFiles")} (${status.files.length})`}
                 </button>
               ))}
             </div>
@@ -176,7 +181,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
                   <input
                     value={newPattern}
                     onChange={(e) => setNewPattern(e.target.value)}
-                    placeholder="*.psd, *.zip, *.bin..."
+                    placeholder={t("lfs.trackPatternPlaceholder")}
                     onKeyDown={(e) => e.key === "Enter" && handleTrack()}
                     style={{
                       flex: 1,
@@ -194,7 +199,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
                     disabled={!newPattern.trim() || !!actionInProgress}
                     style={{ fontSize: 11, padding: "5px 12px" }}
                   >
-                    Track
+                    {t("lfs.track")}
                   </button>
                 </div>
 
@@ -217,12 +222,12 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
                         textAlign: "center",
                       }}
                     >
-                      No tracked patterns
+                      {t("lfs.noTrackedPatterns")}
                     </div>
                   ) : (
-                    status.tracked.map((t) => (
+                    status.tracked.map((tp) => (
                       <div
-                        key={t.pattern}
+                        key={tp.pattern}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -235,16 +240,18 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
                         }}
                       >
                         <span className="mono" style={{ flex: 1, color: "var(--text-primary)" }}>
-                          {t.pattern}
+                          {tp.pattern}
                         </span>
-                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{t.filter}</span>
+                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
+                          {tp.filter}
+                        </span>
                         <button
                           className="toolbar-btn"
-                          onClick={() => handleUntrack(t.pattern)}
+                          onClick={() => handleUntrack(tp.pattern)}
                           disabled={!!actionInProgress}
                           style={{ fontSize: 10, padding: "1px 6px", color: "var(--red)" }}
                         >
-                          Untrack
+                          {t("lfs.untrack")}
                         </button>
                       </div>
                     ))
@@ -272,7 +279,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
                       textAlign: "center",
                     }}
                   >
-                    No LFS files
+                    {t("lfs.noLfsFiles")}
                   </div>
                 ) : (
                   status.files.map((f) => (
@@ -321,7 +328,7 @@ export const LfsDialog: React.FC<Props> = ({ open, onClose }) => {
         <DialogError error={error} />
       </div>
 
-      <DialogActions onCancel={onClose} onConfirm={onClose} confirmLabel="Close" />
+      <DialogActions onCancel={onClose} onConfirm={onClose} confirmLabel={t("dialogs.close")} />
     </ModalDialog>
   );
 };

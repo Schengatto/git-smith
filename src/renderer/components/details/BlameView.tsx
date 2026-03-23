@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useGraphStore } from "../../store/graph-store";
 
 interface Props {
@@ -71,6 +72,7 @@ function ageColor(timestamp: number, oldest: number, newest: number): string {
 }
 
 export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
+  const { t } = useTranslation();
   const [raw, setRaw] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedHash, setSelectedHash] = useState<string | null>(null);
@@ -167,7 +169,7 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
               <circle cx="12" cy="12" r="3" />
             </svg>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
-              Blame
+              {t("blame.title")}
             </span>
             {!loading && lines.length > 0 && (
               <span
@@ -179,7 +181,7 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
                   borderRadius: 8,
                 }}
               >
-                {lines.length} lines
+                {t("blame.lines", { count: lines.length })}
               </span>
             )}
             <span className="mono" style={{ fontSize: 11, color: "var(--text-muted)" }}>
@@ -205,7 +207,7 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
                   background: "var(--red-dim)",
                 }}
               />
-              older
+              {t("blame.older")}
               <span
                 style={{
                   display: "inline-block",
@@ -216,7 +218,7 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
                   marginLeft: 4,
                 }}
               />
-              newer
+              {t("blame.newer")}
             </div>
             <button
               onClick={onClose}
@@ -251,11 +253,11 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
         <div style={{ flex: 1, overflow: "auto" }}>
           {loading ? (
             <div className="empty-state">
-              <span>Loading blame...</span>
+              <span>{t("blame.loadingBlame")}</span>
             </div>
           ) : lines.length === 0 ? (
             <div className="empty-state">
-              <span>No blame data</span>
+              <span>{t("blame.noBlameData")}</span>
             </div>
           ) : (
             <table
@@ -309,7 +311,7 @@ export const BlameView: React.FC<Props> = ({ open, onClose, filePath }) => {
                                 e.stopPropagation();
                                 handleNavigate(line.hash);
                               }}
-                              title="Show in graph"
+                              title={t("blame.showInGraph")}
                             >
                               {line.hash.slice(0, 8)}
                             </span>

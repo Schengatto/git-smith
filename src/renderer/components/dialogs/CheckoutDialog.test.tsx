@@ -5,6 +5,32 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { CheckoutDialog } from "./CheckoutDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "checkout.title": "Checkout",
+        "checkout.branch": "Branch",
+        "checkout.localBranch": "Local branch",
+        "checkout.remoteBranch": "Remote branch",
+        "checkout.selectBranch": "Select branch",
+        "checkout.detachedHead": "Checkout the commit (detached HEAD)",
+        "checkout.detachedHeadTitle": "Checkout commit (detached HEAD)",
+        "checkout.localChanges": "Local changes",
+        "checkout.dontChange": "Don't change",
+        "checkout.mergeChanges": "Merge",
+        "checkout.stashChanges": "Stash",
+        "checkout.resetChanges": "Reset",
+        "checkout.warningDiscardChanges": "Warning: all uncommitted changes will be discarded.",
+        "checkout.checkoutButton": "Checkout",
+        "dialogs.cancel": "Cancel",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     refreshInfo: vi.fn().mockResolvedValue(undefined),

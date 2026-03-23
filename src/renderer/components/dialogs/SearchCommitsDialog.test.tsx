@@ -5,6 +5,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { SearchCommitsDialog } from "./SearchCommitsDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockSelectCommit = vi.fn();
 
 vi.mock("../../store/graph-store", () => ({
@@ -32,7 +39,7 @@ describe("SearchCommitsDialog", () => {
 
   it("renders the dialog title when open", () => {
     render(<SearchCommitsDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Search Commits")).toBeInTheDocument();
+    expect(screen.getByText("searchCommits.title")).toBeInTheDocument();
   });
 
   it("shows Message contains input", () => {
@@ -52,21 +59,21 @@ describe("SearchCommitsDialog", () => {
 
   it("Search button is disabled when all inputs are empty", () => {
     render(<SearchCommitsDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /^search$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /searchCommits.search/i })).toBeDisabled();
   });
 
   it("Search button becomes enabled when grep input has text", () => {
     render(<SearchCommitsDialog open={true} onClose={vi.fn()} />);
     const grepInput = screen.getByPlaceholderText(/fix, feat, refactor/i);
     fireEvent.change(grepInput, { target: { value: "fix" } });
-    expect(screen.getByRole("button", { name: /^search$/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /searchCommits.search/i })).not.toBeDisabled();
   });
 
   it("calls log.search when Search button is clicked", () => {
     render(<SearchCommitsDialog open={true} onClose={vi.fn()} />);
     const grepInput = screen.getByPlaceholderText(/fix, feat, refactor/i);
     fireEvent.change(grepInput, { target: { value: "fix" } });
-    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /searchCommits.search/i }));
     expect(mockElectronAPI.log.search).toHaveBeenCalledWith(
       expect.objectContaining({ grep: "fix", maxCount: 200 })
     );
@@ -77,9 +84,9 @@ describe("SearchCommitsDialog", () => {
     render(<SearchCommitsDialog open={true} onClose={vi.fn()} />);
     const grepInput = screen.getByPlaceholderText(/fix, feat, refactor/i);
     fireEvent.change(grepInput, { target: { value: "fix" } });
-    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /searchCommits.search/i }));
     await waitFor(() => {
-      expect(screen.getByText(/0 results found/i)).toBeInTheDocument();
+      expect(screen.getByText(/searchCommits.resultsFound/i)).toBeInTheDocument();
     });
   });
 
@@ -96,7 +103,7 @@ describe("SearchCommitsDialog", () => {
     render(<SearchCommitsDialog open={true} onClose={vi.fn()} />);
     const grepInput = screen.getByPlaceholderText(/fix, feat, refactor/i);
     fireEvent.change(grepInput, { target: { value: "fix" } });
-    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /searchCommits.search/i }));
     await waitFor(() => {
       expect(screen.getByText("fix: correct the bug")).toBeInTheDocument();
       expect(screen.getByText("Dev User")).toBeInTheDocument();
@@ -117,7 +124,7 @@ describe("SearchCommitsDialog", () => {
     render(<SearchCommitsDialog open={true} onClose={onClose} />);
     const grepInput = screen.getByPlaceholderText(/fix, feat, refactor/i);
     fireEvent.change(grepInput, { target: { value: "fix" } });
-    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /searchCommits.search/i }));
     await waitFor(() => screen.getByText("fix: correct the bug"));
     fireEvent.click(screen.getByText("fix: correct the bug"));
     expect(mockSelectCommit).toHaveBeenCalledWith("abc123");
@@ -127,7 +134,7 @@ describe("SearchCommitsDialog", () => {
   it("calls onClose when Close button is clicked", () => {
     const onClose = vi.fn();
     render(<SearchCommitsDialog open={true} onClose={onClose} />);
-    fireEvent.click(screen.getByText("Close"));
+    fireEvent.click(screen.getByText("dialogs.close"));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

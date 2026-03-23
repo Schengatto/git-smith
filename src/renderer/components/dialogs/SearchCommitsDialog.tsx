@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogInput, DialogError } from "./ModalDialog";
 import { useGraphStore } from "../../store/graph-store";
 import type { CommitInfo } from "../../../shared/git-types";
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [grep, setGrep] = useState("");
   const [author, setAuthor] = useState("");
   const [code, setCode] = useState("");
@@ -57,10 +59,10 @@ export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
   const hasInput = grep.trim() || author.trim() || code.trim();
 
   return (
-    <ModalDialog open={open} title="Search Commits" onClose={onClose} width={600}>
+    <ModalDialog open={open} title={t("searchCommits.title")} onClose={onClose} width={600}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <DialogInput
-          label="Message contains"
+          label={t("searchCommits.messageContains")}
           value={grep}
           onChange={(e) => setGrep(e.target.value)}
           placeholder="fix, feat, refactor..."
@@ -68,14 +70,14 @@ export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <DialogInput
-          label="Author"
+          label={t("searchCommits.author")}
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           placeholder="name or email"
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <DialogInput
-          label="Code change contains (pickaxe)"
+          label={t("searchCommits.codeChangeContains")}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="functionName, variable..."
@@ -98,11 +100,14 @@ export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
             fontWeight: 600,
           }}
         >
-          {loading ? "Searching..." : "Search"}
+          {loading ? t("searchCommits.searching") : t("searchCommits.search")}
         </button>
         {searched && !loading && (
           <span style={{ fontSize: 11, color: "var(--text-muted)", alignSelf: "center" }}>
-            {results.length} result{results.length !== 1 ? "s" : ""} found
+            {t("searchCommits.resultsFound", {
+              count: results.length,
+              plural: results.length !== 1 ? "s" : "",
+            })}
           </span>
         )}
       </div>
@@ -165,7 +170,7 @@ export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
 
       {searched && !loading && results.length === 0 && (
         <div style={{ textAlign: "center", padding: 20, color: "var(--text-muted)", fontSize: 12 }}>
-          No commits found matching your criteria.
+          {t("searchCommits.noCommitsFound")}
         </div>
       )}
 
@@ -182,7 +187,7 @@ export const SearchCommitsDialog: React.FC<Props> = ({ open, onClose }) => {
             fontSize: 12,
           }}
         >
-          Close
+          {t("dialogs.close")}
         </button>
       </div>
     </ModalDialog>

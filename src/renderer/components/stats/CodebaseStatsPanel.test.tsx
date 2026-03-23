@@ -3,6 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { CodebaseStatsPanel } from "./CodebaseStatsPanel";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockLoadStats = vi.fn();
 const mockReset = vi.fn();
 let mockStatsState: Record<string, unknown> = {};
@@ -46,7 +53,7 @@ describe("CodebaseStatsPanel", () => {
   it("shows no-repo message when no repo", () => {
     mockRepo = null;
     render(<CodebaseStatsPanel />);
-    expect(screen.getByText(/open a repository/i)).toBeTruthy();
+    expect(screen.getByText(/codebaseStats.openRepoToSee/i)).toBeTruthy();
   });
 
   it("renders stats when data is available", () => {

@@ -4,6 +4,33 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PatchCreateDialog, PatchApplyDialog } from "./PatchDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "patch.createTitle": "Create Patch",
+        "patch.applyTitle": "Apply Patch",
+        "patch.selectPatchFilePlaceholder": "Select a patch file...",
+        "patch.selectOutputDirectory": "Select output directory for patches",
+        "patch.selectPatchFileTitle": "Select patch file",
+        "patch.selectPatchFile": "Select a patch file",
+        "patch.createPatch": "Create Patch",
+        "dialogs.browse": "Browse",
+        "dialogs.apply": "Apply",
+        "dialogs.cancel": "Cancel",
+      };
+      if (key === "patch.createPatchFiles" && opts) {
+        return `Create patch file(s) for ${opts.count} commit(s):`;
+      }
+      if (key === "patch.createdPatchFiles" && opts) {
+        return `Created ${opts.count} patch file(s) in ${opts.dir}`;
+      }
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: Object.assign(() => ({ refreshStatus: vi.fn().mockResolvedValue(undefined) }), {
     getState: () => ({}),

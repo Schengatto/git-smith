@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError, DialogCheckbox } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 
@@ -90,6 +91,7 @@ const sectionLabelStyle: React.CSSProperties = {
 
 export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
   const { openRepo } = useRepoStore();
+  const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [destination, setDestination] = useState("");
   const [subdirectory, setSubdirectory] = useState("");
@@ -189,7 +191,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
     if (!url.trim() || !destination.trim() || !subdirectory.trim()) return;
     setLoading(true);
     setError(null);
-    setProgress("Cloning repository...");
+    setProgress(t("clone.cloning"));
     try {
       const clonePath = joinPath(destination, subdirectory);
       await window.electronAPI.remote.clone(url.trim(), clonePath, {
@@ -199,7 +201,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
         shallow: !fullHistory,
       });
       if (!bare) {
-        setProgress("Opening repository...");
+        setProgress(t("clone.opening"));
         await openRepo(clonePath);
       }
       onClose();
@@ -214,15 +216,15 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
   const canClone = url.trim() && destination.trim() && subdirectory.trim();
 
   return (
-    <ModalDialog open={open} title="Clone Repository" onClose={onClose} width={580}>
+    <ModalDialog open={open} title={t("clone.title")} onClose={onClose} width={580}>
       {/* Repository to clone */}
       <div style={inputRowStyle}>
-        <label style={labelStyle}>Repository to clone</label>
+        <label style={labelStyle}>{t("clone.repoToClone")}</label>
         <input
           style={inputStyle}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://github.com/user/repo.git"
+          placeholder={t("clone.repoUrlPlaceholder")}
           autoFocus
           onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
@@ -231,12 +233,12 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
 
       {/* Destination */}
       <div style={inputRowStyle}>
-        <label style={labelStyle}>Destination</label>
+        <label style={labelStyle}>{t("clone.destination")}</label>
         <input
           style={inputStyle}
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          placeholder="C:/Projects"
+          placeholder={t("clone.destinationPlaceholder")}
           onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
         />
@@ -246,18 +248,18 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
           onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-3)")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
         >
-          Browse
+          {t("dialogs.browse")}
         </button>
       </div>
 
       {/* Subdirectory to create */}
       <div style={inputRowStyle}>
-        <label style={labelStyle}>Subdirectory</label>
+        <label style={labelStyle}>{t("clone.subdirectory")}</label>
         <input
           style={inputStyle}
           value={subdirectory}
           onChange={(e) => setSubdirectory(e.target.value)}
-          placeholder="my-project"
+          placeholder={t("clone.subdirectoryPlaceholder")}
           onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
         />
@@ -265,9 +267,9 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
 
       {/* Branch */}
       <div style={inputRowStyle}>
-        <label style={labelStyle}>Branch</label>
+        <label style={labelStyle}>{t("clone.branch")}</label>
         <select style={selectStyle} value={branch} onChange={(e) => setBranch(e.target.value)}>
-          <option value="">(default: remote HEAD)</option>
+          <option value="">{t("clone.defaultRemoteHead")}</option>
           {remoteBranches.map((b) => (
             <option key={b} value={b}>
               {b}
@@ -292,7 +294,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
       {/* Clone destination info */}
       {finalPath && (
         <div style={infoBoxStyle}>
-          The repository will be cloned to a new directory located here:
+          {t("clone.cloneLocationInfo")}
           <br />
           <span style={{ color: "var(--accent)", fontWeight: 500 }}>{finalPath}</span>
         </div>
@@ -300,7 +302,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
 
       {/* Repository type */}
       <div style={{ marginBottom: 12 }}>
-        <div style={sectionLabelStyle}>Repository type</div>
+        <div style={sectionLabelStyle}>{t("clone.repositoryType")}</div>
         <label
           style={{
             display: "flex",
@@ -320,7 +322,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
             onChange={() => setBare(false)}
             style={{ accentColor: "var(--accent)" }}
           />
-          Personal repository
+          {t("clone.personalRepo")}
         </label>
         <label
           style={{
@@ -340,19 +342,19 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
             onChange={() => setBare(true)}
             style={{ accentColor: "var(--accent)" }}
           />
-          Public repository, no working directory (--bare)
+          {t("clone.bareRepo")}
         </label>
       </div>
 
       {/* Checkboxes */}
       <div style={{ marginBottom: 4 }}>
         <DialogCheckbox
-          label="Initialize all submodules"
+          label={t("clone.initSubmodules")}
           checked={recurseSubmodules}
           onChange={setRecurseSubmodules}
         />
         <DialogCheckbox
-          label="Download full history"
+          label={t("clone.downloadFullHistory")}
           checked={fullHistory}
           onChange={setFullHistory}
         />
@@ -387,7 +389,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
       <DialogActions
         onCancel={onClose}
         onConfirm={handleClone}
-        confirmLabel="Clone"
+        confirmLabel={t("clone.clone")}
         disabled={!canClone}
         loading={loading}
       />

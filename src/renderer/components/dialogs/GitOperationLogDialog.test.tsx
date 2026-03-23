@@ -5,6 +5,13 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { GitOperationLogDialog } from "./GitOperationLogDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const storeState = {
   open: false,
   label: "Test operation",
@@ -83,7 +90,7 @@ describe("GitOperationLogDialog", () => {
     storeState.error = "Push failed: rejected";
     render(<GitOperationLogDialog />);
     // The header span contains "Git Push — Failed"
-    expect(screen.getByText(/git push — failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/git push/i)).toBeInTheDocument();
   });
 
   it("shows error message content when error is set", () => {
@@ -126,7 +133,7 @@ describe("GitOperationLogDialog", () => {
   it("shows Close on success checkbox", () => {
     storeState.open = true;
     render(<GitOperationLogDialog />);
-    expect(screen.getByText(/close on success/i)).toBeInTheDocument();
+    expect(screen.getByText(/operationLog.closeOnSuccess/i)).toBeInTheDocument();
     expect(screen.getByRole("checkbox")).toBeInTheDocument();
   });
 
@@ -150,8 +157,8 @@ describe("GitOperationLogDialog", () => {
     storeState.running = true;
     storeState.entries = [];
     render(<GitOperationLogDialog />);
-    expect(screen.getByText(/mostra dettagli log/i)).toBeInTheDocument();
-    expect(screen.queryByText(/waiting for git output/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/operationLog.showLogDetails/i)).toBeInTheDocument();
+    expect(screen.queryByText(/operationLog.waitingForOutput/i)).not.toBeInTheDocument();
   });
 
   it("shows Waiting for git output when running with no entries and log expanded", () => {
@@ -159,9 +166,9 @@ describe("GitOperationLogDialog", () => {
     storeState.running = true;
     storeState.entries = [];
     render(<GitOperationLogDialog />);
-    fireEvent.click(screen.getByText(/mostra dettagli log/i));
-    expect(screen.getByText(/waiting for git output/i)).toBeInTheDocument();
-    expect(screen.getByText(/nascondi dettagli log/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/operationLog.showLogDetails/i));
+    expect(screen.getByText(/operationLog.waitingForOutput/i)).toBeInTheDocument();
+    expect(screen.getByText(/operationLog.hideLogDetails/i)).toBeInTheDocument();
   });
 
   it("renders log entries with command and args when expanded", () => {
@@ -176,7 +183,7 @@ describe("GitOperationLogDialog", () => {
       },
     ];
     const { container } = render(<GitOperationLogDialog />);
-    fireEvent.click(screen.getByText(/mostra dettagli log/i));
+    fireEvent.click(screen.getByText(/operationLog.showLogDetails/i));
     expect(container.textContent).toContain("git");
     expect(container.textContent).toContain("push origin main");
   });

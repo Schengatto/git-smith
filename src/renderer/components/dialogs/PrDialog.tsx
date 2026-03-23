@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useMcpStore } from "../../store/mcp-store";
@@ -24,6 +25,7 @@ interface Props {
 type Tab = "list" | "create";
 
 export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const { repo } = useRepoStore();
   const { generating, generatePrTitle, generatePrDescription } = useMcpStore();
   const [tab, setTab] = useState<Tab>("list");
@@ -79,12 +81,12 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const handleViewPr = async (pr: PrInfo) => {
     setSelectedPr(pr);
-    setPrDetail("Loading...");
+    setPrDetail(t("dialogs.loading"));
     try {
       const detail = await window.electronAPI.pr.view(pr.number);
       setPrDetail(detail);
     } catch {
-      setPrDetail("Failed to load details.");
+      setPrDetail(t("pr.failedToLoadDetails"));
     }
   };
 
@@ -134,11 +136,11 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
 
   const providerLabel =
     provider?.provider === "github"
-      ? "GitHub"
+      ? t("pr.github")
       : provider?.provider === "gitlab"
-        ? "GitLab"
-        : "Unknown";
-  const prLabel = provider?.provider === "gitlab" ? "Merge Request" : "Pull Request";
+        ? t("pr.gitlab")
+        : t("pr.unknown");
+  const prLabel = provider?.provider === "gitlab" ? t("pr.mergeRequest") : t("pr.pullRequest");
 
   const stateColor = (state: string) => {
     if (state === "open" || state === "opened") return "var(--green)";
@@ -152,8 +154,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         {provider?.provider === "unknown" && !loading && (
           <div style={{ fontSize: 12, color: "var(--peach)", padding: "8px 0" }}>
-            Could not detect GitHub or GitLab from remote URL. Make sure &apos;gh&apos; or
-            &apos;glab&apos; CLI is installed.
+            {t("pr.providerUnknown")}
           </div>
         )}
 
@@ -175,7 +176,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
               cursor: "pointer",
             }}
           >
-            List ({prs.length})
+            {t("pr.list")} ({prs.length})
           </button>
           <button
             onClick={() => setTab("create")}
@@ -190,7 +191,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
               cursor: "pointer",
             }}
           >
-            Create New
+            {t("pr.createNew")}
           </button>
         </div>
 
@@ -205,7 +206,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                   textAlign: "center",
                 }}
               >
-                Loading...
+                {t("dialogs.loading")}
               </div>
             ) : selectedPr ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -214,7 +215,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                   onClick={() => setSelectedPr(null)}
                   style={{ fontSize: 11, padding: "3px 8px", alignSelf: "flex-start" }}
                 >
-                  Back to list
+                  {t("pr.backToList")}
                 </button>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
                   #{selectedPr.number} {selectedPr.title}
@@ -241,7 +242,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                   onClick={() => window.electronAPI.repo.openExternal(selectedPr.url)}
                   style={{ fontSize: 11, padding: "4px 12px", alignSelf: "flex-start" }}
                 >
-                  Open in Browser
+                  {t("pr.openInBrowser")}
                 </button>
               </div>
             ) : prs.length === 0 ? (
@@ -253,7 +254,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                   textAlign: "center",
                 }}
               >
-                No {prLabel}s found
+                {t("pr.noPrsFound", { prLabel })}
               </div>
             ) : (
               <div
@@ -354,12 +355,12 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
         {tab === "create" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-              Source:{" "}
+              {t("pr.source")}{" "}
               <span style={{ color: "var(--accent)" }}>{repo?.currentBranch || "HEAD"}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <label style={{ fontSize: 11, color: "var(--text-secondary)", flexShrink: 0 }}>
-                Target:
+                {t("pr.target")}
               </label>
               <input
                 value={targetBranch}
@@ -378,7 +379,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
             <button
               onClick={handleAiGenerate}
               disabled={generating}
-              title={aiError || "Generate title and description with AI"}
+              title={aiError || t("pr.aiGenerateTitle")}
               style={{
                 padding: "4px 10px",
                 borderRadius: 6,
@@ -407,13 +408,13 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                 <path d="M2 17l10 5 10-5" />
                 <path d="M2 12l10 5 10-5" />
               </svg>
-              {generating ? "Generating..." : "AI Generate"}
+              {generating ? t("pr.generating") : t("pr.aiGenerate")}
             </button>
             {aiError && <div style={{ fontSize: 11, color: "var(--red)" }}>{aiError}</div>}
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={`${prLabel} title...`}
+              placeholder={t("pr.titlePlaceholder", { prLabel })}
               style={{
                 padding: "6px 8px",
                 fontSize: 12,
@@ -426,7 +427,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Description (optional)..."
+              placeholder={t("pr.descriptionPlaceholder")}
               rows={5}
               style={{
                 padding: "6px 8px",
@@ -450,7 +451,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
               }}
             >
               <input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} />
-              Create as draft
+              {t("pr.createAsDraft")}
             </label>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
               <button
@@ -458,7 +459,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                 onClick={onClose}
                 style={{ fontSize: 11, padding: "5px 14px" }}
               >
-                Cancel
+                {t("dialogs.cancel")}
               </button>
               <button
                 className="toolbar-btn"
@@ -471,7 +472,7 @@ export const PrDialog: React.FC<Props> = ({ open, onClose }) => {
                   color: "var(--text-on-color)",
                 }}
               >
-                {creating ? "Creating..." : `Create ${prLabel}`}
+                {creating ? t("pr.creating") : t("pr.createPrButton", { prLabel })}
               </button>
             </div>
           </div>

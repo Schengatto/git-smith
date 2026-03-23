@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ModalDialog,
   DialogInput,
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export const CreateTagDialog: React.FC<Props> = ({ open, onClose, commitHash, commitSubject }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [annotated, setAnnotated] = useState(true);
@@ -59,7 +61,7 @@ export const CreateTagDialog: React.FC<Props> = ({ open, onClose, commitHash, co
   };
 
   return (
-    <ModalDialog open={open} title="Create Tag" onClose={onClose} width={460}>
+    <ModalDialog open={open} title={t("tag.createTitle")} onClose={onClose} width={460}>
       {/* Target commit */}
       <div
         style={{
@@ -79,15 +81,15 @@ export const CreateTagDialog: React.FC<Props> = ({ open, onClose, commitHash, co
       </div>
 
       <DialogInput
-        label="Tag name"
+        label={t("tag.tagName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="v1.0.0"
+        placeholder={t("tag.tagNamePlaceholder")}
         autoFocus
         onKeyDown={(e) => e.key === "Enter" && handleCreate()}
       />
 
-      <DialogCheckbox label="Annotated tag" checked={annotated} onChange={setAnnotated} />
+      <DialogCheckbox label={t("tag.annotatedTag")} checked={annotated} onChange={setAnnotated} />
 
       {annotated && (
         <div style={{ marginBottom: 12 }}>
@@ -102,13 +104,13 @@ export const CreateTagDialog: React.FC<Props> = ({ open, onClose, commitHash, co
               letterSpacing: "0.05em",
             }}
           >
-            Message
+            {t("tag.messageLabel")}
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={2}
-            placeholder={name || "Tag message..."}
+            placeholder={name || t("tag.messagePlaceholder")}
             style={{
               width: "100%",
               padding: "7px 10px",
@@ -129,7 +131,7 @@ export const CreateTagDialog: React.FC<Props> = ({ open, onClose, commitHash, co
       )}
 
       <DialogCheckbox
-        label="Push tag to remote after creating"
+        label={t("tag.pushAfterCreating")}
         checked={pushToRemote}
         onChange={setPushToRemote}
       />
@@ -138,7 +140,7 @@ export const CreateTagDialog: React.FC<Props> = ({ open, onClose, commitHash, co
       <DialogActions
         onCancel={onClose}
         onConfirm={handleCreate}
-        confirmLabel={pushToRemote ? "Create & Push" : "Create Tag"}
+        confirmLabel={pushToRemote ? t("tag.createAndPush") : t("tag.createTag")}
         disabled={!name.trim()}
         loading={loading}
       />

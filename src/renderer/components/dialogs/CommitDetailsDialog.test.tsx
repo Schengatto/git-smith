@@ -6,6 +6,13 @@ import React from "react";
 import { CommitDetailsDialog } from "./CommitDetailsDialog";
 import type { CommitFullInfo, CommitFileInfo } from "../../../shared/git-types";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockFullInfo: CommitFullInfo = {
   hash: "abc123def456",
   abbreviatedHash: "abc123d",
@@ -71,7 +78,7 @@ describe("CommitDetailsDialog", () => {
     });
 
     expect(screen.getByText("feat: add commit details dialog")).toBeInTheDocument();
-    expect(screen.getByText("3 files changed")).toBeInTheDocument();
+    expect(screen.getByText("commitDetails.filesChanged")).toBeInTheDocument();
   });
 
   it("displays file list with status badges and stats", async () => {
@@ -111,7 +118,7 @@ describe("CommitDetailsDialog", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Commit Details")).toBeInTheDocument();
+      expect(screen.getByText("commitDetails.title")).toBeInTheDocument();
     });
 
     // Click the overlay (first child of container)
@@ -125,11 +132,11 @@ describe("CommitDetailsDialog", () => {
     render(<CommitDetailsDialog open={true} onClose={onClose} commitHash="abc123def456" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Commit Details")).toBeInTheDocument();
+      expect(screen.getByText("commitDetails.title")).toBeInTheDocument();
     });
 
     // Find the close button (the X button in header)
-    const header = screen.getByText("Commit Details").parentElement!;
+    const header = screen.getByText("commitDetails.title").parentElement!;
     const closeBtn = header.querySelector("button")!;
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();

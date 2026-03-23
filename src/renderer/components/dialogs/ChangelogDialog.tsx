@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { ChangelogData } from "../../../shared/git-types";
 
 interface Props {
@@ -16,6 +17,7 @@ export const ChangelogDialog: React.FC<Props> = ({
   commitSubject,
   mode = "overlay",
 }) => {
+  const { t } = useTranslation();
   const [tags, setTags] = useState<string[]>([]);
   const [selectedBase, setSelectedBase] = useState("");
   const [customBase, setCustomBase] = useState("");
@@ -66,7 +68,9 @@ export const ChangelogDialog: React.FC<Props> = ({
 
   useEffect(() => {
     if (mode === "window") {
-      document.title = changelog ? `Changelog — ${changelog.from}..${changelog.to}` : "Changelog";
+      document.title = changelog
+        ? `${t("changelog.title")} — ${changelog.from}..${changelog.to}`
+        : t("changelog.title");
     }
   }, [changelog, mode]);
 
@@ -138,7 +142,9 @@ export const ChangelogDialog: React.FC<Props> = ({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ color: "var(--text-muted)", fontSize: 13, flexShrink: 0 }}>From</span>
+            <span style={{ color: "var(--text-muted)", fontSize: 13, flexShrink: 0 }}>
+              {t("changelog.from")}
+            </span>
             <select
               value={selectedBase}
               onChange={(e) => setSelectedBase(e.target.value)}
@@ -158,9 +164,11 @@ export const ChangelogDialog: React.FC<Props> = ({
                   {tag}
                 </option>
               ))}
-              <option value="__custom__">Custom ref...</option>
+              <option value="__custom__">{t("changelog.customRef")}</option>
             </select>
-            <span style={{ color: "var(--text-muted)", fontSize: 13, flexShrink: 0 }}>to</span>
+            <span style={{ color: "var(--text-muted)", fontSize: 13, flexShrink: 0 }}>
+              {t("changelog.to")}
+            </span>
             <span
               style={{
                 background: "var(--surface-1)",
@@ -222,7 +230,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                 color: "var(--text-muted)",
               }}
             >
-              Generating changelog...
+              {t("changelog.generating")}
             </div>
           )}
           {!changelog && !error && !loading && selectedBase === "__custom__" && (
@@ -235,7 +243,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                 color: "var(--text-muted)",
               }}
             >
-              Enter a ref and click Generate
+              {t("changelog.enterRefAndGenerate")}
             </div>
           )}
           {changelog && changelog.totalCommits === 0 && (
@@ -248,7 +256,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                 color: "var(--text-muted)",
               }}
             >
-              No commits in this range
+              {t("changelog.noCommitsInRange")}
             </div>
           )}
           {changelog &&
@@ -306,7 +314,10 @@ export const ChangelogDialog: React.FC<Props> = ({
         >
           <span style={{ color: "var(--overlay1)", fontSize: 12 }}>
             {changelog
-              ? `${changelog.totalCommits} commits · ${changelog.authors.length} authors`
+              ? t("changelog.commitsAndAuthors", {
+                  commits: changelog.totalCommits,
+                  authors: changelog.authors.length,
+                })
               : ""}
           </span>
           <div style={{ display: "flex", gap: 8 }}>
@@ -326,7 +337,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                   opacity: !effectiveBase || loading ? 0.6 : 1,
                 }}
               >
-                {loading ? "Generating..." : "Generate"}
+                {loading ? t("changelog.generating") : t("changelog.generate")}
               </button>
             )}
             {changelog && (
@@ -342,7 +353,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                   cursor: "pointer",
                 }}
               >
-                Copy as Markdown
+                {t("changelog.copyAsMarkdown")}
               </button>
             )}
             <button
@@ -357,7 +368,7 @@ export const ChangelogDialog: React.FC<Props> = ({
                 cursor: "pointer",
               }}
             >
-              Close
+              {t("dialogs.close")}
             </button>
           </div>
         </div>

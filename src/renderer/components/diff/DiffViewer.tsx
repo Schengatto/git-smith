@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { html } from "diff2html";
 import { Diff2HtmlUI } from "diff2html/lib/ui/js/diff2html-ui-slim";
 import { ColorSchemeType } from "diff2html/lib/types";
@@ -19,6 +20,7 @@ export const DiffViewer: React.FC<Props> = ({
   outputFormat: initialFormat = "line-by-line",
   showFormatToggle = true,
 }) => {
+  const { t } = useTranslation();
   const [format, setFormat] = useState<OutputFormat>(initialFormat);
   const [syntaxHighlight, setSyntaxHighlight] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +72,7 @@ export const DiffViewer: React.FC<Props> = ({
   if (!rawDiff) {
     return (
       <div className="empty-state" style={{ height: "100%" }}>
-        <span>No diff available</span>
+        <span>{t("diff.noDiffAvailable")}</span>
       </div>
     );
   }
@@ -111,7 +113,11 @@ export const DiffViewer: React.FC<Props> = ({
           {/* Syntax highlight toggle */}
           <button
             onClick={() => setSyntaxHighlight((v) => !v)}
-            title={syntaxHighlight ? "Disable syntax highlighting" : "Enable syntax highlighting"}
+            title={
+              syntaxHighlight
+                ? t("diff.disableSyntaxHighlighting")
+                : t("diff.enableSyntaxHighlighting")
+            }
             style={{
               display: "flex",
               alignItems: "center",
@@ -140,7 +146,7 @@ export const DiffViewer: React.FC<Props> = ({
               <polyline points="16 18 22 12 16 6" />
               <polyline points="8 6 2 12 8 18" />
             </svg>
-            Syntax
+            {t("diff.syntax")}
           </button>
 
           {showFormatToggle && (
@@ -155,12 +161,12 @@ export const DiffViewer: React.FC<Props> = ({
               <FormatBtn
                 active={format === "line-by-line"}
                 onClick={() => setFormat("line-by-line")}
-                label="Unified"
+                label={t("diff.unified")}
               />
               <FormatBtn
                 active={format === "side-by-side"}
                 onClick={() => setFormat("side-by-side")}
-                label="Split"
+                label={t("diff.split")}
               />
             </div>
           )}

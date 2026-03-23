@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogError } from "./ModalDialog";
 import type { GistCreateOptions, GistResult } from "../../../shared/git-types";
 
@@ -17,6 +18,7 @@ export const GistDialog: React.FC<Props> = ({
   initialContent = "",
   initialFilename = "snippet.txt",
 }) => {
+  const { t } = useTranslation();
   const [filename, setFilename] = useState(initialFilename);
   const [description, setDescription] = useState("");
   const [content, setContent] = useState(initialContent);
@@ -104,7 +106,7 @@ export const GistDialog: React.FC<Props> = ({
   };
 
   return (
-    <ModalDialog open={open} title="Create Gist / Snippet" onClose={onClose} width={600}>
+    <ModalDialog open={open} title={t("gist.title")} onClose={onClose} width={600}>
       <div style={{ display: "flex", flexDirection: "column", padding: "4px 0" }}>
         {result ? (
           /* Success state */
@@ -124,12 +126,12 @@ export const GistDialog: React.FC<Props> = ({
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--green)" }}>
-                Gist created successfully!
+                {t("gist.createdSuccessfully")}
               </span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={labelStyle}>Gist URL</label>
+              <label style={labelStyle}>{t("gist.gistUrl")}</label>
               <div
                 style={{
                   display: "flex",
@@ -156,7 +158,7 @@ export const GistDialog: React.FC<Props> = ({
                 </span>
                 <button
                   onClick={handleCopyUrl}
-                  title="Copy URL"
+                  title={t("gist.copyUrl")}
                   style={{
                     background: "none",
                     border: "none",
@@ -229,7 +231,7 @@ export const GistDialog: React.FC<Props> = ({
                   cursor: "pointer",
                 }}
               >
-                Close
+                {t("dialogs.close")}
               </button>
               <button
                 onClick={handleOpenInBrowser}
@@ -261,7 +263,7 @@ export const GistDialog: React.FC<Props> = ({
                   <polyline points="15 3 21 3 21 9" />
                   <line x1="10" y1="14" x2="21" y2="3" />
                 </svg>
-                Open in Browser
+                {t("gist.openInBrowser")}
               </button>
             </div>
           </div>
@@ -269,11 +271,11 @@ export const GistDialog: React.FC<Props> = ({
           /* Creation form */
           <>
             <div style={fieldStyle}>
-              <label style={labelStyle}>Filename</label>
+              <label style={labelStyle}>{t("gist.filename")}</label>
               <input
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
-                placeholder="snippet.txt"
+                placeholder={t("gist.filenamePlaceholder")}
                 style={inputStyle}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
@@ -281,11 +283,11 @@ export const GistDialog: React.FC<Props> = ({
             </div>
 
             <div style={fieldStyle}>
-              <label style={labelStyle}>Description</label>
+              <label style={labelStyle}>{t("gist.description")}</label>
               <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional description..."
+                placeholder={t("gist.descriptionPlaceholder")}
                 style={inputStyle}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
@@ -293,11 +295,11 @@ export const GistDialog: React.FC<Props> = ({
             </div>
 
             <div style={fieldStyle}>
-              <label style={labelStyle}>Content</label>
+              <label style={labelStyle}>{t("gist.content")}</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Paste or type your snippet here..."
+                placeholder={t("gist.contentPlaceholder")}
                 rows={10}
                 style={{
                   ...inputStyle,
@@ -312,7 +314,7 @@ export const GistDialog: React.FC<Props> = ({
             </div>
 
             <div style={{ ...fieldStyle, marginBottom: 0 }}>
-              <label style={labelStyle}>Visibility</label>
+              <label style={labelStyle}>{t("gist.visibility")}</label>
               <div
                 style={{
                   display: "flex",
@@ -340,14 +342,14 @@ export const GistDialog: React.FC<Props> = ({
                       transition: "background 0.15s, color 0.15s",
                     }}
                   >
-                    {v === "secret" ? "Secret" : "Public"}
+                    {v === "secret" ? t("gist.secret") : t("gist.public")}
                   </button>
                 ))}
               </div>
               <div style={{ marginTop: 5, fontSize: 11, color: "var(--text-muted)" }}>
                 {visibility === "secret"
-                  ? "Only people with the URL can view this gist."
-                  : "Anyone can discover and view this gist."}
+                  ? t("gist.secretDescription")
+                  : t("gist.publicDescription")}
               </div>
             </div>
 
@@ -374,7 +376,7 @@ export const GistDialog: React.FC<Props> = ({
                   cursor: "pointer",
                 }}
               >
-                Cancel
+                {t("dialogs.cancel")}
               </button>
               <button
                 onClick={handleCreate}
@@ -391,7 +393,7 @@ export const GistDialog: React.FC<Props> = ({
                   transition: "background 0.15s, color 0.15s",
                 }}
               >
-                {loading ? "Creating..." : "Create Gist"}
+                {loading ? t("gist.creating") : t("gist.createGist")}
               </button>
             </div>
           </>

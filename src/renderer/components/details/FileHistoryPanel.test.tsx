@@ -3,6 +3,38 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "fileHistory.title": "File History",
+        "fileHistory.commits": "{{count}} commit",
+        "fileHistory.commitsPlural": "{{count}} commits",
+        "fileHistory.compare": "Compare",
+        "fileHistory.compareTwoVersions": "Compare two versions",
+        "fileHistory.closeFileHistory": "Close file history",
+        "fileHistory.selectOlder": "select older",
+        "fileHistory.selectNewer": "select newer",
+        "fileHistory.reset": "Reset",
+        "fileHistory.loading": "Loading...",
+        "fileHistory.noHistoryFound": "No history found",
+        "fileHistory.selectCommitToView": "Select a commit to view changes",
+        "fileHistory.selectTwoCommits": "Select two commits (A and B) to compare",
+        "fileHistory.loadingDiff": "Loading diff...",
+        "fileHistory.showInGraph": "Show in graph",
+      };
+      let result = translations[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 import { FileHistoryPanel } from "./FileHistoryPanel";
 import type { CommitInfo } from "../../../shared/git-types";
 

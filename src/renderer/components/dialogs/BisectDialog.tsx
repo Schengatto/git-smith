@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import { useGraphStore } from "../../store/graph-store";
 import { useRepoStore } from "../../store/repo-store";
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [active, setActive] = useState(false);
   const [good, setGood] = useState<string[]>([]);
   const [bad, setBad] = useState<string[]>([]);
@@ -66,7 +68,7 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Git Bisect" onClose={onClose} width={480}>
+    <ModalDialog open={open} title={t("bisect.title")} onClose={onClose} width={480}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
         {/* Status */}
         <div
@@ -79,15 +81,23 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
           }}
         >
           <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
-            {active ? "Bisect in Progress" : "Bisect Not Active"}
+            {active ? t("bisect.bisectInProgress") : t("bisect.bisectNotActive")}
           </div>
           {active && (
             <div style={{ color: "var(--text-secondary)", fontSize: 11 }}>
-              {good.length > 0 && <div>Good: {good.map((h) => h.slice(0, 7)).join(", ")}</div>}
-              {bad.length > 0 && <div>Bad: {bad.map((h) => h.slice(0, 7)).join(", ")}</div>}
+              {good.length > 0 && (
+                <div>
+                  {t("bisect.good")}: {good.map((h) => h.slice(0, 7)).join(", ")}
+                </div>
+              )}
+              {bad.length > 0 && (
+                <div>
+                  {t("bisect.bad")}: {bad.map((h) => h.slice(0, 7)).join(", ")}
+                </div>
+              )}
               {current && (
                 <div style={{ marginTop: 4 }}>
-                  Current:{" "}
+                  {t("bisect.current")}{" "}
                   <span
                     className="mono"
                     style={{
@@ -113,7 +123,7 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
               onClick={handleStart}
               style={{ fontSize: 12, padding: "6px 14px" }}
             >
-              Start Bisect
+              {t("bisect.startBisect")}
             </button>
           ) : (
             <>
@@ -127,7 +137,7 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
                   color: "var(--text-on-color)",
                 }}
               >
-                Good
+                {t("bisect.good")}
               </button>
               <button
                 className="toolbar-btn"
@@ -139,14 +149,14 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
                   color: "var(--text-on-color)",
                 }}
               >
-                Bad
+                {t("bisect.bad")}
               </button>
               <button
                 className="toolbar-btn"
                 onClick={handleSkip}
                 style={{ fontSize: 12, padding: "6px 14px" }}
               >
-                Skip
+                {t("bisect.skip")}
               </button>
               <button
                 className="toolbar-btn"
@@ -158,7 +168,7 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
                   color: "var(--text-on-color)",
                 }}
               >
-                Reset Bisect
+                {t("bisect.resetBisect")}
               </button>
             </>
           )}
@@ -194,7 +204,7 @@ export const BisectDialog: React.FC<Props> = ({ open, onClose }) => {
           onClick={onClose}
           style={{ fontSize: 12, padding: "6px 14px" }}
         >
-          Close
+          {t("dialogs.close")}
         </button>
       </div>
     </ModalDialog>

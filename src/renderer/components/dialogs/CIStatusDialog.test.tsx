@@ -5,6 +5,26 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { CIStatusDialog } from "./CIStatusDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "cicd.title": "CI/CD Pipeline Status",
+        "cicd.noCommitLoaded": "No commit loaded",
+        "cicd.refresh": "Refresh",
+        "cicd.loadingCiRuns": "Loading CI runs...",
+        "cicd.noRunsFound": "No CI runs found for this commit",
+        "cicd.unnamedRun": "Unnamed run",
+        "cicd.started": "Started:",
+        "cicd.inProgress": "In progress",
+        "cicd.waiting": "Waiting",
+        "cicd.clickToOpen": "Click to open in browser",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     repo: { headCommit: "abc1234567890" },

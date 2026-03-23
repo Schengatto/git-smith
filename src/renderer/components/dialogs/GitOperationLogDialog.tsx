@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGitOperationStore } from "../../store/git-operation-store";
 import type { OutputLine } from "../../store/git-operation-store";
 import type { CommandLogEntry } from "../../../shared/git-types";
 
 export const GitOperationLogDialog: React.FC = () => {
+  const { t } = useTranslation();
   const {
     open,
     label,
@@ -90,9 +92,9 @@ export const GitOperationLogDialog: React.FC = () => {
             {error && <ErrorIcon />}
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
               {label}
-              {running && " — Running..."}
-              {isSuccess && " — Done"}
-              {error && " — Failed"}
+              {running && ` — ${t("operationLog.running")}`}
+              {isSuccess && ` — ${t("operationLog.done")}`}
+              {error && ` — ${t("operationLog.failed")}`}
             </span>
           </div>
           {!running && (
@@ -160,7 +162,7 @@ export const GitOperationLogDialog: React.FC = () => {
             >
               <polygon points="6,2 22,12 6,22" />
             </svg>
-            {logExpanded ? "Nascondi dettagli log" : "Mostra dettagli log"}
+            {logExpanded ? t("operationLog.hideLogDetails") : t("operationLog.showLogDetails")}
           </button>
           {logExpanded && (
             <div
@@ -176,7 +178,7 @@ export const GitOperationLogDialog: React.FC = () => {
             >
               {entries.length === 0 && running && (
                 <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
-                  Waiting for git output...
+                  {t("operationLog.waitingForOutput")}
                 </div>
               )}
               {entries.map((entry) => (
@@ -245,7 +247,7 @@ export const GitOperationLogDialog: React.FC = () => {
               onChange={(e) => setAutoClose(e.target.checked)}
               style={{ margin: 0, accentColor: "var(--accent)" }}
             />
-            Close on success
+            {t("operationLog.closeOnSuccess")}
           </label>
           {running ? (
             <button
@@ -268,7 +270,7 @@ export const GitOperationLogDialog: React.FC = () => {
                 e.currentTarget.style.background = "transparent";
               }}
             >
-              Cancel
+              {t("dialogs.cancel")}
             </button>
           ) : (
             <button
@@ -284,7 +286,7 @@ export const GitOperationLogDialog: React.FC = () => {
                 cursor: "pointer",
               }}
             >
-              Close
+              {t("dialogs.close")}
             </button>
           )}
         </div>

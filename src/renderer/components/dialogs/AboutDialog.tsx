@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 
 const APP_VERSION = __APP_VERSION__;
@@ -47,8 +48,9 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({
   open,
   onClose,
 }) => {
+  const { t } = useTranslation();
   return (
-    <ModalDialog open={open} title="About GitSmith" onClose={onClose} width={400}>
+    <ModalDialog open={open} title={t("about.title")} onClose={onClose} width={400}>
       <div
         style={{
           display: "flex",
@@ -63,19 +65,19 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({
 
         {/* Name */}
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
-          GitSmith
+          {t("app.name")}
         </h2>
 
         {/* Description */}
         <p style={{ margin: 0, fontSize: 12, color: "var(--text-secondary)", maxWidth: 300 }}>
-          A cross-platform Git GUI desktop application inspired by Git Extensions.
+          {t("about.description")}
         </p>
 
         {/* Info rows */}
         <div style={{ width: "100%", marginTop: 4 }}>
-          <InfoRow label="Version" value={APP_VERSION} />
-          <InfoRow label="License" value="MIT" />
-          <InfoRow label="Author">
+          <InfoRow label={t("about.version")} value={APP_VERSION} />
+          <InfoRow label={t("about.license")} value="MIT" />
+          <InfoRow label={t("about.author")}>
             <ExternalLink href="https://enricoschintu.com">Enrico Schintu</ExternalLink>
           </InfoRow>
         </div>
@@ -107,7 +109,7 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({
             >
               <path d="M20.067 8.478c.492.315.844.825.983 1.39L22 13.5c0 2.485-2.015 4.5-4.5 4.5H16v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h7.5C16.538 5 18.585 6.533 20.067 8.478zM7 7v11h7v-2h2.5A2.5 2.5 0 0 0 19 13.5l-.95-3.611C17.578 9.01 16.613 8.5 15.5 8.5H13V7H7z" />
             </svg>
-            Donate via PayPal
+            {t("about.donateViaPaypal")}
           </div>
         </ExternalLink>
 
@@ -126,7 +128,7 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({
             cursor: "pointer",
           }}
         >
-          Close
+          {t("dialogs.close")}
         </button>
       </div>
     </ModalDialog>

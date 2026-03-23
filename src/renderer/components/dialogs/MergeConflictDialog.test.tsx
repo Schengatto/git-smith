@@ -4,6 +4,84 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "mergeConflict.resolveMergeConflicts": "Resolve merge conflicts",
+        "mergeConflict.unresolvedFile": "{{count}} unresolved file",
+        "mergeConflict.unresolvedFiles": "{{count}} unresolved files",
+        "mergeConflict.conflict": "{{count}} conflict",
+        "mergeConflict.conflicts": "{{count}} conflicts",
+        "mergeConflict.noConflictsRemaining": "No conflicts remaining",
+        "mergeConflict.conflictNumber": "Conflict {{index}}",
+        "mergeConflict.conflictResolved": "Conflict {{index}} (resolved)",
+        "mergeConflict.prevConflict": "Prev conflict",
+        "mergeConflict.nextConflict": "Next conflict",
+        "mergeConflict.acceptAllLocal": "Accept all LOCAL",
+        "mergeConflict.acceptAllRemote": "Accept all REMOTE",
+        "mergeConflict.resolving": "Resolving...",
+        "mergeConflict.resolveWithAi": "Resolve with AI",
+        "mergeConflict.waitingForTool": "Waiting for {{tool}}...",
+        "mergeConflict.resolveInExternalTool":
+          "Resolve the conflict in the external tool, then save and close it.",
+        "mergeConflict.useInternalEditorInstead": "Use internal editor instead",
+        "mergeConflict.openInTool": "Open in {{tool}}",
+        "mergeConflict.current": "CURRENT",
+        "mergeConflict.incoming": "INCOMING",
+        "mergeConflict.ours": "(ours)",
+        "mergeConflict.theirs": "(theirs)",
+        "mergeConflict.localOurs": "LOCAL",
+        "mergeConflict.merged": "MERGED",
+        "mergeConflict.result": "(result)",
+        "mergeConflict.remoteTheirs": "REMOTE",
+        "mergeConflict.resolvedLabel": "Resolved ({{resolution}})",
+        "mergeConflict.editResolution": "Edit resolution",
+        "mergeConflict.edit": "Edit",
+        "mergeConflict.undoResolution": "Undo resolution",
+        "mergeConflict.undoLabel": "Undo",
+        "mergeConflict.acceptCurrent": "Accept Current",
+        "mergeConflict.acceptIncoming": "Accept Incoming",
+        "mergeConflict.acceptBoth": "Accept Both",
+        "mergeConflict.emptyBothSidesRemoved": "(empty — both sides removed)",
+        "mergeConflict.resolveAllThenMark": "Resolve all conflicts, then mark as resolved",
+        "mergeConflict.recheckConflicts": "Recheck conflicts",
+        "mergeConflict.saving": "Saving...",
+        "mergeConflict.markAsResolved": "Mark as resolved",
+        "mergeConflict.allConflictsResolvedMessage": "All conflicts resolved!",
+        "mergeConflict.continueOperation": "You can now continue the operation.",
+        "mergeConflict.noConflictedFiles": "No conflicted files found",
+        "mergeConflict.selectFileToResolve": "Select a file to resolve",
+        "mergeConflict.filesResolvedCount": "{{resolved}} of {{total}} files resolved",
+        "mergeConflict.continue": "Continue",
+        "mergeConflict.unresolvedMergeConflicts": "Unresolved merge conflicts",
+        "mergeConflict.customEdit": "Custom edit",
+        "mergeConflict.done": "Done",
+        "mergeConflict.aiSuggestion": "AI Suggestion",
+        "mergeConflict.fileTooLarge":
+          "File too large for inline diff ({{count}} lines). Showing AI output directly — click Apply to resolve all conflicts.",
+        "mergeConflict.dismiss": "Dismiss",
+        "mergeConflict.externalTool": "external tool",
+        "mergeConflict.aiCouldNotExtract":
+          "Could not extract AI resolutions — try the toolbar 'Resolve with AI' button for manual review.",
+        "dialogs.close": "Close",
+        "dialogs.loading": "Loading...",
+        "dialogs.cancel": "Cancel",
+        "dialogs.apply": "Apply",
+        "ai.aiButtonLabel": "AI",
+      };
+      let result = translations[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 // Mock react-virtuoso — Virtuoso doesn't render in jsdom (no viewport dimensions)
 vi.mock("react-virtuoso", () => ({
   Virtuoso: React.forwardRef(

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 
 /* ------------------------------------------------------------------ */
@@ -245,6 +246,7 @@ export const MenuBar: React.FC<{
   onOpenSsh,
   onResetLayout,
 }) => {
+  const { t } = useTranslation();
   const { repo, openRepoDialog, initRepo, recentRepos, repoCategories, openRepo } = useRepoStore();
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -298,50 +300,50 @@ export const MenuBar: React.FC<{
 
   const menus: MenuDef[] = [
     {
-      label: "Start",
+      label: t("menu.start"),
       items: [
         {
-          label: "Create new repository...",
+          label: t("menu.createRepo"),
           onClick: () => initRepo(),
         },
         {
-          label: "Open repository...",
+          label: t("menu.openRepo"),
           shortcut: "Ctrl+O",
           onClick: () => openRepoDialog(),
         },
         { divider: true },
         {
-          label: "Favorite repositories",
+          label: t("menu.favoriteRepos"),
           disabled: favoriteItems.length === 0,
           children: favoriteItems,
         },
         {
-          label: "Recent repositories",
+          label: t("menu.recentRepos"),
           disabled: recentItems.length === 0,
           children: recentItems,
         },
         { divider: true },
         {
-          label: "Clone repository...",
+          label: t("menu.cloneRepo"),
           onClick: () => onOpenClone(),
         },
         {
-          label: "Scan for repositories...",
+          label: t("menu.scanRepos"),
           onClick: () => onOpenScan(),
         },
         { divider: true },
         {
-          label: "Exit",
+          label: t("menu.exit"),
           shortcut: "Ctrl+Q",
           onClick: () => window.close(),
         },
       ],
     },
     {
-      label: "Dashboard",
+      label: t("menu.dashboard"),
       items: [
         {
-          label: "Refresh",
+          label: t("menu.refresh"),
           shortcut: "F5",
           disabled: !hasRepo,
           onClick: () => {
@@ -353,17 +355,17 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
-          label: "Reset layout",
+          label: t("menu.resetLayout"),
           disabled: !hasRepo,
           onClick: () => onResetLayout(),
         },
       ],
     },
     {
-      label: "Tools",
+      label: t("menu.tools"),
       items: [
         {
-          label: "Git bash",
+          label: t("menu.gitBash"),
           shortcut: "Ctrl+G",
           disabled: !hasRepo,
           onClick: () => {
@@ -374,75 +376,75 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
-          label: "Stale remote branches...",
+          label: t("menu.staleBranches"),
           disabled: !hasRepo,
           onClick: () => onOpenStaleBranches(),
         },
         {
-          label: ".gitignore editor...",
+          label: t("menu.gitignoreEditor"),
           disabled: !hasRepo,
           onClick: () => onOpenGitignore(),
         },
         {
-          label: "Code search (grep)...",
+          label: t("menu.codeSearch"),
           shortcut: "Ctrl+Shift+F",
           disabled: !hasRepo,
           onClick: () => onOpenGrep(),
         },
         {
-          label: "Branch diff...",
+          label: t("menu.branchDiff"),
           disabled: !hasRepo,
           onClick: () => onOpenBranchDiff(),
         },
         {
-          label: "Branch compare...",
+          label: t("menu.branchCompare"),
           disabled: !hasRepo,
           onClick: () => onOpenBranchCompare(),
         },
         {
-          label: "Git hooks...",
+          label: t("menu.gitHooks"),
           disabled: !hasRepo,
           onClick: () => onOpenHooks(),
         },
         {
-          label: "Undo operations...",
+          label: t("menu.undoOps"),
           shortcut: "Ctrl+Z",
           disabled: !hasRepo,
           onClick: () => onOpenUndo(),
         },
         {
-          label: "CI/CD status...",
+          label: t("menu.cicdStatus"),
           disabled: !hasRepo,
           onClick: () => onOpenCIStatus(),
         },
         {
-          label: "Create gist...",
+          label: t("menu.createGist"),
           disabled: !hasRepo,
           onClick: () => onOpenGist(),
         },
         {
-          label: "Advanced statistics...",
+          label: t("menu.advancedStats"),
           disabled: !hasRepo,
           onClick: () => onOpenAdvancedStats(),
         },
         {
-          label: "SSH key manager...",
+          label: t("menu.sshKeyManager"),
           onClick: () => onOpenSsh(),
         },
         {
-          label: "Git reflog...",
+          label: t("menu.gitReflog"),
           disabled: !hasRepo,
           onClick: () => window.dispatchEvent(new CustomEvent("command-palette:open-reflog")),
         },
         { divider: true },
         {
-          label: "Settings...",
+          label: t("menu.settingsMenu"),
           shortcut: "Ctrl+,",
           onClick: () => onOpenSettings(),
         },
         { divider: true },
         {
-          label: "Command Palette",
+          label: t("menu.commandPalette"),
           shortcut: "Ctrl+Shift+P",
           onClick: () =>
             window.dispatchEvent(
@@ -457,25 +459,25 @@ export const MenuBar: React.FC<{
       ],
     },
     {
-      label: "Help",
+      label: t("menu.help"),
       items: [
         {
-          label: "User manual",
+          label: t("menu.userManual"),
           onClick: () => window.electronAPI.app.openUserManual(),
         },
         { divider: true },
         {
-          label: "Report an issue",
+          label: t("menu.reportIssue"),
           onClick: () =>
             window.electronAPI.repo.openExternal("https://github.com/Schengatto/git-smith/issues"),
         },
         {
-          label: "Check for updates...",
+          label: t("menu.checkUpdates"),
           onClick: () => window.electronAPI.app.checkForUpdates(),
         },
         { divider: true },
         {
-          label: "About GitSmith",
+          label: t("menu.aboutGitSmith"),
           onClick: () => onOpenAbout(),
         },
       ],

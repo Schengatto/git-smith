@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 
 const IconGitBranch = () => (
@@ -20,6 +21,7 @@ const IconGitBranch = () => (
 );
 
 export const StatusBar: React.FC = () => {
+  const { t } = useTranslation();
   const { repo, status } = useRepoStore();
 
   const changedCount = status
@@ -37,7 +39,7 @@ export const StatusBar: React.FC = () => {
       }}
     >
       {!repo ? (
-        <span>No repository open</span>
+        <span>{t("statusBar.noRepositoryOpen")}</span>
       ) : (
         <>
           <span className="flex items-center gap-1 font-semibold">
@@ -58,11 +60,11 @@ export const StatusBar: React.FC = () => {
               >
                 {changedCount}
               </span>
-              change{changedCount !== 1 ? "s" : ""}
+              {changedCount !== 1 ? t("statusBar.changes") : t("statusBar.change")}
             </span>
           )}
 
-          {!repo.isDirty && <span style={{ opacity: 0.7 }}>clean</span>}
+          {!repo.isDirty && <span style={{ opacity: 0.7 }}>{t("statusBar.clean")}</span>}
 
           <div className="flex-1" />
 

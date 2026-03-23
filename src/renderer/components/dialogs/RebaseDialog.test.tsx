@@ -6,6 +6,13 @@ import React from "react";
 import { RebaseDialog } from "./RebaseDialog";
 import type { CommitInfo } from "../../../shared/git-types";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockCommits: CommitInfo[] = [
   {
     hash: "aaa111full",
@@ -44,6 +51,7 @@ const refreshStatusMock = vi.fn().mockResolvedValue(undefined);
 const loadGraphMock = vi.fn().mockResolvedValue(undefined);
 
 // Mock stores
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     repo: {
@@ -108,7 +116,7 @@ describe("RebaseDialog", () => {
       expect(screen.getByText("feature/my-branch")).toBeInTheDocument();
     });
 
-    const input = screen.getByPlaceholderText("commit hash or branch name...");
+    const input = screen.getByPlaceholderText("rebaseDialog.rebaseOnPlaceholder");
     expect(input).toHaveValue("main");
   });
 
@@ -144,7 +152,7 @@ describe("RebaseDialog", () => {
       expect(screen.getByText("feat: add login page")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Rebase" }));
+    fireEvent.click(screen.getByRole("button", { name: "rebaseDialog.rebase" }));
 
     await waitFor(() => {
       expect(rebaseWithOptionsMock).toHaveBeenCalledWith(expect.objectContaining({ onto: "main" }));
@@ -165,11 +173,11 @@ describe("RebaseDialog", () => {
     });
 
     // Check some advanced options
-    fireEvent.click(screen.getByLabelText("Preserve Merges"));
-    fireEvent.click(screen.getByLabelText("Auto stash"));
-    fireEvent.click(screen.getByLabelText("Ignore date"));
+    fireEvent.click(screen.getByLabelText("rebaseDialog.preserveMerges"));
+    fireEvent.click(screen.getByLabelText("rebaseDialog.autoStash"));
+    fireEvent.click(screen.getByLabelText("rebaseDialog.ignoreDate"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Rebase" }));
+    fireEvent.click(screen.getByRole("button", { name: "rebaseDialog.rebase" }));
 
     await waitFor(() => {
       expect(rebaseWithOptionsMock).toHaveBeenCalledWith(
@@ -193,10 +201,10 @@ describe("RebaseDialog", () => {
     });
 
     // Interactive mode should show action dropdowns
-    const checkbox = screen.getByLabelText("Interactive Rebase") as HTMLInputElement;
+    const checkbox = screen.getByLabelText("rebaseDialog.interactiveRebase") as HTMLInputElement;
     expect(checkbox.checked).toBe(true);
 
-    fireEvent.click(screen.getByRole("button", { name: "Rebase" }));
+    fireEvent.click(screen.getByRole("button", { name: "rebaseDialog.rebase" }));
 
     await waitFor(() => {
       expect(rebaseWithOptionsMock).toHaveBeenCalledWith(
@@ -218,12 +226,12 @@ describe("RebaseDialog", () => {
     render(<RebaseDialog open={true} onClose={vi.fn()} preselectedOnto="main" />);
 
     await waitFor(() => {
-      expect(screen.getByText("There are unresolved merge conflicts")).toBeInTheDocument();
+      expect(screen.getByText("rebaseDialog.unresolvedConflicts")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Solve conflicts")).toBeInTheDocument();
-    expect(screen.getByText("Abort")).toBeInTheDocument();
-    expect(screen.getByText("Skip currently applying commit")).toBeInTheDocument();
+    expect(screen.getByText("rebaseDialog.solveConflicts")).toBeInTheDocument();
+    expect(screen.getByText("rebaseDialog.abort")).toBeInTheDocument();
+    expect(screen.getByText("rebaseDialog.skipCommit")).toBeInTheDocument();
   });
 
   it("opens merge conflict dialog on Solve conflicts click", async () => {
@@ -239,10 +247,10 @@ describe("RebaseDialog", () => {
     render(<RebaseDialog open={true} onClose={vi.fn()} preselectedOnto="main" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Solve conflicts")).toBeInTheDocument();
+      expect(screen.getByText("rebaseDialog.solveConflicts")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText("Solve conflicts"));
+    fireEvent.click(screen.getByText("rebaseDialog.solveConflicts"));
 
     expect(dialogOpenMock).toHaveBeenCalledWith({ dialog: "MergeConflictDialog" });
   });
@@ -254,10 +262,10 @@ describe("RebaseDialog", () => {
     render(<RebaseDialog open={true} onClose={onClose} preselectedOnto="main" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Abort")).toBeInTheDocument();
+      expect(screen.getByText("rebaseDialog.abort")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText("Abort"));
+    fireEvent.click(screen.getByText("rebaseDialog.abort"));
 
     await waitFor(() => {
       expect(rebaseAbortMock).toHaveBeenCalled();
@@ -271,10 +279,10 @@ describe("RebaseDialog", () => {
     render(<RebaseDialog open={true} onClose={vi.fn()} preselectedOnto="main" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Skip currently applying commit")).toBeInTheDocument();
+      expect(screen.getByText("rebaseDialog.skipCommit")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText("Skip currently applying commit"));
+    fireEvent.click(screen.getByText("rebaseDialog.skipCommit"));
 
     await waitFor(() => {
       expect(rebaseSkipMock).toHaveBeenCalled();
@@ -288,7 +296,7 @@ describe("RebaseDialog", () => {
       expect(isRebaseInProgressMock).toHaveBeenCalled();
     });
 
-    const rebaseBtn = screen.getByRole("button", { name: "Rebase" });
+    const rebaseBtn = screen.getByRole("button", { name: "rebaseDialog.rebase" });
     expect(rebaseBtn).toBeDisabled();
   });
 });

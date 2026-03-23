@@ -159,6 +159,18 @@ vi.mock("../../store/git-operation-store", () => ({
   GitOperationCancelledError: class extends Error {},
 }));
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      if (params) {
+        return Object.entries(params).reduce((acc, [k, v]) => acc.replace(`{{${k}}}`, v), key);
+      }
+      return key;
+    },
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 // ---------------------------------------------------------------------------
 // Sample data
 // ---------------------------------------------------------------------------
@@ -363,7 +375,7 @@ describe("CommitGraphPanel — empty / loading states", () => {
   it("shows 'Open a repository' message when repo is null", () => {
     repoStoreMockState = { repo: null } as any;
     render(<CommitGraphPanel />);
-    expect(screen.getByText(/open a repository/i)).toBeInTheDocument();
+    expect(screen.getByText("graph.openRepoToViewCommits")).toBeInTheDocument();
   });
 
   it("shows loading spinner when loading=true and rows is empty", () => {
@@ -373,7 +385,7 @@ describe("CommitGraphPanel — empty / loading states", () => {
       loading: true,
     };
     render(<CommitGraphPanel />);
-    expect(screen.getByText(/loading commits/i)).toBeInTheDocument();
+    expect(screen.getByText("graph.loadingCommits")).toBeInTheDocument();
   });
 
   it("does NOT show spinner when rows are already populated, even if loading", () => {
@@ -382,7 +394,7 @@ describe("CommitGraphPanel — empty / loading states", () => {
       loading: true,
     };
     render(<CommitGraphPanel />);
-    expect(screen.queryByText(/loading commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("graph.loadingCommits")).not.toBeInTheDocument();
   });
 });
 
@@ -448,27 +460,27 @@ describe("CommitGraphPanel — branch labels", () => {
 describe("CommitGraphPanel — inline search bar", () => {
   it("search bar is hidden by default", () => {
     render(<CommitGraphPanel />);
-    expect(screen.queryByPlaceholderText(/search commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.searchCommitsPlaceholder")).not.toBeInTheDocument();
   });
 
   it("shows search bar after Ctrl+F keydown", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    expect(screen.getByPlaceholderText(/search commits/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("graph.searchCommitsPlaceholder")).toBeInTheDocument();
   });
 
   it("hides search bar on Escape when visible", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    expect(screen.getByPlaceholderText(/search commits/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("graph.searchCommitsPlaceholder")).toBeInTheDocument();
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.queryByPlaceholderText(/search commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.searchCommitsPlaceholder")).not.toBeInTheDocument();
   });
 
   it("filters commits by subject text", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    const input = screen.getByPlaceholderText(/search commits/i);
+    const input = screen.getByPlaceholderText("graph.searchCommitsPlaceholder");
     fireEvent.change(input, { target: { value: "First" } });
     expect(screen.getByText("First commit")).toBeInTheDocument();
     expect(screen.queryByText("Second commit")).not.toBeInTheDocument();
@@ -477,7 +489,7 @@ describe("CommitGraphPanel — inline search bar", () => {
   it("filters commits by author name", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    const input = screen.getByPlaceholderText(/search commits/i);
+    const input = screen.getByPlaceholderText("graph.searchCommitsPlaceholder");
     fireEvent.change(input, { target: { value: "Bob" } });
     expect(screen.getByText("Second commit")).toBeInTheDocument();
     expect(screen.queryByText("First commit")).not.toBeInTheDocument();
@@ -486,7 +498,7 @@ describe("CommitGraphPanel — inline search bar", () => {
   it("shows match count when a search term is active", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    const input = screen.getByPlaceholderText(/search commits/i);
+    const input = screen.getByPlaceholderText("graph.searchCommitsPlaceholder");
     fireEvent.change(input, { target: { value: "commit" } });
     // All 3 commits match "commit"
     expect(screen.getByText("3/3")).toBeInTheDocument();
@@ -495,20 +507,20 @@ describe("CommitGraphPanel — inline search bar", () => {
   it("closes search bar via Escape key (equivalent to clicking close)", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    expect(screen.getByPlaceholderText(/search commits/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("graph.searchCommitsPlaceholder")).toBeInTheDocument();
     // Escape closes the bar — same code path as the close button
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.queryByPlaceholderText(/search commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.searchCommitsPlaceholder")).not.toBeInTheDocument();
   });
 
   it("closes search bar when the X button inside search bar is clicked", async () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    expect(screen.getByPlaceholderText(/search commits/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("graph.searchCommitsPlaceholder")).toBeInTheDocument();
     // The search bar close button has no label text — find it as the only button
     // that is a direct sibling of the search input inside the search-bar flex row.
     // It is the last <button> child of the immediate parent of the input.
-    const searchInput = screen.getByPlaceholderText(/search commits/i);
+    const searchInput = screen.getByPlaceholderText("graph.searchCommitsPlaceholder");
     // parent = the flex div that holds [svg-icon, input, count?, close-button]
     const flexRow = searchInput.parentElement!;
     const buttons = Array.from(flexRow.querySelectorAll("button"));
@@ -517,34 +529,34 @@ describe("CommitGraphPanel — inline search bar", () => {
     await act(async () => {
       fireEvent.click(buttons[buttons.length - 1]!);
     });
-    expect(screen.queryByPlaceholderText(/search commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.searchCommitsPlaceholder")).not.toBeInTheDocument();
   });
 });
 
 describe("CommitGraphPanel — toolbar buttons", () => {
   it("renders 'Branches' filter button", () => {
     render(<CommitGraphPanel />);
-    expect(screen.getByTitle("Filter branches")).toBeInTheDocument();
+    expect(screen.getByTitle("graph.filterBranches")).toBeInTheDocument();
   });
 
   it("renders 'Author' filter button", () => {
     render(<CommitGraphPanel />);
-    expect(screen.getByTitle("Filter by author")).toBeInTheDocument();
+    expect(screen.getByTitle("graph.filterByAuthor")).toBeInTheDocument();
   });
 
   it("renders 'Go to HEAD' button", () => {
     render(<CommitGraphPanel />);
-    expect(screen.getByTitle(/scroll to head/i)).toBeInTheDocument();
+    expect(screen.getByTitle("graph.scrollToHead")).toBeInTheDocument();
   });
 
   it("renders 'Search' advanced search button", () => {
     render(<CommitGraphPanel />);
-    expect(screen.getByTitle(/search commits/i)).toBeInTheDocument();
+    expect(screen.getByTitle("graph.searchCommitsTooltip")).toBeInTheDocument();
   });
 
   it("opens SearchCommitsDialog when Search button is clicked", () => {
     render(<CommitGraphPanel />);
-    const searchBtn = screen.getByTitle(/search commits \(message, author, code\)/i);
+    const searchBtn = screen.getByTitle("graph.searchCommitsTooltip");
     fireEvent.click(searchBtn);
     expect(screen.getByTestId("search-commits-dialog")).toBeInTheDocument();
   });
@@ -553,7 +565,7 @@ describe("CommitGraphPanel — toolbar buttons", () => {
 describe("CommitGraphPanel — quick branch filter input", () => {
   it("renders quick filter input when no active branch visibility filter", () => {
     render(<CommitGraphPanel />);
-    expect(screen.getByPlaceholderText("Quick filter...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("graph.quickFilter")).toBeInTheDocument();
   });
 
   it("does NOT render quick filter input when branch visibility filter is active", () => {
@@ -562,7 +574,7 @@ describe("CommitGraphPanel — quick branch filter input", () => {
       branchVisibility: { mode: "include", branches: ["main"] },
     };
     render(<CommitGraphPanel />);
-    expect(screen.queryByPlaceholderText("Quick filter...")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.quickFilter")).not.toBeInTheDocument();
   });
 
   it("shows branch visibility indicator when filter is active", () => {
@@ -571,7 +583,7 @@ describe("CommitGraphPanel — quick branch filter input", () => {
       branchVisibility: { mode: "include", branches: ["main"] },
     };
     render(<CommitGraphPanel />);
-    expect(screen.getByText(/showing 1 branch/i)).toBeInTheDocument();
+    expect(screen.getByText(/graph\.showing/)).toBeInTheDocument();
   });
 
   it("shows 'Clear branch filter' button when filter is active", () => {
@@ -580,7 +592,7 @@ describe("CommitGraphPanel — quick branch filter input", () => {
       branchVisibility: { mode: "include", branches: ["main"] },
     };
     render(<CommitGraphPanel />);
-    expect(screen.getByTitle("Clear branch filter")).toBeInTheDocument();
+    expect(screen.getByTitle("graph.clearBranchFilter")).toBeInTheDocument();
   });
 
   it("calls setBranchVisibility(null) when Clear branch filter button is clicked", () => {
@@ -589,7 +601,7 @@ describe("CommitGraphPanel — quick branch filter input", () => {
       branchVisibility: { mode: "include", branches: ["main"] },
     };
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Clear branch filter"));
+    fireEvent.click(screen.getByTitle("graph.clearBranchFilter"));
     expect(mockSetBranchVisibility).toHaveBeenCalledWith(null);
   });
 });
@@ -597,7 +609,7 @@ describe("CommitGraphPanel — quick branch filter input", () => {
 describe("CommitGraphPanel — author filter dropdown", () => {
   it("lists unique authors in dropdown when Author button is clicked", () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter by author"));
+    fireEvent.click(screen.getByTitle("graph.filterByAuthor"));
     // Both Alice and Bob should appear in the dropdown (multiple nodes possible)
     const aliceItems = screen.getAllByText("Alice");
     expect(aliceItems.length).toBeGreaterThan(0);
@@ -607,14 +619,14 @@ describe("CommitGraphPanel — author filter dropdown", () => {
 
   it("shows Highlight and Filter mode buttons in author dropdown", () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter by author"));
-    expect(screen.getByText("Highlight")).toBeInTheDocument();
-    expect(screen.getByText("Filter")).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle("graph.filterByAuthor"));
+    expect(screen.getByText("graph.highlight")).toBeInTheDocument();
+    expect(screen.getByText("graph.filter")).toBeInTheDocument();
   });
 
   it("calls setAuthorFilter when an author is selected", () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter by author"));
+    fireEvent.click(screen.getByTitle("graph.filterByAuthor"));
     // Click the 'Bob' author item (button in dropdown)
     const bobButton = screen.getAllByText("Bob")[0]!;
     fireEvent.click(bobButton);
@@ -649,8 +661,8 @@ describe("CommitGraphPanel — author filter dropdown", () => {
 
   it("calls setAuthorFilterMode when mode button is clicked", () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter by author"));
-    fireEvent.click(screen.getByText("Filter"));
+    fireEvent.click(screen.getByTitle("graph.filterByAuthor"));
+    fireEvent.click(screen.getByText("graph.filter"));
     expect(mockSetAuthorFilterMode).toHaveBeenCalledWith("filter");
   });
 });
@@ -670,96 +682,96 @@ describe("CommitGraphPanel — context menu", () => {
   it("context menu contains Cherry Pick item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Cherry Pick")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.cherryPick")).toBeInTheDocument();
   });
 
   it("context menu contains Revert Commit item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Revert Commit")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.revertCommit")).toBeInTheDocument();
   });
 
   it("context menu contains Create Branch Here item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Create Branch Here")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.createBranchHere")).toBeInTheDocument();
   });
 
   it("context menu contains Create Tag Here item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Create Tag Here")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.createTagHere")).toBeInTheDocument();
   });
 
   it("context menu contains Reset Current Branch to Here item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Reset Current Branch to Here")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.resetCurrentBranchToHere")).toBeInTheDocument();
   });
 
   it("context menu contains AI Code Review item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-AI Code Review")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.aiCodeReview")).toBeInTheDocument();
   });
 
   it("context menu contains Archive / Export item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Archive / Export...")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.archiveExport")).toBeInTheDocument();
   });
 
   it("context menu contains Create Patch item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-Create Patch...")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.createPatch")).toBeInTheDocument();
   });
 
   it("context menu contains View Commit Info item", () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    expect(screen.getByTestId("ctx-item-View Commit Info")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.viewCommitInfo")).toBeInTheDocument();
   });
 
   it("opens CherryPickDialog when Cherry Pick is clicked", async () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    fireEvent.click(screen.getByTestId("ctx-item-Cherry Pick"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.cherryPick"));
     expect(screen.getByTestId("cherry-pick-dialog")).toBeInTheDocument();
   });
 
   it("opens RevertDialog when Revert Commit is clicked", async () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    fireEvent.click(screen.getByTestId("ctx-item-Revert Commit"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.revertCommit"));
     expect(screen.getByTestId("revert-dialog")).toBeInTheDocument();
   });
 
   it("opens ResetDialog when Reset Current Branch to Here is clicked", async () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    fireEvent.click(screen.getByTestId("ctx-item-Reset Current Branch to Here"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.resetCurrentBranchToHere"));
     expect(screen.getByTestId("reset-dialog")).toBeInTheDocument();
   });
 
   it("opens CreateBranchDialog when Create Branch Here is clicked", async () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    fireEvent.click(screen.getByTestId("ctx-item-Create Branch Here"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.createBranchHere"));
     expect(screen.getByTestId("create-branch-dialog")).toBeInTheDocument();
   });
 
   it("opens CreateTagDialog when Create Tag Here is clicked", async () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    fireEvent.click(screen.getByTestId("ctx-item-Create Tag Here"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.createTagHere"));
     expect(screen.getByTestId("create-tag-dialog")).toBeInTheDocument();
   });
 
   it("opens AiReviewDialog when AI Code Review is clicked", async () => {
     render(<CommitGraphPanel />);
     rightClickFirstCommit();
-    fireEvent.click(screen.getByTestId("ctx-item-AI Code Review"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.aiCodeReview"));
     expect(screen.getByTestId("ai-review-dialog")).toBeInTheDocument();
   });
 
@@ -787,7 +799,7 @@ describe("CommitGraphPanel — context menu", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Branch tip commit"));
-    expect(screen.getByTestId('ctx-item-Checkout "feature/bar"')).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.checkoutRef")).toBeInTheDocument();
   });
 
   it("shows 'Delete Branch' item for local non-current branches", () => {
@@ -806,7 +818,7 @@ describe("CommitGraphPanel — context menu", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Old feature commit"));
-    expect(screen.getByTestId('ctx-item-Delete Branch "old-feature"')).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.deleteBranch")).toBeInTheDocument();
   });
 
   it("shows 'Delete Tag' item for tag refs", () => {
@@ -825,21 +837,21 @@ describe("CommitGraphPanel — context menu", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Tagged commit"));
-    expect(screen.getByTestId('ctx-item-Delete Tag "v1.0.0"')).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.deleteTag")).toBeInTheDocument();
   });
 
   it("shows 'Compare with HEAD' item for non-HEAD commits", () => {
     // rows[1] (bbb222) is not the HEAD commit (abc123)
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Second commit"));
-    expect(screen.getByTestId("ctx-item-Compare with HEAD")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.compareWithHead")).toBeInTheDocument();
   });
 
   it("does NOT show 'Compare with HEAD' for the HEAD commit itself", () => {
     render(<CommitGraphPanel />);
     // HEAD is abc123def456 = "First commit"
     fireEvent.contextMenu(screen.getByText("First commit"));
-    expect(screen.queryByTestId("ctx-item-Compare with HEAD")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("ctx-item-graph.compareWithHead")).not.toBeInTheDocument();
   });
 });
 
@@ -880,15 +892,15 @@ describe("CommitGraphPanel — load more / infinite scroll", () => {
 describe("CommitGraphPanel — branch filter dropdown", () => {
   it("opens branch filter dropdown when Branches button is clicked", async () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter branches"));
+    fireEvent.click(screen.getByTitle("graph.filterBranches"));
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Search branches...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("graph.searchBranches")).toBeInTheDocument();
     });
   });
 
   it("lists branches from electronAPI in the dropdown", async () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter branches"));
+    fireEvent.click(screen.getByTitle("graph.filterBranches"));
     await waitFor(() => {
       expect(screen.getByText("feature/foo")).toBeInTheDocument();
     });
@@ -913,11 +925,7 @@ describe("CommitGraphPanel — selected commit highlight", () => {
     render(<CommitGraphPanel />);
     // Right-click Alice's commit (which differs from HEAD and selected)
     fireEvent.contextMenu(screen.getByText("Feature branch commit"));
-    expect(
-      screen.getByTestId(
-        `ctx-item-Compare with selected (${SAMPLE_ROWS[1]!.commit.abbreviatedHash})`
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.compareWithSelected")).toBeInTheDocument();
   });
 });
 
@@ -936,23 +944,23 @@ describe("CommitGraphPanel — double-click commit", () => {
 describe("CommitGraphPanel — keyboard shortcuts in graph panel", () => {
   it("toggles search bar with Ctrl+F", () => {
     render(<CommitGraphPanel />);
-    expect(screen.queryByPlaceholderText(/search commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.searchCommitsPlaceholder")).not.toBeInTheDocument();
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    expect(screen.getByPlaceholderText(/search commits/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("graph.searchCommitsPlaceholder")).toBeInTheDocument();
   });
 
   it("clears search bar when Escape is pressed while search is visible", () => {
     render(<CommitGraphPanel />);
     fireEvent.keyDown(window, { key: "f", ctrlKey: true });
-    const input = screen.getByPlaceholderText(/search commits/i);
+    const input = screen.getByPlaceholderText("graph.searchCommitsPlaceholder");
     fireEvent.change(input, { target: { value: "abc" } });
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.queryByPlaceholderText(/search commits/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("graph.searchCommitsPlaceholder")).not.toBeInTheDocument();
   });
 
   it("Go to HEAD button scrolls without crash when HEAD row is found", () => {
     render(<CommitGraphPanel />);
-    const headBtn = screen.getByTitle(/scroll to head/i);
+    const headBtn = screen.getByTitle("graph.scrollToHead");
     fireEvent.click(headBtn);
     // No crash — virtuosoRef.current is mocked so scrollToIndex may not run
     expect(headBtn).toBeInTheDocument();
@@ -967,7 +975,7 @@ describe("CommitGraphPanel — keyboard shortcuts in graph panel", () => {
       repo: { ...repoStoreMockState.repo, headCommit: "nonexistent-hash" },
     };
     render(<CommitGraphPanel />);
-    const headBtn = screen.getByTitle(/scroll to head/i);
+    const headBtn = screen.getByTitle("graph.scrollToHead");
     fireEvent.click(headBtn);
     expect(headBtn).toBeInTheDocument();
   });
@@ -976,40 +984,40 @@ describe("CommitGraphPanel — keyboard shortcuts in graph panel", () => {
 describe("CommitGraphPanel — branch filter dropdown interactions", () => {
   it("shows Apply button in branch dropdown", async () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter branches"));
+    fireEvent.click(screen.getByTitle("graph.filterBranches"));
     await waitFor(() => {
-      expect(screen.getByText("Apply")).toBeInTheDocument();
+      expect(screen.getByText("graph.apply")).toBeInTheDocument();
     });
   });
 
   it("clicking Apply in branch dropdown calls setBranchVisibility", async () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter branches"));
+    fireEvent.click(screen.getByTitle("graph.filterBranches"));
     await waitFor(() => {
-      expect(screen.getByText("Apply")).toBeInTheDocument();
+      expect(screen.getByText("graph.apply")).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText("Apply"));
+    fireEvent.click(screen.getByText("graph.apply"));
     // With no branches selected, setBranchVisibility(null) is called
     expect(mockSetBranchVisibility).toHaveBeenCalledWith(null);
   });
 
   it("branch filter dropdown search narrows branch list", async () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter branches"));
+    fireEvent.click(screen.getByTitle("graph.filterBranches"));
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Search branches...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("graph.searchBranches")).toBeInTheDocument();
     });
     // Verify feature/foo is in dropdown before filtering
     await waitFor(() => {
       expect(screen.getAllByText("feature/foo").length).toBeGreaterThan(0);
     });
-    fireEvent.change(screen.getByPlaceholderText("Search branches..."), {
+    fireEvent.change(screen.getByPlaceholderText("graph.searchBranches"), {
       target: { value: "feature" },
     });
     // After filtering, "feature/foo" should still be there but list is narrowed
     // (we can't easily assert "main" not present since it's also in commit list)
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Search branches...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("graph.searchBranches")).toBeInTheDocument();
     });
   });
 
@@ -1019,15 +1027,15 @@ describe("CommitGraphPanel — branch filter dropdown interactions", () => {
       branchVisibility: { mode: "exclude", branches: ["feature/foo"] },
     };
     render(<CommitGraphPanel />);
-    expect(screen.getByText(/excluding 1 branch/i)).toBeInTheDocument();
+    expect(screen.getByText(/graph\.excluding/)).toBeInTheDocument();
   });
 });
 
 describe("CommitGraphPanel — author dropdown search", () => {
   it("filters authors by search input", () => {
     render(<CommitGraphPanel />);
-    fireEvent.click(screen.getByTitle("Filter by author"));
-    const searchInput = screen.getByPlaceholderText("Search authors...");
+    fireEvent.click(screen.getByTitle("graph.filterByAuthor"));
+    const searchInput = screen.getByPlaceholderText("graph.searchAuthors");
     fireEvent.change(searchInput, { target: { value: "alice" } });
     // The search input should still be visible with our search value
     expect(searchInput).toHaveValue("alice");
@@ -1044,7 +1052,7 @@ describe("CommitGraphPanel — author dropdown search", () => {
     render(<CommitGraphPanel />);
     // The X button next to the author filter text — it's inside the Author button
     // The author button contains an SVG X button when authorFilter is set
-    const authorBtn = screen.getByTitle("Filter by author");
+    const authorBtn = screen.getByTitle("graph.filterByAuthor");
     // Inside authorBtn there's a span with the X svg that calls setAuthorFilter(null)
     const spans = authorBtn.querySelectorAll("span");
     if (spans.length > 0) {
@@ -1061,28 +1069,28 @@ describe("CommitGraphPanel — context menu additional actions", () => {
   it("opens SquashDialog when Squash Commits to Here is clicked", () => {
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("First commit"));
-    fireEvent.click(screen.getByTestId("ctx-item-Squash Commits to Here..."));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.squashCommitsToHere"));
     expect(screen.getByTestId("squash-dialog")).toBeInTheDocument();
   });
 
   it("opens ArchiveDialog when Archive/Export is clicked", () => {
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("First commit"));
-    fireEvent.click(screen.getByTestId("ctx-item-Archive / Export..."));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.archiveExport"));
     expect(screen.getByTestId("archive-dialog")).toBeInTheDocument();
   });
 
   it("opens PatchDialog when Create Patch is clicked", () => {
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("First commit"));
-    fireEvent.click(screen.getByTestId("ctx-item-Create Patch..."));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.createPatch"));
     expect(screen.getByTestId("patch-dialog")).toBeInTheDocument();
   });
 
   it("opens NotesDialog when Git Notes is clicked", () => {
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("First commit"));
-    fireEvent.click(screen.getByTestId("ctx-item-Git Notes..."));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.gitNotes"));
     expect(screen.getByTestId("notes-dialog")).toBeInTheDocument();
   });
 
@@ -1103,7 +1111,7 @@ describe("CommitGraphPanel — context menu additional actions", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Detached commit"));
-    expect(screen.getByTestId("ctx-item-Checkout Commit (detached HEAD)")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-item-graph.checkoutCommitDetachedHead")).toBeInTheDocument();
   });
 
   it("shows Merge submenus for refs on a commit", () => {
@@ -1125,14 +1133,14 @@ describe("CommitGraphPanel — context menu additional actions", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Multi-ref commit"));
-    expect(screen.getByTestId("ctx-submenu-Merge into current branch...")).toBeInTheDocument();
+    expect(screen.getByTestId("ctx-submenu-graph.mergeIntoCurrentBranch")).toBeInTheDocument();
   });
 
   it("clicking Compare with HEAD opens CommitCompareDialog", () => {
     render(<CommitGraphPanel />);
     // Right-click second commit (not HEAD)
     fireEvent.contextMenu(screen.getByText("Second commit"));
-    fireEvent.click(screen.getByTestId("ctx-item-Compare with HEAD"));
+    fireEvent.click(screen.getByTestId("ctx-item-graph.compareWithHead"));
     expect(screen.getByTestId("commit-compare-dialog")).toBeInTheDocument();
   });
 
@@ -1142,7 +1150,7 @@ describe("CommitGraphPanel — context menu additional actions", () => {
     });
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("First commit"));
-    const copyBtn = screen.getByTestId(/ctx-item-Copy Hash/);
+    const copyBtn = screen.getByTestId(/ctx-item-graph\.copyHash/);
     fireEvent.click(copyBtn);
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("abc123def456");
   });
@@ -1166,7 +1174,7 @@ describe("CommitGraphPanel — context menu additional actions", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Remote branch commit"));
-    const deleteBtn = screen.queryByTestId('ctx-item-Delete Remote Branch "origin/feature/old"');
+    const deleteBtn = screen.queryByTestId("ctx-item-graph.deleteRemoteBranch");
     if (deleteBtn) {
       fireEvent.click(deleteBtn);
       expect(screen.getByTestId("modal-dialog")).toBeInTheDocument();
@@ -1194,13 +1202,11 @@ describe("CommitGraphPanel — context menu additional actions", () => {
     };
     render(<CommitGraphPanel />);
     fireEvent.contextMenu(screen.getByText("Remote prefixed commit"));
-    const deleteBtn = screen.queryByTestId(
-      'ctx-item-Delete Remote Branch "remotes/origin/dependabot/npm/zustand-5"'
-    );
+    const deleteBtn = screen.queryByTestId("ctx-item-graph.deleteRemoteBranch");
     expect(deleteBtn).toBeTruthy();
     fireEvent.click(deleteBtn!);
     // Confirm deletion
-    const confirmBtn = screen.getByText("Delete");
+    const confirmBtn = screen.getByText("dialogs.delete");
     await act(async () => {
       fireEvent.click(confirmBtn);
     });

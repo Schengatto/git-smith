@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogError } from "./ModalDialog";
 import { openDialogWindow } from "../../utils/open-dialog";
 import { useRepoStore } from "../../store/repo-store";
@@ -38,6 +39,7 @@ export const RebaseDialog: React.FC<Props> = ({
   preselectedOnto,
   startInteractive,
 }) => {
+  const { t } = useTranslation();
   const { repo, refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -217,27 +219,31 @@ export const RebaseDialog: React.FC<Props> = ({
   const currentBranch = repo?.currentBranch || "HEAD";
 
   return (
-    <ModalDialog open={open} title="Rebase" onClose={onClose} width={720}>
+    <ModalDialog open={open} title={t("rebaseDialog.title")} onClose={onClose} width={720}>
       {/* Header info */}
       <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          Rebase current branch on top of another branch
+          {t("rebaseDialog.description")}
         </span>
       </div>
 
       <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Current branch:</span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {t("rebaseDialog.currentBranch")}
+        </span>
         <span style={branchBadgeStyle}>{currentBranch}</span>
       </div>
 
       {/* Rebase on selector */}
       <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)", flexShrink: 0 }}>Rebase on</span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)", flexShrink: 0 }}>
+          {t("rebaseDialog.rebaseOn")}
+        </span>
         <input
           type="text"
           value={rebaseOn}
           onChange={(e) => setRebaseOn(e.target.value)}
-          placeholder="commit hash or branch name..."
+          placeholder={t("rebaseDialog.rebaseOnPlaceholder")}
           style={inputStyle}
           disabled={rebaseInProgress}
         />
@@ -259,7 +265,7 @@ export const RebaseDialog: React.FC<Props> = ({
                 textDecoration: "underline",
               }}
             >
-              {showOptions ? "Hide options" : "Show options"}
+              {showOptions ? t("rebaseDialog.hideOptions") : t("rebaseDialog.showOptions")}
             </button>
           </div>
 
@@ -284,7 +290,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setInteractive(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Interactive Rebase
+                  {t("rebaseDialog.interactiveRebase")}
                 </label>
                 <label style={checkboxLabelStyle}>
                   <input
@@ -293,7 +299,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setPreserveMerges(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Preserve Merges
+                  {t("rebaseDialog.preserveMerges")}
                 </label>
                 <label style={checkboxLabelStyle}>
                   <input
@@ -302,7 +308,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setAutosquash(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Autosquash
+                  {t("rebaseDialog.autosquash")}
                 </label>
                 <label style={checkboxLabelStyle}>
                   <input
@@ -311,7 +317,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setAutoStash(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Auto stash
+                  {t("rebaseDialog.autoStash")}
                 </label>
                 <label style={checkboxLabelStyle}>
                   <input
@@ -320,7 +326,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setIgnoreDate(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Ignore date
+                  {t("rebaseDialog.ignoreDate")}
                 </label>
               </div>
 
@@ -333,7 +339,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setCommitterDateIsAuthorDate(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Committer date is author date
+                  {t("rebaseDialog.committerDateIsAuthorDate")}
                 </label>
                 <label style={checkboxLabelStyle}>
                   <input
@@ -342,7 +348,7 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setUpdateRefs(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Update dependent refs
+                  {t("rebaseDialog.updateDependentRefs")}
                 </label>
               </div>
 
@@ -355,25 +361,29 @@ export const RebaseDialog: React.FC<Props> = ({
                     onChange={(e) => setSpecificRange(e.target.checked)}
                     style={checkboxStyle}
                   />
-                  Specific range
+                  {t("rebaseDialog.specificRange")}
                 </label>
                 {specificRange && (
                   <>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>From (exc.)</span>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      {t("rebaseDialog.fromExc")}
+                    </span>
                     <input
                       type="text"
                       value={rangeFrom}
                       onChange={(e) => setRangeFrom(e.target.value)}
                       style={{ ...inputStyle, width: 120, padding: "4px 6px", fontSize: 11 }}
-                      placeholder="commit..."
+                      placeholder={t("rebaseDialog.commitPlaceholder")}
                     />
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>To</span>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      {t("rebaseDialog.to")}
+                    </span>
                     <input
                       type="text"
                       value={rangeTo}
                       onChange={(e) => setRangeTo(e.target.value)}
                       style={{ ...inputStyle, width: 120, padding: "4px 6px", fontSize: 11 }}
-                      placeholder="branch..."
+                      placeholder={t("rebaseDialog.branchPlaceholder")}
                     />
                   </>
                 )}
@@ -397,13 +407,13 @@ export const RebaseDialog: React.FC<Props> = ({
             fontWeight: 500,
           }}
         >
-          There are unresolved merge conflicts
+          {t("rebaseDialog.unresolvedConflicts")}
         </div>
       )}
 
       {/* Commits to re-apply */}
       <div style={{ marginBottom: 8 }}>
-        <span style={fieldLabelStyle}>Commits to re-apply</span>
+        <span style={fieldLabelStyle}>{t("rebaseDialog.commitsToReapply")}</span>
       </div>
 
       <div
@@ -428,11 +438,11 @@ export const RebaseDialog: React.FC<Props> = ({
             gap: 8,
           }}
         >
-          {interactive && <span style={{ width: 60 }}>Action</span>}
-          <span style={{ flex: 3, minWidth: 0 }}>Subject</span>
-          <span style={{ width: 120 }}>Author</span>
-          <span style={{ width: 120, textAlign: "right" }}>Date</span>
-          <span style={{ width: 90, textAlign: "right" }}>Commit hash</span>
+          {interactive && <span style={{ width: 60 }}>{t("rebaseDialog.action")}</span>}
+          <span style={{ flex: 3, minWidth: 0 }}>{t("rebaseDialog.subject")}</span>
+          <span style={{ width: 120 }}>{t("rebaseDialog.author")}</span>
+          <span style={{ width: 120, textAlign: "right" }}>{t("rebaseDialog.date")}</span>
+          <span style={{ width: 90, textAlign: "right" }}>{t("rebaseDialog.commitHash")}</span>
         </div>
 
         {/* Table body */}
@@ -446,7 +456,7 @@ export const RebaseDialog: React.FC<Props> = ({
                 fontSize: 12,
               }}
             >
-              Loading commits...
+              {t("rebaseDialog.loadingCommits")}
             </div>
           ) : entries.length === 0 ? (
             <div
@@ -457,7 +467,9 @@ export const RebaseDialog: React.FC<Props> = ({
                 fontSize: 12,
               }}
             >
-              {rebaseOn ? "No commits to rebase" : "Select a branch or commit to rebase onto"}
+              {rebaseOn
+                ? t("rebaseDialog.noCommitsToRebase")
+                : t("rebaseDialog.selectBranchOrCommit")}
             </div>
           ) : (
             entries.map((entry, i) => (
@@ -541,17 +553,17 @@ export const RebaseDialog: React.FC<Props> = ({
           }}
         >
           <button onClick={handleSkip} disabled={loading} style={secondaryBtnStyle}>
-            Skip currently applying commit
+            {t("rebaseDialog.skipCommit")}
           </button>
           <button
             onClick={() => openDialogWindow({ dialog: "MergeConflictDialog" })}
             disabled={loading}
             style={primaryBtnStyle}
           >
-            Solve conflicts
+            {t("rebaseDialog.solveConflicts")}
           </button>
           <button onClick={handleAbort} disabled={loading} style={dangerBtnStyle}>
-            Abort
+            {t("rebaseDialog.abort")}
           </button>
         </div>
       ) : (
@@ -564,7 +576,7 @@ export const RebaseDialog: React.FC<Props> = ({
           }}
         >
           <button onClick={onClose} style={secondaryBtnStyle}>
-            Cancel
+            {t("dialogs.cancel")}
           </button>
           <button
             onClick={handleRebase}
@@ -575,7 +587,7 @@ export const RebaseDialog: React.FC<Props> = ({
               cursor: loading || !rebaseOn ? "not-allowed" : "pointer",
             }}
           >
-            {loading ? "Rebasing..." : "Rebase"}
+            {loading ? t("rebaseDialog.rebasing") : t("rebaseDialog.rebase")}
           </button>
         </div>
       )}

@@ -5,6 +5,26 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { BranchDiffDialog } from "./BranchDiffDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "branchDiff.title": "Branch Diff",
+        "branchDiff.from": "From",
+        "branchDiff.to": "To",
+        "branchDiff.swapBranches": "Swap branches",
+        "branchDiff.compare": "Compare",
+        "branchDiff.noDifferences": "No differences between these branches",
+        "branchDiff.selectBranchesAndCompare": "Select two branches and press Compare",
+      };
+      if (key === "branchDiff.filesChanged" && opts) {
+        return `${opts.count} file(s) changed`;
+      }
+      return translations[key] ?? key;
+    },
+  }),
+}));
+
 const mockElectronAPI = {
   branch: {
     list: vi.fn().mockResolvedValue([]),
@@ -113,7 +133,7 @@ describe("BranchDiffDialog", () => {
     await waitFor(() => screen.getAllByText("main"));
     fireEvent.click(screen.getByText("Compare"));
     await waitFor(() => {
-      expect(screen.getByText("3")).toBeInTheDocument();
+      expect(screen.getByText("3 file(s) changed")).toBeInTheDocument();
     });
   });
 

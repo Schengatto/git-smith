@@ -6,6 +6,13 @@ import React from "react";
 import { CommitInfoWindow } from "./CommitInfoWindow";
 import type { CommitFullInfo, CommitFileInfo } from "../../../shared/git-types";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockFullInfo: CommitFullInfo = {
   hash: "abc123def456789012345678901234567890abcd",
   abbreviatedHash: "abc123d",
@@ -186,7 +193,7 @@ describe("CommitInfoWindow", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Commit Information")).toBeInTheDocument();
+      expect(screen.getByText("commitInfoDialog.title")).toBeInTheDocument();
     });
 
     const overlay = container.firstChild as HTMLElement;
@@ -205,10 +212,10 @@ describe("CommitInfoWindow", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Commit Information")).toBeInTheDocument();
+      expect(screen.getByText("commitInfoDialog.title")).toBeInTheDocument();
     });
 
-    const header = screen.getByText("Commit Information").parentElement!;
+    const header = screen.getByText("commitInfoDialog.title").parentElement!;
     const closeBtn = header.querySelector("button")!;
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();
@@ -246,10 +253,10 @@ describe("CommitInfoWindow", () => {
       expect(screen.getByText("src/main.ts")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText("File tree"));
+    fireEvent.click(screen.getByText("commitInfoDialog.fileTree"));
 
-    // File tree tab should show the "Select a file to view diff" placeholder
-    expect(screen.getByText("Select a file to view diff")).toBeInTheDocument();
+    // File tree tab should show the "commitInfoDialog.selectFileToViewDiff" placeholder
+    expect(screen.getByText("commitInfoDialog.selectFileToViewDiff")).toBeInTheDocument();
   });
 
   it("hides committer when same as author", async () => {

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useCommandLogStore } from "../../store/command-log-store";
 
 const IconTerminal = () => (
@@ -19,6 +20,7 @@ const IconTerminal = () => (
 );
 
 export const CommandLogPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { entries, clear } = useCommandLogStore();
 
   return (
@@ -28,7 +30,7 @@ export const CommandLogPanel: React.FC = () => {
           <div className="empty-state-icon">
             <IconTerminal />
           </div>
-          <span>Git commands will appear here</span>
+          <span>{t("commandLog.commandsWillAppearHere")}</span>
         </div>
       ) : (
         <>
@@ -48,7 +50,7 @@ export const CommandLogPanel: React.FC = () => {
                 color: "var(--text-muted)",
               }}
             >
-              Commands ({entries.length})
+              {t("commandLog.commandsCount", { count: entries.length })}
             </span>
             <button
               className="text-[10px] uppercase tracking-wider font-medium"
@@ -65,7 +67,7 @@ export const CommandLogPanel: React.FC = () => {
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
               onClick={clear}
             >
-              Clear
+              {t("commandLog.clear")}
             </button>
           </div>
           <div className="flex-1 overflow-y-auto mono" style={{ fontSize: 11 }}>
@@ -96,7 +98,8 @@ export const CommandLogPanel: React.FC = () => {
                       fontSize: 10,
                     }}
                   >
-                    {entry.duration}ms
+                    {entry.duration}
+                    {t("commandLog.ms")}
                   </span>
                 )}
                 {entry.error && (

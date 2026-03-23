@@ -1,4 +1,5 @@
 import React from "react";
+import i18n from "../i18n";
 
 interface State {
   hasError: boolean;
@@ -30,9 +31,9 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontSize: 24, marginBottom: 12 }}>Something went wrong</h1>
+        <h1 style={{ fontSize: 24, marginBottom: 12 }}>{i18n.t("app.somethingWentWrong")}</h1>
         <p style={{ color: "var(--text-muted)", marginBottom: 24, maxWidth: 500 }}>
-          {this.state.error?.message || "An unexpected error occurred."}
+          {this.state.error?.message || i18n.t("app.unexpectedError")}
         </p>
         <button
           onClick={() => window.location.reload()}
@@ -47,7 +48,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
             fontWeight: 600,
           }}
         >
-          Reload
+          {i18n.t("app.reload")}
         </button>
       </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -27,6 +28,7 @@ export const CheckoutDialog: React.FC<Props> = ({
   commitSubject = "",
   branchName,
 }) => {
+  const { t } = useTranslation();
   const { refreshInfo, refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -128,11 +130,11 @@ export const CheckoutDialog: React.FC<Props> = ({
   const hasNoBranches = allBranches.length === 0;
 
   return (
-    <ModalDialog open={open} title="Checkout" onClose={onClose} width={480}>
+    <ModalDialog open={open} title={t("checkout.title")} onClose={onClose} width={480}>
       {/* Direct branch mode — show branch name */}
       {directMode && (
         <div style={{ marginBottom: 12 }}>
-          <label style={fieldLabelStyle}>Branch</label>
+          <label style={fieldLabelStyle}>{t("checkout.branch")}</label>
           <div
             style={{
               fontSize: 13,
@@ -161,7 +163,7 @@ export const CheckoutDialog: React.FC<Props> = ({
                 disabled={localBranches.length === 0}
                 style={radioStyle}
               />
-              Local branch
+              {t("checkout.localBranch")}
             </label>
             <label style={radioLabelStyle}>
               <input
@@ -171,14 +173,14 @@ export const CheckoutDialog: React.FC<Props> = ({
                 disabled={remoteBranches.length === 0}
                 style={radioStyle}
               />
-              Remote branch
+              {t("checkout.remoteBranch")}
             </label>
           </div>
 
           {/* Branch selector */}
           {!checkoutDetached && (
             <div style={{ marginBottom: 12 }}>
-              <label style={fieldLabelStyle}>Select branch</label>
+              <label style={fieldLabelStyle}>{t("checkout.selectBranch")}</label>
               <select
                 value={selectedBranch}
                 onChange={(e) => setSelectedBranch(e.target.value)}
@@ -204,7 +206,7 @@ export const CheckoutDialog: React.FC<Props> = ({
                 }}
                 style={radioStyle}
               />
-              Checkout the commit (detached HEAD)
+              {t("checkout.detachedHead")}
             </label>
           </div>
 
@@ -230,7 +232,7 @@ export const CheckoutDialog: React.FC<Props> = ({
       {!directMode && hasNoBranches && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 13, color: "var(--text-primary)", marginBottom: 8 }}>
-            Checkout commit (detached HEAD)
+            {t("checkout.detachedHeadTitle")}
           </div>
           <div
             style={{
@@ -266,15 +268,15 @@ export const CheckoutDialog: React.FC<Props> = ({
             padding: "0 6px",
           }}
         >
-          Local changes
+          {t("checkout.localChanges")}
         </legend>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px" }}>
           {(
             [
-              ["none", "Don't change"],
-              ["merge", "Merge"],
-              ["stash", "Stash"],
-              ["reset", "Reset"],
+              ["none", t("checkout.dontChange")],
+              ["merge", t("checkout.mergeChanges")],
+              ["stash", t("checkout.stashChanges")],
+              ["reset", t("checkout.resetChanges")],
             ] as [LocalChangesStrategy, string][]
           ).map(([value, label]) => (
             <label key={value} style={radioLabelStyle}>
@@ -299,7 +301,7 @@ export const CheckoutDialog: React.FC<Props> = ({
             marginBottom: 8,
           }}
         >
-          Warning: all uncommitted changes will be discarded.
+          {t("checkout.warningDiscardChanges")}
         </div>
       )}
 
@@ -307,7 +309,7 @@ export const CheckoutDialog: React.FC<Props> = ({
       <DialogActions
         onCancel={onClose}
         onConfirm={handleCheckout}
-        confirmLabel="Checkout"
+        confirmLabel={t("checkout.checkoutButton")}
         loading={loading}
         disabled={!checkoutDetached && !selectedBranch}
       />

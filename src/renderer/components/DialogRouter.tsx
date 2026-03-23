@@ -1,4 +1,5 @@
 import React, { Component, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { DialogResult } from "../../shared/dialog-types";
 
 import { MergeConflictDialog as _MergeConflictDialog } from "./dialogs/MergeConflictDialog";
@@ -69,6 +70,7 @@ class DialogErrorBoundary extends Component<
 }
 
 export const DialogRouter: React.FC<Props> = ({ dialog }) => {
+  const { t } = useTranslation();
   const [initData, setInitData] = useState<Record<string, unknown>>({});
   const [ready, setReady] = useState(false);
 
@@ -111,7 +113,7 @@ export const DialogRouter: React.FC<Props> = ({ dialog }) => {
           color: "var(--text-muted)",
         }}
       >
-        Loading...
+        {t("dialogRouter.loading")}
       </div>
     );
   }
@@ -173,7 +175,9 @@ export const DialogRouter: React.FC<Props> = ({ dialog }) => {
               justifyContent: "center",
             }}
           >
-            <p style={{ color: "var(--red)" }}>Unknown dialog: {dialog}</p>
+            <p style={{ color: "var(--red)" }}>
+              {t("dialogRouter.unknownDialog", { name: dialog })}
+            </p>
           </div>
         );
     }

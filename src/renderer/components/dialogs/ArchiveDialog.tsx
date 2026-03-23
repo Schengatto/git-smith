@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions } from "./ModalDialog";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const ArchiveDialog: React.FC<Props> = ({ open, onClose, ref_, refLabel }) => {
+  const { t } = useTranslation();
   const [format, setFormat] = useState<"zip" | "tar.gz">("zip");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -34,14 +36,10 @@ export const ArchiveDialog: React.FC<Props> = ({ open, onClose, ref_, refLabel }
   };
 
   return (
-    <ModalDialog open={open} title="Archive / Export" onClose={onClose}>
+    <ModalDialog open={open} title={t("archive.title")} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
         <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          Export{" "}
-          <span className="mono" style={{ color: "var(--accent)" }}>
-            {refLabel}
-          </span>{" "}
-          as archive
+          {t("archive.exportDescription", { ref: refLabel })}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <label
@@ -55,7 +53,7 @@ export const ArchiveDialog: React.FC<Props> = ({ open, onClose, ref_, refLabel }
             }}
           >
             <input type="radio" checked={format === "zip"} onChange={() => setFormat("zip")} />
-            ZIP
+            {t("archive.zip")}
           </label>
           <label
             style={{
@@ -72,7 +70,7 @@ export const ArchiveDialog: React.FC<Props> = ({ open, onClose, ref_, refLabel }
               checked={format === "tar.gz"}
               onChange={() => setFormat("tar.gz")}
             />
-            TAR.GZ
+            {t("archive.tarGz")}
           </label>
         </div>
         {error && (
@@ -82,7 +80,11 @@ export const ArchiveDialog: React.FC<Props> = ({ open, onClose, ref_, refLabel }
           <div style={{ fontSize: 11, color: "var(--green)", padding: "4px 0" }}>{success}</div>
         )}
       </div>
-      <DialogActions onCancel={onClose} onConfirm={handleExport} confirmLabel="Export" />
+      <DialogActions
+        onCancel={onClose}
+        onConfirm={handleExport}
+        confirmLabel={t("dialogs.export")}
+      />
     </ModalDialog>
   );
 };

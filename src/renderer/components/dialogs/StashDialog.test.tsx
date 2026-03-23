@@ -5,6 +5,39 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { StashDialog } from "./StashDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "stash.title": "Stash",
+        "stash.show": "Show:",
+        "stash.workingDirectoryChanges": "Current working directory changes",
+        "stash.stashListOption": "Stash list",
+        "stash.noChanges": "No changes in working directory.",
+        "stash.noStashes": "There are no stashes.",
+        "stash.selectFileDiff": "Select a file to view its diff",
+        "stash.selectStash": "Select a stash from the list",
+        "stash.message": "Message:",
+        "stash.optionalMessage": "Optional stash message...",
+        "stash.keepIndex": "Keep index",
+        "stash.includeUntracked": "Include untracked",
+        "stash.stashing": "Stashing...",
+        "stash.stashAllChanges": "Stash all changes",
+        "stash.applySelected": "Apply Selected Stash",
+        "stash.dropSelected": "Drop Selected Stash",
+      };
+      if (key === "stash.workingDirectoryCount" && opts) {
+        return `Working directory (${opts.count} file${opts.plural})`;
+      }
+      if (key === "stash.stashesCount" && opts) {
+        return `Stashes (${opts.count})`;
+      }
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockStatus = {
   staged: [{ path: "src/index.ts", status: "modified" }],
   unstaged: [{ path: "src/utils.ts", status: "modified" }],

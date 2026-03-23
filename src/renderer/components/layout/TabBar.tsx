@@ -1,10 +1,12 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { WorkspaceTab } from "../../store/workspace-store";
 import { useWorkspaceStore } from "../../store/workspace-store";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 
 export const TabBar: React.FC = () => {
+  const { t } = useTranslation();
   const { tabs, activeTabId, setActiveTab, removeTab } = useWorkspaceStore();
   const { openRepo } = useRepoStore();
   const { loadGraph } = useGraphStore();
@@ -99,7 +101,7 @@ export const TabBar: React.FC = () => {
               alignItems: "center",
               flexShrink: 0,
             }}
-            title="Close tab"
+            title={t("tabBar.closeTab")}
           >
             <svg
               width="10"

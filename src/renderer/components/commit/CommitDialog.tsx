@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
@@ -80,6 +81,7 @@ function sortTree(nodes: TreeNode[]): TreeNode[] {
 }
 
 export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const { repo, refreshStatus, refreshInfo } = useRepoStore();
   const { loadGraph } = useGraphStore();
   const showToast = useUIStore((s) => s.showToast);
@@ -192,13 +194,13 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
     const loadDiff = async () => {
       try {
         if (file.isUntracked) {
-          setDiff("(New untracked file)");
+          setDiff(t("commit.newUntrackedFile"));
         } else {
           const d = await window.electronAPI.diff.file(selectedFile, selectedFileStaged);
-          setDiff(d || "(No diff available)");
+          setDiff(d || t("commit.noDiffAvailable"));
         }
       } catch {
-        setDiff("(Could not load diff)");
+        setDiff(t("commit.couldNotLoadDiff"));
       }
     };
     loadDiff();
@@ -255,7 +257,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setConflictedFiles(status.conflicted);
       setSelectedUnstaged(new Set());
     } catch (err: unknown) {
-      showToast(`Stage failed: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(`${t("errors.stageFailed")}: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -265,7 +267,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setFiles(statusToFiles(status));
       setSelectedStaged(new Set());
     } catch (err: unknown) {
-      showToast(`Unstage failed: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(
+        `${t("errors.unstageFailed")}: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -277,7 +281,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setFiles(statusToFiles(status));
       setSelectedUnstaged(new Set());
     } catch (err: unknown) {
-      showToast(`Stage all failed: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(
+        `${t("errors.stageAllFailed")}: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -289,7 +295,9 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
       setFiles(statusToFiles(status));
       setSelectedStaged(new Set());
     } catch (err: unknown) {
-      showToast(`Unstage all failed: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(
+        `${t("errors.unstageAllFailed")}: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -508,7 +516,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 whiteSpace: "nowrap",
               }}
             >
-              Commit to {repo?.currentBranch || "HEAD"}
+              {t("commit.commitTo", { branch: repo?.currentBranch || "HEAD" })}
             </span>
             {repo?.path && (
               <span
@@ -583,8 +591,12 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 600, flex: 1 }}>
-              Merge in progress — {conflictedFiles.length} conflicted file
-              {conflictedFiles.length !== 1 ? "s" : ""} to resolve
+              {t("commit.mergeInProgress")}
+              {conflictedFiles.length}{" "}
+              {conflictedFiles.length !== 1
+                ? t("commit.conflictedFiles")
+                : t("commit.conflictedFile")}{" "}
+              to resolve
             </span>
             <button
               onClick={() => openDialogWindow({ dialog: "MergeConflictDialog" })}
@@ -603,7 +615,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              Resolve Conflicts
+              {t("commit.resolveConflicts")}
             </button>
           </div>
         )}
@@ -622,7 +634,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
           >
             {/* Unstaged / Changes section */}
             <FileListPanel
-              title="Changes"
+              title={t("commit.changes")}
               count={unstagedFiles.length}
               files={unstagedFiles}
               selectedFile={selectedFileStaged ? null : selectedFile}
@@ -667,14 +679,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               }}
             >
               <StageIconButton
-                title="Stage selected"
+                title={t("commit.stageSelected")}
                 disabled={selectedUnstaged.size === 0}
                 onClick={() => stageFiles(Array.from(selectedUnstaged))}
               >
                 <IconArrowDown size={14} />
               </StageIconButton>
               <StageIconButton
-                title="Stage all"
+                title={t("commit.stageAllTitle")}
                 disabled={unstagedFiles.length === 0}
                 onClick={stageAll}
               >
@@ -689,14 +701,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 }}
               />
               <StageIconButton
-                title="Unstage selected"
+                title={t("commit.unstageSelected")}
                 disabled={selectedStaged.size === 0}
                 onClick={() => unstageFiles(Array.from(selectedStaged))}
               >
                 <IconArrowUp size={14} />
               </StageIconButton>
               <StageIconButton
-                title="Unstage all"
+                title={t("commit.unstageAllTitle")}
                 disabled={stagedFiles.length === 0}
                 onClick={unstageAll}
               >
@@ -710,14 +722,18 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                   margin: "0 3px",
                 }}
               />
-              <StageIconButton title="Refresh file list" disabled={false} onClick={loadFiles}>
+              <StageIconButton
+                title={t("commit.refreshFileList")}
+                disabled={false}
+                onClick={loadFiles}
+              >
                 <IconRefresh size={14} />
               </StageIconButton>
             </div>
 
             {/* Staged section */}
             <FileListPanel
-              title="Staged"
+              title={t("commit.staged")}
               count={stagedFiles.length}
               files={stagedFiles}
               selectedFile={selectedFileStaged ? selectedFile : null}
@@ -774,7 +790,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               ) : (
                 <div className="empty-state" style={{ height: "100%" }}>
                   <span>
-                    {selectedFile ? diff || "Loading..." : "Select a file to view changes"}
+                    {selectedFile ? diff || t("commit.loading") : t("commit.selectFileToView")}
                   </span>
                 </div>
               )}
@@ -796,7 +812,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 {/* Commit message dropdown */}
                 <div ref={messageDropdownRef} style={{ position: "relative" }}>
                   <ToolbarButton
-                    label="Commit message"
+                    label={t("commit.commitMessage")}
                     hasDropdown
                     onClick={() => {
                       setMessageDropdownOpen((v) => !v);
@@ -829,7 +845,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                             color: "var(--text-muted)",
                           }}
                         >
-                          No recent commit messages
+                          {t("commit.noRecentCommitMessages")}
                         </div>
                       ) : (
                         recentMessages.slice(0, 5).map((msg, i) => (
@@ -871,7 +887,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 {/* Commit templates dropdown */}
                 <div ref={templateDropdownRef} style={{ position: "relative" }}>
                   <ToolbarButton
-                    label="Commit templates"
+                    label={t("commit.commitTemplates")}
                     hasDropdown
                     onClick={() => {
                       setTemplateDropdownOpen((v) => !v);
@@ -905,7 +921,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                           letterSpacing: "0.04em",
                         }}
                       >
-                        Commit Templates
+                        {t("commit.commitTemplates")}
                       </div>
                       {commitTemplates.length === 0 ? (
                         <div
@@ -915,7 +931,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                             color: "var(--text-muted)",
                           }}
                         >
-                          No templates configured
+                          {t("commit.noTemplatesConfigured")}
                         </div>
                       ) : (
                         commitTemplates.map((tpl) => (
@@ -955,7 +971,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                 {/* Commit snippets dropdown */}
                 <div ref={snippetDropdownRef} style={{ position: "relative" }}>
                   <ToolbarButton
-                    label="Snippets"
+                    label={t("commit.snippets")}
                     hasDropdown
                     onClick={() => {
                       setSnippetDropdownOpen((v) => !v);
@@ -990,7 +1006,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                           letterSpacing: "0.04em",
                         }}
                       >
-                        Snippets
+                        {t("commit.snippets")}
                       </div>
                       {commitSnippets.length === 0 ? (
                         <div
@@ -1000,7 +1016,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                             color: "var(--text-muted)",
                           }}
                         >
-                          No snippets configured
+                          {t("commit.noSnippetsConfigured")}
                         </div>
                       ) : (
                         commitSnippets.map((snip) => (
@@ -1064,7 +1080,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
 
                 {/* Create branch button */}
                 <ToolbarButton
-                  label="Create branch"
+                  label={t("commit.createBranch")}
                   onClick={() => setCreateBranchOpen((v) => !v)}
                   icon={<IconBranch size={12} />}
                   active={createBranchOpen}
@@ -1093,13 +1109,13 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         flexShrink: 0,
                       }}
                     >
-                      Branch name
+                      {t("commit.branchName")}
                     </label>
                     <input
                       type="text"
                       value={newBranchName}
                       onChange={(e) => setNewBranchName(e.target.value)}
-                      placeholder="new-branch-name"
+                      placeholder={t("commit.newBranchNamePlaceholder")}
                       style={{
                         flex: 1,
                         padding: "5px 8px",
@@ -1126,7 +1142,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         flexShrink: 0,
                       }}
                     >
-                      From
+                      {t("commit.from")}
                     </label>
                     <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                       {repo?.currentBranch || "HEAD"} ({repo?.headCommit?.slice(0, 7) || "---"})
@@ -1150,7 +1166,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         onChange={(e) => setCheckoutAfterCreate(e.target.checked)}
                         style={{ accentColor: "var(--accent)" }}
                       />
-                      Checkout after create
+                      {t("commit.checkoutAfterCreate")}
                     </label>
                   </div>
                   {branchError && (
@@ -1174,7 +1190,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         cursor: "pointer",
                       }}
                     >
-                      Cancel
+                      {t("dialogs.cancel")}
                     </button>
                     <button
                       onClick={handleCreateBranch}
@@ -1196,7 +1212,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                         cursor: newBranchName.trim() && !creatingBranch ? "pointer" : "not-allowed",
                       }}
                     >
-                      {creatingBranch ? "Creating..." : "Create branch"}
+                      {creatingBranch ? t("commit.creating") : t("commit.createBranch")}
                     </button>
                   </div>
                 </div>
@@ -1205,7 +1221,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
               <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
                 <textarea
                   ref={messageTextareaRef}
-                  placeholder="Enter commit message..."
+                  placeholder={t("commit.enterCommitMessage")}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={4}
@@ -1264,7 +1280,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                       }}
                     >
                       <IconCheck size={12} />
-                      {committing ? "Committing..." : "Commit"}
+                      {committing ? t("commit.committing") : t("commit.commit")}
                     </button>
                     <button
                       onClick={() => setCommitDropdownOpen((v) => !v)}
@@ -1314,13 +1330,13 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                     >
                       <DropdownItem
                         icon={<IconCheck size={12} />}
-                        label="Commit"
+                        label={t("commit.commit")}
                         disabled={!canCommit}
                         onClick={() => handleCommit(false)}
                       />
                       <DropdownItem
                         icon={<IconArrowUp size={12} />}
-                        label="Commit & push"
+                        label={t("commit.commitAndPush")}
                         disabled={!canCommit}
                         onClick={() => handleCommit(true)}
                       />
@@ -1333,7 +1349,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                       />
                       <DropdownItem
                         icon={<IconAmend size={12} />}
-                        label={amend ? "Disable amend" : "Amend commit"}
+                        label={amend ? t("commit.disableAmend") : t("commit.amendCommit")}
                         onClick={() => {
                           setAmend((v) => !v);
                           setCommitDropdownOpen(false);
@@ -1349,12 +1365,12 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                       />
                       <DropdownItem
                         icon={<IconStash size={12} />}
-                        label="Stash staged changes"
+                        label={t("commit.stashStagedChanges")}
                         onClick={handleStash}
                       />
                       <DropdownItem
                         icon={<IconDiscard size={12} />}
-                        label="Reset all changes"
+                        label={t("commit.resetAllChanges")}
                         danger
                         onClick={handleResetAll}
                       />
@@ -1364,14 +1380,14 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
 
                 {amend && (
                   <span style={{ fontSize: 11, color: "var(--yellow)", fontWeight: 500 }}>
-                    Amend mode
+                    {t("commit.amendMode")}
                   </span>
                 )}
 
                 <div style={{ flex: 1 }} />
 
                 <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
-                  {stagedFiles.length}/{files.length} staged
+                  {stagedFiles.length}/{files.length} {t("commit.staged").toLowerCase()}
                 </span>
 
                 <button
@@ -1393,7 +1409,7 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
                     e.currentTarget.style.background = "transparent";
                   }}
                 >
-                  Cancel
+                  {t("dialogs.cancel")}
                 </button>
               </div>
             </div>
@@ -1414,10 +1430,10 @@ export const CommitDialog: React.FC<Props> = ({ open, onClose }) => {
             flexShrink: 0,
           }}
         >
-          <span>Ctrl+Enter to commit</span>
+          <span>{t("commit.ctrlEnterToCommit")}</span>
           <div style={{ flex: 1 }} />
           <span>
-            Staged {stagedFiles.length}/{files.length}
+            {t("commit.staged")} {stagedFiles.length}/{files.length}
           </span>
         </div>
       </div>
@@ -1487,6 +1503,7 @@ const FileListPanel: React.FC<{
   onFileBlame,
   onDropFiles,
 }) => {
+  const { t } = useTranslation();
   const [confirmDiscardAll, setConfirmDiscardAll] = useState(false);
   const [collapsedDirs, setCollapsedDirs] = useState<Set<string>>(new Set());
   const [dragOver, setDragOver] = useState(false);
@@ -1549,7 +1566,7 @@ const FileListPanel: React.FC<{
             files.length > 0 &&
             (confirmDiscardAll ? (
               <span style={{ display: "flex", gap: 3, alignItems: "center", fontSize: 10 }}>
-                <span style={{ color: "var(--red)" }}>Discard all?</span>
+                <span style={{ color: "var(--red)" }}>{t("commit.discardAll")}</span>
                 <button
                   onClick={() => {
                     onDiscardAll();
@@ -1566,7 +1583,7 @@ const FileListPanel: React.FC<{
                     fontWeight: 600,
                   }}
                 >
-                  Yes
+                  {t("commit.yes")}
                 </button>
                 <button
                   onClick={() => setConfirmDiscardAll(false)}
@@ -1579,16 +1596,19 @@ const FileListPanel: React.FC<{
                     padding: "1px 3px",
                   }}
                 >
-                  No
+                  {t("commit.no")}
                 </button>
               </span>
             ) : (
-              <IconButton title="Discard all changes" onClick={() => setConfirmDiscardAll(true)}>
+              <IconButton
+                title={t("commit.discardAllChanges")}
+                onClick={() => setConfirmDiscardAll(true)}
+              >
                 <IconDiscard size={11} />
               </IconButton>
             ))}
           <IconButton
-            title={treeView ? "Switch to flat view" : "Switch to tree view"}
+            title={treeView ? t("commit.switchToFlatView") : t("commit.switchToTreeView")}
             onClick={onToggleTreeView}
             active={treeView}
           >
@@ -1636,7 +1656,7 @@ const FileListPanel: React.FC<{
               textAlign: "center",
             }}
           >
-            No files
+            {t("commit.noFiles")}
           </div>
         )}
         {treeView

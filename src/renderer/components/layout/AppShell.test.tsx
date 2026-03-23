@@ -210,7 +210,7 @@ vi.mock("./Toolbar", () => ({ Toolbar: () => <div data-testid="toolbar">Toolbar<
 vi.mock("./StatusBar", () => ({
   StatusBar: () => (
     <div data-testid="statusbar">
-      <span>No repository open</span>
+      <span>statusBar.noRepositoryOpen</span>
     </div>
   ),
 }));
@@ -219,13 +219,20 @@ vi.mock("./TabBar", () => ({ TabBar: () => null }));
 vi.mock("./MenuBar", () => ({
   MenuBar: () => (
     <div>
-      <span>Start</span>
-      <span>Help</span>
+      <span>menu.start</span>
+      <span>menu.help</span>
     </div>
   ),
 }));
 
 import { AppShell } from "./AppShell";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
 
 const mockElectronAPI = {
   settings: { get: vi.fn().mockResolvedValue({ language: "en" }) },
@@ -266,8 +273,8 @@ describe("AppShell", () => {
 
   it("renders the menu bar with top-level entries", () => {
     render(<AppShell />);
-    expect(screen.getByText("Start")).toBeInTheDocument();
-    expect(screen.getByText("Help")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
+    expect(screen.getByText("menu.help")).toBeInTheDocument();
   });
 
   it("does not show dockview when no repo is open", () => {
@@ -277,7 +284,7 @@ describe("AppShell", () => {
 
   it("renders the status bar with no-repo message", () => {
     render(<AppShell />);
-    expect(screen.getByText("No repository open")).toBeInTheDocument();
+    expect(screen.getByText("statusBar.noRepositoryOpen")).toBeInTheDocument();
   });
 
   it("registers IPC listeners on mount (calls electronAPI.on.*)", () => {
@@ -330,7 +337,7 @@ describe("AppShell", () => {
     // Never resolve to keep layoutLoaded=false
     mockElectronAPI.repo.getViewSettings.mockReturnValue(new Promise(() => {}));
     render(<AppShell />);
-    expect(screen.getByText("Loading layout…")).toBeInTheDocument();
+    expect(screen.getByText("app.loadingLayout")).toBeInTheDocument();
   });
 
   it("calls getViewSettings with repo path when repo is set", async () => {
@@ -353,7 +360,7 @@ describe("AppShell", () => {
         })
       );
     });
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("opens repo dialog via Ctrl+O keyboard shortcut", () => {
@@ -371,7 +378,7 @@ describe("AppShell", () => {
     act(() => {
       window.dispatchEvent(new CustomEvent("command-palette:open-reflog"));
     });
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("unregisters keyboard listener on unmount", () => {
@@ -449,7 +456,7 @@ describe("AppShell", () => {
       });
     }
     // Component mounted successfully — no crash
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("dialog.onResult with 'resolved' action triggers refreshInfo and loadGraph", () => {
@@ -472,7 +479,7 @@ describe("AppShell", () => {
     }
 
     // No crash — store functions called
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("dialog.onResult with 'navigate' action and hash selects commit", () => {
@@ -495,7 +502,7 @@ describe("AppShell", () => {
       });
     }
 
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("menuOpenRepo IPC handler calls openRepoDialog", () => {
@@ -513,7 +520,7 @@ describe("AppShell", () => {
       });
     }
     // openRepoDialog is called via getState — verified by no crash
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("repoChanged IPC handler calls refreshInfo and loadGraph when repo exists", () => {
@@ -532,7 +539,7 @@ describe("AppShell", () => {
       });
     }
 
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("Ctrl+N with no repo does not crash the app", () => {
@@ -544,7 +551,7 @@ describe("AppShell", () => {
         new KeyboardEvent("keydown", { ctrlKey: true, key: "n", bubbles: true })
       );
     });
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("shows loading screen with spinner before initializing", () => {
@@ -597,7 +604,7 @@ describe("AppShell", () => {
   it("does not open command palette before Ctrl+Shift+P is pressed", () => {
     render(<AppShell />);
     // CommandPalette is mocked as null; main shell renders without it open
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("Ctrl+O calls openRepoDialog via getState", () => {
@@ -608,7 +615,7 @@ describe("AppShell", () => {
       );
     });
     // openRepoDialog is called via getState() in the handler
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("Meta+O (macOS) calls openRepoDialog", () => {
@@ -633,7 +640,7 @@ describe("AppShell", () => {
         })
       );
     });
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("does not call openRepoDialog for unrelated key", () => {
@@ -667,7 +674,7 @@ describe("AppShell", () => {
     if (capturedHandler) {
       (capturedHandler as (l: string) => void)("some output line");
     }
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("dialog.onResult with 'closed' action triggers refreshInfo and loadGraph", () => {
@@ -689,7 +696,7 @@ describe("AppShell", () => {
       });
     }
 
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("dialog.onResult with 'navigate' action and no hash does nothing extra", () => {
@@ -712,7 +719,7 @@ describe("AppShell", () => {
       });
     }
 
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("repoChanged IPC handler does nothing when repo is null", () => {
@@ -731,7 +738,7 @@ describe("AppShell", () => {
       });
     }
 
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("command-palette:open-reflog event sets reflog open state without crash", () => {
@@ -740,13 +747,13 @@ describe("AppShell", () => {
       window.dispatchEvent(new CustomEvent("command-palette:open-reflog"));
     });
     // ReflogDialog is mocked as null, so just check no crash
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("cloneDialogOpen flag renders CloneDialog (mocked as null, no crash)", () => {
     // CloneDialog is always rendered (null-mocked), this just verifies no crash with flag
     render(<AppShell />);
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("layout save timer is cleared on unmount", () => {
@@ -774,7 +781,7 @@ describe("AppShell", () => {
     mockElectronAPI.repo.getViewSettings.mockReturnValue(new Promise(() => {}));
     render(<AppShell />);
     expect(screen.queryByTestId("dockview")).not.toBeInTheDocument();
-    expect(screen.getByText("Loading layout…")).toBeInTheDocument();
+    expect(screen.getByText("app.loadingLayout")).toBeInTheDocument();
   });
 
   it("renders the ConflictBanner when repo and status are present", () => {
@@ -782,7 +789,7 @@ describe("AppShell", () => {
     mockStatus = { conflicted: ["file.txt"] };
     render(<AppShell />);
     // ConflictBanner is mocked as null so no crash expected
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("useRepoStore.subscribe callback updates workspace tab when repo changes", () => {
@@ -794,7 +801,7 @@ describe("AppShell", () => {
       });
     // Store subscribe is already mocked via the module mock
     render(<AppShell />);
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("getViewSettings is not called when repo is null (no repo set)", () => {
@@ -816,7 +823,7 @@ describe("AppShell", () => {
         output: "done",
       });
     }
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("dialog.onResult navigate with a hash that matches a row calls selectCommit", () => {
@@ -836,7 +843,7 @@ describe("AppShell", () => {
         data: { hash: "foundHash" },
       });
     }
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 
   it("Meta+N with no repo calls initRepo", () => {
@@ -850,6 +857,6 @@ describe("AppShell", () => {
       );
     });
     // No crash — getState().initRepo is called
-    expect(screen.getByText("Start")).toBeInTheDocument();
+    expect(screen.getByText("menu.start")).toBeInTheDocument();
   });
 });

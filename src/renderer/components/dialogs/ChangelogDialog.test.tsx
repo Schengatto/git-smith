@@ -5,6 +5,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { ChangelogDialog } from "./ChangelogDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockElectronAPI = {
   changelog: {
     getTagsBefore: vi.fn().mockResolvedValue([]),
@@ -60,24 +67,24 @@ describe("ChangelogDialog", () => {
 
   it("shows Close button", () => {
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    expect(screen.getByText("Close")).toBeInTheDocument();
+    expect(screen.getByText("dialogs.close")).toBeInTheDocument();
   });
 
   it("calls onClose when Close button is clicked", () => {
     const onClose = vi.fn();
     render(<ChangelogDialog open={true} onClose={onClose} commitHash="abc1234" />);
-    fireEvent.click(screen.getByText("Close"));
+    fireEvent.click(screen.getByText("dialogs.close"));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("shows From label", () => {
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    expect(screen.getByText("From")).toBeInTheDocument();
+    expect(screen.getByText("changelog.from")).toBeInTheDocument();
   });
 
   it("shows to label", () => {
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    expect(screen.getByText("to")).toBeInTheDocument();
+    expect(screen.getByText("changelog.to")).toBeInTheDocument();
   });
 
   it("calls getTagsBefore on open", async () => {
@@ -90,7 +97,7 @@ describe("ChangelogDialog", () => {
   it("shows custom ref option in select", async () => {
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("Custom ref...")).toBeInTheDocument();
+      expect(screen.getByText("changelog.customRef")).toBeInTheDocument();
     });
   });
 
@@ -114,7 +121,7 @@ describe("ChangelogDialog", () => {
   it("shows custom ref input when Custom ref is selected", async () => {
     mockElectronAPI.changelog.getTagsBefore.mockResolvedValue(["v1.0.0"]);
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    await waitFor(() => screen.getByText("Custom ref..."));
+    await waitFor(() => screen.getByText("changelog.customRef"));
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "__custom__" } });
     expect(screen.getByPlaceholderText("branch, tag, or commit hash")).toBeInTheDocument();
   });
@@ -123,7 +130,7 @@ describe("ChangelogDialog", () => {
     mockElectronAPI.changelog.getTagsBefore.mockResolvedValue([]);
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("Generate")).toBeInTheDocument();
+      expect(screen.getByText("changelog.generate")).toBeInTheDocument();
     });
   });
 
@@ -131,7 +138,7 @@ describe("ChangelogDialog", () => {
     mockElectronAPI.changelog.getTagsBefore.mockResolvedValue([]);
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("Generate")).toBeDisabled();
+      expect(screen.getByText("changelog.generate")).toBeDisabled();
     });
   });
 
@@ -159,7 +166,7 @@ describe("ChangelogDialog", () => {
     });
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("Copy as Markdown")).toBeInTheDocument();
+      expect(screen.getByText("changelog.copyAsMarkdown")).toBeInTheDocument();
     });
   });
 
@@ -174,7 +181,7 @@ describe("ChangelogDialog", () => {
     });
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("5 commits · 2 authors")).toBeInTheDocument();
+      expect(screen.getByText("changelog.commitsAndAuthors")).toBeInTheDocument();
     });
   });
 
@@ -218,8 +225,8 @@ describe("ChangelogDialog", () => {
       authors: ["Alice"],
     });
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    await waitFor(() => screen.getByText("Copy as Markdown"));
-    fireEvent.click(screen.getByText("Copy as Markdown"));
+    await waitFor(() => screen.getByText("changelog.copyAsMarkdown"));
+    fireEvent.click(screen.getByText("changelog.copyAsMarkdown"));
     expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 
@@ -234,7 +241,7 @@ describe("ChangelogDialog", () => {
     });
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("No commits in this range")).toBeInTheDocument();
+      expect(screen.getByText("changelog.noCommitsInRange")).toBeInTheDocument();
     });
   });
 
@@ -242,7 +249,7 @@ describe("ChangelogDialog", () => {
     mockElectronAPI.changelog.getTagsBefore.mockResolvedValue([]);
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("Enter a ref and click Generate")).toBeInTheDocument();
+      expect(screen.getByText("changelog.enterRefAndGenerate")).toBeInTheDocument();
     });
   });
 
@@ -260,7 +267,7 @@ describe("ChangelogDialog", () => {
     fireEvent.change(screen.getByPlaceholderText("branch, tag, or commit hash"), {
       target: { value: "myref" },
     });
-    fireEvent.click(screen.getByText("Generate"));
+    fireEvent.click(screen.getByText("changelog.generate"));
     await waitFor(() => {
       expect(mockElectronAPI.changelog.generate).toHaveBeenCalledWith("myref", "abc1234");
     });
@@ -279,7 +286,7 @@ describe("ChangelogDialog", () => {
     mockElectronAPI.changelog.getTagsBefore.mockRejectedValue(new Error("No tags"));
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
     await waitFor(() => {
-      expect(screen.getByText("Generate")).toBeInTheDocument();
+      expect(screen.getByText("changelog.generate")).toBeInTheDocument();
     });
   });
 
@@ -363,8 +370,8 @@ describe("ChangelogDialog", () => {
       authors: ["Alice"],
     });
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    await waitFor(() => screen.getByText("Copy as Markdown"));
-    fireEvent.click(screen.getByText("Copy as Markdown"));
+    await waitFor(() => screen.getByText("changelog.copyAsMarkdown"));
+    fireEvent.click(screen.getByText("changelog.copyAsMarkdown"));
     const writtenText = (navigator.clipboard.writeText as ReturnType<typeof vi.fn>).mock
       .calls[0]![0] as string;
     expect(writtenText).toContain("## Changelog");
@@ -375,13 +382,13 @@ describe("ChangelogDialog", () => {
 
   it("renders in window mode without overlay wrapper", () => {
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" mode="window" />);
-    expect(screen.getByText("Close")).toBeInTheDocument();
+    expect(screen.getByText("dialogs.close")).toBeInTheDocument();
   });
 
   it("does not auto-generate when custom ref mode is active", async () => {
     mockElectronAPI.changelog.getTagsBefore.mockResolvedValue([]);
     render(<ChangelogDialog open={true} onClose={vi.fn()} commitHash="abc1234" />);
-    await waitFor(() => screen.getByText("Generate"));
+    await waitFor(() => screen.getByText("changelog.generate"));
     // generate should NOT have been called with empty customBase
     expect(mockElectronAPI.changelog.generate).not.toHaveBeenCalled();
   });

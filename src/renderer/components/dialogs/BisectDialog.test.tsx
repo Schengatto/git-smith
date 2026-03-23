@@ -5,6 +5,26 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { BisectDialog } from "./BisectDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "bisect.title": "Git Bisect",
+        "bisect.bisectInProgress": "Bisect in Progress",
+        "bisect.bisectNotActive": "Bisect Not Active",
+        "bisect.good": "Good",
+        "bisect.bad": "Bad",
+        "bisect.current": "Current:",
+        "bisect.startBisect": "Start Bisect",
+        "bisect.skip": "Skip",
+        "bisect.resetBisect": "Reset Bisect",
+        "dialogs.close": "Close",
+      };
+      return translations[key] ?? key;
+    },
+  }),
+}));
+
 const mockSelectCommit = vi.fn();
 const mockLoadGraph = vi.fn().mockResolvedValue(undefined);
 

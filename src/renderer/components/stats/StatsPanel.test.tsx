@@ -96,6 +96,13 @@ const mockLeaderboard: LeaderboardEntry[] = [
 // ---------------------------------------------------------------------------
 import { StatsPanel } from "./StatsPanel";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 describe("StatsPanel", () => {
   beforeEach(() => {
     resetStats();
@@ -244,7 +251,7 @@ describe("StatsPanel", () => {
     mockGetLeaderboard.mockResolvedValue([]);
     render(<StatsPanel />);
     await waitFor(() => {
-      expect(screen.getByText(/no data/i)).toBeInTheDocument();
+      expect(screen.getByText(/stats.noDataForTimeframe/i)).toBeInTheDocument();
     });
   });
 
@@ -252,7 +259,7 @@ describe("StatsPanel", () => {
     mockGetLeaderboard.mockResolvedValue([]);
     render(<StatsPanel />);
     await waitFor(() => {
-      expect(screen.getByText("Author Statistics")).toBeInTheDocument();
+      expect(screen.getByText("stats.authorStatistics")).toBeInTheDocument();
     });
   });
 

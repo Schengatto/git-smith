@@ -1,11 +1,20 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface ActivityHeatmapProps {
   hourlyDistribution: number[];
   dailyDistribution: number[];
 }
 
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_LABEL_KEYS = [
+  "activityHeatmap.sun",
+  "activityHeatmap.mon",
+  "activityHeatmap.tue",
+  "activityHeatmap.wed",
+  "activityHeatmap.thu",
+  "activityHeatmap.fri",
+  "activityHeatmap.sat",
+];
 const HOUR_TICK_LABELS: { hour: number; label: string }[] = [
   { hour: 0, label: "0" },
   { hour: 6, label: "6" },
@@ -29,6 +38,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   hourlyDistribution,
   dailyDistribution,
 }) => {
+  const { t } = useTranslation();
   const hours = hourlyDistribution.length === 24 ? hourlyDistribution : Array(24).fill(0);
   const days = dailyDistribution.length === 7 ? dailyDistribution : Array(7).fill(0);
 
@@ -52,7 +62,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             letterSpacing: "0.05em",
           }}
         >
-          Activity by Hour
+          {t("activityHeatmap.activityByHour")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           <div
@@ -65,13 +75,13 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
               flexShrink: 0,
             }}
           >
-            Hour
+            {t("activityHeatmap.hour")}
           </div>
           <div style={{ display: "flex", gap: cellGap }}>
             {hours.map((val, i) => (
               <div
                 key={i}
-                title={`Hour ${i}: ${val} commits`}
+                title={t("activityHeatmap.hourCommits", { hour: i, count: val })}
                 style={{
                   width: cellSize,
                   height: cellSize,
@@ -135,7 +145,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             letterSpacing: "0.05em",
           }}
         >
-          Activity by Day
+          {t("activityHeatmap.activityByDay")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           <div
@@ -148,13 +158,13 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
               flexShrink: 0,
             }}
           >
-            Day
+            {t("activityHeatmap.day")}
           </div>
           <div style={{ display: "flex", gap: cellGap }}>
             {days.map((val, i) => (
               <div
                 key={i}
-                title={`${DAY_LABELS[i]}: ${val} commits`}
+                title={t("activityHeatmap.dayCommits", { day: t(DAY_LABEL_KEYS[i]!), count: val })}
                 style={{
                   width: cellSize + 10,
                   height: cellSize,
@@ -180,7 +190,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             gap: cellGap,
           }}
         >
-          {DAY_LABELS.map((label, i) => (
+          {DAY_LABEL_KEYS.map((key, i) => (
             <span
               key={i}
               style={{
@@ -192,7 +202,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                 userSelect: "none",
               }}
             >
-              {label}
+              {t(key)}
             </span>
           ))}
         </div>
@@ -200,7 +210,9 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
       {/* Legend */}
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Less</span>
+        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
+          {t("activityHeatmap.less")}
+        </span>
         {[0, 0.25, 0.5, 0.75, 1].map((opacity, i) => (
           <div
             key={i}
@@ -215,7 +227,9 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             }}
           />
         ))}
-        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>More</span>
+        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
+          {t("activityHeatmap.more")}
+        </span>
       </div>
     </div>
   );

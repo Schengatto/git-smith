@@ -3,6 +3,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "hunkStaging.stageHunk": "Stage Hunk",
+        "hunkStaging.unstageHunk": "Unstage Hunk",
+        "hunkStaging.stageLines": "Stage {{count}} lines",
+        "hunkStaging.unstageLines": "Unstage {{count}} lines",
+        "hunkStaging.noDiffAvailable": "No diff available",
+      };
+      let result = translations[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 import { HunkStagingView, parseHunks, buildPatch } from "./HunkStagingView";
 
 // ─── parseHunks unit tests ─────────────────────────────────────────────────────

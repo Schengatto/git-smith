@@ -1,18 +1,20 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useCodebaseStatsStore } from "../../store/codebase-stats-store";
 import { useRepoStore } from "../../store/repo-store";
 
-const TYPE_LABELS: Record<string, string> = {
-  source: "Source",
-  test: "Test",
-  config: "Config",
-  styles: "Styles",
-  docs: "Docs",
-  cicd: "CI/CD",
-  other: "Other",
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  source: "codebaseStats.source",
+  test: "codebaseStats.test",
+  config: "codebaseStats.config",
+  styles: "codebaseStats.styles",
+  docs: "codebaseStats.docs",
+  cicd: "codebaseStats.cicd",
+  other: "codebaseStats.other",
 };
 
 export const CodebaseStatsPanel: React.FC = () => {
+  const { t } = useTranslation();
   const repo = useRepoStore((s) => s.repo);
   const { stats, loading, error, loadStats, reset } = useCodebaseStatsStore();
 
@@ -35,7 +37,7 @@ export const CodebaseStatsPanel: React.FC = () => {
           color: "var(--text-secondary)",
         }}
       >
-        Open a repository to see codebase statistics
+        {t("codebaseStats.openRepoToSee")}
       </div>
     );
   }
@@ -51,7 +53,7 @@ export const CodebaseStatsPanel: React.FC = () => {
           color: "var(--text-secondary)",
         }}
       >
-        Loading codebase statistics...
+        {t("codebaseStats.loadingStats")}
       </div>
     );
   }
@@ -80,7 +82,7 @@ export const CodebaseStatsPanel: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Retry
+          {t("dialogs.retry")}
         </button>
       </div>
     );
@@ -97,7 +99,7 @@ export const CodebaseStatsPanel: React.FC = () => {
           color: "var(--text-secondary)",
         }}
       >
-        No tracked files found
+        {t("codebaseStats.noTrackedFiles")}
       </div>
     );
   }
@@ -119,7 +121,7 @@ export const CodebaseStatsPanel: React.FC = () => {
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontWeight: "bold", fontSize: "14px" }}>Codebase Statistics</span>
+        <span style={{ fontWeight: "bold", fontSize: "14px" }}>{t("codebaseStats.title")}</span>
         <button
           onClick={loadStats}
           style={{
@@ -132,16 +134,16 @@ export const CodebaseStatsPanel: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          ⟳ Refresh
+          ⟳ {t("codebaseStats.refresh")}
         </button>
       </div>
 
       {/* Summary row */}
       <div style={{ display: "flex", gap: "12px" }}>
         {[
-          { label: "Total LOC", value: stats.totalLines.toLocaleString() },
-          { label: "Files", value: stats.totalFiles.toLocaleString() },
-          { label: "Languages", value: String(stats.languageCount) },
+          { label: t("codebaseStats.totalLoc"), value: stats.totalLines.toLocaleString() },
+          { label: t("codebaseStats.files"), value: stats.totalFiles.toLocaleString() },
+          { label: t("codebaseStats.languages"), value: String(stats.languageCount) },
         ].map((item) => (
           <div
             key={item.label}
@@ -170,7 +172,7 @@ export const CodebaseStatsPanel: React.FC = () => {
             marginBottom: "10px",
           }}
         >
-          Lines of Code by Language
+          {t("codebaseStats.linesByLanguage")}
         </div>
         {stats.byLanguage.map((lang) => (
           <div
@@ -243,25 +245,25 @@ export const CodebaseStatsPanel: React.FC = () => {
             marginBottom: "10px",
           }}
         >
-          Lines of Code by Type
+          {t("codebaseStats.linesByType")}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-          {stats.byType.map((t) => (
+          {stats.byType.map((tp) => (
             <div
-              key={t.type}
+              key={tp.type}
               style={{
                 background: "var(--surface-1)",
                 borderRadius: "6px",
                 padding: "10px",
                 textAlign: "center",
-                borderLeft: `3px solid ${t.color}`,
+                borderLeft: `3px solid ${tp.color}`,
               }}
             >
-              <div style={{ color: t.color, fontSize: "18px", fontWeight: "bold" }}>
-                {t.lines.toLocaleString()}
+              <div style={{ color: tp.color, fontSize: "18px", fontWeight: "bold" }}>
+                {tp.lines.toLocaleString()}
               </div>
               <div style={{ fontSize: "10px", color: "var(--text-secondary)" }}>
-                {TYPE_LABELS[t.type] ?? t.type}
+                {TYPE_LABEL_KEYS[tp.type] ? t(TYPE_LABEL_KEYS[tp.type]!) : tp.type}
               </div>
             </div>
           ))}
@@ -279,7 +281,7 @@ export const CodebaseStatsPanel: React.FC = () => {
             marginBottom: "10px",
           }}
         >
-          Test Code Ratio
+          {t("codebaseStats.testCodeRatio")}
         </div>
         {stats.testRatio.sourceLines + stats.testRatio.testLines > 0 ? (
           <>
@@ -298,7 +300,7 @@ export const CodebaseStatsPanel: React.FC = () => {
                 <span
                   style={{ color: "var(--text-on-color)", fontSize: "10px", fontWeight: "bold" }}
                 >
-                  Source {(100 - stats.testRatio.percentage).toFixed(0)}%
+                  {t("codebaseStats.source")} {(100 - stats.testRatio.percentage).toFixed(0)}%
                 </span>
               </div>
               <div
@@ -314,7 +316,7 @@ export const CodebaseStatsPanel: React.FC = () => {
                   <span
                     style={{ color: "var(--text-on-color)", fontSize: "10px", fontWeight: "bold" }}
                   >
-                    Test {stats.testRatio.percentage.toFixed(0)}%
+                    {t("codebaseStats.test")} {stats.testRatio.percentage.toFixed(0)}%
                   </span>
                 )}
               </div>
@@ -323,20 +325,21 @@ export const CodebaseStatsPanel: React.FC = () => {
               <span style={{ color: "var(--green)" }}>
                 {stats.testRatio.testLines.toLocaleString()}
               </span>{" "}
-              lines of test code for{" "}
+              {t("codebaseStats.linesOfTestCode")}{" "}
               <span style={{ color: "var(--accent)" }}>
                 {stats.testRatio.sourceLines.toLocaleString()}
               </span>{" "}
-              lines of source code
+              {t("codebaseStats.linesOfSourceCode")}
               <span style={{ color: "var(--text-muted)" }}>
                 {" "}
-                — ratio 1:{stats.testRatio.ratio > 0 ? (1 / stats.testRatio.ratio).toFixed(1) : "∞"}
+                — {t("codebaseStats.ratio")} 1:
+                {stats.testRatio.ratio > 0 ? (1 / stats.testRatio.ratio).toFixed(1) : "∞"}
               </span>
             </div>
           </>
         ) : (
           <div style={{ color: "var(--text-secondary)", fontSize: "12px" }}>
-            No source or test files found
+            {t("codebaseStats.noSourceOrTestFiles")}
           </div>
         )}
       </div>

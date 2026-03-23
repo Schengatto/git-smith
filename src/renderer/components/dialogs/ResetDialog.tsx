@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -13,28 +14,29 @@ interface Props {
   commitSubject: string;
 }
 
-const MODES: { value: ResetMode; label: string; description: string; color: string }[] = [
+const MODES: { value: ResetMode; labelKey: string; descriptionKey: string; color: string }[] = [
   {
     value: "soft",
-    label: "Soft",
-    description: "Move HEAD only. Staged and working directory unchanged.",
+    labelKey: "resetDialog.soft",
+    descriptionKey: "resetDialog.softFullDescription",
     color: "var(--green)",
   },
   {
     value: "mixed",
-    label: "Mixed",
-    description: "Move HEAD and reset staging area. Working directory unchanged.",
+    labelKey: "resetDialog.mixed",
+    descriptionKey: "resetDialog.mixedFullDescription",
     color: "var(--yellow)",
   },
   {
     value: "hard",
-    label: "Hard",
-    description: "Move HEAD, reset staging area and working directory. All changes will be lost!",
+    labelKey: "resetDialog.hard",
+    descriptionKey: "resetDialog.hardFullDescription",
     color: "var(--red)",
   },
 ];
 
 export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commitSubject }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<ResetMode>("mixed");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
   const selectedMode = MODES.find((m) => m.value === mode)!;
 
   return (
-    <ModalDialog open={open} title="Reset Branch" onClose={onClose} width={460}>
+    <ModalDialog open={open} title={t("resetDialog.title")} onClose={onClose} width={460}>
       {/* Target commit */}
       <div style={{ marginBottom: 16 }}>
         <div
@@ -82,7 +84,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
             marginBottom: 4,
           }}
         >
-          Reset to
+          {t("resetDialog.resetToLabel")}
         </div>
         <div
           style={{
@@ -115,8 +117,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
             marginBottom: 12,
           }}
         >
-          HEAD is detached — no local branch is currently checked out. This reset will only move
-          HEAD, not any branch. Checkout a branch first if you want to reset it.
+          {t("resetDialog.detachedHeadWarning")}
         </div>
       )}
 
@@ -132,7 +133,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
             marginBottom: 8,
           }}
         >
-          Reset mode
+          {t("resetDialog.resetMode")}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {MODES.map((m) => (
@@ -166,7 +167,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
                 }}
               />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: m.color }}>{m.label}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: m.color }}>{t(m.labelKey)}</div>
                 <div
                   style={{
                     fontSize: 11,
@@ -175,7 +176,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
                     lineHeight: 1.4,
                   }}
                 >
-                  {m.description}
+                  {t(m.descriptionKey)}
                 </div>
               </div>
             </label>
@@ -197,8 +198,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
             marginBottom: 8,
           }}
         >
-          This will permanently discard all uncommitted changes in your working directory and
-          staging area. This action cannot be undone.
+          {t("resetDialog.hardResetWarning")}
         </div>
       )}
 
@@ -206,7 +206,7 @@ export const ResetDialog: React.FC<Props> = ({ open, onClose, commitHash, commit
       <DialogActions
         onCancel={onClose}
         onConfirm={handleReset}
-        confirmLabel={`Reset ${selectedMode.label}`}
+        confirmLabel={`${t("resetDialog.resetButton")} ${t(selectedMode.labelKey)}`}
         confirmColor={selectedMode.color}
         loading={loading}
       />

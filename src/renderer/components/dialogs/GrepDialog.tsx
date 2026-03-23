@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogCheckbox, DialogError } from "./ModalDialog";
 import type { GrepResult, GrepMatch } from "../../../shared/git-types";
 
@@ -68,6 +69,7 @@ function highlightMatch(
 }
 
 export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [pattern, setPattern] = useState("");
   const [ignoreCase, setIgnoreCase] = useState(false);
   const [regex, setRegex] = useState(false);
@@ -126,7 +128,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
   const canSearch = pattern.trim().length > 0 && !loading;
 
   return (
-    <ModalDialog open={open} title="Git Grep / Code Search" onClose={onClose} width={700}>
+    <ModalDialog open={open} title={t("grep.title")} onClose={onClose} width={700}>
       {/* Search bar */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
         <input
@@ -134,7 +136,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
           value={pattern}
           onChange={(e) => setPattern(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search pattern..."
+          placeholder={t("grep.searchPlaceholder")}
           style={{
             flex: 1,
             padding: "7px 10px",
@@ -167,15 +169,19 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
             transition: "background 0.15s",
           }}
         >
-          {loading ? "Searching..." : "Search"}
+          {loading ? t("grep.searching") : t("grep.search")}
         </button>
       </div>
 
       {/* Options row */}
       <div style={{ display: "flex", gap: 20, marginBottom: 12 }}>
-        <DialogCheckbox label="Case insensitive" checked={ignoreCase} onChange={setIgnoreCase} />
-        <DialogCheckbox label="Regex" checked={regex} onChange={setRegex} />
-        <DialogCheckbox label="Whole word" checked={wholeWord} onChange={setWholeWord} />
+        <DialogCheckbox
+          label={t("grep.caseInsensitive")}
+          checked={ignoreCase}
+          onChange={setIgnoreCase}
+        />
+        <DialogCheckbox label={t("grep.regex")} checked={regex} onChange={setRegex} />
+        <DialogCheckbox label={t("grep.wholeWord")} checked={wholeWord} onChange={setWholeWord} />
       </div>
 
       <DialogError error={error} />
@@ -192,11 +198,12 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
           }}
         >
           <span>
-            {result.matches.length} match{result.matches.length !== 1 ? "es" : ""} in{" "}
-            {groups.length} file{groups.length !== 1 ? "s" : ""}
+            {result.matches.length}{" "}
+            {result.matches.length !== 1 ? t("grep.matches") : t("grep.match")} in {groups.length}{" "}
+            file{groups.length !== 1 ? "s" : ""}
           </span>
           {result.totalCount > result.matches.length && (
-            <span style={{ color: "var(--yellow)" }}>(limited to 500 results)</span>
+            <span style={{ color: "var(--yellow)" }}>{t("grep.limitedResults")}</span>
           )}
         </div>
       )}
@@ -224,7 +231,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
               flexShrink: 0,
             }}
           />
-          Searching...
+          {t("grep.searching")}
         </div>
       )}
 
@@ -244,7 +251,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
               {/* File header */}
               <div
                 onClick={() => handleOpenFile(group.file)}
-                title="Open file"
+                title={t("grep.openFile")}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -289,7 +296,8 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
                   {group.file}
                 </span>
                 <span style={{ fontSize: 10, color: "var(--text-muted)", flexShrink: 0 }}>
-                  {group.matches.length} match{group.matches.length !== 1 ? "es" : ""}
+                  {group.matches.length}{" "}
+                  {group.matches.length !== 1 ? t("grep.matches") : t("grep.match")}
                 </span>
               </div>
 
@@ -298,7 +306,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
                 <div
                   key={idx}
                   onClick={() => handleOpenFile(match.file)}
-                  title="Open file"
+                  title={t("grep.openFile")}
                   style={{
                     display: "flex",
                     alignItems: "baseline",
@@ -366,7 +374,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
             fontSize: 12,
           }}
         >
-          No matches found for{" "}
+          {t("grep.noMatchesFoundFor")}{" "}
           <span style={{ fontFamily: "monospace", color: "var(--text-primary)" }}>{pattern}</span>
         </div>
       )}
@@ -386,7 +394,7 @@ export const GrepDialog: React.FC<Props> = ({ open, onClose }) => {
             cursor: "pointer",
           }}
         >
-          Close
+          {t("dialogs.close")}
         </button>
       </div>
 

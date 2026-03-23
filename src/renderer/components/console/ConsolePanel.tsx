@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { useRepoStore } from "../../store/repo-store";
 
 export const ConsolePanel: React.FC = () => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const repo = useRepoStore((s) => s.repo);
 
@@ -62,7 +64,7 @@ export const ConsolePanel: React.FC = () => {
       try {
         await window.electronAPI.terminal.spawn(term.cols, term.rows);
       } catch (err) {
-        term.write(`\r\n\x1b[31mFailed to start shell: ${err}\x1b[0m\r\n`);
+        term.write(`\r\n\x1b[31m${t("console.failedToStartShell", { error: err })}\x1b[0m\r\n`);
         return;
       }
 
@@ -77,7 +79,7 @@ export const ConsolePanel: React.FC = () => {
       });
 
       unsubExit = window.electronAPI.on.terminalExit(() => {
-        term?.write("\r\n[Process exited]\r\n");
+        term?.write(`\r\n${t("console.processExited")}\r\n`);
       });
 
       // xterm input → PTY

@@ -3,6 +3,26 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      const translations: Record<string, string> = {
+        "ai.aiReviewTitle": "AI Code Review — {{hash}}",
+        "ai.analyzingCommit": "Analyzing commit...",
+        "ai.close": "Close",
+      };
+      let result = translations[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{{${k}}}`, v);
+        });
+      }
+      return result;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 import { AiReviewDialog } from "./AiReviewDialog";
 
 const reviewCommitMock = vi.fn();

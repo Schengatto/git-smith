@@ -6,6 +6,24 @@ import React from "react";
 import { ReflogDialog } from "./ReflogDialog";
 import type { ReflogEntry } from "../../../shared/git-types";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "reflog.title": "Git Reflog",
+        "reflog.filterPlaceholder": "Filter reflog entries...",
+        "reflog.entry": "entry",
+        "reflog.entries": "entries",
+        "reflog.clickToNavigate": "Click a row to navigate to that commit",
+        "reflog.noEntriesFound": "No reflog entries found",
+        "reflog.noEntriesMatchFilter": "No entries match the filter",
+        "dialogs.loading": "Loading...",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 const mockEntries: ReflogEntry[] = [
   {
     hash: "abc123full",

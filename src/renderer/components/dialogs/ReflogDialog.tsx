@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import { useGraphStore } from "../../store/graph-store";
 import type { ReflogEntry } from "../../../shared/git-types";
@@ -33,6 +34,7 @@ const actionBadgeBg = (action: string): string => {
 };
 
 export const ReflogDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<ReflogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("");
@@ -84,13 +86,13 @@ export const ReflogDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Git Reflog" onClose={onClose} width={680}>
+    <ModalDialog open={open} title={t("reflog.title")} onClose={onClose} width={680}>
       {/* Filter input */}
       <div style={{ marginBottom: 10 }}>
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter reflog entries..."
+          placeholder={t("reflog.filterPlaceholder")}
           style={{
             width: "100%",
             padding: "7px 10px",
@@ -117,9 +119,11 @@ export const ReflogDialog: React.FC<Props> = ({ open, onClose }) => {
         }}
       >
         <span>
-          {loading ? "Loading..." : `${filtered.length} entr${filtered.length === 1 ? "y" : "ies"}`}
+          {loading
+            ? t("dialogs.loading")
+            : `${filtered.length} ${filtered.length === 1 ? t("reflog.entry") : t("reflog.entries")}`}
         </span>
-        <span>Click a row to navigate to that commit</span>
+        <span>{t("reflog.clickToNavigate")}</span>
       </div>
 
       {/* Table */}
@@ -140,7 +144,7 @@ export const ReflogDialog: React.FC<Props> = ({ open, onClose }) => {
               color: "var(--text-muted)",
             }}
           >
-            {entries.length === 0 ? "No reflog entries found" : "No entries match the filter"}
+            {entries.length === 0 ? t("reflog.noEntriesFound") : t("reflog.noEntriesMatchFilter")}
           </div>
         ) : (
           filtered.map((entry, i) => (

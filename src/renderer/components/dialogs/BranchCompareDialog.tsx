@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type { CommitInfo, BranchInfo } from "../../../shared/git-types";
 
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [refA, setRefA] = useState("");
   const [refB, setRefB] = useState("");
@@ -65,7 +67,7 @@ export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [refA, refB]);
 
   return (
-    <ModalDialog open={open} title="Compare Branch Commit Ranges" onClose={onClose} width={800}>
+    <ModalDialog open={open} title={t("branchCompare.title")} onClose={onClose} width={800}>
       {/* Ref selectors */}
       <div
         style={{
@@ -87,7 +89,7 @@ export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
               letterSpacing: "0.05em",
             }}
           >
-            Branch A
+            {t("branchCompare.branchA")}
           </label>
           <select
             value={refA}
@@ -117,7 +119,7 @@ export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
         {/* Swap button */}
         <button
           onClick={handleSwap}
-          title="Swap branches"
+          title={t("branchCompare.swapBranches")}
           style={{
             marginTop: 18,
             padding: "6px 10px",
@@ -163,7 +165,7 @@ export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
               letterSpacing: "0.05em",
             }}
           >
-            Branch B
+            {t("branchCompare.branchB")}
           </label>
           <select
             value={refB}
@@ -207,7 +209,7 @@ export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
             whiteSpace: "nowrap",
           }}
         >
-          {loading ? "Comparing..." : "Compare"}
+          {loading ? t("branchCompare.comparing") : t("branchCompare.compare")}
         </button>
       </div>
 
@@ -233,7 +235,7 @@ export const BranchCompareDialog: React.FC<Props> = ({ open, onClose }) => {
             color: "var(--text-muted)",
           }}
         >
-          Select two branches and click Compare to see exclusive commits.
+          {t("branchCompare.selectBranchesPrompt")}
         </div>
       )}
     </ModalDialog>
@@ -244,78 +246,81 @@ const CommitColumn: React.FC<{
   title: string;
   commits: CommitInfo[];
   accentColor: string;
-}> = ({ title, commits, accentColor }) => (
-  <div
-    style={{
-      flex: 1,
-      minWidth: 0,
-      border: "1px solid var(--border-subtle)",
-      borderRadius: 8,
-      overflow: "hidden",
-    }}
-  >
-    {/* Column header */}
+}> = ({ title, commits, accentColor }) => {
+  const { t } = useTranslation();
+  return (
     <div
       style={{
-        padding: "8px 12px",
-        background: "var(--surface-2)",
-        borderBottom: "1px solid var(--border-subtle)",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
+        flex: 1,
+        minWidth: 0,
+        border: "1px solid var(--border-subtle)",
+        borderRadius: 8,
+        overflow: "hidden",
       }}
     >
-      <span
+      {/* Column header */}
+      <div
         style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: accentColor,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
+          padding: "8px 12px",
+          background: "var(--surface-2)",
+          borderBottom: "1px solid var(--border-subtle)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
-        {title}
-      </span>
-      <span
-        style={{
-          fontSize: 11,
-          color: "var(--text-muted)",
-          background: "var(--surface-3)",
-          borderRadius: 10,
-          padding: "1px 7px",
-        }}
-      >
-        {commits.length}
-      </span>
-    </div>
-
-    {/* Commit list */}
-    <div
-      style={{
-        maxHeight: 360,
-        overflowY: "auto",
-        background: "var(--surface-0)",
-      }}
-    >
-      {commits.length === 0 ? (
-        <div
+        <span
           style={{
-            padding: "20px 12px",
-            fontSize: 12,
-            color: "var(--text-muted)",
-            textAlign: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: accentColor,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
           }}
         >
-          No exclusive commits
-        </div>
-      ) : (
-        commits.map((commit) => (
-          <CommitRow key={commit.hash} commit={commit} accentColor={accentColor} />
-        ))
-      )}
+          {title}
+        </span>
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--text-muted)",
+            background: "var(--surface-3)",
+            borderRadius: 10,
+            padding: "1px 7px",
+          }}
+        >
+          {commits.length}
+        </span>
+      </div>
+
+      {/* Commit list */}
+      <div
+        style={{
+          maxHeight: 360,
+          overflowY: "auto",
+          background: "var(--surface-0)",
+        }}
+      >
+        {commits.length === 0 ? (
+          <div
+            style={{
+              padding: "20px 12px",
+              fontSize: 12,
+              color: "var(--text-muted)",
+              textAlign: "center",
+            }}
+          >
+            {t("branchCompare.noExclusiveCommits")}
+          </div>
+        ) : (
+          commits.map((commit) => (
+            <CommitRow key={commit.hash} commit={commit} accentColor={accentColor} />
+          ))
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CommitRow: React.FC<{ commit: CommitInfo; accentColor: string }> = ({
   commit,

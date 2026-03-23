@@ -5,6 +5,26 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { AboutDialog } from "./AboutDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "about.title": "About GitSmith",
+        "app.name": "GitSmith",
+        "about.description":
+          "A cross-platform Git GUI desktop application inspired by Git Extensions.",
+        "about.version": "Version",
+        "about.license": "License",
+        "about.author": "Author",
+        "about.donateViaPaypal": "Donate via PayPal",
+        "dialogs.close": "Close",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 // Mock electronAPI
 const openExternalMock = vi.fn();
 

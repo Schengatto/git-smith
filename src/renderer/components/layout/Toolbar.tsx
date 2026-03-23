@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
@@ -261,6 +262,7 @@ function repoName(path: string): string {
 }
 
 const RepoSelector: React.FC = () => {
+  const { t } = useTranslation();
   const { repo, recentRepos, openRepo, closeRepo, openRepoDialog } = useRepoStore();
   const { openCloneDialog } = useUIStore();
   const [open, setOpen] = useState(false);
@@ -328,7 +330,7 @@ const RepoSelector: React.FC = () => {
               letterSpacing: "0.5px",
             }}
           >
-            Current Repository
+            {t("toolbar.currentRepo")}
           </div>
           <div
             style={{
@@ -370,8 +372,8 @@ const RepoSelector: React.FC = () => {
                 padding: 4,
                 borderRadius: 4,
               }}
-              title="Close repository"
-              aria-label="Close repository"
+              title={t("toolbar.closeRepo")}
+              aria-label={t("toolbar.closeRepo")}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
             >
@@ -393,7 +395,7 @@ const RepoSelector: React.FC = () => {
               letterSpacing: "0.5px",
             }}
           >
-            Recent Repositories
+            {t("toolbar.recentRepos")}
           </div>
           {recentRepos.filter((r) => r !== repo.path).length === 0 ? (
             <div
@@ -404,7 +406,7 @@ const RepoSelector: React.FC = () => {
                 fontStyle: "italic",
               }}
             >
-              No other recent repositories
+              {t("toolbar.noOtherRecentRepos")}
             </div>
           ) : (
             recentRepos
@@ -481,7 +483,7 @@ const RepoSelector: React.FC = () => {
             <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>
               <IconFolder />
             </span>
-            Open...
+            {t("toolbar.open")}
           </button>
           <button
             onClick={() => {
@@ -507,7 +509,7 @@ const RepoSelector: React.FC = () => {
             <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>
               <IconDownload />
             </span>
-            Clone...
+            {t("toolbar.clone")}
           </button>
         </div>
       )}
@@ -532,6 +534,7 @@ const IconUser = () => (
 );
 
 const AccountSelector: React.FC = () => {
+  const { t } = useTranslation();
   const { repo } = useRepoStore();
   const {
     accounts,
@@ -576,7 +579,7 @@ const AccountSelector: React.FC = () => {
         title={
           currentAccount
             ? `${currentAccount.name} <${currentAccount.email}>`
-            : "No account assigned"
+            : t("toolbar.noAccountAssigned")
         }
       >
         <IconUser />
@@ -588,7 +591,7 @@ const AccountSelector: React.FC = () => {
             fontSize: 11,
           }}
         >
-          {currentAccount?.label || "No account"}
+          {currentAccount?.label || t("toolbar.noAccount")}
         </span>
         <IconChevronDown />
       </button>
@@ -620,7 +623,7 @@ const AccountSelector: React.FC = () => {
               letterSpacing: "0.5px",
             }}
           >
-            Set for this repo
+            {t("toolbar.setForThisRepo")}
           </div>
 
           {/* None option */}
@@ -646,7 +649,7 @@ const AccountSelector: React.FC = () => {
               if (currentAccount) e.currentTarget.style.background = "transparent";
             }}
           >
-            None (use git config default)
+            {t("toolbar.noneDefault")}
           </div>
 
           {accounts.map((account) => (
@@ -695,7 +698,7 @@ const AccountSelector: React.FC = () => {
               letterSpacing: "0.5px",
             }}
           >
-            Set as global default
+            {t("toolbar.setAsGlobalDefault")}
           </div>
           {accounts.map((account) => (
             <div
@@ -739,7 +742,7 @@ const AccountSelector: React.FC = () => {
             onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-3)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            Manage accounts...
+            {t("toolbar.manageAccounts")}
           </div>
         </div>
       )}
@@ -748,6 +751,7 @@ const AccountSelector: React.FC = () => {
 };
 
 export const Toolbar: React.FC = () => {
+  const { t } = useTranslation();
   const { repo, status, refreshStatus, refreshInfo } = useRepoStore();
   const { loadGraph } = useGraphStore();
   const [commitOpen, setCommitOpen] = useState(false);
@@ -839,8 +843,8 @@ export const Toolbar: React.FC = () => {
 
   const pushItems: DropdownEntry[] = [
     {
-      label: "Push",
-      sublabel: "git push",
+      label: t("toolbar.push"),
+      sublabel: t("toolbar.pushSublabel"),
       icon: <IconArrowUp />,
       onClick: async () => {
         try {
@@ -854,8 +858,8 @@ export const Toolbar: React.FC = () => {
     },
     { divider: true },
     {
-      label: "Force Push",
-      sublabel: "git push --force (rewrites remote history!)",
+      label: t("toolbar.forcePush"),
+      sublabel: t("toolbar.forcePushSublabel"),
       icon: <IconWarning />,
       onClick: () => setForcePushConfirm(true),
     },
@@ -863,8 +867,8 @@ export const Toolbar: React.FC = () => {
 
   const pullItems: DropdownEntry[] = [
     {
-      label: "Pull",
-      sublabel: "Default strategy from git config",
+      label: t("toolbar.pull"),
+      sublabel: t("toolbar.pullSublabel"),
       icon: <IconArrowDown />,
       onClick: async () => {
         await runGitOperation("Pull", () => window.electronAPI.remote.pull());
@@ -872,8 +876,8 @@ export const Toolbar: React.FC = () => {
       },
     },
     {
-      label: "Pull (Merge)",
-      sublabel: "git pull --no-rebase",
+      label: t("toolbar.pullMerge"),
+      sublabel: t("toolbar.pullMergeSublabel"),
       icon: <IconMerge />,
       onClick: async () => {
         await runGitOperation("Pull (Merge)", () => window.electronAPI.remote.pullMerge());
@@ -881,8 +885,8 @@ export const Toolbar: React.FC = () => {
       },
     },
     {
-      label: "Pull (Rebase)",
-      sublabel: "git pull --rebase",
+      label: t("toolbar.pullRebase"),
+      sublabel: t("toolbar.pullRebaseSublabel"),
       icon: <IconRebase />,
       onClick: async () => {
         await runGitOperation("Pull (Rebase)", () => window.electronAPI.remote.pullRebase());
@@ -911,33 +915,33 @@ export const Toolbar: React.FC = () => {
 
   const stashItems: DropdownEntry[] = [
     {
-      label: "Stash",
-      sublabel: "Stash all modified files",
+      label: t("toolbar.stash"),
+      sublabel: t("toolbar.stashSublabel"),
       icon: <IconStash />,
       onClick: () => handleStashQuick(),
     },
     {
-      label: "Stash staged",
-      sublabel: "Stash only staged files",
+      label: t("toolbar.stashStaged"),
+      sublabel: t("toolbar.stashStagedSublabel"),
       icon: <IconStash />,
       onClick: () => handleStashQuick({ staged: true }),
     },
     {
-      label: "Stash pop",
-      sublabel: "Restore the most recent stash",
+      label: t("toolbar.stashPop"),
+      sublabel: t("toolbar.stashPopSublabel"),
       icon: <IconArrowDown />,
       onClick: handleStashPop,
     },
     { divider: true },
     {
-      label: "Manage stashes...",
-      sublabel: "View and manage all stashes",
+      label: t("toolbar.manageStashes"),
+      sublabel: t("toolbar.manageStashesSublabel"),
       icon: <IconStash />,
       onClick: () => openDialogWindow({ dialog: "StashDialog" }),
     },
     {
-      label: "Create a stash...",
-      sublabel: "Stash with message and options",
+      label: t("toolbar.createStash"),
+      sublabel: t("toolbar.createStashSublabel"),
       icon: <IconStash />,
       onClick: () => openDialogWindow({ dialog: "StashDialog" }),
     },
@@ -945,8 +949,8 @@ export const Toolbar: React.FC = () => {
 
   const fetchItems: DropdownEntry[] = [
     {
-      label: "Fetch",
-      sublabel: "Fetch from default remote",
+      label: t("toolbar.fetch"),
+      sublabel: t("toolbar.fetchSublabel"),
       icon: <IconDownload />,
       onClick: async () => {
         await runGitOperation("Fetch", () => window.electronAPI.remote.fetch());
@@ -954,8 +958,8 @@ export const Toolbar: React.FC = () => {
       },
     },
     {
-      label: "Fetch All",
-      sublabel: "git fetch --all",
+      label: t("toolbar.fetchAll"),
+      sublabel: t("toolbar.fetchAllSublabel"),
       icon: <IconGlobe />,
       onClick: async () => {
         await runGitOperation("Fetch All", () => window.electronAPI.remote.fetchAll());
@@ -964,8 +968,8 @@ export const Toolbar: React.FC = () => {
     },
     { divider: true },
     {
-      label: "Fetch & Prune",
-      sublabel: "git fetch --all --prune",
+      label: t("toolbar.fetchPrune"),
+      sublabel: t("toolbar.fetchPruneSublabel"),
       icon: <IconPrune />,
       onClick: async () => {
         await runGitOperation("Fetch & Prune", () => window.electronAPI.remote.fetchPrune());
@@ -974,8 +978,8 @@ export const Toolbar: React.FC = () => {
     },
     { divider: true },
     {
-      label: "Batch Fetch All Repos",
-      sublabel: "Fetch all recent repositories",
+      label: t("toolbar.batchFetchAll"),
+      sublabel: t("toolbar.batchFetchAllSublabel"),
       icon: <IconGlobe />,
       onClick: async () => {
         const repos = await window.electronAPI.repo.getRecent();
@@ -992,7 +996,7 @@ export const Toolbar: React.FC = () => {
         // Re-open current repo
         if (repo) await window.electronAPI.repo.open(repo.path);
         await Promise.all([refreshInfo(), loadGraph()]);
-        alert(`Fetched ${fetched} of ${repos.length} repositories`);
+        alert(t("toolbar.batchFetchResult", { fetched, total: repos.length }));
       },
     },
   ];
@@ -1009,26 +1013,26 @@ export const Toolbar: React.FC = () => {
       <RepoSelector />
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
-      <button onClick={handleRefresh} className="toolbar-btn" title="Refresh">
-        <IconRefresh /> Refresh
+      <button onClick={handleRefresh} className="toolbar-btn" title={t("toolbar.refresh")}>
+        <IconRefresh /> {t("toolbar.refresh")}
       </button>
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
 
-      <DropdownButton icon={<IconDownload />} label="Fetch" items={fetchItems} />
+      <DropdownButton icon={<IconDownload />} label={t("toolbar.fetch")} items={fetchItems} />
 
-      <DropdownButton icon={<IconArrowDown />} label="Pull" items={pullItems} />
+      <DropdownButton icon={<IconArrowDown />} label={t("toolbar.pull")} items={pullItems} />
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
 
       <button
         onClick={() => setCommitOpen(true)}
         className="toolbar-btn"
-        title="Commit (Ctrl+K)"
+        title={t("toolbar.commitShortcut")}
         style={changedCount > 0 ? { color: "var(--peach)" } : undefined}
       >
         <IconCommit />
-        Commit
+        {t("toolbar.commit")}
         {changedCount > 0 && (
           <span
             style={{
@@ -1049,19 +1053,27 @@ export const Toolbar: React.FC = () => {
         )}
       </button>
 
-      <DropdownButton icon={<IconArrowUp />} label="Push" items={pushItems} />
+      <DropdownButton icon={<IconArrowUp />} label={t("toolbar.push")} items={pushItems} />
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
 
-      <DropdownButton icon={<IconStash />} label="Stash" items={stashItems} />
+      <DropdownButton icon={<IconStash />} label={t("toolbar.stash")} items={stashItems} />
 
-      <button onClick={() => setRemotesOpen(true)} className="toolbar-btn" title="Manage Remotes">
-        <IconGlobe /> Remotes
+      <button
+        onClick={() => setRemotesOpen(true)}
+        className="toolbar-btn"
+        title={t("toolbar.manageRemotes")}
+      >
+        <IconGlobe /> {t("toolbar.remotes")}
       </button>
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
 
-      <button onClick={() => setBisectOpen(true)} className="toolbar-btn" title="Git Bisect">
+      <button
+        onClick={() => setBisectOpen(true)}
+        className="toolbar-btn"
+        title={t("toolbar.gitBisect")}
+      >
         <svg
           width="13"
           height="13"
@@ -1076,13 +1088,13 @@ export const Toolbar: React.FC = () => {
           <line x1="12" y1="8" x2="12" y2="16" />
           <line x1="8" y1="12" x2="16" y2="12" />
         </svg>
-        Bisect
+        {t("toolbar.bisect")}
       </button>
 
       <button
         onClick={() => setWorktreeOpen(true)}
         className="toolbar-btn"
-        title="Manage Worktrees"
+        title={t("toolbar.manageWorktrees")}
       >
         <svg
           width="13"
@@ -1098,10 +1110,14 @@ export const Toolbar: React.FC = () => {
           <line x1="12" y1="11" x2="12" y2="17" />
           <line x1="9" y1="14" x2="15" y2="14" />
         </svg>
-        Worktrees
+        {t("toolbar.worktrees")}
       </button>
 
-      <button onClick={() => setPatchApplyOpen(true)} className="toolbar-btn" title="Apply Patch">
+      <button
+        onClick={() => setPatchApplyOpen(true)}
+        className="toolbar-btn"
+        title={t("toolbar.applyPatch")}
+      >
         <svg
           width="13"
           height="13"
@@ -1115,7 +1131,7 @@ export const Toolbar: React.FC = () => {
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
         </svg>
-        Patch
+        {t("toolbar.patch")}
       </button>
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
@@ -1123,7 +1139,7 @@ export const Toolbar: React.FC = () => {
       <button
         onClick={() => setSubmodulesOpen(true)}
         className="toolbar-btn"
-        title="Manage Submodules"
+        title={t("toolbar.manageSubmodules")}
       >
         <svg
           width="13"
@@ -1138,10 +1154,10 @@ export const Toolbar: React.FC = () => {
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
           <rect x="7" y="7" width="10" height="10" rx="1" ry="1" />
         </svg>
-        Submodules
+        {t("toolbar.submodules")}
       </button>
 
-      <button onClick={() => setLfsOpen(true)} className="toolbar-btn" title="Git LFS">
+      <button onClick={() => setLfsOpen(true)} className="toolbar-btn" title={t("toolbar.gitLfs")}>
         <svg
           width="13"
           height="13"
@@ -1156,13 +1172,13 @@ export const Toolbar: React.FC = () => {
           <polyline points="17 8 12 3 7 8" />
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
-        LFS
+        {t("toolbar.lfs")}
       </button>
 
       <button
         onClick={() => setPrOpen(true)}
         className="toolbar-btn"
-        title="Pull Requests / Merge Requests"
+        title={t("toolbar.pullRequestsMergeRequests")}
       >
         <svg
           width="13"
@@ -1179,7 +1195,7 @@ export const Toolbar: React.FC = () => {
           <path d="M13 6h3a2 2 0 0 1 2 2v7" />
           <line x1="6" y1="9" x2="6" y2="21" />
         </svg>
-        PRs
+        {t("toolbar.prs")}
       </button>
 
       <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
@@ -1191,8 +1207,8 @@ export const Toolbar: React.FC = () => {
       <button
         onClick={() => setShortcutsOpen(true)}
         className="toolbar-btn"
-        title="Keyboard Shortcuts (?)"
-        aria-label="Keyboard Shortcuts"
+        title={t("toolbar.keyboardShortcutsShortcut")}
+        aria-label={t("toolbar.keyboardShortcuts")}
       >
         <svg
           width="14"
@@ -1215,8 +1231,8 @@ export const Toolbar: React.FC = () => {
       <button
         onClick={() => openDialogWindow({ dialog: "SettingsDialog" })}
         className="toolbar-btn"
-        title="Settings"
-        aria-label="Settings"
+        title={t("toolbar.settings")}
+        aria-label={t("toolbar.settings")}
       >
         <svg
           width="14"
@@ -1272,13 +1288,15 @@ export const Toolbar: React.FC = () => {
 };
 
 const ThemeToggle: React.FC = () => {
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useUIStore();
+  const themeLabel = t("toolbar.switchToTheme", { theme: theme === "dark" ? "light" : "dark" });
   return (
     <button
       onClick={toggleTheme}
       className="toolbar-btn"
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      title={themeLabel}
+      aria-label={themeLabel}
     >
       {theme === "dark" ? (
         <svg
@@ -1324,6 +1342,7 @@ const ForcePushConfirmDialog: React.FC<{
   onClose: () => void;
   onConfirm: () => void;
 }> = ({ open, onClose, onConfirm }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   if (!open) return null;
@@ -1395,10 +1414,10 @@ const ForcePushConfirmDialog: React.FC<{
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-              Force Push
+              {t("toolbar.forcePush")}
             </div>
             <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-              This action is destructive
+              {t("toolbar.destructiveAction")}
             </div>
           </div>
         </div>
@@ -1411,10 +1430,9 @@ const ForcePushConfirmDialog: React.FC<{
             marginBottom: 16,
           }}
         >
-          Force pushing will{" "}
-          <strong style={{ color: "var(--red)" }}>overwrite the remote branch history</strong>. Any
-          commits pushed by other collaborators that are not in your local branch will be
-          permanently lost.
+          {t("toolbar.forcePushWarningPre")}
+          <strong style={{ color: "var(--red)" }}>{t("toolbar.forcePushWarningStrong")}</strong>
+          {t("toolbar.forcePushWarningPost")}
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -1431,7 +1449,7 @@ const ForcePushConfirmDialog: React.FC<{
               cursor: "pointer",
             }}
           >
-            Cancel
+            {t("toolbar.cancel")}
           </button>
           <button
             onClick={handleConfirm}
@@ -1447,7 +1465,7 @@ const ForcePushConfirmDialog: React.FC<{
               cursor: loading ? "not-allowed" : "pointer",
             }}
           >
-            {loading ? "Pushing..." : "Force Push"}
+            {loading ? t("toolbar.pushing") : t("toolbar.forcePush")}
           </button>
         </div>
       </div>

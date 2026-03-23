@@ -5,6 +5,13 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { CommandPalette } from "./CommandPalette";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 // vi.hoisted() runs before vi.mock() factories, so the returned values can be
 // safely referenced inside factory closures without the TDZ hoisting problem.
 const {
@@ -143,7 +150,7 @@ function renderOpen(onClose = vi.fn()) {
 }
 
 function getInput() {
-  return screen.getByPlaceholderText("Type a command...");
+  return screen.getByPlaceholderText("commandPalette.placeholder");
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -159,8 +166,8 @@ describe("CommandPalette", () => {
   it("shows search input and commands when open", () => {
     renderOpen();
     expect(getInput()).toBeInTheDocument();
-    expect(screen.getByText("Open Repository...")).toBeInTheDocument();
-    expect(screen.getByText("Clone Repository...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.openRepo")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.cloneRepo")).toBeInTheDocument();
   });
 
   it("renders an ESC hint badge", () => {
@@ -173,43 +180,43 @@ describe("CommandPalette", () => {
   it("filters commands based on query", () => {
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "clone" } });
-    expect(screen.getByText("Clone Repository...")).toBeInTheDocument();
-    expect(screen.queryByText("Toggle Dark/Light Theme")).not.toBeInTheDocument();
+    expect(screen.getByText("commandPalette.cloneRepo")).toBeInTheDocument();
+    expect(screen.queryByText("commandPalette.toggleTheme")).not.toBeInTheDocument();
   });
 
   it("shows 'No commands found' for unmatched query", () => {
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "xyznonexistent" } });
-    expect(screen.getByText("No commands found")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.noCommandsFound")).toBeInTheDocument();
   });
 
   it("resets filter to all commands when query is cleared", () => {
     renderOpen();
     const input = getInput();
     fireEvent.change(input, { target: { value: "clone" } });
-    expect(screen.queryByText("Toggle Dark/Light Theme")).not.toBeInTheDocument();
+    expect(screen.queryByText("commandPalette.toggleTheme")).not.toBeInTheDocument();
     fireEvent.change(input, { target: { value: "" } });
-    expect(screen.getByText("Toggle Dark/Light Theme")).toBeInTheDocument();
-    expect(screen.getByText("Clone Repository...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.toggleTheme")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.cloneRepo")).toBeInTheDocument();
   });
 
   it("filters by category label too (e.g. 'repository' shows repo commands)", () => {
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "repository" } });
-    // Commands in the "Repository" category should match
-    expect(screen.getByText("Open Repository...")).toBeInTheDocument();
+    // Commands in the "commandPalette.categoryRepository" category should match
+    expect(screen.getByText("commandPalette.openRepo")).toBeInTheDocument();
   });
 
   it("is case-insensitive when filtering", () => {
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "CLONE" } });
-    expect(screen.getByText("Clone Repository...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.cloneRepo")).toBeInTheDocument();
   });
 
   it("multi-word query matches commands containing all words", () => {
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "open repo" } });
-    expect(screen.getByText("Open Repository...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.openRepo")).toBeInTheDocument();
   });
 
   // ── Commands that require a repo are hidden when no repo ─────────────────────
@@ -217,16 +224,16 @@ describe("CommandPalette", () => {
   it("hides needsRepo commands when no repo is open", () => {
     mockHasRepo = false;
     renderOpen();
-    // "Close Repository" requires a repo
-    expect(screen.queryByText("Close Repository")).not.toBeInTheDocument();
-    // "Open Repository..." does not require a repo
-    expect(screen.getByText("Open Repository...")).toBeInTheDocument();
+    // "commandPalette.closeRepo" requires a repo
+    expect(screen.queryByText("commandPalette.closeRepo")).not.toBeInTheDocument();
+    // "commandPalette.openRepo" does not require a repo
+    expect(screen.getByText("commandPalette.openRepo")).toBeInTheDocument();
   });
 
   it("shows needsRepo commands when a repo is open", () => {
     renderOpen();
-    expect(screen.getByText("Close Repository")).toBeInTheDocument();
-    expect(screen.getByText("Refresh")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.closeRepo")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.refresh")).toBeInTheDocument();
   });
 
   // ── Keyboard navigation ───────────────────────────────────────────────────────
@@ -293,7 +300,7 @@ describe("CommandPalette", () => {
   });
 
   it("Enter executes the selected command and calls onClose", () => {
-    // Filter to only the "Toggle Dark/Light Theme" command so it is index 0
+    // Filter to only the "commandPalette.toggleTheme" command so it is index 0
     const { onClose } = renderOpen();
     fireEvent.change(getInput(), { target: { value: "toggle theme" } });
     fireEvent.keyDown(getInput(), { key: "Enter" });
@@ -314,7 +321,7 @@ describe("CommandPalette", () => {
     const { onClose } = renderOpen();
     // Filter to a unique label so we get exactly one button
     fireEvent.change(getInput(), { target: { value: "toggle theme" } });
-    const btn = screen.getByText("Toggle Dark/Light Theme").closest("button")!;
+    const btn = screen.getByText("commandPalette.toggleTheme").closest("button")!;
     fireEvent.click(btn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -356,69 +363,69 @@ describe("CommandPalette", () => {
   it("shows Repository category commands", () => {
     renderOpen();
     // All Repository commands (category labels shown next to items)
-    expect(screen.getAllByText("Repository").length).toBeGreaterThan(0);
-    expect(screen.getByText("Open Repository...")).toBeInTheDocument();
-    expect(screen.getByText("Create New Repository...")).toBeInTheDocument();
-    expect(screen.getByText("Clone Repository...")).toBeInTheDocument();
-    expect(screen.getByText("Scan for Repositories...")).toBeInTheDocument();
+    expect(screen.getAllByText("commandPalette.categoryRepository").length).toBeGreaterThan(0);
+    expect(screen.getByText("commandPalette.openRepo")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.createNewRepo")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.cloneRepo")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.scanRepos")).toBeInTheDocument();
   });
 
   it("shows Git category commands", () => {
     renderOpen();
-    expect(screen.getByText("Fetch")).toBeInTheDocument();
-    expect(screen.getByText("Fetch All")).toBeInTheDocument();
-    expect(screen.getByText("Fetch & Prune")).toBeInTheDocument();
-    expect(screen.getByText("Pull")).toBeInTheDocument();
-    expect(screen.getByText("Pull (Rebase)")).toBeInTheDocument();
-    expect(screen.getByText("Pull (Merge)")).toBeInTheDocument();
-    expect(screen.getByText("Push")).toBeInTheDocument();
-    expect(screen.getByText("Stash Changes")).toBeInTheDocument();
-    expect(screen.getByText("Stash Pop")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.fetch")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.fetchAll")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.fetchPrune")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.pull")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.pullRebase")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.pullMerge")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.push")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.stashChanges")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.stashPop")).toBeInTheDocument();
   });
 
   it("shows Dialogs category commands", () => {
     renderOpen();
-    expect(screen.getByText("Open Commit Dialog")).toBeInTheDocument();
-    expect(screen.getByText("Manage Stashes...")).toBeInTheDocument();
-    expect(screen.getByText("Manage Remotes...")).toBeInTheDocument();
-    expect(screen.getByText("Search Commits...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.openCommitDialog")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.manageStashes")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.manageRemotes")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.searchCommits")).toBeInTheDocument();
   });
 
   it("shows Tools category commands", () => {
     renderOpen();
-    expect(screen.getByText("Stale Remote Branches...")).toBeInTheDocument();
-    expect(screen.getByText(".gitignore Editor...")).toBeInTheDocument();
-    expect(screen.getByText("Code Search (grep)...")).toBeInTheDocument();
-    expect(screen.getByText("Branch Diff Comparison...")).toBeInTheDocument();
-    expect(screen.getByText("Branch Commit Range Compare...")).toBeInTheDocument();
-    expect(screen.getByText("Git Hooks Manager...")).toBeInTheDocument();
-    expect(screen.getByText("Undo Git Operations...")).toBeInTheDocument();
-    expect(screen.getByText("CI/CD Pipeline Status...")).toBeInTheDocument();
-    expect(screen.getByText("Create Gist...")).toBeInTheDocument();
-    expect(screen.getByText("Advanced Statistics...")).toBeInTheDocument();
-    expect(screen.getByText("SSH Key Manager...")).toBeInTheDocument();
-    expect(screen.getByText("Git Bisect...")).toBeInTheDocument();
-    expect(screen.getByText("Manage Worktrees...")).toBeInTheDocument();
-    expect(screen.getByText("Apply Patch...")).toBeInTheDocument();
-    expect(screen.getByText("Manage Submodules...")).toBeInTheDocument();
-    expect(screen.getByText("Git LFS...")).toBeInTheDocument();
-    expect(screen.getByText("Pull Requests / Merge Requests...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.staleBranches")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.gitignoreEditor")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.codeSearchGrep")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.branchDiffComparison")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.branchCommitRangeCompare")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.gitHooksManager")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.undoGitOps")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.cicdPipelineStatus")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.createGist")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.advancedStats")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.sshKeyManager")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.gitBisect")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.manageWorktrees")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.applyPatch")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.manageSubmodules")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.gitLfs")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.pullRequestsMergeRequests")).toBeInTheDocument();
   });
 
   it("shows Help category commands", () => {
     renderOpen();
-    expect(screen.getByText("Keyboard Shortcuts")).toBeInTheDocument();
-    expect(screen.getByText("About GitSmith")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.keyboardShortcuts")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.aboutGitSmith")).toBeInTheDocument();
   });
 
   it("shows Settings category commands", () => {
     renderOpen();
-    expect(screen.getByText("Open Settings...")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.openSettings")).toBeInTheDocument();
   });
 
   it("shows View category commands", () => {
     renderOpen();
-    expect(screen.getByText("Toggle Dark/Light Theme")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.toggleTheme")).toBeInTheDocument();
   });
 
   // ── Dialog-opening actions ────────────────────────────────────────────────────
@@ -429,7 +436,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Open Settings" } });
-    fireEvent.click(screen.getByText("Open Settings...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.openSettings").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenDialogWindow).toHaveBeenCalledWith({ dialog: "SettingsDialog" });
     vi.useRealTimers();
@@ -439,7 +446,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Manage Stashes" } });
-    fireEvent.click(screen.getByText("Manage Stashes...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.manageStashes").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenDialogWindow).toHaveBeenCalledWith({ dialog: "StashDialog" });
     vi.useRealTimers();
@@ -449,7 +456,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "clone" } });
-    fireEvent.click(screen.getByText("Clone Repository...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.cloneRepo").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenCloneDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -459,7 +466,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "toggle theme" } });
-    fireEvent.click(screen.getByText("Toggle Dark/Light Theme").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.toggleTheme").closest("button")!);
     vi.runAllTimers();
     expect(mockToggleTheme).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -469,7 +476,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "SSH Key" } });
-    fireEvent.click(screen.getByText("SSH Key Manager...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.sshKeyManager").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenSshDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -478,8 +485,8 @@ describe("CommandPalette", () => {
   it("clicking 'Scan for Repositories...' calls openScanDialog", () => {
     vi.useFakeTimers();
     renderOpen();
-    fireEvent.change(getInput(), { target: { value: "Scan for" } });
-    fireEvent.click(screen.getByText("Scan for Repositories...").closest("button")!);
+    fireEvent.change(getInput(), { target: { value: "scanRepos" } });
+    fireEvent.click(screen.getByText("commandPalette.scanRepos").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenScanDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -489,7 +496,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "About" } });
-    fireEvent.click(screen.getByText("About GitSmith").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.aboutGitSmith").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenAboutDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -499,7 +506,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Open Repository" } });
-    fireEvent.click(screen.getByText("Open Repository...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.openRepo").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenRepoDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -513,7 +520,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-commit", listener);
     fireEvent.change(getInput(), { target: { value: "Open Commit" } });
-    fireEvent.click(screen.getByText("Open Commit Dialog").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.openCommitDialog").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -526,7 +533,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-search", listener);
     fireEvent.change(getInput(), { target: { value: "Search Commits" } });
-    fireEvent.click(screen.getByText("Search Commits...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.searchCommits").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -539,7 +546,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-bisect", listener);
     fireEvent.change(getInput(), { target: { value: "bisect" } });
-    fireEvent.click(screen.getByText("Git Bisect...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.gitBisect").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -552,7 +559,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-worktrees", listener);
     fireEvent.change(getInput(), { target: { value: "worktree" } });
-    fireEvent.click(screen.getByText("Manage Worktrees...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.manageWorktrees").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -565,7 +572,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-patch-apply", listener);
     fireEvent.change(getInput(), { target: { value: "Apply Patch" } });
-    fireEvent.click(screen.getByText("Apply Patch...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.applyPatch").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -577,8 +584,8 @@ describe("CommandPalette", () => {
     renderOpen();
     const listener = vi.fn();
     window.addEventListener("command-palette:open-shortcuts", listener);
-    fireEvent.change(getInput(), { target: { value: "Keyboard Shortcuts" } });
-    fireEvent.click(screen.getByText("Keyboard Shortcuts").closest("button")!);
+    fireEvent.change(getInput(), { target: { value: "commandPalette.keyboardShortcuts" } });
+    fireEvent.click(screen.getByText("commandPalette.keyboardShortcuts").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -591,7 +598,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-submodules", listener);
     fireEvent.change(getInput(), { target: { value: "submodule" } });
-    fireEvent.click(screen.getByText("Manage Submodules...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.manageSubmodules").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -604,7 +611,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-lfs", listener);
     fireEvent.change(getInput(), { target: { value: "LFS" } });
-    fireEvent.click(screen.getByText("Git LFS...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.gitLfs").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -617,7 +624,9 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-pr", listener);
     fireEvent.change(getInput(), { target: { value: "Pull Requests" } });
-    fireEvent.click(screen.getByText("Pull Requests / Merge Requests...").closest("button")!);
+    fireEvent.click(
+      screen.getByText("commandPalette.pullRequestsMergeRequests").closest("button")!
+    );
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -630,7 +639,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-reflog", listener);
     fireEvent.change(getInput(), { target: { value: "Reflog" } });
-    fireEvent.click(screen.getByText("Git Reflog...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.gitReflog").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -643,7 +652,7 @@ describe("CommandPalette", () => {
     const listener = vi.fn();
     window.addEventListener("command-palette:open-remotes", listener);
     fireEvent.change(getInput(), { target: { value: "Manage Remotes" } });
-    fireEvent.click(screen.getByText("Manage Remotes...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.manageRemotes").closest("button")!);
     vi.runAllTimers();
     expect(listener).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -653,8 +662,8 @@ describe("CommandPalette", () => {
   it("clicking 'Close Repository' calls closeRepo", () => {
     vi.useFakeTimers();
     renderOpen();
-    fireEvent.change(getInput(), { target: { value: "Close Repository" } });
-    fireEvent.click(screen.getByText("Close Repository").closest("button")!);
+    fireEvent.change(getInput(), { target: { value: "commandPalette.closeRepo" } });
+    fireEvent.click(screen.getByText("commandPalette.closeRepo").closest("button")!);
     vi.runAllTimers();
     expect(mockCloseRepo).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -664,7 +673,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Create New" } });
-    fireEvent.click(screen.getByText("Create New Repository...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.createNewRepo").closest("button")!);
     vi.runAllTimers();
     expect(mockInitRepo).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -674,7 +683,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Stale" } });
-    fireEvent.click(screen.getByText("Stale Remote Branches...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.staleBranches").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenStaleBranchesDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -684,7 +693,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "gitignore" } });
-    fireEvent.click(screen.getByText(".gitignore Editor...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.gitignoreEditor").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenGitignoreDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -694,7 +703,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Code Search" } });
-    fireEvent.click(screen.getByText("Code Search (grep)...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.codeSearchGrep").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenGrepDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -704,7 +713,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Branch Diff" } });
-    fireEvent.click(screen.getByText("Branch Diff Comparison...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.branchDiffComparison").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenBranchDiffDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -714,7 +723,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Branch Commit Range" } });
-    fireEvent.click(screen.getByText("Branch Commit Range Compare...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.branchCommitRangeCompare").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenBranchCompareDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -724,7 +733,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Git Hooks" } });
-    fireEvent.click(screen.getByText("Git Hooks Manager...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.gitHooksManager").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenHooksDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -734,7 +743,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Undo Git" } });
-    fireEvent.click(screen.getByText("Undo Git Operations...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.undoGitOps").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenUndoDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -743,8 +752,8 @@ describe("CommandPalette", () => {
   it("clicking 'CI/CD Pipeline Status...' calls openCIStatusDialog", () => {
     vi.useFakeTimers();
     renderOpen();
-    fireEvent.change(getInput(), { target: { value: "CI/CD" } });
-    fireEvent.click(screen.getByText("CI/CD Pipeline Status...").closest("button")!);
+    fireEvent.change(getInput(), { target: { value: "cicdPipeline" } });
+    fireEvent.click(screen.getByText("commandPalette.cicdPipelineStatus").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenCIStatusDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -754,7 +763,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Create Gist" } });
-    fireEvent.click(screen.getByText("Create Gist...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.createGist").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenGistDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
@@ -764,7 +773,7 @@ describe("CommandPalette", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "Advanced Stat" } });
-    fireEvent.click(screen.getByText("Advanced Statistics...").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.advancedStats").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenAdvancedStatsDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();

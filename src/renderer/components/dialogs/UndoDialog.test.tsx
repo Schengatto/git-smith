@@ -5,6 +5,24 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import React from "react";
 import { UndoDialog } from "./UndoDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "undo.title": "Undo Git Operations",
+        "undo.noReflogEntries": "No reflog entries",
+        "undo.undoButton": "Undo",
+        "undo.resetConfirm": `Reset HEAD to "${opts?.description ?? ""}"?\n\nThis will use git reset --hard and cannot be easily undone.`,
+        "undo.revertedTo": `Reverted to: ${opts?.description ?? ""}`,
+        "undo.undoFailed": `Undo failed: ${opts?.error ?? ""}`,
+        "dialogs.loading": "Loading...",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     refreshStatus: vi.fn().mockResolvedValue(undefined),

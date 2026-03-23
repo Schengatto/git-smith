@@ -4,6 +4,13 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MergeEditorDialog } from "./MergeEditorDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockVersions = {
   base: "base content",
   ours: "our content",
@@ -33,7 +40,7 @@ describe("MergeEditorDialog", () => {
 
   it("renders dialog title with filename when open", () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
-    expect(screen.getByText(/3-Way Merge Editor/)).toBeInTheDocument();
+    expect(screen.getByText(/mergeEditor.threeWayTitle/)).toBeInTheDocument();
     expect(screen.getByText(/foo\.ts/)).toBeInTheDocument();
   });
 
@@ -45,34 +52,34 @@ describe("MergeEditorDialog", () => {
   it("renders Quick resolve buttons after loading", async () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
     await vi.waitFor(() => {
-      expect(screen.getByText("Accept Ours")).toBeInTheDocument();
-      expect(screen.getByText("Accept Theirs")).toBeInTheDocument();
-      expect(screen.getByText("Accept Both")).toBeInTheDocument();
+      expect(screen.getByText("mergeEditor.acceptOurs")).toBeInTheDocument();
+      expect(screen.getByText("mergeEditor.acceptTheirs")).toBeInTheDocument();
+      expect(screen.getByText("mergeEditor.acceptBoth")).toBeInTheDocument();
     });
   });
 
   it("renders Save & Mark Resolved button", async () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
     await vi.waitFor(() => {
-      expect(screen.getByText("Save & Mark Resolved")).toBeInTheDocument();
+      expect(screen.getByText("mergeEditor.saveAndMarkResolved")).toBeInTheDocument();
     });
   });
 
   it("renders panel labels after loading", async () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
     await vi.waitFor(() => {
-      expect(screen.getByText(/Ours \(current branch\)/)).toBeInTheDocument();
-      expect(screen.getByText(/Base \(common ancestor\)/)).toBeInTheDocument();
-      expect(screen.getByText(/Theirs \(incoming\)/)).toBeInTheDocument();
-      expect(screen.getByText(/Result \(editable/)).toBeInTheDocument();
+      expect(screen.getByText(/mergeEditor.oursBranch/)).toBeInTheDocument();
+      expect(screen.getByText(/mergeEditor.baseAncestor/)).toBeInTheDocument();
+      expect(screen.getByText(/mergeEditor.theirsIncoming/)).toBeInTheDocument();
+      expect(screen.getByText(/mergeEditor.resultEditable/)).toBeInTheDocument();
     });
   });
 
   it("Accept Ours sets result textarea to ours content", async () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
     // Wait until the 3-panel source view is visible (versions loaded)
-    await vi.waitFor(() => screen.getByText(/Ours \(current branch\)/));
-    fireEvent.click(screen.getByText("Accept Ours"));
+    await vi.waitFor(() => screen.getByText(/mergeEditor.oursBranch/));
+    fireEvent.click(screen.getByText("mergeEditor.acceptOurs"));
     await vi.waitFor(() => {
       const textareas = document.querySelectorAll("textarea");
       const resultTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
@@ -82,8 +89,8 @@ describe("MergeEditorDialog", () => {
 
   it("Accept Theirs sets result textarea to theirs content", async () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
-    await vi.waitFor(() => screen.getByText(/Ours \(current branch\)/));
-    fireEvent.click(screen.getByText("Accept Theirs"));
+    await vi.waitFor(() => screen.getByText(/mergeEditor.oursBranch/));
+    fireEvent.click(screen.getByText("mergeEditor.acceptTheirs"));
     await vi.waitFor(() => {
       const textareas = document.querySelectorAll("textarea");
       const resultTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
@@ -93,8 +100,8 @@ describe("MergeEditorDialog", () => {
 
   it("Accept Both concatenates ours and theirs in the result", async () => {
     render(<MergeEditorDialog open={true} onClose={vi.fn()} filePath="src/foo.ts" />);
-    await vi.waitFor(() => screen.getByText(/Ours \(current branch\)/));
-    fireEvent.click(screen.getByText("Accept Both"));
+    await vi.waitFor(() => screen.getByText(/mergeEditor.oursBranch/));
+    fireEvent.click(screen.getByText("mergeEditor.acceptBoth"));
     await vi.waitFor(() => {
       const textareas = document.querySelectorAll("textarea");
       const resultTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
@@ -108,10 +115,10 @@ describe("MergeEditorDialog", () => {
     render(<MergeEditorDialog open={true} onClose={onClose} filePath="src/foo.ts" />);
     // Wait until versions have loaded (button becomes enabled)
     await vi.waitFor(() => {
-      const btn = screen.getByText("Save & Mark Resolved") as HTMLButtonElement;
+      const btn = screen.getByText("mergeEditor.saveAndMarkResolved") as HTMLButtonElement;
       expect(btn.disabled).toBe(false);
     });
-    fireEvent.click(screen.getByText("Save & Mark Resolved"));
+    fireEvent.click(screen.getByText("mergeEditor.saveAndMarkResolved"));
     await vi.waitFor(() => {
       expect(mockElectronAPI.conflict.saveMerged).toHaveBeenCalledWith(
         "src/foo.ts",

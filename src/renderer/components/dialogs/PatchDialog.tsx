@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions } from "./ModalDialog";
 import { runGitOperation, GitOperationCancelledError } from "../../store/git-operation-store";
 import { useRepoStore } from "../../store/repo-store";
@@ -12,21 +13,20 @@ interface CreateProps {
 }
 
 export const PatchCreateDialog: React.FC<CreateProps> = ({ open, onClose, hashes, subjects }) => {
+  const { t } = useTranslation();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const handleCreate = async () => {
     setError("");
     setSuccess("");
-    const dir = await window.electronAPI.repo.browseDirectory(
-      "Select output directory for patches"
-    );
+    const dir = await window.electronAPI.repo.browseDirectory(t("patch.selectOutputDirectory"));
     if (!dir) return;
     try {
       const files = await runGitOperation("format-patch", () =>
         window.electronAPI.patch.create(hashes, dir)
       );
-      setSuccess(`Created ${files.length} patch file(s) in ${dir}`);
+      setSuccess(t("patch.createdPatchFiles", { count: files.length, dir }));
     } catch (err: unknown) {
       if (err instanceof GitOperationCancelledError) return;
       setError(err instanceof Error ? err.message : String(err));
@@ -34,10 +34,10 @@ export const PatchCreateDialog: React.FC<CreateProps> = ({ open, onClose, hashes
   };
 
   return (
-    <ModalDialog open={open} title="Create Patch" onClose={onClose}>
+    <ModalDialog open={open} title={t("patch.createTitle")} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          Create patch file(s) for {hashes.length} commit(s):
+          {t("patch.createPatchFiles", { count: hashes.length })}
         </div>
         <div
           style={{
@@ -63,7 +63,11 @@ export const PatchCreateDialog: React.FC<CreateProps> = ({ open, onClose, hashes
         {error && <div style={{ fontSize: 11, color: "var(--red)" }}>{error}</div>}
         {success && <div style={{ fontSize: 11, color: "var(--green)" }}>{success}</div>}
       </div>
-      <DialogActions onCancel={onClose} onConfirm={handleCreate} confirmLabel="Create Patch" />
+      <DialogActions
+        onCancel={onClose}
+        onConfirm={handleCreate}
+        confirmLabel={t("patch.createPatch")}
+      />
     </ModalDialog>
   );
 };
@@ -74,6 +78,7 @@ interface ApplyProps {
 }
 
 export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [patchPath, setPatchPath] = useState("");
   const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
@@ -81,7 +86,7 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
   const { loadGraph } = useGraphStore();
 
   const handleBrowse = async () => {
-    const file = await window.electronAPI.repo.browseFile("Select patch file");
+    const file = await window.electronAPI.repo.browseFile(t("patch.selectPatchFileTitle"));
     if (file) {
       setPatchPath(file);
       setError("");
@@ -96,7 +101,7 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
 
   const handleApply = async () => {
     if (!patchPath) {
-      setError("Select a patch file");
+      setError(t("patch.selectPatchFile"));
       return;
     }
     setError("");
@@ -111,14 +116,14 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Apply Patch" onClose={onClose}>
+    <ModalDialog open={open} title={t("patch.applyTitle")} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input
             type="text"
             value={patchPath}
             readOnly
-            placeholder="Select a patch file..."
+            placeholder={t("patch.selectPatchFilePlaceholder")}
             style={{
               flex: 1,
               padding: "6px 10px",
@@ -134,7 +139,7 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
             onClick={handleBrowse}
             style={{ fontSize: 11, padding: "5px 12px" }}
           >
-            Browse
+            {t("dialogs.browse")}
           </button>
         </div>
 
@@ -158,7 +163,7 @@ export const PatchApplyDialog: React.FC<ApplyProps> = ({ open, onClose }) => {
 
         {error && <div style={{ fontSize: 11, color: "var(--red)" }}>{error}</div>}
       </div>
-      <DialogActions onCancel={onClose} onConfirm={handleApply} confirmLabel="Apply" />
+      <DialogActions onCancel={onClose} onConfirm={handleApply} confirmLabel={t("dialogs.apply")} />
     </ModalDialog>
   );
 };

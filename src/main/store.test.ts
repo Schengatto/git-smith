@@ -20,6 +20,8 @@ const mockWriteFileSync = vi.fn();
 const mockMkdirSync = vi.fn();
 const mockExistsSync = vi.fn();
 const mockReaddirSync = vi.fn();
+const mockRealpathSync = vi.fn().mockImplementation((p: string) => p);
+const mockUnlinkSync = vi.fn();
 
 vi.mock("fs", () => ({
   default: {
@@ -28,12 +30,16 @@ vi.mock("fs", () => ({
     mkdirSync: (...args: unknown[]) => mockMkdirSync(...args),
     existsSync: (...args: unknown[]) => mockExistsSync(...args),
     readdirSync: (...args: unknown[]) => mockReaddirSync(...args),
+    realpathSync: (...args: unknown[]) => mockRealpathSync(...args),
+    unlinkSync: (...args: unknown[]) => mockUnlinkSync(...args),
   },
   readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
   writeFileSync: (...args: unknown[]) => mockWriteFileSync(...args),
   mkdirSync: (...args: unknown[]) => mockMkdirSync(...args),
   existsSync: (...args: unknown[]) => mockExistsSync(...args),
   readdirSync: (...args: unknown[]) => mockReaddirSync(...args),
+  realpathSync: (...args: unknown[]) => mockRealpathSync(...args),
+  unlinkSync: (...args: unknown[]) => mockUnlinkSync(...args),
 }));
 
 // Helper: reset module cache so cachedStore is cleared between tests.
@@ -524,7 +530,14 @@ describe("main/store — scanForRepos", () => {
     const project = path.join(root, "project");
     mockReaddirSync.mockImplementation((dir: string) => {
       if (dir === root) {
-        return [{ name: "project", isDirectory: () => true, isFile: () => false }];
+        return [
+          {
+            name: "project",
+            isDirectory: () => true,
+            isFile: () => false,
+            isSymbolicLink: () => false,
+          },
+        ];
       }
       if (dir === project) {
         return [{ name: ".git", isDirectory: () => true, isFile: () => false }];
@@ -545,7 +558,14 @@ describe("main/store — scanForRepos", () => {
     const root = path.resolve("/root");
     mockReaddirSync.mockImplementation((dir: string) => {
       if (dir === root) {
-        return [{ name: "node_modules", isDirectory: () => true, isFile: () => false }];
+        return [
+          {
+            name: "node_modules",
+            isDirectory: () => true,
+            isFile: () => false,
+            isSymbolicLink: () => false,
+          },
+        ];
       }
       return [];
     });
@@ -562,7 +582,14 @@ describe("main/store — scanForRepos", () => {
 
     mockReaddirSync.mockImplementation((dir: string) => {
       if (dir === root) {
-        return [{ name: "project", isDirectory: () => true, isFile: () => false }];
+        return [
+          {
+            name: "project",
+            isDirectory: () => true,
+            isFile: () => false,
+            isSymbolicLink: () => false,
+          },
+        ];
       }
       if (dir === project) {
         return [{ name: ".git", isDirectory: () => true, isFile: () => false }];
@@ -582,7 +609,14 @@ describe("main/store — scanForRepos", () => {
     let callCount = 0;
     mockReaddirSync.mockImplementation(() => {
       callCount++;
-      return [{ name: "subdir", isDirectory: () => true, isFile: () => false }];
+      return [
+        {
+          name: "subdir",
+          isDirectory: () => true,
+          isFile: () => false,
+          isSymbolicLink: () => false,
+        },
+      ];
     });
 
     await scanForRepos("/root", 0, vi.fn());
@@ -649,5 +683,65 @@ describe("main/store — getAutoFetchInterval / setAutoFetchInterval", () => {
     const { setAutoFetchInterval, getAutoFetchInterval } = await freshStore();
     setAutoFetchInterval(600);
     expect(getAutoFetchInterval()).toBe(600);
+  });
+});
+
+describe("main/store — resetSettings", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("resets settings to defaults while keeping repos", async () => {
+    simulateFile({
+      recentRepos: ["/a", "/b"],
+      settings: { theme: "light", autoFetchInterval: 999, diffContextLines: 10 },
+    });
+    const { resetSettings, getSettings, getRecentRepos, defaultSettings } = await freshStore();
+    const result = resetSettings();
+    expect(result.theme).toBe(defaultSettings.theme);
+    expect(result.autoFetchInterval).toBe(defaultSettings.autoFetchInterval);
+    expect(result.diffContextLines).toBe(defaultSettings.diffContextLines);
+    expect(getSettings()).toEqual(defaultSettings);
+    expect(getRecentRepos()).toEqual(["/a", "/b"]);
+  });
+
+  it("returns default settings object", async () => {
+    simulateNoFile();
+    const { resetSettings, defaultSettings } = await freshStore();
+    const result = resetSettings();
+    expect(result).toEqual(defaultSettings);
+  });
+});
+
+describe("main/store — clearAllData", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("deletes the config file", async () => {
+    simulateFile({ recentRepos: ["/a"] });
+    const { clearAllData } = await freshStore();
+    clearAllData();
+    expect(mockUnlinkSync).toHaveBeenCalledWith(path.join("/tmp/test-app-data", "config.json"));
+  });
+
+  it("resets in-memory state to defaults", async () => {
+    simulateFile({
+      recentRepos: ["/a", "/b"],
+      settings: { theme: "light" },
+    });
+    const { clearAllData, getRecentRepos, getSettings, defaultSettings } = await freshStore();
+    clearAllData();
+    expect(getRecentRepos()).toEqual([]);
+    expect(getSettings()).toEqual(defaultSettings);
+  });
+
+  it("does not throw if file does not exist", async () => {
+    simulateNoFile();
+    mockUnlinkSync.mockImplementation(() => {
+      throw new Error("ENOENT");
+    });
+    const { clearAllData } = await freshStore();
+    expect(() => clearAllData()).not.toThrow();
   });
 });

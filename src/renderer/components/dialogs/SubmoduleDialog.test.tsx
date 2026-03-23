@@ -5,6 +5,33 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { SubmoduleDialog } from "./SubmoduleDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "submodule.title": "Submodules",
+        "submodule.initAndUpdate": "Init & Update",
+        "submodule.update": "Update",
+        "submodule.sync": "Sync",
+        "submodule.refresh": "Refresh",
+        "submodule.initializingAndUpdating": "Initializing & updating...",
+        "submodule.updating": "Updating...",
+        "submodule.syncing": "Syncing...",
+        "submodule.loading": "Loading...",
+        "submodule.noSubmodulesFound": "No submodules found",
+        "submodule.deinit": "Deinit",
+        "submodule.deinitializeSubmodule": "Deinitialize submodule",
+        "dialogs.close": "Close",
+      };
+      if (key === "submodule.deinitializing" && opts) {
+        return `Deinitializing ${opts.path}...`;
+      }
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockStatus = vi.fn();
 const mockUpdate = vi.fn();
 const mockSync = vi.fn();

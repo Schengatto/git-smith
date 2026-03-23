@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { DiffViewer } from "../diff/DiffViewer";
 import { FileTree } from "../details/FileTree";
 import { FileHistoryPanel } from "../details/FileHistoryPanel";
@@ -39,6 +40,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
   onNavigateToCommit,
   mode = "overlay",
 }) => {
+  const { t } = useTranslation();
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
   const [files, setFiles] = useState<CommitFileInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -169,7 +171,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
           }}
         >
           <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
-            Commit Information
+            {t("commitInfoDialog.title")}
           </span>
           <button
             onClick={onClose}
@@ -206,7 +208,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
           <div
             style={{ textAlign: "center", padding: 40, color: "var(--text-muted)", fontSize: 12 }}
           >
-            Loading commit info...
+            {t("commitInfoDialog.loadingInfo")}
           </div>
         )}
         {error && <div style={{ color: "var(--red)", fontSize: 12, padding: 16 }}>{error}</div>}
@@ -238,17 +240,17 @@ export const CommitInfoWindow: React.FC<Props> = ({
                   />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <MetaRow label="Author">
+                  <MetaRow label={t("commitInfo.author")}>
                     {info.authorName} &lt;{info.authorEmail}&gt;
                   </MetaRow>
-                  <MetaRow label="Date">{formatFullDate(info.authorDate)}</MetaRow>
+                  <MetaRow label={t("commitInfo.date")}>{formatFullDate(info.authorDate)}</MetaRow>
                   {(info.committerName !== info.authorName ||
                     info.committerEmail !== info.authorEmail) && (
-                    <MetaRow label="Committer">
+                    <MetaRow label={t("commitInfo.committer")}>
                       {info.committerName} &lt;{info.committerEmail}&gt;
                     </MetaRow>
                   )}
-                  <MetaRow label="Commit hash">
+                  <MetaRow label={t("commitInfo.commitHash")}>
                     <span style={{ fontFamily: "monospace", fontSize: 11, userSelect: "all" }}>
                       {info.hash}
                     </span>
@@ -259,7 +261,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
               {/* Child / Parent hashes */}
               <div style={{ marginTop: 6 }}>
                 {info.childHashes.length > 0 && (
-                  <MetaRow label="Child">
+                  <MetaRow label={t("commitInfo.child")}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {info.childHashes.map((ch) => (
                         <HashLink key={ch} hash={ch} onClick={onNavigateToCommit} />
@@ -268,7 +270,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
                   </MetaRow>
                 )}
                 {info.parentHashes.length > 0 && (
-                  <MetaRow label="Parent">
+                  <MetaRow label={t("commitInfo.parent")}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {info.parentHashes.map((ph) => (
                         <HashLink key={ph} hash={ph} onClick={onNavigateToCommit} />
@@ -310,21 +312,21 @@ export const CommitInfoWindow: React.FC<Props> = ({
 
               {/* Branches, Tags, Derives */}
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-                <MetaRow label="Contained in branches">
+                <MetaRow label={t("commitInfo.containedInBranches")}>
                   <BadgeList
                     items={info.containedInBranches}
-                    emptyText="No branches"
+                    emptyText={t("commitInfo.noBranches")}
                     color="var(--surface-2)"
                   />
                 </MetaRow>
-                <MetaRow label="Contained in tags">
+                <MetaRow label={t("commitInfo.containedInTags")}>
                   <BadgeList
                     items={info.containedInTags}
-                    emptyText="Contained in no tag"
+                    emptyText={t("commitInfo.containedInNoTag")}
                     color="var(--surface-2)"
                   />
                 </MetaRow>
-                <MetaRow label="Derives from tag">
+                <MetaRow label={t("commitInfo.derivesFromTag")}>
                   {info.derivesFromTag ? (
                     <span
                       style={{
@@ -340,7 +342,7 @@ export const CommitInfoWindow: React.FC<Props> = ({
                     </span>
                   ) : (
                     <span style={{ fontSize: 12, color: "var(--text-muted)", fontStyle: "italic" }}>
-                      Derives from no tag
+                      {t("commitInfo.derivesFromNoTag")}
                     </span>
                   )}
                 </MetaRow>
@@ -361,14 +363,14 @@ export const CommitInfoWindow: React.FC<Props> = ({
                 }}
               >
                 <TabButton active={bottomTab === "diff"} onClick={() => setBottomTab("diff")}>
-                  Diff
+                  {t("commitInfoDialog.diff")}
                   {files.length > 0 && <span style={tabBadgeStyle}>{files.length}</span>}
                 </TabButton>
                 <TabButton
                   active={bottomTab === "file-tree"}
                   onClick={() => setBottomTab("file-tree")}
                 >
-                  File tree
+                  {t("commitInfoDialog.fileTree")}
                 </TabButton>
                 {/* Stats summary */}
                 <div
@@ -551,6 +553,7 @@ const DiffTab: React.FC<{
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
 }> = ({ files, selectedFile, onFileClick, diff, diffLoading, onFileHistory, onFileBlame }) => {
+  const { t } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(
     null
   );
@@ -576,7 +579,7 @@ const DiffTab: React.FC<{
           <div
             style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}
           >
-            No files changed
+            {t("commitDetails.noFilesChanged")}
           </div>
         )}
       </div>
@@ -601,7 +604,7 @@ const DiffTab: React.FC<{
             <div
               style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}
             >
-              Loading diff...
+              {t("commitDetails.loadingDiff")}
             </div>
           ) : (
             <DiffViewer rawDiff={diff} showFormatToggle={false} />
@@ -713,52 +716,55 @@ const FileTreeTab: React.FC<{
   diffLoading: boolean;
   onFileHistory?: (path: string) => void;
   onFileBlame?: (path: string) => void;
-}> = ({ files, selectedFile, onSelect, diff, diffLoading, onFileHistory, onFileBlame }) => (
-  <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
-    <div
-      style={{
-        width: 260,
-        minWidth: 180,
-        borderRight: "1px solid var(--border-subtle)",
-        overflowY: "auto",
-      }}
-    >
-      <FileTree
-        files={files}
-        selectedFile={selectedFile}
-        onSelect={onSelect}
-        onFileHistory={onFileHistory}
-        onFileBlame={onFileBlame}
-      />
-    </div>
-    <div style={{ flex: 1, overflow: "auto", background: "var(--surface-0)" }}>
-      {selectedFile ? (
-        diffLoading ? (
-          <div
-            style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}
-          >
-            Loading diff...
-          </div>
+}> = ({ files, selectedFile, onSelect, diff, diffLoading, onFileHistory, onFileBlame }) => {
+  const { t } = useTranslation();
+  return (
+    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+      <div
+        style={{
+          width: 260,
+          minWidth: 180,
+          borderRight: "1px solid var(--border-subtle)",
+          overflowY: "auto",
+        }}
+      >
+        <FileTree
+          files={files}
+          selectedFile={selectedFile}
+          onSelect={onSelect}
+          onFileHistory={onFileHistory}
+          onFileBlame={onFileBlame}
+        />
+      </div>
+      <div style={{ flex: 1, overflow: "auto", background: "var(--surface-0)" }}>
+        {selectedFile ? (
+          diffLoading ? (
+            <div
+              style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}
+            >
+              {t("commitDetails.loadingDiff")}
+            </div>
+          ) : (
+            <DiffViewer rawDiff={diff} showFormatToggle={false} />
+          )
         ) : (
-          <DiffViewer rawDiff={diff} showFormatToggle={false} />
-        )
-      ) : (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            color: "var(--text-muted)",
-            fontSize: 12,
-          }}
-        >
-          Select a file to view diff
-        </div>
-      )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              color: "var(--text-muted)",
+              fontSize: 12,
+            }}
+          >
+            {t("commitInfoDialog.selectFileToViewDiff")}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ── Helpers ── */
 

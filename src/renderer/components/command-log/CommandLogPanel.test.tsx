@@ -8,6 +8,21 @@ import { CommandLogPanel } from "./CommandLogPanel";
 const mockClear = vi.fn();
 let mockEntries: unknown[] = [];
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      if (opts) {
+        return Object.entries(opts).reduce(
+          (str, [k, v]) => str.replace(`{{${k}}}`, String(v)),
+          key
+        );
+      }
+      return key;
+    },
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 vi.mock("../../store/command-log-store", () => ({
   useCommandLogStore: vi.fn((selector?: (s: Record<string, unknown>) => unknown) => {
     const state = { entries: mockEntries, clear: mockClear };
@@ -31,7 +46,7 @@ const makeEntry = (overrides: Record<string, unknown> = {}) => ({
 describe("CommandLogPanel", () => {
   it("renders empty state when there are no entries", () => {
     render(<CommandLogPanel />);
-    expect(screen.getByText("Git commands will appear here")).toBeInTheDocument();
+    expect(screen.getByText("commandLog.commandsWillAppearHere")).toBeInTheDocument();
   });
 
   it("renders entries list when entries are present", () => {
@@ -44,26 +59,26 @@ describe("CommandLogPanel", () => {
   it("shows entry count in header", () => {
     mockEntries = [makeEntry({ id: "1" }), makeEntry({ id: "2", args: ["log"] })];
     render(<CommandLogPanel />);
-    expect(screen.getByText("Commands (2)")).toBeInTheDocument();
+    expect(screen.getByText("commandLog.commandsCount")).toBeInTheDocument();
   });
 
   it("shows Clear button when entries exist", () => {
     mockEntries = [makeEntry()];
     render(<CommandLogPanel />);
-    expect(screen.getByText("Clear")).toBeInTheDocument();
+    expect(screen.getByText("commandLog.clear")).toBeInTheDocument();
   });
 
   it("calls clear when Clear button is clicked", () => {
     mockEntries = [makeEntry()];
     render(<CommandLogPanel />);
-    fireEvent.click(screen.getByText("Clear"));
+    fireEvent.click(screen.getByText("commandLog.clear"));
     expect(mockClear).toHaveBeenCalledOnce();
   });
 
   it("renders entry with duration when present", () => {
     mockEntries = [makeEntry({ duration: 123 })];
     render(<CommandLogPanel />);
-    expect(screen.getByText("123ms")).toBeInTheDocument();
+    expect(screen.getByText("123commandLog.ms")).toBeInTheDocument();
   });
 
   it("renders entry error message when present", () => {
@@ -75,7 +90,7 @@ describe("CommandLogPanel", () => {
   it("does not render duration when not present", () => {
     mockEntries = [makeEntry()];
     render(<CommandLogPanel />);
-    expect(screen.queryByText(/ms/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/commandLog\.ms/)).not.toBeInTheDocument();
   });
 
   it("renders multiple entries", () => {
@@ -99,7 +114,7 @@ describe("CommandLogPanel", () => {
   it("changes Clear button color on mouse enter and leave", () => {
     mockEntries = [makeEntry()];
     render(<CommandLogPanel />);
-    const clearBtn = screen.getByText("Clear");
+    const clearBtn = screen.getByText("commandLog.clear");
 
     fireEvent.mouseEnter(clearBtn);
     expect(clearBtn.style.color).toBe("var(--text-primary)");

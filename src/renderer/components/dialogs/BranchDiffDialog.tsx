@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type { BranchDiffResult, CommitFileInfo, BranchInfo } from "../../../shared/git-types";
 
@@ -24,6 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [branchesLoading, setBranchesLoading] = useState(false);
   const [from, setFrom] = useState("");
@@ -117,12 +119,12 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Branch Diff" onClose={onClose} width={700}>
+    <ModalDialog open={open} title={t("branchDiff.title")} onClose={onClose} width={700}>
       {/* Branch selectors row */}
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 16 }}>
         {/* From */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={labelStyle}>From</span>
+          <span style={labelStyle}>{t("branchDiff.from")}</span>
           <select
             value={from}
             onChange={(e) => {
@@ -145,7 +147,7 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
         {/* Swap button */}
         <button
           onClick={handleSwap}
-          title="Swap branches"
+          title={t("branchDiff.swapBranches")}
           style={{
             flexShrink: 0,
             background: "var(--surface-2)",
@@ -181,7 +183,7 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
 
         {/* To */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={labelStyle}>To</span>
+          <span style={labelStyle}>{t("branchDiff.to")}</span>
           <select
             value={to}
             onChange={(e) => {
@@ -221,7 +223,7 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
             cursor: loading || branchesLoading || !from || !to ? "not-allowed" : "pointer",
           }}
         >
-          {loading ? "..." : "Compare"}
+          {loading ? "..." : t("branchDiff.compare")}
         </button>
       </div>
 
@@ -246,12 +248,7 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
               marginBottom: 10,
             }}
           >
-            <span>
-              <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
-                {result.stats.filesChanged}
-              </span>{" "}
-              file{result.stats.filesChanged !== 1 ? "s" : ""} changed
-            </span>
+            <span>{t("branchDiff.filesChanged", { count: result.stats.filesChanged })}</span>
             {totalAdditions > 0 && (
               <span style={{ color: "var(--green)", fontWeight: 600 }}>+{totalAdditions}</span>
             )}
@@ -273,7 +270,7 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
                 border: "1px solid var(--border-subtle)",
               }}
             >
-              No differences between these branches
+              {t("branchDiff.noDifferences")}
             </div>
           ) : (
             <div
@@ -311,7 +308,7 @@ export const BranchDiffDialog: React.FC<Props> = ({ open, onClose }) => {
             border: "1px solid var(--border-subtle)",
           }}
         >
-          Select two branches and press Compare
+          {t("branchDiff.selectBranchesAndCompare")}
         </div>
       )}
     </ModalDialog>

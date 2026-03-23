@@ -5,6 +5,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { CommitInfoDialog } from "./CommitInfoDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockElectronAPI = {
   log: {
     fullInfo: vi.fn().mockResolvedValue(null),
@@ -52,7 +59,7 @@ describe("CommitInfoDialog", () => {
 
   it("shows the dialog title", () => {
     render(<CommitInfoDialog open={true} onClose={vi.fn()} commitHash="abc123" />);
-    expect(screen.getByText("Commit Information")).toBeInTheDocument();
+    expect(screen.getByText("commitInfoDialog.title")).toBeInTheDocument();
   });
 
   it("calls log.fullInfo with the commitHash on open", () => {
@@ -107,7 +114,7 @@ describe("CommitInfoDialog", () => {
     mockElectronAPI.log.fullInfo.mockResolvedValue(makeFullInfo({ containedInBranches: [] }));
     render(<CommitInfoDialog open={true} onClose={vi.fn()} commitHash="abc123" />);
     await waitFor(() => {
-      expect(screen.getByText("No branches")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.noBranches")).toBeInTheDocument();
     });
   });
 
@@ -126,7 +133,7 @@ describe("CommitInfoDialog", () => {
     mockElectronAPI.log.fullInfo.mockResolvedValue(makeFullInfo({ containedInTags: [] }));
     render(<CommitInfoDialog open={true} onClose={vi.fn()} commitHash="abc123" />);
     await waitFor(() => {
-      expect(screen.getByText("Contained in no tag")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.containedInNoTag")).toBeInTheDocument();
     });
   });
 
@@ -145,7 +152,7 @@ describe("CommitInfoDialog", () => {
     mockElectronAPI.log.fullInfo.mockResolvedValue(makeFullInfo({ derivesFromTag: null }));
     render(<CommitInfoDialog open={true} onClose={vi.fn()} commitHash="abc123" />);
     await waitFor(() => {
-      expect(screen.getByText("Derives from no tag")).toBeInTheDocument();
+      expect(screen.getByText("commitInfo.derivesFromNoTag")).toBeInTheDocument();
     });
   });
 

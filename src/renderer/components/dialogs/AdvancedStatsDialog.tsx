@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type {
   TimelineEntry,
@@ -14,16 +15,16 @@ interface Props {
 type Period = "day" | "week" | "month";
 type Tab = "timeline" | "churn" | "contributors";
 
-const PERIODS: { value: Period; label: string }[] = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
+const PERIODS: { value: Period; labelKey: string }[] = [
+  { value: "day", labelKey: "advancedStats.day" },
+  { value: "week", labelKey: "advancedStats.week" },
+  { value: "month", labelKey: "advancedStats.month" },
 ];
 
-const TABS: { value: Tab; label: string }[] = [
-  { value: "timeline", label: "Commits Timeline" },
-  { value: "churn", label: "Code Churn" },
-  { value: "contributors", label: "Contributors" },
+const TABS: { value: Tab; labelKey: string }[] = [
+  { value: "timeline", labelKey: "advancedStats.commitsTimeline" },
+  { value: "churn", labelKey: "advancedStats.codeChurn" },
+  { value: "contributors", labelKey: "advancedStats.contributors" },
 ];
 
 const MAX_BARS = 30;
@@ -35,7 +36,8 @@ const MAX_BARS = 30;
 const PeriodSelector: React.FC<{
   value: Period;
   onChange: (p: Period) => void;
-}> = ({ value, onChange }) => (
+  t: (key: string) => string;
+}> = ({ value, onChange, t }) => (
   <div
     style={{
       display: "flex",
@@ -62,7 +64,7 @@ const PeriodSelector: React.FC<{
           transition: "background 0.12s, color 0.12s",
         }}
       >
-        {p.label}
+        {t(p.labelKey)}
       </button>
     ))}
   </div>
@@ -71,7 +73,8 @@ const PeriodSelector: React.FC<{
 const TabBar: React.FC<{
   value: Tab;
   onChange: (t: Tab) => void;
-}> = ({ value, onChange }) => (
+  t: (key: string) => string;
+}> = ({ value, onChange, t }) => (
   <div
     style={{
       display: "flex",
@@ -79,30 +82,31 @@ const TabBar: React.FC<{
       borderBottom: "1px solid var(--border)",
     }}
   >
-    {TABS.map((t) => (
+    {TABS.map((tabItem) => (
       <button
-        key={t.value}
-        onClick={() => onChange(t.value)}
+        key={tabItem.value}
+        onClick={() => onChange(tabItem.value)}
         style={{
           padding: "8px 16px",
           fontSize: 12,
-          fontWeight: value === t.value ? 600 : 400,
+          fontWeight: value === tabItem.value ? 600 : 400,
           border: "none",
-          borderBottom: value === t.value ? "2px solid var(--accent)" : "2px solid transparent",
+          borderBottom:
+            value === tabItem.value ? "2px solid var(--accent)" : "2px solid transparent",
           background: "transparent",
-          color: value === t.value ? "var(--accent)" : "var(--text-muted)",
+          color: value === tabItem.value ? "var(--accent)" : "var(--text-muted)",
           cursor: "pointer",
           transition: "color 0.12s, border-color 0.12s",
           marginBottom: -1,
         }}
       >
-        {t.label}
+        {t(tabItem.labelKey)}
       </button>
     ))}
   </div>
 );
 
-const LoadingState: React.FC = () => (
+const LoadingState: React.FC<{ t: (key: string) => string }> = ({ t }) => (
   <div
     style={{
       display: "flex",
@@ -113,11 +117,11 @@ const LoadingState: React.FC = () => (
       fontSize: 13,
     }}
   >
-    Loading...
+    {t("dialogs.loading")}
   </div>
 );
 
-const EmptyState: React.FC<{ message?: string }> = ({ message = "No data for this period." }) => (
+const EmptyState: React.FC<{ message?: string }> = ({ message }) => (
   <div
     style={{
       display: "flex",
@@ -237,7 +241,10 @@ const TimelineChart: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => {
 /* Churn chart                                                           */
 /* ------------------------------------------------------------------ */
 
-const ChurnChart: React.FC<{ entries: ChurnEntry[] }> = ({ entries }) => {
+const ChurnChart: React.FC<{ entries: ChurnEntry[]; t: (key: string) => string }> = ({
+  entries,
+  t,
+}) => {
   const visible = entries.slice(-MAX_BARS);
   const maxVal = Math.max(...visible.map((e) => Math.max(e.additions, e.deletions)), 1);
 
@@ -271,7 +278,7 @@ const ChurnChart: React.FC<{ entries: ChurnEntry[] }> = ({ entries }) => {
                 background: "var(--green)",
               }}
             />
-            Additions
+            {t("advancedStats.additions")}
           </span>
           <span
             style={{
@@ -291,7 +298,7 @@ const ChurnChart: React.FC<{ entries: ChurnEntry[] }> = ({ entries }) => {
                 background: "var(--red)",
               }}
             />
-            Deletions
+            {t("advancedStats.deletions")}
           </span>
         </div>
 
@@ -391,7 +398,10 @@ interface ContributorRow {
   total: number;
 }
 
-const ContributorsTable: React.FC<{ entries: ContributorTimelineEntry[] }> = ({ entries }) => {
+const ContributorsTable: React.FC<{
+  entries: ContributorTimelineEntry[];
+  t: (key: string) => string;
+}> = ({ entries, t }) => {
   const allDates = Array.from(new Set(entries.map((e) => e.date)))
     .sort()
     .slice(-MAX_BARS);
@@ -436,7 +446,7 @@ const ContributorsTable: React.FC<{ entries: ContributorTimelineEntry[] }> = ({ 
                 whiteSpace: "nowrap",
               }}
             >
-              Author
+              {t("advancedStats.author")}
             </th>
             {allDates.map((date) => (
               <th
@@ -467,7 +477,7 @@ const ContributorsTable: React.FC<{ entries: ContributorTimelineEntry[] }> = ({ 
                 whiteSpace: "nowrap",
               }}
             >
-              Total
+              {t("advancedStats.total")}
             </th>
           </tr>
         </thead>
@@ -530,6 +540,7 @@ const ContributorsTable: React.FC<{ entries: ContributorTimelineEntry[] }> = ({ 
 /* ------------------------------------------------------------------ */
 
 export const AdvancedStatsDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>("week");
   const [tab, setTab] = useState<Tab>("timeline");
 
@@ -587,28 +598,31 @@ export const AdvancedStatsDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const renderContent = () => {
-    if (loading) return <LoadingState />;
+    if (loading) return <LoadingState t={t} />;
     if (error) return <ErrorState message={error} />;
 
     if (tab === "timeline") {
-      if (!timelineData) return <LoadingState />;
-      if (timelineData.length === 0) return <EmptyState />;
+      if (!timelineData) return <LoadingState t={t} />;
+      if (timelineData.length === 0)
+        return <EmptyState message={t("advancedStats.noDataForPeriod")} />;
       return <TimelineChart entries={timelineData} />;
     }
 
     if (tab === "churn") {
-      if (!churnData) return <LoadingState />;
-      if (churnData.length === 0) return <EmptyState />;
-      return <ChurnChart entries={churnData} />;
+      if (!churnData) return <LoadingState t={t} />;
+      if (churnData.length === 0)
+        return <EmptyState message={t("advancedStats.noDataForPeriod")} />;
+      return <ChurnChart entries={churnData} t={t} />;
     }
 
-    if (!contributorsData) return <LoadingState />;
-    if (contributorsData.length === 0) return <EmptyState />;
-    return <ContributorsTable entries={contributorsData} />;
+    if (!contributorsData) return <LoadingState t={t} />;
+    if (contributorsData.length === 0)
+      return <EmptyState message={t("advancedStats.noDataForPeriod")} />;
+    return <ContributorsTable entries={contributorsData} t={t} />;
   };
 
   return (
-    <ModalDialog open={open} title="Advanced Statistics" onClose={onClose} width={750}>
+    <ModalDialog open={open} title={t("advancedStats.title")} onClose={onClose} width={750}>
       {/* Controls bar */}
       <div
         style={{
@@ -618,12 +632,14 @@ export const AdvancedStatsDialog: React.FC<Props> = ({ open, onClose }) => {
           marginBottom: 12,
         }}
       >
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Period</span>
-        <PeriodSelector value={period} onChange={handlePeriodChange} />
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {t("advancedStats.period")}
+        </span>
+        <PeriodSelector value={period} onChange={handlePeriodChange} t={t} />
       </div>
 
       {/* Tabs */}
-      <TabBar value={tab} onChange={handleTabChange} />
+      <TabBar value={tab} onChange={handleTabChange} t={t} />
 
       {/* Chart / table area */}
       <div
@@ -651,7 +667,7 @@ export const AdvancedStatsDialog: React.FC<Props> = ({ open, onClose }) => {
             textAlign: "right",
           }}
         >
-          Showing last {MAX_BARS} periods
+          {t("advancedStats.showingLast30")}
         </div>
       )}
     </ModalDialog>

@@ -5,6 +5,13 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MergeDialog } from "./MergeDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: Object.assign(
     () => ({
@@ -55,12 +62,12 @@ describe("MergeDialog", () => {
 
   it("renders dialog title when open", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Merge branches")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.title")).toBeInTheDocument();
   });
 
   it("shows Into current branch label and branch name", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Into current branch")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.intoCurrentBranch")).toBeInTheDocument();
     expect(screen.getByText("main")).toBeInTheDocument();
   });
 
@@ -71,24 +78,24 @@ describe("MergeDialog", () => {
 
   it("renders fast-forward and no-ff strategy options", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText(/fast forward/)).toBeInTheDocument();
-    expect(screen.getByText(/Always create a new merge commit/)).toBeInTheDocument();
+    expect(screen.getByText(/mergeDialog.fastForward/)).toBeInTheDocument();
+    expect(screen.getByText(/mergeDialog.alwaysMergeCommit/)).toBeInTheDocument();
   });
 
   it("renders Merge and Cancel buttons", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Merge")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.merge")).toBeInTheDocument();
     expect(screen.getByText("Cancel")).toBeInTheDocument();
   });
 
   it("renders Do not commit checkbox", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Do not commit")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.doNotCommit")).toBeInTheDocument();
   });
 
   it("renders Show advanced options checkbox", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("Show advanced options")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.showAdvancedOptions")).toBeInTheDocument();
   });
 
   it("calls onClose when Cancel is clicked", () => {
@@ -100,12 +107,12 @@ describe("MergeDialog", () => {
 
   it("reveals advanced options when the checkbox is toggled", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    const advLabel = screen.getByText("Show advanced options").closest("label")!;
+    const advLabel = screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!;
     const advCheckbox = advLabel.querySelector("input")!;
     fireEvent.click(advCheckbox);
-    expect(screen.getByText("Squash commits")).toBeInTheDocument();
-    expect(screen.getByText("Allow unrelated histories")).toBeInTheDocument();
-    expect(screen.getByText("Specify merge message")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.squashCommits")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.allowUnrelatedHistories")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.specifyMergeMessage")).toBeInTheDocument();
   });
 
   it("renders branch selector dropdown", async () => {
@@ -134,48 +141,50 @@ describe("MergeDialog", () => {
 
   it("shows Squash commits and Allow unrelated histories in advanced section", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    const advLabel = screen.getByText("Show advanced options").closest("label")!;
+    const advLabel = screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!;
     const advCheckbox = advLabel.querySelector("input")!;
     fireEvent.click(advCheckbox);
-    expect(screen.getByText("Squash commits")).toBeInTheDocument();
-    expect(screen.getByText("Allow unrelated histories")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.squashCommits")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.allowUnrelatedHistories")).toBeInTheDocument();
   });
 
   it("shows Add log messages option in advanced section", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
     fireEvent.click(
-      screen.getByText("Show advanced options").closest("label")!.querySelector("input")!
+      screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!.querySelector("input")!
     );
-    expect(screen.getByText("Add log messages")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.addLogMessages")).toBeInTheDocument();
   });
 
   it("shows log count input when Add log messages is checked", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
     fireEvent.click(
-      screen.getByText("Show advanced options").closest("label")!.querySelector("input")!
+      screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!.querySelector("input")!
     );
-    fireEvent.click(screen.getByText("Add log messages").closest("label")!.querySelector("input")!);
+    fireEvent.click(
+      screen.getByText("mergeDialog.addLogMessages").closest("label")!.querySelector("input")!
+    );
     expect(screen.getByDisplayValue("20")).toBeInTheDocument();
   });
 
   it("shows message textarea when Specify merge message is checked", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
     fireEvent.click(
-      screen.getByText("Show advanced options").closest("label")!.querySelector("input")!
+      screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!.querySelector("input")!
     );
     fireEvent.click(
-      screen.getByText("Specify merge message").closest("label")!.querySelector("input")!
+      screen.getByText("mergeDialog.specifyMergeMessage").closest("label")!.querySelector("input")!
     );
-    expect(screen.getByPlaceholderText("Enter merge commit message...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("mergeDialog.mergeMessagePlaceholder")).toBeInTheDocument();
   });
 
   it("squash checkbox is disabled when fast-forward is selected", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
     fireEvent.click(
-      screen.getByText("Show advanced options").closest("label")!.querySelector("input")!
+      screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!.querySelector("input")!
     );
     const squashCheckbox = screen
-      .getByText("Squash commits")
+      .getByText("mergeDialog.squashCommits")
       .closest("label")!
       .querySelector("input")!;
     expect(squashCheckbox).toBeDisabled();
@@ -184,17 +193,17 @@ describe("MergeDialog", () => {
   it("squash checkbox is enabled when no-ff strategy is selected", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
     fireEvent.click(
-      screen.getByText("Show advanced options").closest("label")!.querySelector("input")!
+      screen.getByText("mergeDialog.showAdvancedOptions").closest("label")!.querySelector("input")!
     );
     // Select no-ff
     fireEvent.click(
       screen
-        .getByText(/Always create a new merge commit/)
+        .getByText(/mergeDialog.alwaysMergeCommit/)
         .closest("label")!
         .querySelector("input")!
     );
     const squashCheckbox = screen
-      .getByText("Squash commits")
+      .getByText("mergeDialog.squashCommits")
       .closest("label")!
       .querySelector("input")!;
     expect(squashCheckbox).not.toBeDisabled();
@@ -225,12 +234,15 @@ describe("MergeDialog", () => {
       expect(select).not.toBeNull();
     });
     // The preselectedBranch value is set, check dialog is shown
-    expect(screen.getByText("Merge branches")).toBeInTheDocument();
+    expect(screen.getByText("mergeDialog.title")).toBeInTheDocument();
   });
 
   it("toggles Do not commit checkbox", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    const checkbox = screen.getByText("Do not commit").closest("label")!.querySelector("input")!;
+    const checkbox = screen
+      .getByText("mergeDialog.doNotCommit")
+      .closest("label")!
+      .querySelector("input")!;
     expect(checkbox).not.toBeChecked();
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
@@ -238,9 +250,9 @@ describe("MergeDialog", () => {
 
   it("switches back to ff when the ff radio is selected after no-ff", () => {
     render(<MergeDialog open={true} onClose={vi.fn()} />);
-    const noFfLabel = screen.getByText(/Always create a new merge commit/).closest("label")!;
+    const noFfLabel = screen.getByText(/mergeDialog.alwaysMergeCommit/).closest("label")!;
     const noFfRadio = noFfLabel.querySelector("input")!;
-    const ffLabel = screen.getByText(/fast forward/).closest("label")!;
+    const ffLabel = screen.getByText(/mergeDialog.fastForward/).closest("label")!;
     const ffRadio = ffLabel.querySelector("input")!;
     fireEvent.click(noFfRadio);
     expect(noFfRadio).toBeChecked();

@@ -5,6 +5,27 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { GitignoreDialog } from "./GitignoreDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "gitignore.title": ".gitignore Editor",
+        "gitignore.editor": "Editor",
+        "gitignore.ignoredFiles": "Ignored Files",
+        "gitignore.addPatternPlaceholder": "Add pattern (e.g. *.log, dist/)",
+        "gitignore.templates": "Templates",
+        "gitignore.saving": "Saving...",
+        "gitignore.noIgnoredFiles": "No ignored files found",
+        "dialogs.close": "Close",
+        "dialogs.save": "Save",
+        "dialogs.add": "Add",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockElectronAPI = {
   gitignore: {
     read: vi.fn().mockResolvedValue("node_modules/\ndist/\n"),

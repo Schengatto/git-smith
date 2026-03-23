@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 
 interface Props {
@@ -66,6 +67,7 @@ function addLineNumbers(text: string | null): string {
 }
 
 export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) => {
+  const { t } = useTranslation();
   const [versions, setVersions] = useState<FileVersions | null>(null);
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -122,7 +124,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
   return (
     <ModalDialog
       open={open}
-      title={`3-Way Merge Editor — ${fileName}`}
+      title={`${t("mergeEditor.threeWayTitle")} — ${fileName}`}
       onClose={onClose}
       width={950}
     >
@@ -146,7 +148,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
           }}
         >
           <span style={{ fontSize: 11, color: "var(--text-muted)", marginRight: 4 }}>
-            Quick resolve:
+            {t("mergeEditor.quickResolve")}
           </span>
           <button
             style={{
@@ -163,7 +165,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
               e.currentTarget.style.background = "var(--surface-2)";
             }}
           >
-            Accept Ours
+            {t("mergeEditor.acceptOurs")}
           </button>
           <button
             style={{
@@ -180,7 +182,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
               e.currentTarget.style.background = "var(--surface-2)";
             }}
           >
-            Accept Theirs
+            {t("mergeEditor.acceptTheirs")}
           </button>
           <button
             style={{
@@ -197,7 +199,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
               e.currentTarget.style.background = "var(--surface-2)";
             }}
           >
-            Accept Both
+            {t("mergeEditor.acceptBoth")}
           </button>
 
           <div style={{ flex: 1 }} />
@@ -217,7 +219,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
               transition: "background 0.12s",
             }}
           >
-            {saving ? "Saving…" : "Save & Mark Resolved"}
+            {saving ? t("mergeEditor.saving") : t("mergeEditor.saveAndMarkResolved")}
           </button>
         </div>
 
@@ -250,7 +252,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
               minHeight: 200,
             }}
           >
-            Loading file versions…
+            {t("mergeEditor.loadingFileVersions")}
           </div>
         )}
 
@@ -268,7 +270,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
             {/* Ours */}
             <div style={PANEL_STYLE}>
               <div style={{ ...PANEL_LABEL_STYLE, color: "var(--green)" }}>
-                Ours (current branch)
+                {t("mergeEditor.oursBranch")}
               </div>
               <textarea
                 readOnly
@@ -287,7 +289,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
             {/* Base */}
             <div style={PANEL_STYLE}>
               <div style={{ ...PANEL_LABEL_STYLE, color: "var(--accent)" }}>
-                Base (common ancestor)
+                {t("mergeEditor.baseAncestor")}
               </div>
               <textarea
                 readOnly
@@ -303,7 +305,9 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
 
             {/* Theirs */}
             <div style={PANEL_STYLE}>
-              <div style={{ ...PANEL_LABEL_STYLE, color: "var(--red)" }}>Theirs (incoming)</div>
+              <div style={{ ...PANEL_LABEL_STYLE, color: "var(--red)" }}>
+                {t("mergeEditor.theirsIncoming")}
+              </div>
               <textarea
                 readOnly
                 value={addLineNumbers(versions.theirs)}
@@ -337,7 +341,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
                 marginBottom: 4,
               }}
             >
-              Result (editable — will be saved)
+              {t("mergeEditor.resultEditable")}
             </div>
             <textarea
               value={result}
@@ -350,7 +354,7 @@ export const MergeEditorDialog: React.FC<Props> = ({ open, onClose, filePath }) 
                 resize: "vertical",
               }}
               spellCheck={false}
-              placeholder="Edit the merged result here…"
+              placeholder={t("mergeEditor.editPlaceholder")}
             />
           </div>
         )}

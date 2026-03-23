@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import { useUIStore } from "../../store/ui-store";
@@ -153,6 +154,7 @@ type CtxMenu =
 /* ---------- Main Component ---------- */
 
 export const Sidebar: React.FC = () => {
+  const { t } = useTranslation();
   const { repo } = useRepoStore();
   const { loadGraph } = useGraphStore();
   const showToast = useUIStore((s) => s.showToast);
@@ -193,7 +195,9 @@ export const Sidebar: React.FC = () => {
       setSubmodules(submoduleList);
       setStashes(stashList);
     } catch (err: unknown) {
-      showToast(`Failed to load sidebar data: ${err instanceof Error ? err.message : String(err)}`);
+      showToast(
+        `${t("errors.sidebarLoadFailed")}: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -238,7 +242,7 @@ export const Sidebar: React.FC = () => {
         <div className="empty-state-icon">
           <IconGitBranch />
         </div>
-        <span>Open a repository</span>
+        <span>{t("sidebar.openARepository")}</span>
       </div>
     );
   }
@@ -253,21 +257,21 @@ export const Sidebar: React.FC = () => {
   const branchesSectionCtx = (e: React.MouseEvent) =>
     showSectionCtx(e, [
       {
-        label: "Create New Branch...",
+        label: t("sidebar.createNewBranch"),
         onClick: () => setDialog({ type: "create-branch" }),
       },
     ]);
 
   const tagsSectionCtx = (e: React.MouseEvent) =>
     showSectionCtx(e, [
-      { label: "Create New Tag...", onClick: () => setDialog({ type: "create-tag" }) },
+      { label: t("sidebar.createNewTag"), onClick: () => setDialog({ type: "create-tag" }) },
     ]);
 
   const submodulesSectionCtx = (e: React.MouseEvent) =>
     showSectionCtx(e, [
-      { label: "Add Submodule...", onClick: () => setDialog({ type: "add-submodule" }) },
+      { label: t("sidebar.addSubmodule"), onClick: () => setDialog({ type: "add-submodule" }) },
       {
-        label: "Update All (init)",
+        label: t("sidebar.updateAllInit"),
         onClick: async () => {
           try {
             await window.electronAPI.submodule.update(true);
@@ -276,7 +280,7 @@ export const Sidebar: React.FC = () => {
         },
       },
       {
-        label: "Sync All",
+        label: t("sidebar.syncAll"),
         onClick: async () => {
           try {
             await window.electronAPI.submodule.sync();
@@ -288,7 +292,7 @@ export const Sidebar: React.FC = () => {
 
   const stashesSectionCtx = (e: React.MouseEvent) =>
     showSectionCtx(e, [
-      { label: "Stash Changes...", onClick: () => setDialog({ type: "create-stash" }) },
+      { label: t("sidebar.stashChanges"), onClick: () => setDialog({ type: "create-stash" }) },
     ]);
 
   /* ---------- Item context menu builders ---------- */
@@ -298,28 +302,28 @@ export const Sidebar: React.FC = () => {
 
     if (!branch.current) {
       items.push({
-        label: "Checkout",
+        label: t("sidebar.checkout"),
         onClick: () => setDialog({ type: "checkout", branch: branch.name }),
       });
     }
 
     if (!branch.remote) {
       items.push({
-        label: "Create Branch From Here",
+        label: t("sidebar.createBranchFromHere"),
         onClick: () => setDialog({ type: "create-branch", startPoint: branch.name }),
       });
 
       if (!branch.current) {
         items.push({
-          label: "Merge into Current",
+          label: t("sidebar.mergeIntoCurrent"),
           onClick: () => setDialog({ type: "merge-branch", branch: branch.name }),
         });
         items.push({
-          label: "Rebase Current onto This",
+          label: t("sidebar.rebaseCurrentOntoThis"),
           onClick: () => setDialog({ type: "rebase", onto: branch.name }),
         });
         items.push({
-          label: "Interactive Rebase onto This",
+          label: t("sidebar.interactiveRebaseOntoThis"),
           onClick: () =>
             openDialogWindow({
               dialog: "InteractiveRebaseDialog",
@@ -331,25 +335,25 @@ export const Sidebar: React.FC = () => {
       items.push({ divider: true });
 
       items.push({
-        label: "Rename",
+        label: t("sidebar.rename"),
         onClick: () => setDialog({ type: "rename-branch", branch: branch.name }),
       });
 
       if (!branch.current) {
         items.push({
-          label: "Delete",
+          label: t("sidebar.delete"),
           color: "var(--red)",
           onClick: () => setDialog({ type: "delete-branch", branch: branch.name }),
         });
       }
     } else {
       items.push({
-        label: "Create Local Branch",
+        label: t("sidebar.createLocalBranch"),
         onClick: () => setDialog({ type: "create-branch", startPoint: branch.name }),
       });
       items.push({ divider: true });
       items.push({
-        label: "Delete Remote Branch",
+        label: t("sidebar.deleteRemoteBranch"),
         color: "var(--red)",
         onClick: () => setDialog({ type: "delete-remote-branch", branch: branch.name }),
       });
@@ -360,7 +364,7 @@ export const Sidebar: React.FC = () => {
 
   const buildTagContextMenu = (tag: TagInfo): ContextMenuEntry[] => [
     {
-      label: "Push to Remote",
+      label: t("sidebar.pushToRemote"),
       onClick: async () => {
         await runGitOperation("Push Tag", () => window.electronAPI.tag.push(tag.name));
         await loadGraph();
@@ -369,7 +373,7 @@ export const Sidebar: React.FC = () => {
     },
     { divider: true },
     {
-      label: "Delete",
+      label: t("sidebar.delete"),
       color: "var(--red)",
       onClick: () => setDialog({ type: "delete-tag", tag: tag.name }),
     },
@@ -377,14 +381,14 @@ export const Sidebar: React.FC = () => {
 
   const buildStashContextMenu = (stash: StashEntry): ContextMenuEntry[] => [
     {
-      label: "Pop",
+      label: t("sidebar.pop"),
       onClick: async () => {
         await runGitOperation("Stash Pop", () => window.electronAPI.stash.pop(stash.index));
         await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
       },
     },
     {
-      label: "Apply",
+      label: t("sidebar.apply"),
       onClick: async () => {
         await runGitOperation("Stash Apply", () => window.electronAPI.stash.apply(stash.index));
         await Promise.all([loadData(), loadGraph(), useRepoStore.getState().refreshStatus()]);
@@ -392,7 +396,7 @@ export const Sidebar: React.FC = () => {
     },
     { divider: true },
     {
-      label: "Drop",
+      label: t("sidebar.drop"),
       color: "var(--red)",
       onClick: async () => {
         await window.electronAPI.stash.drop(stash.index);
@@ -440,7 +444,7 @@ export const Sidebar: React.FC = () => {
           </span>
           <input
             type="text"
-            placeholder="Filter..."
+            placeholder={t("sidebar.filter")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -478,7 +482,7 @@ export const Sidebar: React.FC = () => {
         {/* Branches (Local) */}
         <SectionHeader
           icon={<IconGitBranch />}
-          label="Branches"
+          label={t("sidebar.branches")}
           count={localBranches.length}
           expanded={expandedSections.branches}
           onClick={() => toggleSection("branches")}
@@ -498,7 +502,9 @@ export const Sidebar: React.FC = () => {
               />
             ))}
             {localBranches.length === 0 && (
-              <EmptyMessage>{q ? "No matches" : "No local branches"}</EmptyMessage>
+              <EmptyMessage>
+                {q ? t("sidebar.noMatches") : t("sidebar.noLocalBranches")}
+              </EmptyMessage>
             )}
           </div>
         )}
@@ -506,7 +512,7 @@ export const Sidebar: React.FC = () => {
         {/* Remotes */}
         <SectionHeader
           icon={<IconCloud />}
-          label="Remotes"
+          label={t("sidebar.remoteBranches")}
           count={remoteBranches.length}
           expanded={expandedSections.remotes}
           onClick={() => toggleSection("remotes")}
@@ -525,7 +531,9 @@ export const Sidebar: React.FC = () => {
               />
             ))}
             {remoteBranches.length === 0 && (
-              <EmptyMessage>{q ? "No matches" : "No remote branches"}</EmptyMessage>
+              <EmptyMessage>
+                {q ? t("sidebar.noMatches") : t("sidebar.noRemoteBranches")}
+              </EmptyMessage>
             )}
           </div>
         )}
@@ -533,7 +541,7 @@ export const Sidebar: React.FC = () => {
         {/* Tags */}
         <SectionHeader
           icon={<IconTag />}
-          label="Tags"
+          label={t("sidebar.tags")}
           count={filteredTags.length}
           expanded={expandedSections.tags}
           onClick={() => toggleSection("tags")}
@@ -576,7 +584,7 @@ export const Sidebar: React.FC = () => {
               </div>
             ))}
             {filteredTags.length === 0 && (
-              <EmptyMessage>{q ? "No matches" : "No tags"}</EmptyMessage>
+              <EmptyMessage>{q ? t("sidebar.noMatches") : t("sidebar.noTags")}</EmptyMessage>
             )}
           </div>
         )}
@@ -584,7 +592,7 @@ export const Sidebar: React.FC = () => {
         {/* Submodules */}
         <SectionHeader
           icon={<IconSubmodule />}
-          label="Submodules"
+          label={t("sidebar.submodules")}
           count={filteredSubmodules.length}
           expanded={expandedSections.submodules}
           onClick={() => toggleSection("submodules")}
@@ -617,7 +625,7 @@ export const Sidebar: React.FC = () => {
               </div>
             ))}
             {filteredSubmodules.length === 0 && (
-              <EmptyMessage>{q ? "No matches" : "No submodules"}</EmptyMessage>
+              <EmptyMessage>{q ? t("sidebar.noMatches") : t("sidebar.noSubmodules")}</EmptyMessage>
             )}
           </div>
         )}
@@ -625,7 +633,7 @@ export const Sidebar: React.FC = () => {
         {/* Stashes */}
         <SectionHeader
           icon={<IconArchive />}
-          label="Stashes"
+          label={t("sidebar.stashes")}
           count={filteredStashes.length}
           expanded={expandedSections.stashes}
           onClick={() => toggleSection("stashes")}
@@ -648,7 +656,7 @@ export const Sidebar: React.FC = () => {
               </div>
             ))}
             {filteredStashes.length === 0 && (
-              <EmptyMessage>{q ? "No matches" : "No stashes"}</EmptyMessage>
+              <EmptyMessage>{q ? t("sidebar.noMatches") : t("sidebar.noStashes")}</EmptyMessage>
             )}
           </div>
         )}
@@ -707,14 +715,14 @@ export const Sidebar: React.FC = () => {
       {/* Delete remote branch confirmation */}
       <ModalDialog
         open={dialog.type === "delete-remote-branch"}
-        title="Delete Remote Branch"
+        title={t("sidebar.deleteRemoteBranchTitle")}
         onClose={closeDialog}
         width={380}
       >
         <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
-          Are you sure you want to delete remote branch &quot;
-          {dialog.type === "delete-remote-branch" ? dialog.branch : ""}&quot;? This will remove it
-          from the remote server.
+          {t("sidebar.deleteRemoteBranchConfirm", {
+            branch: dialog.type === "delete-remote-branch" ? dialog.branch : "",
+          })}
         </p>
         <DialogActions
           onCancel={closeDialog}
@@ -745,7 +753,7 @@ export const Sidebar: React.FC = () => {
       {/* Delete tag confirmation */}
       <ModalDialog
         open={dialog.type === "delete-tag"}
-        title="Delete Tag"
+        title={t("sidebar.deleteTagTitle")}
         onClose={() => {
           closeDialog();
           setDeleteTagRemote(false);
@@ -753,8 +761,7 @@ export const Sidebar: React.FC = () => {
         width={380}
       >
         <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>
-          Are you sure you want to delete tag &quot;
-          {dialog.type === "delete-tag" ? dialog.tag : ""}&quot;?
+          {t("sidebar.deleteTagConfirm", { tag: dialog.type === "delete-tag" ? dialog.tag : "" })}
         </p>
         <label
           style={{
@@ -772,7 +779,7 @@ export const Sidebar: React.FC = () => {
             checked={deleteTagRemote}
             onChange={(e) => setDeleteTagRemote(e.target.checked)}
           />
-          Delete tag from remote
+          {t("sidebar.deleteTagFromRemote")}
         </label>
         <DialogActions
           onCancel={() => {

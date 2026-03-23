@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogInput, DialogError } from "./ModalDialog";
 import { useUIStore } from "../../store/ui-store";
 import type { RemoteInfo } from "../../../shared/git-types";
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const showToast = useUIStore((s) => s.showToast);
   const [remotes, setRemotes] = useState<RemoteInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,7 +66,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Manage Remotes" onClose={onClose} width={520}>
+    <ModalDialog open={open} title={t("remote.title")} onClose={onClose} width={520}>
       {/* Remote list */}
       <div
         style={{
@@ -78,7 +80,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
           <div
             style={{ padding: 16, textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}
           >
-            No remotes configured
+            {t("remote.noRemotesConfigured")}
           </div>
         ) : (
           remotes.map((r, i) => (
@@ -102,7 +104,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
               </div>
               <button
                 onClick={() => handleRemove(r.name)}
-                title="Remove remote"
+                title={t("remote.removeRemote")}
                 style={{
                   background: "none",
                   border: "none",
@@ -148,17 +150,17 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
           }}
         >
           <DialogInput
-            label="Remote name"
+            label={t("remote.remoteName")}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="origin"
+            placeholder={t("remote.namePlaceholder")}
             autoFocus
           />
           <DialogInput
-            label="URL"
+            label={t("remote.url")}
             value={newUrl}
             onChange={(e) => setNewUrl(e.target.value)}
-            placeholder="https://github.com/user/repo.git"
+            placeholder={t("remote.urlPlaceholder")}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           />
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -174,7 +176,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
                 cursor: "pointer",
               }}
             >
-              Cancel
+              {t("dialogs.cancel")}
             </button>
             <button
               onClick={handleAdd}
@@ -192,7 +194,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
                 cursor: !newName.trim() || !newUrl.trim() ? "not-allowed" : "pointer",
               }}
             >
-              Add
+              {t("dialogs.add")}
             </button>
           </div>
         </div>
@@ -235,7 +237,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Add Remote
+          {t("remote.addRemote")}
         </button>
       )}
 
@@ -255,7 +257,7 @@ export const RemoteDialog: React.FC<Props> = ({ open, onClose }) => {
             cursor: "pointer",
           }}
         >
-          Done
+          {t("remote.done")}
         </button>
       </div>
     </ModalDialog>

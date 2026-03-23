@@ -4,6 +4,35 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { HooksDialog } from "./HooksDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "hooks.title": "Git Hooks Manager",
+        "hooks.noHooks": "No hooks found",
+        "hooks.selectHookPrompt": "Select a hook from the list to view or edit its content",
+        "hooks.active": "active",
+        "hooks.inactive": "inactive",
+        "hooks.noContent": "no content",
+        "hooks.enable": "Enable",
+        "hooks.disable": "Disable",
+        "hooks.deleteHook": "Delete hook",
+        "hooks.deleteHookConfirm": `Delete hook "${opts?.name ?? ""}"? This action cannot be undone.`,
+        "hooks.saveContentFirst": "Save content first to enable this hook",
+        "hooks.disableHook": "Disable hook",
+        "hooks.enableHook": "Enable hook",
+        "hooks.saving": "Saving...",
+        "dialogs.loading": "Loading...",
+        "dialogs.close": "Close",
+        "dialogs.save": "Save",
+        "dialogs.delete": "Delete",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockHooks = [
   { name: "pre-commit", content: "#!/bin/sh\nexit 0", active: true },
   { name: "commit-msg", content: "", active: false },

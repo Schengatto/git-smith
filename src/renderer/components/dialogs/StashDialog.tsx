@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
 import type { StashEntry, GitStatus } from "../../../shared/git-types";
@@ -152,6 +153,7 @@ function sortTree(nodes: TreeNode[]): TreeNode[] {
 }
 
 export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }) => {
+  const { t } = useTranslation();
   const { refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
@@ -436,7 +438,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
             </svg>
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-              Stash
+              {t("stash.title")}
             </span>
           </div>
           <button
@@ -468,7 +470,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
             fontSize: 12,
           }}
         >
-          <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>Show:</span>
+          <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>{t("stash.show")}</span>
           <select
             value={showMode}
             onChange={(e) => {
@@ -486,8 +488,8 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
               cursor: "pointer",
             }}
           >
-            <option value="working">Current working directory changes</option>
-            <option value="stash">Stash list</option>
+            <option value="working">{t("stash.workingDirectoryChanges")}</option>
+            <option value="stash">{t("stash.stashListOption")}</option>
           </select>
         </div>
 
@@ -517,8 +519,11 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
               }}
             >
               {showMode === "working"
-                ? `Working directory (${files.length} file${files.length !== 1 ? "s" : ""})`
-                : `Stashes (${stashes.length})`}
+                ? t("stash.workingDirectoryCount", {
+                    count: files.length,
+                    plural: files.length !== 1 ? "s" : "",
+                  })
+                : t("stash.stashesCount", { count: stashes.length })}
             </div>
             <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
               {showMode === "working" ? (
@@ -531,7 +536,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                       fontStyle: "italic",
                     }}
                   >
-                    No changes in working directory.
+                    {t("stash.noChanges")}
                   </div>
                 ) : (
                   tree.map((node) => renderTreeNode(node, 0))
@@ -545,7 +550,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                     fontStyle: "italic",
                   }}
                 >
-                  There are no stashes.
+                  {t("stash.noStashes")}
                 </div>
               ) : (
                 stashes.map((s) => (
@@ -619,9 +624,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                 <span
                   style={{ color: "var(--text-muted)", fontStyle: "italic", fontFamily: "inherit" }}
                 >
-                  {showMode === "working"
-                    ? "Select a file to view its diff"
-                    : "Select a stash from the list"}
+                  {showMode === "working" ? t("stash.selectFileDiff") : t("stash.selectStash")}
                 </span>
               )}
             </div>
@@ -642,13 +645,13 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
           {/* Message input */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>
-              Message:
+              {t("stash.message")}
             </label>
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={showMode === "working" ? "Optional stash message..." : ""}
+              placeholder={showMode === "working" ? t("stash.optionalMessage") : ""}
               disabled={showMode !== "working"}
               style={{
                 padding: "6px 10px",
@@ -686,7 +689,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                 disabled={showMode !== "working"}
                 style={{ accentColor: "var(--mauve)" }}
               />
-              Keep index
+              {t("stash.keepIndex")}
             </label>
             <label
               style={{
@@ -704,7 +707,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                 disabled={showMode !== "working"}
                 style={{ accentColor: "var(--mauve)" }}
               />
-              Include untracked
+              {t("stash.includeUntracked")}
             </label>
           </div>
 
@@ -730,7 +733,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                   cursor: files.length === 0 || loading ? "not-allowed" : "pointer",
                 }}
               >
-                {loading ? "Stashing..." : "Stash all changes"}
+                {loading ? t("stash.stashing") : t("stash.stashAllChanges")}
               </button>
             ) : (
               <>
@@ -752,7 +755,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                     cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
                   }}
                 >
-                  Apply Selected Stash
+                  {t("stash.applySelected")}
                 </button>
                 <button
                   onClick={handleDropStash}
@@ -768,7 +771,7 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
                     cursor: selectedStash === null || loading ? "not-allowed" : "pointer",
                   }}
                 >
-                  Drop Selected Stash
+                  {t("stash.dropSelected")}
                 </button>
               </>
             )}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import type { GitignoreTemplate } from "../../../shared/gitignore-templates";
 
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState("");
   const [ignoredFiles, setIgnoredFiles] = useState<string[]>([]);
   const [templates, setTemplates] = useState<GitignoreTemplate[]>([]);
@@ -90,7 +92,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
   });
 
   return (
-    <ModalDialog open={open} title=".gitignore Editor" onClose={onClose} width={640}>
+    <ModalDialog open={open} title={t("gitignore.title")} onClose={onClose} width={640}>
       <div
         style={{
           padding: "0 16px 16px",
@@ -103,7 +105,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
         {/* Tabs */}
         <div style={{ display: "flex", borderBottom: "1px solid var(--border-subtle)" }}>
           <button style={tabStyle(activeTab === "editor")} onClick={() => setActiveTab("editor")}>
-            Editor
+            {t("gitignore.editor")}
           </button>
           <button
             style={tabStyle(activeTab === "preview")}
@@ -112,7 +114,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
               loadPreview();
             }}
           >
-            Ignored Files ({ignoredFiles.length})
+            {t("gitignore.ignoredFiles")} ({ignoredFiles.length})
           </button>
         </div>
 
@@ -124,7 +126,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
                 value={newPattern}
                 onChange={(e) => setNewPattern(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addPattern()}
-                placeholder="Add pattern (e.g. *.log, dist/)"
+                placeholder={t("gitignore.addPatternPlaceholder")}
                 style={{
                   flex: 1,
                   padding: "5px 8px",
@@ -150,7 +152,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
                   opacity: newPattern.trim() ? 1 : 0.5,
                 }}
               >
-                Add
+                {t("dialogs.add")}
               </button>
             </div>
 
@@ -165,7 +167,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
                   marginBottom: 4,
                 }}
               >
-                Templates
+                {t("gitignore.templates")}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                 {templates.map((tpl) => (
@@ -227,7 +229,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
                   cursor: "pointer",
                 }}
               >
-                Close
+                {t("dialogs.close")}
               </button>
               <button
                 onClick={save}
@@ -243,7 +245,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
                   opacity: dirty && !saving ? 1 : 0.5,
                 }}
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? t("gitignore.saving") : t("dialogs.save")}
               </button>
             </div>
           </>
@@ -269,7 +271,7 @@ export const GitignoreDialog: React.FC<Props> = ({ open, onClose }) => {
                   color: "var(--text-muted)",
                 }}
               >
-                No ignored files found
+                {t("gitignore.noIgnoredFiles")}
               </div>
             ) : (
               ignoredFiles.map((f, i) => (

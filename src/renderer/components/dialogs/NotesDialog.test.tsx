@@ -5,6 +5,23 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { NotesDialog } from "./NotesDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "notes.title": "Git Notes",
+        "notes.noteFor": "Note for",
+        "notes.placeholder": "Add a note to this commit...",
+        "notes.removeNote": "Remove Note",
+        "dialogs.loading": "Loading...",
+        "dialogs.cancel": "Cancel",
+        "dialogs.save": "Save",
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 const mockGetNote = vi.fn();
 const mockAddNote = vi.fn();
 const mockRemoveNote = vi.fn();

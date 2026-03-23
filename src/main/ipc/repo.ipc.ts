@@ -13,6 +13,7 @@ import {
   renameCategory,
   deleteCategory,
   scanForRepos,
+  cancelScan,
   getLastOpenedRepo,
   setLastOpenedRepo,
   getRepoViewSettings,
@@ -130,6 +131,10 @@ export function registerRepoHandlers() {
       addMultipleRecentRepos(found);
     }
     return found;
+  });
+
+  ipcMain.handle(IPC.REPO.SCAN_CANCEL, () => {
+    cancelScan();
   });
 
   ipcMain.handle(IPC.REPO.OPEN_EXTERNAL, async (_event, url: string) => {

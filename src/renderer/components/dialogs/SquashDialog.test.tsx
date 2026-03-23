@@ -6,6 +6,13 @@ import React from "react";
 import { SquashDialog } from "./SquashDialog";
 import type { CommitInfo } from "../../../shared/git-types";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockPreviewCommits: CommitInfo[] = [
   {
     hash: "aaa111full",
@@ -93,7 +100,7 @@ describe("SquashDialog", () => {
     // Target commit shown
     expect(screen.getByText("chore: target commit")).toBeInTheDocument();
     // Total count: 2 preview + 1 target = 3
-    expect(screen.getByText(/3 commits/)).toBeInTheDocument();
+    expect(screen.getByText(/squash.squashCount/)).toBeInTheDocument();
   });
 
   it("populates the textarea with combined commit messages", async () => {
@@ -130,7 +137,7 @@ describe("SquashDialog", () => {
     const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: "feat: combined" } });
 
-    const confirmBtn = screen.getByText("Squash");
+    const confirmBtn = screen.getByText("squash.squashButton");
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {
@@ -153,10 +160,10 @@ describe("SquashDialog", () => {
     const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: "   " } });
 
-    const confirmBtn = screen.getByText("Squash");
+    const confirmBtn = screen.getByText("squash.squashButton");
     fireEvent.click(confirmBtn);
 
-    expect(screen.getByText("Commit message cannot be empty")).toBeInTheDocument();
+    expect(screen.getByText("squash.messageCannotBeEmpty")).toBeInTheDocument();
     expect(squashExecuteMock).not.toHaveBeenCalled();
   });
 
@@ -169,7 +176,7 @@ describe("SquashDialog", () => {
       expect(squashPreviewMock).toHaveBeenCalled();
     });
 
-    const confirmBtn = screen.getByText("Squash");
+    const confirmBtn = screen.getByText("squash.squashButton");
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {

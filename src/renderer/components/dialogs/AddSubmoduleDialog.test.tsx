@@ -5,6 +5,13 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { AddSubmoduleDialog } from "./AddSubmoduleDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 const mockElectronAPI = {
   submodule: {
     add: vi.fn().mockResolvedValue(undefined),
@@ -24,8 +31,8 @@ describe("AddSubmoduleDialog", () => {
 
   it("renders the dialog title when open", () => {
     render(<AddSubmoduleDialog open={true} onClose={vi.fn()} />);
-    // "Add Submodule" appears as modal title and as confirm button
-    expect(screen.getAllByText("Add Submodule").length).toBeGreaterThan(0);
+    // "submodule.addTitle" appears as modal title and as confirm button
+    expect(screen.getAllByText("submodule.addTitle").length).toBeGreaterThan(0);
   });
 
   it("shows Repository URL input with placeholder", () => {
@@ -35,12 +42,12 @@ describe("AddSubmoduleDialog", () => {
 
   it("shows Path input with placeholder", () => {
     render(<AddSubmoduleDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByPlaceholderText(/leave empty to use repo name/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/submodule.pathPlaceholder/i)).toBeInTheDocument();
   });
 
   it("Add Submodule confirm button is disabled when URL is empty", () => {
     render(<AddSubmoduleDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /add submodule/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /submodule.addSubmodule/i })).toBeDisabled();
   });
 
   it("Add Submodule button becomes enabled when URL is entered", () => {
@@ -49,7 +56,7 @@ describe("AddSubmoduleDialog", () => {
     fireEvent.change(urlInput, {
       target: { value: "https://github.com/example/lib.git" },
     });
-    expect(screen.getByRole("button", { name: /add submodule/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /submodule.addSubmodule/i })).not.toBeDisabled();
   });
 
   it("calls submodule.add with URL when confirmed without path", () => {
@@ -58,7 +65,7 @@ describe("AddSubmoduleDialog", () => {
     fireEvent.change(urlInput, {
       target: { value: "https://github.com/example/lib.git" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /add submodule/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submodule.addSubmodule/i }));
     expect(mockElectronAPI.submodule.add).toHaveBeenCalledWith(
       "https://github.com/example/lib.git",
       undefined
@@ -68,12 +75,12 @@ describe("AddSubmoduleDialog", () => {
   it("calls submodule.add with URL and path when both are provided", () => {
     render(<AddSubmoduleDialog open={true} onClose={vi.fn()} />);
     const urlInput = screen.getByPlaceholderText("https://github.com/user/repo.git");
-    const pathInput = screen.getByPlaceholderText(/leave empty to use repo name/i);
+    const pathInput = screen.getByPlaceholderText(/submodule.pathPlaceholder/i);
     fireEvent.change(urlInput, {
       target: { value: "https://github.com/example/lib.git" },
     });
     fireEvent.change(pathInput, { target: { value: "libs/example" } });
-    fireEvent.click(screen.getByRole("button", { name: /add submodule/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submodule.addSubmodule/i }));
     expect(mockElectronAPI.submodule.add).toHaveBeenCalledWith(
       "https://github.com/example/lib.git",
       "libs/example"
@@ -87,7 +94,7 @@ describe("AddSubmoduleDialog", () => {
     fireEvent.change(urlInput, {
       target: { value: "https://github.com/example/lib.git" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /add submodule/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submodule.addSubmodule/i }));
     const { waitFor } = await import("@testing-library/react");
     await waitFor(() => {
       expect(screen.getByText("Failed to clone repository")).toBeInTheDocument();
@@ -104,7 +111,7 @@ describe("AddSubmoduleDialog", () => {
   it("triggers add when Enter is pressed in path input", () => {
     render(<AddSubmoduleDialog open={true} onClose={vi.fn()} />);
     const urlInput = screen.getByPlaceholderText("https://github.com/user/repo.git");
-    const pathInput = screen.getByPlaceholderText(/leave empty to use repo name/i);
+    const pathInput = screen.getByPlaceholderText(/submodule.pathPlaceholder/i);
     fireEvent.change(urlInput, {
       target: { value: "https://github.com/example/lib.git" },
     });

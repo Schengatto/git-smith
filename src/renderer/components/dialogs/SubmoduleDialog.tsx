@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const { refreshStatus } = useRepoStore();
   const { loadGraph } = useGraphStore();
   const [submodules, setSubmodules] = useState<SubmoduleInfo[]>([]);
@@ -43,7 +45,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [open]);
 
   const handleUpdate = async (init: boolean) => {
-    setActionInProgress(init ? "Initializing & updating..." : "Updating...");
+    setActionInProgress(init ? t("submodule.initializingAndUpdating") : t("submodule.updating"));
     setError(null);
     try {
       await window.electronAPI.submodule.update(init);
@@ -56,7 +58,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleSync = async () => {
-    setActionInProgress("Syncing...");
+    setActionInProgress(t("submodule.syncing"));
     setError(null);
     try {
       await window.electronAPI.submodule.sync();
@@ -69,7 +71,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleDeinit = async (subPath: string) => {
-    setActionInProgress(`Deinitializing ${subPath}...`);
+    setActionInProgress(t("submodule.deinitializing", { path: subPath }));
     setError(null);
     try {
       await window.electronAPI.submodule.deinit(subPath, true);
@@ -97,7 +99,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Submodules" onClose={onClose} width={580}>
+    <ModalDialog open={open} title={t("submodule.title")} onClose={onClose} width={580}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0" }}>
         {/* Action buttons */}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -107,7 +109,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
             disabled={!!actionInProgress}
             style={{ fontSize: 11, padding: "4px 10px" }}
           >
-            Init & Update
+            {t("submodule.initAndUpdate")}
           </button>
           <button
             className="toolbar-btn"
@@ -115,7 +117,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
             disabled={!!actionInProgress}
             style={{ fontSize: 11, padding: "4px 10px" }}
           >
-            Update
+            {t("submodule.update")}
           </button>
           <button
             className="toolbar-btn"
@@ -123,7 +125,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
             disabled={!!actionInProgress}
             style={{ fontSize: 11, padding: "4px 10px" }}
           >
-            Sync
+            {t("submodule.sync")}
           </button>
           <button
             className="toolbar-btn"
@@ -131,7 +133,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
             disabled={!!actionInProgress}
             style={{ fontSize: 11, padding: "4px 10px" }}
           >
-            Refresh
+            {t("submodule.refresh")}
           </button>
         </div>
 
@@ -146,13 +148,13 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}
           >
-            Loading...
+            {t("submodule.loading")}
           </div>
         ) : submodules.length === 0 ? (
           <div
             style={{ fontSize: 12, color: "var(--text-muted)", padding: 16, textAlign: "center" }}
           >
-            No submodules found
+            {t("submodule.noSubmodulesFound")}
           </div>
         ) : (
           <div
@@ -216,9 +218,9 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
                   onClick={() => handleDeinit(sub.path)}
                   disabled={!!actionInProgress}
                   style={{ fontSize: 10, padding: "2px 8px", color: "var(--red)" }}
-                  title="Deinitialize submodule"
+                  title={t("submodule.deinitializeSubmodule")}
                 >
-                  Deinit
+                  {t("submodule.deinit")}
                 </button>
               </div>
             ))}
@@ -228,7 +230,7 @@ export const SubmoduleDialog: React.FC<Props> = ({ open, onClose }) => {
         <DialogError error={error} />
       </div>
 
-      <DialogActions onCancel={onClose} onConfirm={onClose} confirmLabel="Close" />
+      <DialogActions onCancel={onClose} onConfirm={onClose} confirmLabel={t("dialogs.close")} />
     </ModalDialog>
   );
 };

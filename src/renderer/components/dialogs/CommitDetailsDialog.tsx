@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { CommitFullInfo, CommitFileInfo } from "../../../shared/git-types";
 
 interface Props {
@@ -24,6 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export const CommitDetailsDialog: React.FC<Props> = ({ open, onClose, commitHash }) => {
+  const { t } = useTranslation();
   const [info, setInfo] = useState<CommitFullInfo | null>(null);
   const [files, setFiles] = useState<CommitFileInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -118,7 +120,7 @@ export const CommitDetailsDialog: React.FC<Props> = ({ open, onClose, commitHash
           }}
         >
           <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
-            Commit Details
+            {t("commitDetails.title")}
           </span>
           <button
             onClick={onClose}
@@ -156,7 +158,7 @@ export const CommitDetailsDialog: React.FC<Props> = ({ open, onClose, commitHash
             <div
               style={{ textAlign: "center", padding: 20, color: "var(--text-muted)", fontSize: 12 }}
             >
-              Loading commit details...
+              {t("commitDetails.loadingDetails")}
             </div>
           )}
           {error && <div style={{ color: "var(--red)", fontSize: 12, padding: 8 }}>{error}</div>}
@@ -250,7 +252,10 @@ export const CommitDetailsDialog: React.FC<Props> = ({ open, onClose, commitHash
                   }}
                 >
                   <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
-                    {files.length} file{files.length !== 1 ? "s" : ""} changed
+                    {t("commitDetails.filesChanged", {
+                      count: files.length,
+                      plural: files.length !== 1 ? "s" : "",
+                    })}
                   </span>
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                     <span style={{ color: "var(--green)" }}>+{totalAdditions}</span>
@@ -278,7 +283,7 @@ export const CommitDetailsDialog: React.FC<Props> = ({ open, onClose, commitHash
                       textAlign: "center",
                     }}
                   >
-                    No files changed
+                    {t("commitDetails.noFilesChanged")}
                   </div>
                 )}
               </div>
@@ -318,7 +323,7 @@ export const CommitDetailsDialog: React.FC<Props> = ({ open, onClose, commitHash
                           textAlign: "center",
                         }}
                       >
-                        Loading diff...
+                        {t("commitDetails.loadingDiff")}
                       </div>
                     ) : (
                       <DiffViewer diff={diff} />
@@ -420,10 +425,11 @@ const FileEntry: React.FC<{
 );
 
 const DiffViewer: React.FC<{ diff: string }> = ({ diff }) => {
+  const { t } = useTranslation();
   if (!diff) {
     return (
       <div style={{ padding: 16, fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}>
-        No diff available
+        {t("commitDetails.noDiffAvailable")}
       </div>
     );
   }

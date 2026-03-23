@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { VirtuosoHandle } from "react-virtuoso";
 import { Virtuoso } from "react-virtuoso";
 import { useRepoStore } from "../../store/repo-store";
@@ -66,6 +67,7 @@ const IconGitCommit = () => (
 );
 
 export const CommitGraphPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { repo } = useRepoStore();
   const {
     rows,
@@ -360,8 +362,8 @@ export const CommitGraphPanel: React.FC = () => {
       items.push({
         label:
           checkableBranches.length === 1
-            ? `Checkout "${checkableBranches[0]!.name}"`
-            : "Checkout...",
+            ? t("graph.checkoutRef", { ref: checkableBranches[0]!.name })
+            : t("graph.checkoutEllipsis"),
         onClick: () =>
           setCheckoutTarget({
             refs: row.commit.refs,
@@ -372,7 +374,7 @@ export const CommitGraphPanel: React.FC = () => {
     } else if (!row.commit.refs.some((r) => r.current)) {
       // No branches but also not the current HEAD commit — offer detached checkout
       items.push({
-        label: "Checkout Commit (detached HEAD)",
+        label: t("graph.checkoutCommitDetachedHead"),
         onClick: () =>
           setCheckoutTarget({
             refs: row.commit.refs,
@@ -388,7 +390,7 @@ export const CommitGraphPanel: React.FC = () => {
     );
     if (mergeableRefs.length > 0) {
       items.push({
-        label: "Merge into current branch...",
+        label: t("graph.mergeIntoCurrentBranch"),
         children: mergeableRefs.map((ref) => ({
           label: ref.name,
           onClick: () => setMergeTarget(ref.name),
@@ -400,15 +402,15 @@ export const CommitGraphPanel: React.FC = () => {
     {
       const rebaseChildren: ContextMenuEntry[] = [
         {
-          label: "Selected commit",
+          label: t("graph.selectedCommit"),
           onClick: () => setRebaseTarget({ onto: row.commit.hash }),
         },
         {
-          label: "Selected commit interactively...",
+          label: t("graph.selectedCommitInteractively"),
           onClick: () => setRebaseTarget({ onto: row.commit.hash, interactive: true }),
         },
         {
-          label: "Selected commit with advanced options...",
+          label: t("graph.selectedCommitAdvanced"),
           onClick: () => setRebaseTarget({ onto: row.commit.hash }),
         },
       ];
@@ -428,7 +430,7 @@ export const CommitGraphPanel: React.FC = () => {
       }
 
       items.push({
-        label: "Rebase current branch on",
+        label: t("graph.rebaseCurrentBranchOn"),
         children: rebaseChildren,
       });
     }
@@ -437,7 +439,7 @@ export const CommitGraphPanel: React.FC = () => {
 
     items.push(
       {
-        label: "Cherry Pick",
+        label: t("graph.cherryPick"),
         onClick: () =>
           setCherryPickTarget({
             hash: row.commit.hash,
@@ -446,7 +448,7 @@ export const CommitGraphPanel: React.FC = () => {
           }),
       },
       {
-        label: "Revert Commit",
+        label: t("graph.revertCommit"),
         onClick: () =>
           setRevertTarget({
             hash: row.commit.hash,
@@ -455,15 +457,15 @@ export const CommitGraphPanel: React.FC = () => {
           }),
       },
       {
-        label: "Squash Commits to Here...",
+        label: t("graph.squashCommitsToHere"),
         onClick: () => setSquashTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
       {
-        label: "Create Branch Here",
+        label: t("graph.createBranchHere"),
         onClick: () => setCreateBranchFrom(row.commit.hash),
       },
       {
-        label: "Create Tag Here",
+        label: t("graph.createTagHere"),
         onClick: () => setTagTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       }
     );
@@ -483,21 +485,21 @@ export const CommitGraphPanel: React.FC = () => {
       items.push({ divider: true });
       for (const branch of localBranches) {
         items.push({
-          label: `Delete Branch "${branch.name}"`,
+          label: t("graph.deleteBranch", { name: branch.name }),
           color: "var(--red)",
           onClick: () => setDeleteBranchTarget(branch.name),
         });
       }
       for (const branch of remoteBranches) {
         items.push({
-          label: `Delete Remote Branch "${branch.name}"`,
+          label: t("graph.deleteRemoteBranch", { name: branch.name }),
           color: "var(--red)",
           onClick: () => setDeleteRemoteBranchTarget(branch.name),
         });
       }
       for (const tag of tags) {
         items.push({
-          label: `Delete Tag "${tag.name}"`,
+          label: t("graph.deleteTag", { name: tag.name }),
           color: "var(--red)",
           onClick: () => setDeleteTagTarget(tag.name),
         });
@@ -507,13 +509,13 @@ export const CommitGraphPanel: React.FC = () => {
     items.push(
       { divider: true },
       {
-        label: "Reset Current Branch to Here",
+        label: t("graph.resetCurrentBranchToHere"),
         color: "var(--peach)",
         onClick: () => setResetTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
       { divider: true },
       {
-        label: "View Commit Info",
+        label: t("graph.viewCommitInfo"),
         onClick: () =>
           openDialogWindow({
             dialog: "CommitInfoWindow",
@@ -526,7 +528,7 @@ export const CommitGraphPanel: React.FC = () => {
     const headRow = rows.find((r) => r.commit.hash === repo?.headCommit);
     if (headRow && headRow.commit.hash !== row.commit.hash) {
       items.push({
-        label: "Compare with HEAD",
+        label: t("graph.compareWithHead"),
         onClick: () => setCompareTarget({ commit1: row.commit, commit2: headRow.commit }),
       });
     }
@@ -536,7 +538,7 @@ export const CommitGraphPanel: React.FC = () => {
       selectedCommit.hash !== headRow?.commit.hash
     ) {
       items.push({
-        label: `Compare with selected (${selectedCommit.abbreviatedHash})`,
+        label: t("graph.compareWithSelected", { hash: selectedCommit.abbreviatedHash }),
         onClick: () => setCompareTarget({ commit1: row.commit, commit2: selectedCommit }),
       });
     }
@@ -544,7 +546,7 @@ export const CommitGraphPanel: React.FC = () => {
     items.push(
       { divider: true },
       {
-        label: "Generate Changelog...",
+        label: t("graph.generateChangelog"),
         icon: "📋",
         onClick: () =>
           openDialogWindow({
@@ -556,27 +558,27 @@ export const CommitGraphPanel: React.FC = () => {
 
     items.push(
       {
-        label: `Copy Hash (${row.commit.abbreviatedHash})`,
+        label: t("graph.copyHash", { hash: row.commit.abbreviatedHash }),
         onClick: () => navigator.clipboard.writeText(row.commit.hash),
       },
       { divider: true },
       {
-        label: "Archive / Export...",
+        label: t("graph.archiveExport"),
         onClick: () =>
           setArchiveTarget({ ref: row.commit.hash, label: row.commit.abbreviatedHash }),
       },
       {
-        label: "Create Patch...",
+        label: t("graph.createPatch"),
         onClick: () =>
           setPatchTarget({ hashes: [row.commit.hash], subjects: [row.commit.subject] }),
       },
       {
-        label: "Git Notes...",
+        label: t("graph.gitNotes"),
         onClick: () => setNotesTarget({ hash: row.commit.hash, subject: row.commit.subject }),
       },
       { divider: true },
       {
-        label: "AI Code Review",
+        label: t("graph.aiCodeReview"),
         onClick: () => setAiReviewHash(row.commit.hash),
       }
     );
@@ -590,7 +592,7 @@ export const CommitGraphPanel: React.FC = () => {
         <div className="empty-state-icon">
           <IconGitCommit />
         </div>
-        <span>Open a repository to view commits</span>
+        <span>{t("graph.openRepoToViewCommits")}</span>
       </div>
     );
   }
@@ -608,7 +610,7 @@ export const CommitGraphPanel: React.FC = () => {
             animation: "spin 0.8s linear infinite",
           }}
         />
-        <span>Loading commits...</span>
+        <span>{t("graph.loadingCommits")}</span>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -635,7 +637,7 @@ export const CommitGraphPanel: React.FC = () => {
           {/* Filter button */}
           <button
             onClick={() => setBranchDropdownOpen((v) => !v)}
-            title="Filter branches"
+            title={t("graph.filterBranches")}
             style={{
               display: "flex",
               alignItems: "center",
@@ -676,7 +678,7 @@ export const CommitGraphPanel: React.FC = () => {
               <circle cx="6" cy="18" r="3" />
               <path d="M18 9a9 9 0 0 1-9 9" />
             </svg>
-            Branches
+            {t("graph.branches")}
             {hasActiveFilter && (
               <span style={{ fontSize: 10, fontWeight: 600 }}>
                 ({branchVisibility?.branches.length || 0})
@@ -700,14 +702,17 @@ export const CommitGraphPanel: React.FC = () => {
           {hasActiveFilter && (
             <>
               <span style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                {branchVisibility?.mode === "exclude" ? "Excluding" : "Showing"}{" "}
-                {branchVisibility?.branches.length} branch
-                {(branchVisibility?.branches.length || 0) !== 1 ? "es" : ""} — {rows.length} commits
+                {branchVisibility?.mode === "exclude" ? t("graph.excluding") : t("graph.showing")}{" "}
+                {branchVisibility?.branches.length}{" "}
+                {(branchVisibility?.branches.length || 0) !== 1
+                  ? t("graph.branchPlural")
+                  : t("graph.branch")}{" "}
+                — {rows.length} {t("graph.commits")}
               </span>
               <button
                 onClick={clearBranchVisibility}
-                title="Clear branch filter"
-                aria-label="Clear branch filter"
+                title={t("graph.clearBranchFilter")}
+                aria-label={t("graph.clearBranchFilter")}
                 style={{
                   background: "none",
                   border: "none",
@@ -748,7 +753,7 @@ export const CommitGraphPanel: React.FC = () => {
                   }
                   if (e.key === "Escape") handleBranchFilterClear();
                 }}
-                placeholder="Quick filter..."
+                placeholder={t("graph.quickFilter")}
                 style={{
                   width: 120,
                   padding: "2px 22px 2px 6px",
@@ -782,8 +787,8 @@ export const CommitGraphPanel: React.FC = () => {
                     display: "flex",
                     alignItems: "center",
                   }}
-                  title="Clear filter"
-                  aria-label="Clear filter"
+                  title={t("graph.clearFilter")}
+                  aria-label={t("graph.clearFilter")}
                 >
                   <svg
                     width="10"
@@ -804,7 +809,7 @@ export const CommitGraphPanel: React.FC = () => {
           )}
           {branchFilter && !hasActiveFilter && (
             <span style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-              {rows.length} commits
+              {rows.length} {t("graph.commits")}
             </span>
           )}
 
@@ -832,7 +837,7 @@ export const CommitGraphPanel: React.FC = () => {
         <div ref={authorDropdownRef} style={{ position: "relative" }}>
           <button
             onClick={() => setAuthorDropdownOpen((v) => !v)}
-            title="Filter by author"
+            title={t("graph.filterByAuthor")}
             style={{
               display: "flex",
               alignItems: "center",
@@ -860,7 +865,7 @@ export const CommitGraphPanel: React.FC = () => {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            {authorFilter || "Author"}
+            {authorFilter || t("graph.author")}
             {authorFilter && (
               <span
                 onClick={(e) => {
@@ -915,7 +920,7 @@ export const CommitGraphPanel: React.FC = () => {
                 <input
                   value={authorSearchInput}
                   onChange={(e) => setAuthorSearchInput(e.target.value)}
-                  placeholder="Search authors..."
+                  placeholder={t("graph.searchAuthors")}
                   autoFocus
                   style={{
                     flex: 1,
@@ -947,7 +952,7 @@ export const CommitGraphPanel: React.FC = () => {
                         fontWeight: authorFilterMode === mode ? 600 : 400,
                       }}
                     >
-                      {mode === "highlight" ? "Highlight" : "Filter"}
+                      {mode === "highlight" ? t("graph.highlight") : t("graph.filter")}
                     </button>
                   ))}
                 </div>
@@ -1004,7 +1009,7 @@ export const CommitGraphPanel: React.FC = () => {
 
         <button
           onClick={scrollToHead}
-          title="Scroll to HEAD (local commit)"
+          title={t("graph.scrollToHead")}
           style={{
             display: "flex",
             alignItems: "center",
@@ -1040,13 +1045,13 @@ export const CommitGraphPanel: React.FC = () => {
             <line x1="1.05" y1="12" x2="7" y2="12" />
             <line x1="17.01" y1="12" x2="22.96" y2="12" />
           </svg>
-          Go to HEAD
+          {t("graph.goToHead")}
         </button>
 
         {/* Advanced search */}
         <button
           onClick={() => setSearchDialogOpen(true)}
-          title="Search commits (message, author, code)"
+          title={t("graph.searchCommitsTooltip")}
           style={{
             display: "flex",
             alignItems: "center",
@@ -1081,7 +1086,7 @@ export const CommitGraphPanel: React.FC = () => {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          Search
+          {t("graph.search")}
         </button>
       </div>
 
@@ -1114,7 +1119,7 @@ export const CommitGraphPanel: React.FC = () => {
             autoFocus
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search commits (message, author, hash, ref)..."
+            placeholder={t("graph.searchCommitsPlaceholder")}
             style={{
               flex: 1,
               padding: "4px 8px",
@@ -1264,8 +1269,8 @@ export const CommitGraphPanel: React.FC = () => {
 
       <ConfirmDeleteDialog
         open={!!deleteBranchTarget}
-        title="Delete Branch"
-        message={`Are you sure you want to delete branch "${deleteBranchTarget}"?`}
+        title={t("graph.deleteBranchTitle")}
+        message={t("graph.deleteBranchConfirm", { name: deleteBranchTarget })}
         onConfirm={async () => {
           if (!deleteBranchTarget) return;
           try {
@@ -1281,8 +1286,8 @@ export const CommitGraphPanel: React.FC = () => {
 
       <ConfirmDeleteDialog
         open={!!deleteRemoteBranchTarget}
-        title="Delete Remote Branch"
-        message={`Are you sure you want to delete remote branch "${deleteRemoteBranchTarget}"?`}
+        title={t("graph.deleteRemoteBranchTitle")}
+        message={t("graph.deleteRemoteBranchConfirm", { name: deleteRemoteBranchTarget })}
         onConfirm={async () => {
           if (!deleteRemoteBranchTarget) return;
           try {
@@ -1355,8 +1360,8 @@ export const CommitGraphPanel: React.FC = () => {
 
       <ConfirmDeleteDialog
         open={!!deleteTagTarget}
-        title="Delete Tag"
-        message={`Are you sure you want to delete tag "${deleteTagTarget}"?`}
+        title={t("graph.deleteTagTitle")}
+        message={t("graph.deleteTagConfirm", { name: deleteTagTarget })}
         onConfirm={async () => {
           if (!deleteTagTarget) return;
           try {
@@ -1392,7 +1397,7 @@ export const CommitGraphPanel: React.FC = () => {
             checked={deleteTagRemote}
             onChange={(e) => setDeleteTagRemote(e.target.checked)}
           />
-          Delete tag from remote
+          {t("graph.deleteTagFromRemote")}
         </label>
       </ConfirmDeleteDialog>
     </div>
@@ -1598,18 +1603,21 @@ const ConfirmDeleteDialog: React.FC<{
   onConfirm: () => void;
   onCancel: () => void;
   children?: React.ReactNode;
-}> = ({ open, title, message, onConfirm, onCancel, children }) => (
-  <ModalDialog open={open} title={title} onClose={onCancel} width={380}>
-    <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>{message}</p>
-    {children}
-    <DialogActions
-      onCancel={onCancel}
-      onConfirm={onConfirm}
-      confirmLabel="Delete"
-      confirmColor="var(--red)"
-    />
-  </ModalDialog>
-);
+}> = ({ open, title, message, onConfirm, onCancel, children }) => {
+  const { t } = useTranslation();
+  return (
+    <ModalDialog open={open} title={title} onClose={onCancel} width={380}>
+      <p style={{ fontSize: 13, color: "var(--text-primary)", margin: 0 }}>{message}</p>
+      {children}
+      <DialogActions
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+        confirmLabel={t("dialogs.delete")}
+        confirmColor="var(--red)"
+      />
+    </ModalDialog>
+  );
+};
 
 const BranchFilterDropdown: React.FC<{
   branches: BranchInfo[];
@@ -1632,6 +1640,7 @@ const BranchFilterDropdown: React.FC<{
   onApply,
   onClear,
 }) => {
+  const { t } = useTranslation();
   const localBranches = branches.filter((b) => !b.remote);
   const remoteBranches = branches.filter((b) => b.remote);
 
@@ -1684,7 +1693,7 @@ const BranchFilterDropdown: React.FC<{
             cursor: "pointer",
           }}
         >
-          Show selected
+          {t("graph.showSelected")}
         </button>
         <button
           onClick={() => onModeChange("exclude")}
@@ -1703,7 +1712,7 @@ const BranchFilterDropdown: React.FC<{
             cursor: "pointer",
           }}
         >
-          Hide selected
+          {t("graph.hideSelected")}
         </button>
       </div>
 
@@ -1719,7 +1728,7 @@ const BranchFilterDropdown: React.FC<{
           autoFocus
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search branches..."
+          placeholder={t("graph.searchBranches")}
           style={{
             width: "100%",
             padding: "4px 8px",
@@ -1750,7 +1759,7 @@ const BranchFilterDropdown: React.FC<{
                 letterSpacing: "0.5px",
               }}
             >
-              Local Branches
+              {t("graph.localBranches")}
             </div>
             {filteredLocal.map((b) => (
               <BranchCheckboxItem
@@ -1775,7 +1784,7 @@ const BranchFilterDropdown: React.FC<{
                 letterSpacing: "0.5px",
               }}
             >
-              Remote Branches
+              {t("graph.remoteBranches")}
             </div>
             {filteredRemote.map((b) => (
               <BranchCheckboxItem
@@ -1797,7 +1806,7 @@ const BranchFilterDropdown: React.FC<{
               textAlign: "center",
             }}
           >
-            No branches found
+            {t("graph.noBranchesFound")}
           </div>
         )}
       </div>
@@ -1813,7 +1822,9 @@ const BranchFilterDropdown: React.FC<{
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{selected.size} selected</span>
+        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
+          {selected.size} {t("graph.selected")}
+        </span>
         <div style={{ display: "flex", gap: 6 }}>
           <button
             onClick={onClear}
@@ -1827,7 +1838,7 @@ const BranchFilterDropdown: React.FC<{
               cursor: "pointer",
             }}
           >
-            Clear
+            {t("graph.clear")}
           </button>
           <button
             onClick={onApply}
@@ -1842,7 +1853,7 @@ const BranchFilterDropdown: React.FC<{
               fontWeight: 600,
             }}
           >
-            Apply
+            {t("graph.apply")}
           </button>
         </div>
       </div>

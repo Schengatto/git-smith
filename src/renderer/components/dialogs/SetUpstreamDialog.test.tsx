@@ -5,6 +5,13 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import React from "react";
 import { SetUpstreamDialog } from "./SetUpstreamDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en", changeLanguage: vi.fn() },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     refreshInfo: vi.fn().mockResolvedValue(undefined),
@@ -27,12 +34,16 @@ const mockElectronAPI = {
   remote: {
     list: vi.fn().mockResolvedValue([{ name: "origin", fetchUrl: "https://github.com/x/y.git" }]),
     push: vi.fn().mockResolvedValue(undefined),
+    add: vi.fn().mockResolvedValue(undefined),
   },
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
   (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI = mockElectronAPI;
+  mockElectronAPI.remote.list.mockResolvedValue([
+    { name: "origin", fetchUrl: "https://github.com/x/y.git" },
+  ]);
 });
 
 describe("SetUpstreamDialog", () => {
@@ -57,7 +68,7 @@ describe("SetUpstreamDialog", () => {
         suggestedBranch="main"
       />
     );
-    expect(screen.getByText("Set Upstream & Push")).toBeInTheDocument();
+    expect(screen.getByText("setUpstream.title")).toBeInTheDocument();
   });
 
   it("shows the suggested branch name", () => {
@@ -81,8 +92,8 @@ describe("SetUpstreamDialog", () => {
         suggestedBranch="main"
       />
     );
-    expect(screen.getByText("Branch")).toBeInTheDocument();
-    expect(screen.getByText("Remote")).toBeInTheDocument();
+    expect(screen.getByText("setUpstream.branch")).toBeInTheDocument();
+    expect(screen.getByText("setUpstream.remote")).toBeInTheDocument();
   });
 
   it("loads and displays remotes in a select", async () => {
@@ -111,7 +122,7 @@ describe("SetUpstreamDialog", () => {
       />
     );
     await waitFor(() => {
-      expect(screen.getByText(/no remotes configured/i)).toBeInTheDocument();
+      expect(screen.getByText("setUpstream.noRemotes")).toBeInTheDocument();
     });
   });
 
@@ -124,7 +135,9 @@ describe("SetUpstreamDialog", () => {
         suggestedBranch="main"
       />
     );
-    expect(screen.getByRole("button", { name: /push & set upstream/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "setUpstream.pushAndSetUpstream" })
+    ).toBeInTheDocument();
   });
 
   it("shows force push warning when force=true", () => {
@@ -137,7 +150,7 @@ describe("SetUpstreamDialog", () => {
         force={true}
       />
     );
-    expect(screen.getByText(/overwrite the remote branch history/i)).toBeInTheDocument();
+    expect(screen.getByText("setUpstream.forcePushWarning")).toBeInTheDocument();
   });
 
   it("shows Force Push & Set Upstream label when force=true", () => {
@@ -150,7 +163,74 @@ describe("SetUpstreamDialog", () => {
         force={true}
       />
     );
-    expect(screen.getByRole("button", { name: /force push & set upstream/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "setUpstream.forcePushAndSetUpstream" })
+    ).toBeInTheDocument();
+  });
+
+  it("shows Add Remote button when no remotes are configured", async () => {
+    mockElectronAPI.remote.list.mockResolvedValue([]);
+    render(
+      <SetUpstreamDialog
+        open={true}
+        onClose={vi.fn()}
+        suggestedRemote="origin"
+        suggestedBranch="main"
+      />
+    );
+    await waitFor(() => {
+      expect(screen.getByText("setUpstream.addRemote")).toBeInTheDocument();
+    });
+  });
+
+  it("shows add remote form when Add Remote button is clicked", async () => {
+    mockElectronAPI.remote.list.mockResolvedValue([]);
+    render(
+      <SetUpstreamDialog
+        open={true}
+        onClose={vi.fn()}
+        suggestedRemote="origin"
+        suggestedBranch="main"
+      />
+    );
+    await waitFor(() => {
+      expect(screen.getByText("setUpstream.addRemote")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("setUpstream.addRemote"));
+    expect(screen.getByPlaceholderText("origin")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("https://github.com/user/repo.git")).toBeInTheDocument();
+  });
+
+  it("calls remote.add and reloads remotes on submit", async () => {
+    mockElectronAPI.remote.list
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ name: "origin", fetchUrl: "https://github.com/user/repo.git" }]);
+    render(
+      <SetUpstreamDialog
+        open={true}
+        onClose={vi.fn()}
+        suggestedRemote="origin"
+        suggestedBranch="main"
+      />
+    );
+    await waitFor(() => {
+      expect(screen.getByText("setUpstream.addRemote")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("setUpstream.addRemote"));
+    fireEvent.change(screen.getByPlaceholderText("origin"), { target: { value: "origin" } });
+    fireEvent.change(screen.getByPlaceholderText("https://github.com/user/repo.git"), {
+      target: { value: "https://github.com/user/repo.git" },
+    });
+    fireEvent.click(screen.getByText("setUpstream.add"));
+    await waitFor(() => {
+      expect(mockElectronAPI.remote.add).toHaveBeenCalledWith(
+        "origin",
+        "https://github.com/user/repo.git"
+      );
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("combobox")).toBeInTheDocument();
+    });
   });
 
   it("calls onClose when Cancel button is clicked", () => {

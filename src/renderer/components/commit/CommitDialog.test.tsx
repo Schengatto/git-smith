@@ -195,7 +195,7 @@ describe("CommitDialog — visibility", () => {
   it("renders the dialog when open=true", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Enter commit message...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("commit.enterCommitMessage")).toBeInTheDocument();
     });
   });
 });
@@ -204,7 +204,7 @@ describe("CommitDialog — header", () => {
   it("shows repo branch name in header", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByText(/Commit to main/)).toBeInTheDocument();
+      expect(screen.getByText(/commit\.commitTo/)).toBeInTheDocument();
     });
   });
 
@@ -218,7 +218,7 @@ describe("CommitDialog — header", () => {
   it("calls onClose when the close (X) button is clicked", async () => {
     const onClose = vi.fn();
     render(<CommitDialog open={true} onClose={onClose} />);
-    await waitFor(() => screen.getByPlaceholderText("Enter commit message..."));
+    await waitFor(() => screen.getByPlaceholderText("commit.enterCommitMessage"));
 
     // The header close button is the only button before the toolbar
     const allButtons = screen.getAllByRole("button");
@@ -230,15 +230,15 @@ describe("CommitDialog — header", () => {
   it("calls onClose when the Cancel button at the bottom is clicked", async () => {
     const onClose = vi.fn();
     render(<CommitDialog open={true} onClose={onClose} />);
-    await waitFor(() => screen.getByText("Cancel"));
-    fireEvent.click(screen.getByText("Cancel"));
+    await waitFor(() => screen.getByText("dialogs.cancel"));
+    fireEvent.click(screen.getByText("dialogs.cancel"));
     expect(onClose).toHaveBeenCalled();
   });
 
   it("calls onClose when the overlay backdrop is clicked", async () => {
     const onClose = vi.fn();
     render(<CommitDialog open={true} onClose={onClose} />);
-    await waitFor(() => screen.getByPlaceholderText("Enter commit message..."));
+    await waitFor(() => screen.getByPlaceholderText("commit.enterCommitMessage"));
 
     // The outermost fixed overlay div is the backdrop
     const backdrop = document.querySelector('[style*="position: fixed"][style*="inset: 0"]');
@@ -275,16 +275,16 @@ describe("CommitDialog — file list sections", () => {
   it("shows Changes and Staged section labels", async () => {
     renderOpen();
     await waitFor(() => {
-      // Labels are "Changes" and "Staged" in the DOM — CSS text-transform: uppercase is visual only
-      expect(screen.getByText("Changes")).toBeInTheDocument();
-      expect(screen.getByText("Staged")).toBeInTheDocument();
+      // Labels are "commit.changes" and "commit.staged" in the DOM — CSS text-transform: uppercase is visual only
+      expect(screen.getByText("commit.changes")).toBeInTheDocument();
+      expect(screen.getByText("commit.staged")).toBeInTheDocument();
     });
   });
 
   it("shows 'No files' when no changes exist", async () => {
     renderOpen();
     await waitFor(() => {
-      const noFiles = screen.getAllByText("No files");
+      const noFiles = screen.getAllByText("commit.noFiles");
       expect(noFiles.length).toBeGreaterThanOrEqual(2);
     });
   });
@@ -327,7 +327,7 @@ describe("CommitDialog — file list sections", () => {
     renderOpen();
     await waitFor(() => {
       // Status bar and bottom bar both show staged count
-      const els = screen.getAllByText(/1\/2 staged|Staged 1\/2/);
+      const els = screen.getAllByText(/1\/2 commit\.staged|commit\.staged 1\/2/);
       expect(els.length).toBeGreaterThan(0);
     });
   });
@@ -337,13 +337,13 @@ describe("CommitDialog — commit message input", () => {
   it("renders commit message textarea", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Enter commit message...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("commit.enterCommitMessage")).toBeInTheDocument();
     });
   });
 
   it("updates message state when typing", async () => {
     renderOpen();
-    const textarea = await screen.findByPlaceholderText("Enter commit message...");
+    const textarea = await screen.findByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: my commit" } });
     expect((textarea as HTMLTextAreaElement).value).toBe("feat: my commit");
   });
@@ -351,7 +351,7 @@ describe("CommitDialog — commit message input", () => {
   it("shows keyboard shortcut hint in status bar", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByText("Ctrl+Enter to commit")).toBeInTheDocument();
+      expect(screen.getByText("commit.ctrlEnterToCommit")).toBeInTheDocument();
     });
   });
 });
@@ -360,16 +360,16 @@ describe("CommitDialog — commit button states", () => {
   it("commit button is disabled when no message and no staged files", async () => {
     renderOpen();
     await waitFor(() => {
-      const commitBtn = screen.getByText("Commit").closest("button")!;
+      const commitBtn = screen.getByText("commit.commit").closest("button")!;
       expect(commitBtn).toBeDisabled();
     });
   });
 
   it("commit button is disabled when message provided but no staged files", async () => {
     renderOpen();
-    const textarea = await screen.findByPlaceholderText("Enter commit message...");
+    const textarea = await screen.findByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "my message" } });
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     expect(commitBtn).toBeDisabled();
   });
 
@@ -379,7 +379,7 @@ describe("CommitDialog — commit button states", () => {
     );
     renderOpen();
     await waitFor(() => screen.getByText("a.ts"));
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     expect(commitBtn).toBeDisabled();
   });
 
@@ -389,9 +389,9 @@ describe("CommitDialog — commit button states", () => {
     );
     renderOpen();
     await waitFor(() => screen.getByText("a.ts"));
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: something" } });
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     expect(commitBtn).not.toBeDisabled();
   });
 });
@@ -405,10 +405,10 @@ describe("CommitDialog — commit action", () => {
     render(<CommitDialog open={true} onClose={onClose} />);
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "  feat: something  " } });
 
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     await act(async () => {
       fireEvent.click(commitBtn);
     });
@@ -436,10 +436,10 @@ describe("CommitDialog — commit action", () => {
     renderOpen();
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "bad commit" } });
 
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     await act(async () => {
       fireEvent.click(commitBtn);
     });
@@ -457,7 +457,7 @@ describe("CommitDialog — commit action", () => {
     render(<CommitDialog open={true} onClose={onClose} />);
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: ctrl+enter" } });
     fireEvent.keyDown(textarea, { key: "Enter", ctrlKey: true });
 
@@ -478,8 +478,8 @@ describe("CommitDialog — staging/unstaging", () => {
     renderOpen();
     await waitFor(() => screen.getByText("foo.ts"));
 
-    // "Stage all" button (double arrow down) — title attribute
-    const stageAllBtn = screen.getByTitle("Stage all");
+    // "commit.stageAllTitle" button (double arrow down) — title attribute
+    const stageAllBtn = screen.getByTitle("commit.stageAllTitle");
     await act(async () => {
       fireEvent.click(stageAllBtn);
     });
@@ -497,7 +497,7 @@ describe("CommitDialog — staging/unstaging", () => {
     renderOpen();
     await waitFor(() => screen.getByText("bar.ts"));
 
-    const unstageAllBtn = screen.getByTitle("Unstage all");
+    const unstageAllBtn = screen.getByTitle("commit.unstageAllTitle");
     await act(async () => {
       fireEvent.click(unstageAllBtn);
     });
@@ -525,7 +525,7 @@ describe("CommitDialog — staging/unstaging", () => {
       fireEvent.click(checkboxDiv);
     }
 
-    const stageSelectedBtn = screen.getByTitle("Stage selected");
+    const stageSelectedBtn = screen.getByTitle("commit.stageSelected");
     await act(async () => {
       fireEvent.click(stageSelectedBtn);
     });
@@ -539,7 +539,7 @@ describe("CommitDialog — staging/unstaging", () => {
     renderOpen();
     await waitFor(() => expect(mockElectronAPI.status.get).toHaveBeenCalledOnce());
 
-    const refreshBtn = screen.getByTitle("Refresh file list");
+    const refreshBtn = screen.getByTitle("commit.refreshFileList");
     await act(async () => {
       fireEvent.click(refreshBtn);
     });
@@ -565,13 +565,13 @@ describe("CommitDialog — amend mode", () => {
     fireEvent.click(chevronBtn!);
 
     await waitFor(() => {
-      expect(screen.getByText("Amend commit")).toBeInTheDocument();
+      expect(screen.getByText("commit.amendCommit")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText("Amend commit"));
+    fireEvent.click(screen.getByText("commit.amendCommit"));
 
     await waitFor(() => {
-      expect(screen.getByText("Amend mode")).toBeInTheDocument();
+      expect(screen.getByText("commit.amendMode")).toBeInTheDocument();
     });
   });
 
@@ -588,15 +588,15 @@ describe("CommitDialog — amend mode", () => {
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Amend commit"));
-    fireEvent.click(screen.getByText("Amend commit"));
-    await waitFor(() => screen.getByText("Amend mode"));
+    await waitFor(() => screen.getByText("commit.amendCommit"));
+    fireEvent.click(screen.getByText("commit.amendCommit"));
+    await waitFor(() => screen.getByText("commit.amendMode"));
 
     // Type a message and commit
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "amend: fix typo" } });
 
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     await act(async () => {
       fireEvent.click(commitBtn);
     });
@@ -611,7 +611,7 @@ describe("CommitDialog — amend mode", () => {
 describe("CommitDialog — commit dropdown", () => {
   it("opens commit dropdown on chevron click", async () => {
     renderOpen();
-    await waitFor(() => screen.getByPlaceholderText("Enter commit message..."));
+    await waitFor(() => screen.getByPlaceholderText("commit.enterCommitMessage"));
 
     const chevronBtn = document.querySelector(
       '[style*="border-radius: 0 6px 6px 0"]'
@@ -619,24 +619,24 @@ describe("CommitDialog — commit dropdown", () => {
     fireEvent.click(chevronBtn!);
 
     await waitFor(() => {
-      expect(screen.getByText("Commit & push")).toBeInTheDocument();
-      expect(screen.getByText("Stash staged changes")).toBeInTheDocument();
-      expect(screen.getByText("Reset all changes")).toBeInTheDocument();
+      expect(screen.getByText("commit.commitAndPush")).toBeInTheDocument();
+      expect(screen.getByText("commit.stashStagedChanges")).toBeInTheDocument();
+      expect(screen.getByText("commit.resetAllChanges")).toBeInTheDocument();
     });
   });
 
   it("calls stash.create when 'Stash staged changes' is clicked", async () => {
     renderOpen();
-    await waitFor(() => screen.getByPlaceholderText("Enter commit message..."));
+    await waitFor(() => screen.getByPlaceholderText("commit.enterCommitMessage"));
 
     const chevronBtn = document.querySelector(
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Stash staged changes"));
+    await waitFor(() => screen.getByText("commit.stashStagedChanges"));
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Stash staged changes"));
+      fireEvent.click(screen.getByText("commit.stashStagedChanges"));
     });
 
     await waitFor(() => {
@@ -655,10 +655,10 @@ describe("CommitDialog — commit dropdown", () => {
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Reset all changes"));
+    await waitFor(() => screen.getByText("commit.resetAllChanges"));
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Reset all changes"));
+      fireEvent.click(screen.getByText("commit.resetAllChanges"));
     });
 
     await waitFor(() => {
@@ -670,12 +670,12 @@ describe("CommitDialog — commit dropdown", () => {
 describe("CommitDialog — templates dropdown", () => {
   it("shows 'No templates configured' when templates list is empty", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Commit templates"));
+    await waitFor(() => screen.getByText("commit.commitTemplates"));
 
-    fireEvent.click(screen.getByText("Commit templates"));
+    fireEvent.click(screen.getByText("commit.commitTemplates"));
 
     await waitFor(() => {
-      expect(screen.getByText("No templates configured")).toBeInTheDocument();
+      expect(screen.getByText("commit.noTemplatesConfigured")).toBeInTheDocument();
     });
   });
 
@@ -688,8 +688,8 @@ describe("CommitDialog — templates dropdown", () => {
       commitSnippets: [],
     });
     renderOpen();
-    await waitFor(() => screen.getByText("Commit templates"));
-    fireEvent.click(screen.getByText("Commit templates"));
+    await waitFor(() => screen.getByText("commit.commitTemplates"));
+    fireEvent.click(screen.getByText("commit.commitTemplates"));
 
     await waitFor(() => {
       expect(screen.getByText("feat")).toBeInTheDocument();
@@ -704,12 +704,12 @@ describe("CommitDialog — templates dropdown", () => {
       commitSnippets: [],
     });
     renderOpen();
-    await waitFor(() => screen.getByText("Commit templates"));
-    fireEvent.click(screen.getByText("Commit templates"));
+    await waitFor(() => screen.getByText("commit.commitTemplates"));
+    fireEvent.click(screen.getByText("commit.commitTemplates"));
 
     await waitFor(() => screen.getByText("feat"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "my change" } });
 
     fireEvent.click(screen.getByText("feat"));
@@ -723,12 +723,12 @@ describe("CommitDialog — templates dropdown", () => {
 describe("CommitDialog — snippets dropdown", () => {
   it("shows 'No snippets configured' when snippet list is empty", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Snippets"));
+    await waitFor(() => screen.getByText("commit.snippets"));
 
-    fireEvent.click(screen.getByText("Snippets"));
+    fireEvent.click(screen.getByText("commit.snippets"));
 
     await waitFor(() => {
-      expect(screen.getByText("No snippets configured")).toBeInTheDocument();
+      expect(screen.getByText("commit.noSnippetsConfigured")).toBeInTheDocument();
     });
   });
 
@@ -741,8 +741,8 @@ describe("CommitDialog — snippets dropdown", () => {
       ],
     });
     renderOpen();
-    await waitFor(() => screen.getByText("Snippets"));
-    fireEvent.click(screen.getByText("Snippets"));
+    await waitFor(() => screen.getByText("commit.snippets"));
+    fireEvent.click(screen.getByText("commit.snippets"));
 
     await waitFor(() => {
       expect(screen.getByText("Breaking")).toBeInTheDocument();
@@ -756,14 +756,14 @@ describe("CommitDialog — snippets dropdown", () => {
       commitSnippets: [{ label: "Closes", text: "\n\nCloses #" }],
     });
     renderOpen();
-    await waitFor(() => screen.getByText("Snippets"));
-    fireEvent.click(screen.getByText("Snippets"));
+    await waitFor(() => screen.getByText("commit.snippets"));
+    fireEvent.click(screen.getByText("commit.snippets"));
 
     await waitFor(() => screen.getByText("Closes"));
     fireEvent.click(screen.getByText("Closes"));
 
     await waitFor(() => {
-      const textarea = screen.getByPlaceholderText("Enter commit message...");
+      const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
       expect((textarea as HTMLTextAreaElement).value).toContain("Closes #");
     });
   });
@@ -772,11 +772,11 @@ describe("CommitDialog — snippets dropdown", () => {
 describe("CommitDialog — commit message history dropdown", () => {
   it("shows 'No recent commit messages' when list is empty", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Commit message"));
-    fireEvent.click(screen.getByText("Commit message"));
+    await waitFor(() => screen.getByText("commit.commitMessage"));
+    fireEvent.click(screen.getByText("commit.commitMessage"));
 
     await waitFor(() => {
-      expect(screen.getByText("No recent commit messages")).toBeInTheDocument();
+      expect(screen.getByText("commit.noRecentCommitMessages")).toBeInTheDocument();
     });
   });
 
@@ -787,8 +787,8 @@ describe("CommitDialog — commit message history dropdown", () => {
       "chore: update deps",
     ]);
     renderOpen();
-    await waitFor(() => screen.getByText("Commit message"));
-    fireEvent.click(screen.getByText("Commit message"));
+    await waitFor(() => screen.getByText("commit.commitMessage"));
+    fireEvent.click(screen.getByText("commit.commitMessage"));
 
     await waitFor(() => {
       expect(screen.getByText("feat: first commit")).toBeInTheDocument();
@@ -799,13 +799,13 @@ describe("CommitDialog — commit message history dropdown", () => {
   it("applies recent message to textarea on click", async () => {
     mockElectronAPI.commit.getRecentMessages.mockResolvedValue(["feat: reuse me"]);
     renderOpen();
-    await waitFor(() => screen.getByText("Commit message"));
-    fireEvent.click(screen.getByText("Commit message"));
+    await waitFor(() => screen.getByText("commit.commitMessage"));
+    fireEvent.click(screen.getByText("commit.commitMessage"));
     await waitFor(() => screen.getByText("feat: reuse me"));
     fireEvent.click(screen.getByText("feat: reuse me"));
 
     await waitFor(() => {
-      const textarea = screen.getByPlaceholderText("Enter commit message...");
+      const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
       expect((textarea as HTMLTextAreaElement).value).toBe("feat: reuse me");
     });
   });
@@ -814,20 +814,20 @@ describe("CommitDialog — commit message history dropdown", () => {
 describe("CommitDialog — create branch panel", () => {
   it("opens create branch panel when 'Create branch' is clicked", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Create branch"));
-    fireEvent.click(screen.getByText("Create branch"));
+    await waitFor(() => screen.getByText("commit.createBranch"));
+    fireEvent.click(screen.getByText("commit.createBranch"));
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("new-branch-name")).toBeInTheDocument();
-      expect(screen.getByText("Branch name")).toBeInTheDocument();
-      expect(screen.getByText("Checkout after create")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("commit.newBranchNamePlaceholder")).toBeInTheDocument();
+      expect(screen.getByText("commit.branchName")).toBeInTheDocument();
+      expect(screen.getByText("commit.checkoutAfterCreate")).toBeInTheDocument();
     });
   });
 
   it("shows current branch as 'From' in create branch panel", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Create branch"));
-    fireEvent.click(screen.getByText("Create branch"));
+    await waitFor(() => screen.getByText("commit.createBranch"));
+    fireEvent.click(screen.getByText("commit.createBranch"));
 
     await waitFor(() => {
       expect(screen.getByText(/main.*abc1234/)).toBeInTheDocument();
@@ -836,12 +836,12 @@ describe("CommitDialog — create branch panel", () => {
 
   it("Create branch button is disabled when branch name is empty", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Create branch"));
-    fireEvent.click(screen.getByText("Create branch"));
+    await waitFor(() => screen.getByText("commit.createBranch"));
+    fireEvent.click(screen.getByText("commit.createBranch"));
 
     await waitFor(() => {
       const createBtn = screen
-        .getAllByText("Create branch")
+        .getAllByText("commit.createBranch")
         .find((el) => el.closest("button")?.disabled);
       expect(createBtn).toBeDefined();
     });
@@ -849,23 +849,23 @@ describe("CommitDialog — create branch panel", () => {
 
   it("calls branch.create with entered name", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Create branch"));
-    // Click the toolbar "Create branch" button (first occurrence, in toolbar)
-    fireEvent.click(screen.getAllByText("Create branch")[0]!);
+    await waitFor(() => screen.getByText("commit.createBranch"));
+    // Click the toolbar "commit.createBranch" button (first occurrence, in toolbar)
+    fireEvent.click(screen.getAllByText("commit.createBranch")[0]!);
 
-    await waitFor(() => screen.getByPlaceholderText("new-branch-name"));
-    const input = screen.getByPlaceholderText("new-branch-name");
+    await waitFor(() => screen.getByPlaceholderText("commit.newBranchNamePlaceholder"));
+    const input = screen.getByPlaceholderText("commit.newBranchNamePlaceholder");
     fireEvent.change(input, { target: { value: "feature/new-thing" } });
 
-    // Uncheck "Checkout after create" so branch.checkout is NOT called
+    // Uncheck "commit.checkoutAfterCreate" so branch.checkout is NOT called
     const allCheckboxes = screen.getAllByRole("checkbox");
     const checkoutCheckbox = allCheckboxes.find((cb) => (cb as HTMLInputElement).checked);
     if (checkoutCheckbox) {
       fireEvent.click(checkoutCheckbox);
     }
 
-    // Find the submit button: last "Create branch" text occurrence inside a button
-    const createBtns = screen.getAllByText("Create branch");
+    // Find the submit button: last "commit.createBranch" text occurrence inside a button
+    const createBtns = screen.getAllByText("commit.createBranch");
     const submitBtn = createBtns[createBtns.length - 1]!.closest("button")!;
     await act(async () => {
       fireEvent.click(submitBtn);
@@ -878,17 +878,19 @@ describe("CommitDialog — create branch panel", () => {
 
   it("closes create branch panel on Cancel", async () => {
     renderOpen();
-    await waitFor(() => screen.getByText("Create branch"));
-    fireEvent.click(screen.getByText("Create branch"));
+    await waitFor(() => screen.getByText("commit.createBranch"));
+    fireEvent.click(screen.getByText("commit.createBranch"));
 
-    await waitFor(() => screen.getByPlaceholderText("new-branch-name"));
+    await waitFor(() => screen.getByPlaceholderText("commit.newBranchNamePlaceholder"));
     const cancelInPanel = screen
-      .getAllByText("Cancel")
+      .getAllByText("dialogs.cancel")
       .find((el) => el.closest('[style*="border-radius: 8px"]'));
     fireEvent.click(cancelInPanel!);
 
     await waitFor(() => {
-      expect(screen.queryByPlaceholderText("new-branch-name")).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText("commit.newBranchNamePlaceholder")
+      ).not.toBeInTheDocument();
     });
   });
 });
@@ -903,9 +905,9 @@ describe("CommitDialog — merge conflict banner", () => {
     );
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByText(/Merge in progress/)).toBeInTheDocument();
-      expect(screen.getByText(/1 conflicted file/)).toBeInTheDocument();
-      expect(screen.getByText("Resolve Conflicts")).toBeInTheDocument();
+      expect(screen.getByText(/commit\.mergeInProgress/)).toBeInTheDocument();
+      expect(screen.getByText(/1 commit\.conflictedFile/)).toBeInTheDocument();
+      expect(screen.getByText("commit.resolveConflicts")).toBeInTheDocument();
     });
   });
 
@@ -918,14 +920,14 @@ describe("CommitDialog — merge conflict banner", () => {
     );
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByText(/2 conflicted files/)).toBeInTheDocument();
+      expect(screen.getByText(/2 commit\.conflictedFiles/)).toBeInTheDocument();
     });
   });
 
   it("does not show merge banner when no conflicts", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.queryByText(/Merge in progress/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/commit\.mergeInProgress/)).not.toBeInTheDocument();
     });
   });
 });
@@ -934,7 +936,7 @@ describe("CommitDialog — diff view", () => {
   it("shows 'Select a file to view changes' placeholder when no file selected", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByText("Select a file to view changes")).toBeInTheDocument();
+      expect(screen.getByText("commit.selectFileToView")).toBeInTheDocument();
     });
   });
 
@@ -998,14 +1000,14 @@ describe("CommitDialog — tree view toggle", () => {
     await waitFor(() => screen.getByText("src"));
 
     // Both file panels have a toggle button; click the first one (Changes section)
-    const toggleBtns = screen.getAllByTitle("Switch to flat view");
+    const toggleBtns = screen.getAllByTitle("commit.switchToFlatView");
     fireEvent.click(toggleBtns[0]!);
 
     await waitFor(() => {
       expect(screen.getByText("file.ts")).toBeInTheDocument();
     });
-    // After toggling one panel, at least one "Switch to tree view" button appears
-    expect(screen.getAllByTitle("Switch to tree view").length).toBeGreaterThanOrEqual(1);
+    // After toggling one panel, at least one "commit.switchToTreeView" button appears
+    expect(screen.getAllByTitle("commit.switchToTreeView").length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -1023,7 +1025,7 @@ describe("CommitDialog — AI commit message button", () => {
     fireEvent.click(screen.getByTestId("ai-commit-btn"));
 
     await waitFor(() => {
-      const textarea = screen.getByPlaceholderText("Enter commit message...");
+      const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
       expect((textarea as HTMLTextAreaElement).value).toBe("AI generated message");
     });
   });
@@ -1033,21 +1035,21 @@ describe("CommitDialog — toolbar buttons visibility", () => {
   it("renders 'Commit message', 'Commit templates', 'Snippets', 'Create branch' toolbar buttons", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByText("Commit message")).toBeInTheDocument();
-      expect(screen.getByText("Commit templates")).toBeInTheDocument();
-      expect(screen.getByText("Snippets")).toBeInTheDocument();
-      expect(screen.getByText("Create branch")).toBeInTheDocument();
+      expect(screen.getByText("commit.commitMessage")).toBeInTheDocument();
+      expect(screen.getByText("commit.commitTemplates")).toBeInTheDocument();
+      expect(screen.getByText("commit.snippets")).toBeInTheDocument();
+      expect(screen.getByText("commit.createBranch")).toBeInTheDocument();
     });
   });
 
   it("renders stage/unstage icon buttons", async () => {
     renderOpen();
     await waitFor(() => {
-      expect(screen.getByTitle("Stage selected")).toBeInTheDocument();
-      expect(screen.getByTitle("Stage all")).toBeInTheDocument();
-      expect(screen.getByTitle("Unstage selected")).toBeInTheDocument();
-      expect(screen.getByTitle("Unstage all")).toBeInTheDocument();
-      expect(screen.getByTitle("Refresh file list")).toBeInTheDocument();
+      expect(screen.getByTitle("commit.stageSelected")).toBeInTheDocument();
+      expect(screen.getByTitle("commit.stageAllTitle")).toBeInTheDocument();
+      expect(screen.getByTitle("commit.unstageSelected")).toBeInTheDocument();
+      expect(screen.getByTitle("commit.unstageAllTitle")).toBeInTheDocument();
+      expect(screen.getByTitle("commit.refreshFileList")).toBeInTheDocument();
     });
   });
 });
@@ -1061,17 +1063,17 @@ describe("CommitDialog — commit & push", () => {
     render(<CommitDialog open={true} onClose={onClose} />);
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: push this" } });
 
-    // Open dropdown and click "Commit & push"
+    // Open dropdown and click "commit.commitAndPush"
     const chevronBtn = document.querySelector(
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Commit & push"));
+    await waitFor(() => screen.getByText("commit.commitAndPush"));
     await act(async () => {
-      fireEvent.click(screen.getByText("Commit & push"));
+      fireEvent.click(screen.getByText("commit.commitAndPush"));
     });
 
     await waitFor(() => {
@@ -1092,16 +1094,16 @@ describe("CommitDialog — commit & push", () => {
     renderOpen();
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: will push" } });
 
     const chevronBtn = document.querySelector(
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Commit & push"));
+    await waitFor(() => screen.getByText("commit.commitAndPush"));
     await act(async () => {
-      fireEvent.click(screen.getByText("Commit & push"));
+      fireEvent.click(screen.getByText("commit.commitAndPush"));
     });
 
     await waitFor(() => {
@@ -1122,16 +1124,16 @@ describe("CommitDialog — commit & push", () => {
     renderOpen();
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: no upstream" } });
 
     const chevronBtn = document.querySelector(
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Commit & push"));
+    await waitFor(() => screen.getByText("commit.commitAndPush"));
     await act(async () => {
-      fireEvent.click(screen.getByText("Commit & push"));
+      fireEvent.click(screen.getByText("commit.commitAndPush"));
     });
 
     await waitFor(() => {
@@ -1198,8 +1200,8 @@ describe("CommitDialog — file selection interactions", () => {
     renderOpen();
     await waitFor(() => screen.getByText("one.ts"));
 
-    // Use the "Stage all" button to validate staging since individual stage arrow is inside the row
-    const stageAllBtn = screen.getByTitle("Stage all");
+    // Use the "commit.stageAllTitle" button to validate staging since individual stage arrow is inside the row
+    const stageAllBtn = screen.getByTitle("commit.stageAllTitle");
     await act(async () => {
       fireEvent.click(stageAllBtn);
     });
@@ -1220,7 +1222,7 @@ describe("CommitDialog — file selection interactions", () => {
     renderOpen();
     await waitFor(() => screen.getByText("two.ts"));
 
-    const unstageAllBtn = screen.getByTitle("Unstage all");
+    const unstageAllBtn = screen.getByTitle("commit.unstageAllTitle");
     await act(async () => {
       fireEvent.click(unstageAllBtn);
     });
@@ -1232,14 +1234,14 @@ describe("CommitDialog — file selection interactions", () => {
 
   it("clears diff when dialog is re-opened", async () => {
     const { rerender } = render(<CommitDialog open={true} onClose={vi.fn()} />);
-    await waitFor(() => screen.getByPlaceholderText("Enter commit message..."));
+    await waitFor(() => screen.getByPlaceholderText("commit.enterCommitMessage"));
 
     // Close and re-open
     rerender(<CommitDialog open={false} onClose={vi.fn()} />);
     rerender(<CommitDialog open={true} onClose={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Select a file to view changes")).toBeInTheDocument();
+      expect(screen.getByText("commit.selectFileToView")).toBeInTheDocument();
     });
   });
 
@@ -1261,7 +1263,7 @@ describe("CommitDialog — file selection interactions", () => {
 
     // Before diff resolves, show "Loading..."
     await waitFor(() => {
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
+      expect(screen.getByText("commit.loading")).toBeInTheDocument();
     });
 
     // Now resolve and check HunkStagingView appears
@@ -1284,7 +1286,7 @@ describe("CommitDialog — error states", () => {
     renderOpen();
     await waitFor(() => screen.getByText("fail.ts"));
 
-    const stageAllBtn = screen.getByTitle("Stage all");
+    const stageAllBtn = screen.getByTitle("commit.stageAllTitle");
     await act(async () => {
       fireEvent.click(stageAllBtn);
     });
@@ -1304,14 +1306,14 @@ describe("CommitDialog — error states", () => {
     renderOpen();
     await waitFor(() => screen.getByText("foo.ts"));
 
-    // Trigger discard all via dropdown → "Reset all changes"
+    // Trigger discard all via dropdown → "commit.resetAllChanges"
     const chevronBtn = document.querySelector(
       '[style*="border-radius: 0 6px 6px 0"]'
     ) as HTMLElement;
     fireEvent.click(chevronBtn!);
-    await waitFor(() => screen.getByText("Reset all changes"));
+    await waitFor(() => screen.getByText("commit.resetAllChanges"));
     await act(async () => {
-      fireEvent.click(screen.getByText("Reset all changes"));
+      fireEvent.click(screen.getByText("commit.resetAllChanges"));
     });
 
     await waitFor(() => {
@@ -1336,11 +1338,11 @@ describe("CommitDialog — error states", () => {
     renderOpen();
     await waitFor(() => screen.getByText("a.ts"));
 
-    const textarea = screen.getByPlaceholderText("Enter commit message...");
+    const textarea = screen.getByPlaceholderText("commit.enterCommitMessage");
     fireEvent.change(textarea, { target: { value: "feat: attempt" } });
 
     // First click — fails
-    const commitBtn = screen.getByText("Commit").closest("button")!;
+    const commitBtn = screen.getByText("commit.commit").closest("button")!;
     await act(async () => {
       fireEvent.click(commitBtn);
     });
@@ -1377,7 +1379,7 @@ describe("CommitDialog — conflicted files excluded from staging via stageFiles
     // To test conflict-path filtering we would need to use stageFiles directly.
     // The stageFiles function (called by Stage selected) filters out conflicted paths.
     // Here we verify Stage all calls stage with both paths (stageAll does not filter conflicts)
-    const stageAllBtn = screen.getByTitle("Stage all");
+    const stageAllBtn = screen.getByTitle("commit.stageAllTitle");
     await act(async () => {
       fireEvent.click(stageAllBtn);
     });

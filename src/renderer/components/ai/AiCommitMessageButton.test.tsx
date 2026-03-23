@@ -4,6 +4,20 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "ai.generateCommitMessage": "Generate commit message with AI",
+        "ai.aiButtonLabel": "AI",
+        "ai.aiGenerationFailed": "AI generation failed",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const generateCommitMessageMock = vi.fn();
 
 // Always return current state object — we control generating via closure

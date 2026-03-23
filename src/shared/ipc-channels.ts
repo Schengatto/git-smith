@@ -18,6 +18,7 @@ export const IPC = {
     BROWSE_DIRECTORY: "git:repo:browse-directory",
     BROWSE_FILE: "git:repo:browse-file",
     SCAN_FOR_REPOS: "git:repo:scan-for-repos",
+    SCAN_CANCEL: "git:repo:scan-cancel",
     OPEN_EXTERNAL: "git:repo:open-external",
     GET_LAST_OPENED: "git:repo:get-last-opened",
     GET_VIEW_SETTINGS: "git:repo:get-view-settings",
@@ -133,6 +134,8 @@ export const IPC = {
     GET_AUTO_FETCH: "git:settings:get-auto-fetch",
     SET_AUTO_FETCH: "git:settings:set-auto-fetch",
     THEME_CHANGED: "git:settings:theme-changed",
+    RESET: "git:settings:reset",
+    CLEAR_ALL: "git:settings:clear-all",
   },
   GIT_CONFIG: {
     GET: "git:config:get",

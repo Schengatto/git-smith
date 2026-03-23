@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
 
@@ -40,6 +41,7 @@ const CheckIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
 type Phase = "idle" | "scanning" | "done";
 
 export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const { loadRecentRepos } = useRepoStore();
   const [rootPath, setRootPath] = useState("");
   const [maxDepth, setMaxDepth] = useState(4);
@@ -68,7 +70,7 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [open]);
 
   const handleBrowse = async () => {
-    const dir = await window.electronAPI.repo.browseDirectory("Select directory to scan");
+    const dir = await window.electronAPI.repo.browseDirectory(t("scan.selectDirectoryToScan"));
     if (dir) setRootPath(dir);
   };
 
@@ -103,7 +105,19 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   }, [rootPath, maxDepth, loadRecentRepos]);
 
+  const handleCancel = useCallback(async () => {
+    await window.electronAPI.repo.scanCancel();
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+    setPhase("done");
+  }, []);
+
   const handleClose = () => {
+    if (phase === "scanning") {
+      window.electronAPI.repo.scanCancel();
+    }
     if (cleanupRef.current) {
       cleanupRef.current();
       cleanupRef.current = null;
@@ -117,7 +131,7 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <ModalDialog open={open} title="Scan for Repositories" onClose={handleClose} width={560}>
+    <ModalDialog open={open} title={t("scan.title")} onClose={handleClose} width={560}>
       {/* Root path */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <label
@@ -131,12 +145,12 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
             flexShrink: 0,
           }}
         >
-          Scan from
+          {t("scan.scanFrom")}
         </label>
         <input
           value={rootPath}
           onChange={(e) => setRootPath(e.target.value)}
-          placeholder="C:/Projects"
+          placeholder={t("scan.pathPlaceholder")}
           disabled={phase === "scanning"}
           autoFocus
           style={{
@@ -173,7 +187,7 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
           }}
           onMouseLeave={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
         >
-          Browse
+          {t("dialogs.browse")}
         </button>
       </div>
 
@@ -190,7 +204,7 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
             flexShrink: 0,
           }}
         >
-          Max depth
+          {t("scan.maxDepth")}
         </label>
         <input
           type="number"
@@ -212,7 +226,9 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
           onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
         />
-        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>levels of subdirectories</span>
+        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          {t("scan.levelsOfSubdirectories")}
+        </span>
       </div>
 
       {/* Progress / scanning state */}
@@ -247,18 +263,43 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
                 flexShrink: 0,
               }}
             />
-            Scanning... ({foundRepos.length} found)
+            {t("scan.scanningCount", { count: foundRepos.length })}
           </div>
           <div
             style={{
-              fontSize: 11,
-              color: "var(--text-muted)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
             }}
           >
-            {truncatePath(currentDir)}
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--text-muted)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {truncatePath(currentDir)}
+            </div>
+            <button
+              onClick={handleCancel}
+              style={{
+                padding: "3px 10px",
+                borderRadius: 4,
+                border: "1px solid var(--border)",
+                background: "var(--surface-2)",
+                color: "var(--text-secondary)",
+                fontSize: 11,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              {t("dialogs.cancel")}
+            </button>
           </div>
         </div>
       )}
@@ -288,11 +329,12 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
             {foundRepos.length > 0 ? (
               <>
                 <CheckIcon />
-                {foundRepos.length} new {foundRepos.length === 1 ? "repository" : "repositories"}{" "}
-                found and imported
+                {foundRepos.length === 1
+                  ? t("scan.newReposFoundAndImported", { count: foundRepos.length })
+                  : t("scan.newReposFoundAndImportedPlural", { count: foundRepos.length })}
               </>
             ) : (
-              "No new repositories found in this directory"
+              t("scan.noNewReposFound")
             )}
           </div>
           {foundRepos.length > 0 && (
@@ -359,14 +401,14 @@ export const ScanDialog: React.FC<Props> = ({ open, onClose }) => {
               cursor: "pointer",
             }}
           >
-            Done
+            {t("scan.done")}
           </button>
         </div>
       ) : (
         <DialogActions
           onCancel={handleClose}
           onConfirm={handleScan}
-          confirmLabel="Scan"
+          confirmLabel={t("scan.scan")}
           disabled={!rootPath.trim()}
           loading={phase === "scanning"}
         />

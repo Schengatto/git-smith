@@ -5,6 +5,36 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { ScanDialog } from "./ScanDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, string | number>) => {
+      const translations: Record<string, string> = {
+        "scan.title": "Scan for Repositories",
+        "scan.scanFrom": "Scan from",
+        "scan.pathPlaceholder": "C:/Projects",
+        "scan.maxDepth": "Max depth",
+        "scan.levelsOfSubdirectories": "levels of subdirectories",
+        "scan.scanningCount": "Scanning... ({{count}} found)",
+        "scan.newReposFoundAndImported": "{{count}} new repository found and imported",
+        "scan.newReposFoundAndImportedPlural": "{{count}} new repositories found and imported",
+        "scan.noNewReposFound": "No new repositories found in this directory",
+        "scan.selectDirectoryToScan": "Select directory to scan",
+        "scan.done": "Done",
+        "scan.scan": "Scan",
+        "dialogs.browse": "Browse",
+        "dialogs.cancel": "Cancel",
+      };
+      let result = translations[key] || key;
+      if (params) {
+        for (const [k, v] of Object.entries(params)) {
+          result = result.replace(`{{${k}}}`, String(v));
+        }
+      }
+      return result;
+    },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     loadRecentRepos: vi.fn().mockResolvedValue(undefined),
@@ -15,6 +45,7 @@ const mockElectronAPI = {
   repo: {
     browseDirectory: vi.fn().mockResolvedValue(null),
     scanForRepos: vi.fn().mockResolvedValue(undefined),
+    scanCancel: vi.fn().mockResolvedValue(undefined),
   },
   on: {
     scanProgress: vi.fn().mockReturnValue(() => {}),

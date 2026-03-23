@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMcpStore } from "../../store/mcp-store";
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export const AiReviewDialog: React.FC<Props> = ({ hash, onClose }) => {
+  const { t } = useTranslation();
   const { reviewCommit, generating } = useMcpStore();
   const [review, setReview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export const AiReviewDialog: React.FC<Props> = ({ hash, onClose }) => {
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-            AI Code Review — {hash.substring(0, 8)}
+            {t("ai.aiReviewTitle", { hash: hash.substring(0, 8) })}
           </span>
           <button
             onClick={onClose}
@@ -102,7 +104,7 @@ export const AiReviewDialog: React.FC<Props> = ({ hash, onClose }) => {
         >
           {generating && !review && (
             <div style={{ color: "var(--text-muted)", textAlign: "center", padding: 40 }}>
-              Analyzing commit...
+              {t("ai.analyzingCommit")}
             </div>
           )}
           {error && <div style={{ color: "var(--red)" }}>{error}</div>}
@@ -130,7 +132,7 @@ export const AiReviewDialog: React.FC<Props> = ({ hash, onClose }) => {
               cursor: "pointer",
             }}
           >
-            Close
+            {t("ai.close")}
           </button>
         </div>
       </div>

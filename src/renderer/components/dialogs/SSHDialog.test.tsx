@@ -5,6 +5,40 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { SSHDialog } from "./SSHDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "ssh.title": "SSH Key Manager",
+        "ssh.sshKeys": "SSH Keys",
+        "ssh.generateNewKey": "Generate New Key",
+        "ssh.testConnection": "Test Connection",
+        "ssh.keyType": "Key Type",
+        "ssh.commentEmail": "Comment (email)",
+        "ssh.commentPlaceholder": "you@example.com",
+        "ssh.filename": "Filename",
+        "ssh.passphrase": "Passphrase",
+        "ssh.passphrasePlaceholder": "Leave empty for no passphrase",
+        "ssh.generateKey": "Generate Key",
+        "ssh.generating": "Generating...",
+        "ssh.publicKeyGenerated": "Public Key (generated)",
+        "ssh.host": "Host",
+        "ssh.testing": "Testing...",
+        "ssh.test": "Test",
+        "ssh.loadingKeys": "Loading keys...",
+        "ssh.noKeysFound": "No SSH keys found in ~/.ssh",
+        "ssh.noFingerprintAvailable": "No fingerprint available",
+        "ssh.copyPublicKey": "Copy public key",
+        "ssh.copied": "Copied!",
+        "ssh.copy": "Copy",
+        "dialogs.close": "Close",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 const mockElectronAPI = {
   ssh: {
     list: vi.fn().mockResolvedValue([]),

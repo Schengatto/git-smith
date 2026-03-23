@@ -5,6 +5,37 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { CloneDialog } from "./CloneDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "clone.title": "Clone Repository",
+        "clone.repoToClone": "Repository to clone",
+        "clone.repoUrlPlaceholder": "https://github.com/user/repo.git",
+        "clone.destination": "Destination",
+        "clone.destinationPlaceholder": "C:/Projects",
+        "clone.subdirectory": "Subdirectory",
+        "clone.subdirectoryPlaceholder": "my-project",
+        "clone.branch": "Branch",
+        "clone.defaultRemoteHead": "(default: remote HEAD)",
+        "clone.cloneLocationInfo": "The repository will be cloned to a new directory located here:",
+        "clone.repositoryType": "Repository type",
+        "clone.personalRepo": "Personal repository",
+        "clone.bareRepo": "Public repository, no working directory (--bare)",
+        "clone.initSubmodules": "Initialize all submodules",
+        "clone.downloadFullHistory": "Download full history",
+        "clone.cloning": "Cloning repository...",
+        "clone.opening": "Opening repository...",
+        "clone.clone": "Clone",
+        "dialogs.browse": "Browse",
+        "dialogs.cancel": "Cancel",
+      };
+      return translations[key] ?? key;
+    },
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("../../store/repo-store", () => ({
   useRepoStore: () => ({
     openRepo: vi.fn().mockResolvedValue(undefined),

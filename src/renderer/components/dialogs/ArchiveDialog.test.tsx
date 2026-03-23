@@ -5,6 +5,24 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { ArchiveDialog } from "./ArchiveDialog";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        "archive.title": "Archive / Export",
+        "archive.zip": "ZIP",
+        "archive.tarGz": "TAR.GZ",
+        "dialogs.export": "Export",
+        "dialogs.cancel": "Cancel",
+      };
+      if (key === "archive.exportDescription" && opts) {
+        return `Export ${opts.ref} as archive`;
+      }
+      return translations[key] ?? key;
+    },
+  }),
+}));
+
 vi.mock("../../store/git-operation-store", () => ({
   runGitOperation: vi.fn((_label: string, fn: () => Promise<unknown>) => fn()),
   GitOperationCancelledError: class extends Error {},
@@ -39,7 +57,7 @@ describe("ArchiveDialog", () => {
 
   it("shows the ref label in description", () => {
     render(<ArchiveDialog open={true} onClose={vi.fn()} ref_="abc123" refLabel="v1.2.3" />);
-    expect(screen.getByText("v1.2.3")).toBeInTheDocument();
+    expect(screen.getByText(/v1\.2\.3/)).toBeInTheDocument();
   });
 
   it("shows ZIP and TAR.GZ format radio buttons", () => {
