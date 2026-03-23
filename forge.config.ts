@@ -62,7 +62,7 @@ const config: ForgeConfig = {
   ],
   publishers: [
     new PublisherGithub({
-      repository: { owner: "Schengatto", name: "git-expansion" },
+      repository: { owner: "Schengatto", name: "git-smith" },
       prerelease: false,
       draft: false,
     }),
@@ -85,7 +85,7 @@ const config: ForgeConfig = {
       const appUpdateYml = [
         "provider: github",
         "owner: Schengatto",
-        "repo: git-expansion",
+        "repo: git-smith",
       ].join("\n");
       for (const outputPath of outputPaths) {
         const resourcesDir = path.join(outputPath, "resources");

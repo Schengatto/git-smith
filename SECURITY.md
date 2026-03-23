@@ -11,7 +11,7 @@
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
-2. Send a detailed report to the maintainers via [GitHub Security Advisories](https://github.com/Schengatto/git-expansion/security/advisories/new)
+2. Send a detailed report to the maintainers via [GitHub Security Advisories](https://github.com/Schengatto/git-smith/security/advisories/new)
 3. Include steps to reproduce the vulnerability
 4. Allow reasonable time for a fix before public disclosure
 

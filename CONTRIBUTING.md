@@ -13,7 +13,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 ### Setup
 
 ```bash
-git clone https://github.com/Schengatto/git-expansion.git
+git clone https://github.com/Schengatto/git-smith.git
 cd gitsmith
 npm install
 npm start
@@ -42,13 +42,13 @@ npm run format
 
 ### Reporting Bugs
 
-1. Check [existing issues](https://github.com/Schengatto/git-expansion/issues) to avoid duplicates
+1. Check [existing issues](https://github.com/Schengatto/git-smith/issues) to avoid duplicates
 2. Use the **Bug Report** issue template
 3. Include your OS, Node.js version, and steps to reproduce
 
 ### Suggesting Features
 
-1. Check [existing issues](https://github.com/Schengatto/git-expansion/issues) for similar suggestions
+1. Check [existing issues](https://github.com/Schengatto/git-smith/issues) for similar suggestions
 2. Use the **Feature Request** issue template
 3. Describe the use case, not just the solution
 
