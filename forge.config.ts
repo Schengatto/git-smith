@@ -18,7 +18,7 @@ async function computeSha512(filePath: string): Promise<string> {
 const config: ForgeConfig = {
   packagerConfig: {
     asar: {
-      unpack: "{**/*.node,**/node-pty/**}",
+      unpack: process.platform !== "win32" ? "{**/*.node,**/node-pty/**}" : "**/*.node",
     },
     name: "GitSmith",
     executableName: "gitsmith",
@@ -27,8 +27,8 @@ const config: ForgeConfig = {
     extraResource: ["./USER_MANUAL.pdf"],
   },
   rebuildConfig: {
-    // Rebuild node-pty against Electron's ABI so the terminal works on all platforms
-    onlyModules: ["node-pty"],
+    // Rebuild node-pty against Electron's ABI (skipped on Windows where node-pty is optional)
+    onlyModules: process.platform !== "win32" ? ["node-pty"] : [],
   },
   makers: [
     new MakerWix({
@@ -69,8 +69,8 @@ const config: ForgeConfig = {
   ],
   hooks: {
     packageAfterCopy: async (_config, buildPath) => {
-      // node-pty is a native module externalized from Vite — copy it into the package
-      const nativeModules = ["node-pty", "node-addon-api"];
+      // node-pty is a native module externalized from Vite — copy it into the package (skip on Windows)
+      const nativeModules = process.platform !== "win32" ? ["node-pty", "node-addon-api"] : [];
       for (const mod of nativeModules) {
         const src = path.join(__dirname, "node_modules", mod);
         const dest = path.join(buildPath, "node_modules", mod);

@@ -39,7 +39,7 @@
     ]
   },
   "scripts": {
-    "postinstall": "electron-rebuild -f -w node-pty",
+    "postinstall": "node -e \"if(process.platform!=='win32'){require('child_process').execSync('electron-rebuild -f -w node-pty',{stdio:'inherit'})}\"",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
@@ -116,12 +116,14 @@
     "electron-squirrel-startup": "1.0.1",
     "electron-updater": "6.8.3",
     "i18next": "25.2.1",
-    "node-pty": "1.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-i18next": "15.5.1",
     "react-virtuoso": "4.12.3",
     "simple-git": "3.33.0",
     "zustand": "5.0.3"
+  },
+  "optionalDependencies": {
+    "node-pty": "1.1.0"
   }
 }
