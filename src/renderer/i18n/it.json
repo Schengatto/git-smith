@@ -438,7 +438,9 @@
     "downloadFullHistory": "Scarica la cronologia completa",
     "cloning": "Clonazione del repository...",
     "opening": "Apertura del repository...",
-    "clone": "Clona"
+    "clone": "Clona",
+    "account": "Account Git",
+    "defaultAccount": "(predefinito: chiave SSH di sistema)"
   },
   "scan": {
     "title": "Cerca repository",

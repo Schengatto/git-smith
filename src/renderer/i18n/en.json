@@ -438,7 +438,9 @@
     "downloadFullHistory": "Download full history",
     "cloning": "Cloning repository...",
     "opening": "Opening repository...",
-    "clone": "Clone"
+    "clone": "Clone",
+    "account": "Git Account",
+    "defaultAccount": "(default: system SSH key)"
   },
   "scan": {
     "title": "Scan for Repositories",

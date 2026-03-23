@@ -147,7 +147,7 @@ describe("git-remote IPC handlers", () => {
     const branches = ["refs/heads/main", "refs/heads/develop"];
     mockListRemoteBranches.mockResolvedValueOnce(branches);
     const result = await getHandler(IPC.REMOTE.LIST_REMOTE_BRANCHES)({}, "https://github.com/x/y");
-    expect(mockListRemoteBranches).toHaveBeenCalledWith("https://github.com/x/y");
+    expect(mockListRemoteBranches).toHaveBeenCalledWith("https://github.com/x/y", undefined);
     expect(result).toBe(branches);
   });
 });

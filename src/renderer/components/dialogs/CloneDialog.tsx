@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ModalDialog, DialogActions, DialogError, DialogCheckbox } from "./ModalDialog";
 import { useRepoStore } from "../../store/repo-store";
+import { useAccountStore } from "../../store/account-store";
 
 function joinPath(base: string, sub: string): string {
   const sep = base.includes("\\") ? "\\" : "/";
@@ -91,11 +92,13 @@ const sectionLabelStyle: React.CSSProperties = {
 
 export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
   const { openRepo } = useRepoStore();
+  const { accounts, loadAccounts } = useAccountStore();
   const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [destination, setDestination] = useState("");
   const [subdirectory, setSubdirectory] = useState("");
   const [branch, setBranch] = useState("");
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [bare, setBare] = useState(false);
   const [recurseSubmodules, setRecurseSubmodules] = useState(true);
   const [fullHistory, setFullHistory] = useState(true);
@@ -106,13 +109,17 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
   const [loadingBranches, setLoadingBranches] = useState(false);
   const branchFetchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const selectedAccount = accounts.find((a) => a.id === selectedAccountId) || null;
+
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
+      loadAccounts();
       setUrl("");
       setDestination("");
       setSubdirectory("");
       setBranch("");
+      setSelectedAccountId("");
       setBare(false);
       setRecurseSubmodules(true);
       setFullHistory(true);
@@ -120,7 +127,7 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
       setProgress(null);
       setRemoteBranches([]);
     }
-  }, [open]);
+  }, [open, loadAccounts]);
 
   // Auto-fill subdirectory from URL
   useEffect(() => {
@@ -138,15 +145,18 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   }, [url]);
 
-  // Debounced fetch of remote branches when URL changes
-  const fetchBranches = useCallback(async (repoUrl: string) => {
+  // Debounced fetch of remote branches when URL or account changes
+  const fetchBranches = useCallback(async (repoUrl: string, sshKeyPath?: string) => {
     if (!repoUrl.trim()) {
       setRemoteBranches([]);
       return;
     }
     setLoadingBranches(true);
     try {
-      const branches = await window.electronAPI.remote.listRemoteBranches(repoUrl.trim());
+      const branches = await window.electronAPI.remote.listRemoteBranches(
+        repoUrl.trim(),
+        sshKeyPath
+      );
       setRemoteBranches(branches);
     } catch {
       setRemoteBranches([]);
@@ -164,14 +174,14 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
       return;
     }
     branchFetchTimeout.current = setTimeout(() => {
-      fetchBranches(url);
+      fetchBranches(url, selectedAccount?.sshKeyPath);
     }, 800);
     return () => {
       if (branchFetchTimeout.current) {
         clearTimeout(branchFetchTimeout.current);
       }
     };
-  }, [url, fetchBranches]);
+  }, [url, selectedAccount, fetchBranches]);
 
   const finalPath =
     destination && subdirectory
@@ -199,7 +209,12 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
         bare,
         recurseSubmodules,
         shallow: !fullHistory,
+        sshKeyPath: selectedAccount?.sshKeyPath,
       });
+      // Assign selected account to the newly cloned repo
+      if (selectedAccount && !bare) {
+        await window.electronAPI.account.setForRepo(clonePath, selectedAccount.id);
+      }
       if (!bare) {
         setProgress(t("clone.opening"));
         await openRepo(clonePath);
@@ -290,6 +305,25 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
           />
         )}
       </div>
+
+      {/* Git Account */}
+      {accounts.length > 0 && (
+        <div style={inputRowStyle}>
+          <label style={labelStyle}>{t("clone.account")}</label>
+          <select
+            style={selectStyle}
+            value={selectedAccountId}
+            onChange={(e) => setSelectedAccountId(e.target.value)}
+          >
+            <option value="">{t("clone.defaultAccount")}</option>
+            {accounts.map((acc) => (
+              <option key={acc.id} value={acc.id}>
+                {acc.label} ({acc.email})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Clone destination info */}
       {finalPath && (

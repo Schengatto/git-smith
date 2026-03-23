@@ -1580,9 +1580,13 @@ export class GitService {
       bare?: boolean;
       recurseSubmodules?: boolean;
       shallow?: boolean;
+      sshKeyPath?: string;
     }
   ): Promise<void> {
-    const git = simpleGit();
+    let git = simpleGit();
+    if (options?.sshKeyPath) {
+      git = git.env("GIT_SSH_COMMAND", `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes`);
+    }
     const args: string[] = [];
     if (options?.branch) {
       args.push("--branch", options.branch);
@@ -1599,8 +1603,11 @@ export class GitService {
     await this.run("git clone", [url, directory, ...args], () => git.clone(url, directory, args));
   }
 
-  async listRemoteBranches(url: string): Promise<string[]> {
-    const git = simpleGit();
+  async listRemoteBranches(url: string, sshKeyPath?: string): Promise<string[]> {
+    let git = simpleGit();
+    if (sshKeyPath) {
+      git = git.env("GIT_SSH_COMMAND", `ssh -i "${sshKeyPath}" -o IdentitiesOnly=yes`);
+    }
     const result = await this.run("git ls-remote --heads", [url], () =>
       git.listRemote(["--heads", url])
     );

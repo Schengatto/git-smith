@@ -63,13 +63,17 @@ export function registerRemoteHandlers() {
         bare?: boolean;
         recurseSubmodules?: boolean;
         shallow?: boolean;
+        sshKeyPath?: string;
       }
     ) => {
       await gitService.clone(url, directory, options);
     }
   );
 
-  ipcMain.handle(IPC.REMOTE.LIST_REMOTE_BRANCHES, async (_event, url: string) => {
-    return gitService.listRemoteBranches(url);
-  });
+  ipcMain.handle(
+    IPC.REMOTE.LIST_REMOTE_BRANCHES,
+    async (_event, url: string, sshKeyPath?: string) => {
+      return gitService.listRemoteBranches(url, sshKeyPath);
+    }
+  );
 }

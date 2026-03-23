@@ -42,6 +42,13 @@ vi.mock("../../store/repo-store", () => ({
   }),
 }));
 
+vi.mock("../../store/account-store", () => ({
+  useAccountStore: () => ({
+    accounts: [],
+    loadAccounts: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 const mockElectronAPI = {
   remote: {
     listRemoteBranches: vi.fn().mockResolvedValue([]),
@@ -49,6 +56,10 @@ const mockElectronAPI = {
   },
   repo: {
     browseDirectory: vi.fn().mockResolvedValue(null),
+  },
+  account: {
+    list: vi.fn().mockResolvedValue([]),
+    setForRepo: vi.fn().mockResolvedValue(undefined),
   },
 };
 

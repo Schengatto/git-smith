@@ -438,7 +438,9 @@
     "downloadFullHistory": "Descargar historial completo",
     "cloning": "Clonando repositorio...",
     "opening": "Abriendo repositorio...",
-    "clone": "Clonar"
+    "clone": "Clonar",
+    "account": "Cuenta Git",
+    "defaultAccount": "(predeterminado: clave SSH del sistema)"
   },
   "scan": {
     "title": "Buscar repositorios",

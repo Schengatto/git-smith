@@ -200,10 +200,11 @@ const electronAPI = {
         bare?: boolean;
         recurseSubmodules?: boolean;
         shallow?: boolean;
+        sshKeyPath?: string;
       }
     ): Promise<void> => ipcRenderer.invoke(IPC.REMOTE.CLONE, url, directory, options),
-    listRemoteBranches: (url: string): Promise<string[]> =>
-      ipcRenderer.invoke(IPC.REMOTE.LIST_REMOTE_BRANCHES, url),
+    listRemoteBranches: (url: string, sshKeyPath?: string): Promise<string[]> =>
+      ipcRenderer.invoke(IPC.REMOTE.LIST_REMOTE_BRANCHES, url, sshKeyPath),
     fetch: (remote?: string): Promise<void> => ipcRenderer.invoke(IPC.REMOTE.FETCH, remote),
     fetchAll: (): Promise<void> => ipcRenderer.invoke(IPC.REMOTE.FETCH_ALL),
     fetchPrune: (): Promise<void> => ipcRenderer.invoke(IPC.REMOTE.FETCH_PRUNE),
