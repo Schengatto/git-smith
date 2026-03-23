@@ -15,13 +15,13 @@
     "version-control",
     "desktop"
   ],
-  "homepage": "https://github.com/Schengatto/git-smith#readme",
+  "homepage": "https://github.com/Schengatto/git-expansion#readme",
   "bugs": {
-    "url": "https://github.com/Schengatto/git-smith/issues"
+    "url": "https://github.com/Schengatto/git-expansion/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Schengatto/git-smith.git"
+    "url": "https://github.com/Schengatto/git-expansion.git"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [

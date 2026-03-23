@@ -12,6 +12,6 @@
     { "type": "chore", "hidden": true },
     { "type": "revert", "section": "Reverts" }
   ],
-  "commitUrlFormat": "https://github.com/Schengatto/git-smith/commit/{{hash}}",
-  "compareUrlFormat": "https://github.com/Schengatto/git-smith/compare/{{previousTag}}...{{currentTag}}"
+  "commitUrlFormat": "https://github.com/Schengatto/git-expansion/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/Schengatto/git-expansion/compare/{{previousTag}}...{{currentTag}}"
 }

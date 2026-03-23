@@ -204,7 +204,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     fireEvent.click(screen.getByText("welcome.develop"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-smith"
+      "https://github.com/Schengatto/git-expansion"
     );
   });
 
@@ -212,7 +212,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     fireEvent.click(screen.getByText("welcome.issues"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-smith/issues"
+      "https://github.com/Schengatto/git-expansion/issues"
     );
   });
 

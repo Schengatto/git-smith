@@ -793,7 +793,7 @@ export const WelcomeScreen: React.FC = () => {
               {
                 icon: <CodeIcon size={13} />,
                 label: t("welcome.develop"),
-                url: "https://github.com/Schengatto/git-smith",
+                url: "https://github.com/Schengatto/git-expansion",
               },
               {
                 icon: <HeartIcon size={13} />,
@@ -803,7 +803,7 @@ export const WelcomeScreen: React.FC = () => {
               {
                 icon: <BugIcon size={13} />,
                 label: t("welcome.issues"),
-                url: "https://github.com/Schengatto/git-smith/issues",
+                url: "https://github.com/Schengatto/git-expansion/issues",
               },
             ].map((item) => (
               <div
