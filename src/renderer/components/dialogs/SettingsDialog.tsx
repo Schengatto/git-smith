@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useUIStore } from "../../store/ui-store";
 import { useAccountStore } from "../../store/account-store";
+import { setAppLanguage } from "../../i18n";
 import type { GitAccount, SshHostEntry } from "../../../shared/git-types";
 import type { AppSettings, CommitTemplate, CommitSnippet } from "../../../shared/settings-types";
 
@@ -99,6 +100,8 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
       await window.electronAPI.settings.update(settings);
       // Apply theme
       useUIStore.getState().setTheme(settings.theme as "dark" | "light");
+      // Apply language
+      setAppLanguage(settings.language);
       setDirty(false);
     } finally {
       setSaving(false);
@@ -370,6 +373,16 @@ const GeneralTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({
             { value: "light", label: t("settings.lightTheme") },
           ]}
           onChange={(v) => onChange("theme", v as "dark" | "light")}
+        />
+      </SettingRow>
+      <SettingRow label={t("settings.language")} description={t("settings.languageDescription")}>
+        <Select
+          value={settings.language}
+          options={[
+            { value: "en", label: t("settings.languageEnglish") },
+            { value: "it", label: t("settings.languageItalian") },
+          ]}
+          onChange={(v) => onChange("language", v)}
         />
       </SettingRow>
       <SectionTitle>{t("settings.git")}</SectionTitle>

@@ -50,6 +50,24 @@ describe("i18n index", () => {
     expect(i18n.language).toBe("en");
   });
 
+  it("switches to Italian and translates keys", async () => {
+    setAppLanguage("it");
+    expect(i18n.language).toBe("it");
+    expect(i18n.t("app.reload")).toBe("Ricarica");
+    expect(i18n.t("toolbar.fetch")).toBe("Fetch");
+    expect(i18n.t("dialogs.close")).toBe("Chiudi");
+    expect(i18n.t("settings.languageItalian")).toBe("Italiano");
+    // restore English
+    setAppLanguage("en");
+  });
+
+  it("Italian falls back to English for missing keys", async () => {
+    setAppLanguage("it");
+    // app.name should be "GitSmith" in both languages
+    expect(i18n.t("app.name")).toBe("GitSmith");
+    setAppLanguage("en");
+  });
+
   it("exports setAppLanguage as a function", () => {
     expect(typeof setAppLanguage).toBe("function");
   });

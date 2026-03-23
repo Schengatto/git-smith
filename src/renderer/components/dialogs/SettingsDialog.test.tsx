@@ -5,7 +5,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { SettingsDialog } from "./SettingsDialog";
 
+vi.mock("../../i18n", () => ({ setAppLanguage: vi.fn() }));
+
 vi.mock("react-i18next", () => ({
+  initReactI18next: { type: "3rdParty", init: () => {} },
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
