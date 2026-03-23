@@ -35,6 +35,10 @@ const config: ForgeConfig = {
       name: "GitSmith",
       manufacturer: "GitSmith",
       exe: "gitsmith",
+      icon: "./assets/icon.ico",
+      shortcutName: "GitSmith",
+      shortcutFolderName: "GitSmith",
+      programFilesFolderName: "GitSmith",
       ui: {
         chooseDirectory: true,
       },

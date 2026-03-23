@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useGraphStore } from "../../store/graph-store";
@@ -237,6 +237,36 @@ const IconChevronDown = () => (
     strokeLinejoin="round"
   >
     <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
+const IconChevronLeft = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const IconChevronRight = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="9 6 15 12 9 18" />
   </svg>
 );
 
@@ -750,6 +780,95 @@ const AccountSelector: React.FC = () => {
   );
 };
 
+const ScrollableActions: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateArrows = useCallback(() => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+    const overflow = content.scrollWidth - container.clientWidth;
+    setCanScrollLeft(offset > 1);
+    setCanScrollRight(offset < overflow - 1);
+    // Clamp offset if container resized larger
+    if (offset > overflow) setOffset(Math.max(0, overflow));
+  }, [offset]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+    updateArrows();
+    const ro = new ResizeObserver(updateArrows);
+    ro.observe(container);
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, [updateArrows]);
+
+  const scroll = (dir: number) => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+    const maxOffset = Math.max(0, content.scrollWidth - container.clientWidth);
+    setOffset((prev) => Math.max(0, Math.min(maxOffset, prev + dir * 150)));
+  };
+
+  const arrowStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 20,
+    height: 28,
+    border: "none",
+    background: "var(--surface-2)",
+    color: "var(--text-secondary)",
+    cursor: "pointer",
+    borderRadius: 4,
+    flexShrink: 0,
+    padding: 0,
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0, gap: 2 }}>
+      {canScrollLeft && (
+        <button style={arrowStyle} onClick={() => scroll(-1)} aria-label="Scroll left">
+          <IconChevronLeft />
+        </button>
+      )}
+      <div
+        ref={containerRef}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflowX: "clip",
+          overflowY: "visible",
+        }}
+      >
+        <div
+          ref={contentRef}
+          className="flex items-center gap-1"
+          style={{
+            width: "max-content",
+            transform: `translateX(-${offset}px)`,
+            transition: "transform 0.2s ease-out",
+          }}
+        >
+          {children}
+        </div>
+      </div>
+      {canScrollRight && (
+        <button style={arrowStyle} onClick={() => scroll(1)} aria-label="Scroll right">
+          <IconChevronRight />
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const Toolbar: React.FC = () => {
   const { t } = useTranslation();
   const { repo, status, refreshStatus, refreshInfo } = useRepoStore();
@@ -1008,201 +1127,241 @@ export const Toolbar: React.FC = () => {
         height: 40,
         background: "var(--surface-1)",
         borderBottom: "1px solid var(--border-subtle)",
+        position: "relative",
+        zIndex: 10,
       }}
     >
       <RepoSelector />
 
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
-      <button onClick={handleRefresh} className="toolbar-btn" title={t("toolbar.refresh")}>
-        <IconRefresh /> {t("toolbar.refresh")}
-      </button>
+      <div
+        className="mx-1"
+        style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+      />
 
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
+      <ScrollableActions>
+        <button
+          onClick={handleRefresh}
+          className="toolbar-btn"
+          title={t("toolbar.refresh")}
+          style={{ whiteSpace: "nowrap" }}
+        >
+          <IconRefresh /> {t("toolbar.refresh")}
+        </button>
 
-      <DropdownButton icon={<IconDownload />} label={t("toolbar.fetch")} items={fetchItems} />
+        <div
+          className="mx-1"
+          style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+        />
 
-      <DropdownButton icon={<IconArrowDown />} label={t("toolbar.pull")} items={pullItems} />
+        <DropdownButton icon={<IconDownload />} label={t("toolbar.fetch")} items={fetchItems} />
 
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
+        <DropdownButton icon={<IconArrowDown />} label={t("toolbar.pull")} items={pullItems} />
 
-      <button
-        onClick={() => setCommitOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.commitShortcut")}
-        style={changedCount > 0 ? { color: "var(--peach)" } : undefined}
-      >
-        <IconCommit />
-        {t("toolbar.commit")}
-        {changedCount > 0 && (
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "0 5px",
-              lineHeight: "16px",
-              borderRadius: 8,
-              background: "var(--peach)",
-              color: "var(--text-on-color)",
-              minWidth: 18,
-              textAlign: "center",
-              display: "inline-block",
-            }}
+        <div
+          className="mx-1"
+          style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+        />
+
+        <button
+          onClick={() => setCommitOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.commitShortcut")}
+          style={{ whiteSpace: "nowrap", ...(changedCount > 0 ? { color: "var(--peach)" } : {}) }}
+        >
+          <IconCommit />
+          {t("toolbar.commit")}
+          {changedCount > 0 && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                padding: "0 5px",
+                lineHeight: "16px",
+                borderRadius: 8,
+                background: "var(--peach)",
+                color: "var(--text-on-color)",
+                minWidth: 18,
+                textAlign: "center",
+                display: "inline-block",
+              }}
+            >
+              {changedCount}
+            </span>
+          )}
+        </button>
+
+        <DropdownButton icon={<IconArrowUp />} label={t("toolbar.push")} items={pushItems} />
+
+        <div
+          className="mx-1"
+          style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+        />
+
+        <DropdownButton icon={<IconStash />} label={t("toolbar.stash")} items={stashItems} />
+
+        <button
+          onClick={() => setRemotesOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.manageRemotes")}
+          style={{ whiteSpace: "nowrap" }}
+        >
+          <IconGlobe /> {t("toolbar.remotes")}
+        </button>
+
+        <div
+          className="mx-1"
+          style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+        />
+
+        <button
+          onClick={() => setBisectOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.gitBisect")}
+          style={{ whiteSpace: "nowrap" }}
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            {changedCount}
-          </span>
-        )}
-      </button>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
+          {t("toolbar.bisect")}
+        </button>
 
-      <DropdownButton icon={<IconArrowUp />} label={t("toolbar.push")} items={pushItems} />
-
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
-
-      <DropdownButton icon={<IconStash />} label={t("toolbar.stash")} items={stashItems} />
-
-      <button
-        onClick={() => setRemotesOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.manageRemotes")}
-      >
-        <IconGlobe /> {t("toolbar.remotes")}
-      </button>
-
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
-
-      <button
-        onClick={() => setBisectOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.gitBisect")}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <button
+          onClick={() => setWorktreeOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.manageWorktrees")}
+          style={{ whiteSpace: "nowrap" }}
         >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="16" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-        </svg>
-        {t("toolbar.bisect")}
-      </button>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            <line x1="12" y1="11" x2="12" y2="17" />
+            <line x1="9" y1="14" x2="15" y2="14" />
+          </svg>
+          {t("toolbar.worktrees")}
+        </button>
 
-      <button
-        onClick={() => setWorktreeOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.manageWorktrees")}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <button
+          onClick={() => setPatchApplyOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.applyPatch")}
+          style={{ whiteSpace: "nowrap" }}
         >
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          <line x1="12" y1="11" x2="12" y2="17" />
-          <line x1="9" y1="14" x2="15" y2="14" />
-        </svg>
-        {t("toolbar.worktrees")}
-      </button>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          {t("toolbar.patch")}
+        </button>
 
-      <button
-        onClick={() => setPatchApplyOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.applyPatch")}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <div
+          className="mx-1"
+          style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+        />
+
+        <button
+          onClick={() => setSubmodulesOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.manageSubmodules")}
+          style={{ whiteSpace: "nowrap" }}
         >
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-        </svg>
-        {t("toolbar.patch")}
-      </button>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <rect x="7" y="7" width="10" height="10" rx="1" ry="1" />
+          </svg>
+          {t("toolbar.submodules")}
+        </button>
 
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
-
-      <button
-        onClick={() => setSubmodulesOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.manageSubmodules")}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <button
+          onClick={() => setLfsOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.gitLfs")}
+          style={{ whiteSpace: "nowrap" }}
         >
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-          <rect x="7" y="7" width="10" height="10" rx="1" ry="1" />
-        </svg>
-        {t("toolbar.submodules")}
-      </button>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          {t("toolbar.lfs")}
+        </button>
 
-      <button onClick={() => setLfsOpen(true)} className="toolbar-btn" title={t("toolbar.gitLfs")}>
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <button
+          onClick={() => setPrOpen(true)}
+          className="toolbar-btn"
+          title={t("toolbar.pullRequestsMergeRequests")}
+          style={{ whiteSpace: "nowrap" }}
         >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-        {t("toolbar.lfs")}
-      </button>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="18" cy="18" r="3" />
+            <circle cx="6" cy="6" r="3" />
+            <path d="M13 6h3a2 2 0 0 1 2 2v7" />
+            <line x1="6" y1="9" x2="6" y2="21" />
+          </svg>
+          {t("toolbar.prs")}
+        </button>
 
-      <button
-        onClick={() => setPrOpen(true)}
-        className="toolbar-btn"
-        title={t("toolbar.pullRequestsMergeRequests")}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="18" cy="18" r="3" />
-          <circle cx="6" cy="6" r="3" />
-          <path d="M13 6h3a2 2 0 0 1 2 2v7" />
-          <line x1="6" y1="9" x2="6" y2="21" />
-        </svg>
-        {t("toolbar.prs")}
-      </button>
+        <div
+          className="mx-1"
+          style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
+        />
 
-      <div className="mx-1" style={{ width: 1, height: 18, background: "var(--border)" }} />
-
-      <AccountSelector />
-
-      <div className="flex-1" />
+        <AccountSelector />
+      </ScrollableActions>
 
       <button
         onClick={() => setShortcutsOpen(true)}

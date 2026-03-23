@@ -441,21 +441,23 @@ export const StashDialog: React.FC<Props> = ({ open, onClose, mode = "overlay" }
               {t("stash.title")}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              border: "none",
-              background: "transparent",
-              color: "var(--text-muted)",
-              cursor: "pointer",
-              padding: 4,
-              borderRadius: 4,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
-          >
-            <IconClose />
-          </button>
+          {mode !== "window" && (
+            <button
+              onClick={onClose}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "var(--text-muted)",
+                cursor: "pointer",
+                padding: 4,
+                borderRadius: 4,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+            >
+              <IconClose />
+            </button>
+          )}
         </div>
 
         {/* Show mode selector */}
