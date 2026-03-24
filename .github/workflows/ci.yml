@@ -43,6 +43,8 @@ jobs:
 
       - name: Run tests with coverage
         run: npx vitest run --coverage
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
   # E2E tests are disabled until Playwright adds Electron 41 support.
   # Electron 41 (Node.js 24) breaks Playwright's -r loader because
