@@ -14,6 +14,7 @@ type Tab =
   | "commit"
   | "diff"
   | "mergetool"
+  | "editor"
   | "advanced"
   | "ai";
 
@@ -42,6 +43,7 @@ const TABS: { id: Tab; labelKey: string; icon: React.ReactNode }[] = [
   { id: "commit", labelKey: "settings.commitTab", icon: <IconCommit /> },
   { id: "diff", labelKey: "settings.diffAndGraph", icon: <IconDiff /> },
   { id: "mergetool", labelKey: "settings.mergeTool", icon: <IconMergeTool /> },
+  { id: "editor", labelKey: "settings.editorTab", icon: <IconEditor /> },
   { id: "advanced", labelKey: "settings.advanced", icon: <IconAdvanced /> },
   { id: "ai", labelKey: "settings.aiMcp", icon: <IconAi /> },
 ];
@@ -271,6 +273,13 @@ export const SettingsDialog: React.FC<Props> = ({ open, onClose, mode = "overlay
             {settings && tab === "diff" && <DiffTab settings={settings} onChange={updateSetting} />}
             {settings && tab === "mergetool" && (
               <MergeToolTab
+                settings={settings}
+                onChange={updateSetting}
+                onBatchChange={updateSettings}
+              />
+            )}
+            {settings && tab === "editor" && (
+              <EditorTab
                 settings={settings}
                 onChange={updateSetting}
                 onBatchChange={updateSettings}
@@ -1111,6 +1120,138 @@ const MergeToolTab: React.FC<{
   );
 };
 
+const EDITOR_PRESETS: {
+  name: string;
+  labelKey?: string;
+  label?: string;
+  path: string;
+  args: string;
+}[] = [
+  { name: "", labelKey: "settings.editorNone", path: "", args: "$FILE" },
+  { name: "vscode", label: "VS Code", path: "code", args: "$FILE" },
+  { name: "vscode-insiders", label: "VS Code Insiders", path: "code-insiders", args: "$FILE" },
+  { name: "cursor", label: "Cursor", path: "cursor", args: "$FILE" },
+  { name: "custom", labelKey: "settings.editorPresetCustom", path: "", args: "$FILE" },
+];
+
+const EditorTab: React.FC<{
+  settings: AppSettings;
+  onChange: OnChange;
+  onBatchChange: (partial: Partial<AppSettings>) => void;
+}> = ({ settings, onChange, onBatchChange }) => {
+  const { t } = useTranslation();
+
+  const handlePresetChange = (presetName: string) => {
+    const preset = EDITOR_PRESETS.find((p) => p.name === presetName);
+    if (!preset) return;
+    if (preset.name === "custom") {
+      onBatchChange({ editorName: "custom" });
+    } else {
+      onBatchChange({
+        editorName: preset.name,
+        editorPath: preset.path,
+        editorArgs: preset.args,
+      });
+    }
+  };
+
+  const handleBrowse = async () => {
+    const selected = await window.electronAPI.repo.browseFile(
+      t("settings.editorPath")
+    );
+    if (selected) onChange("editorPath", selected);
+  };
+
+  const isCustom = settings.editorName === "custom";
+  const hasEditorConfigured = settings.editorName !== "";
+
+  return (
+    <div>
+      <SectionTitle>{t("settings.editorTab")}</SectionTitle>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
+        {t("settings.editorDescription")}
+      </div>
+      <SettingRow
+        label={t("settings.editorPreset")}
+        description={t("settings.editorSelectPreset")}
+      >
+        <Select
+          value={settings.editorName}
+          options={EDITOR_PRESETS.map((p) => ({
+            value: p.name,
+            label: p.labelKey ? t(p.labelKey) : p.label!,
+          }))}
+          onChange={handlePresetChange}
+        />
+      </SettingRow>
+      {hasEditorConfigured && (
+        <>
+          <SettingRow
+            label={t("settings.editorPath")}
+            description={t("settings.editorPathDescription")}
+          >
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input
+                value={settings.editorPath}
+                onChange={(e) => onChange("editorPath", e.target.value)}
+                placeholder={t("settings.editorPathPlaceholder")}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: 6,
+                  border: "1px solid var(--border)",
+                  background: "var(--surface-0)",
+                  color: "var(--text-primary)",
+                  fontSize: 12,
+                  outline: "none",
+                  width: 220,
+                }}
+                readOnly={!isCustom}
+              />
+              {isCustom && (
+                <button
+                  onClick={handleBrowse}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 4,
+                    border: "1px solid var(--border)",
+                    background: "transparent",
+                    color: "var(--text-secondary)",
+                    fontSize: 11,
+                    cursor: "pointer",
+                  }}
+                >
+                  {t("dialogs.browse")}
+                </button>
+              )}
+            </div>
+          </SettingRow>
+          <SettingRow
+            label={t("settings.editorArgs")}
+            description={t("settings.editorArgsDescription")}
+          >
+            <input
+              value={settings.editorArgs}
+              onChange={(e) => onChange("editorArgs", e.target.value)}
+              placeholder="$FILE"
+              style={{
+                padding: "4px 8px",
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+                background: "var(--surface-0)",
+                color: "var(--text-primary)",
+                fontSize: 12,
+                outline: "none",
+                width: 340,
+                fontFamily: "var(--font-mono, monospace)",
+              }}
+            />
+          </SettingRow>
+        </>
+      )}
+    </div>
+  );
+};
+
 const AdvancedTab: React.FC<{
   settings: AppSettings;
   onChange: OnChange;
@@ -1607,6 +1748,24 @@ function IconMergeTool() {
       <circle cx="18" cy="18" r="3" />
       <circle cx="6" cy="6" r="3" />
       <path d="M6 21V9a9 9 0 0 0 9 9" />
+    </svg>
+  );
+}
+
+function IconEditor() {
+  return (
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
     </svg>
   );
 }
