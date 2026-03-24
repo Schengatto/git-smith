@@ -43,6 +43,8 @@ vi.mock("../../store/repo-store", () => ({
 const mockElectronAPI = {
   repo: { openExternal: vi.fn() },
   app: { openUserManual: vi.fn(), checkForUpdates: vi.fn() },
+  settings: { get: vi.fn().mockResolvedValue({ editorName: "", editorPath: "", editorArgs: "$FILE" }) },
+  editor: { launch: vi.fn().mockResolvedValue(undefined), launchFile: vi.fn().mockResolvedValue(undefined) },
 };
 
 const defaultProps = {
