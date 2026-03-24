@@ -49,7 +49,9 @@
     "userManual": "User manual",
     "reportIssue": "Report an issue",
     "checkUpdates": "Check for updates...",
-    "aboutGitSmith": "About GitSmith"
+    "aboutGitSmith": "About GitSmith",
+    "openInEditor": "Open in {{editorName}}",
+    "editorNotConfigured": "No editor configured"
   },
   "commandPalette": {
     "placeholder": "Type a command...",
@@ -193,7 +195,8 @@
     "keyboardShortcuts": "Keyboard Shortcuts",
     "commitShortcut": "Commit (Ctrl+K)",
     "keyboardShortcutsShortcut": "Keyboard Shortcuts (?)",
-    "switchToTheme": "Switch to {{theme}} theme"
+    "switchToTheme": "Switch to {{theme}} theme",
+    "openInEditor": "Open in {{editorName}}"
   },
   "sidebar": {
     "branches": "Branches",
@@ -863,6 +866,17 @@
     "commitTab": "Commit",
     "diffAndGraph": "Diff & Graph",
     "mergeTool": "Merge Tool",
+    "editorTab": "Editor",
+    "editorDescription": "Configure an external code editor to open repositories and files",
+    "editorPreset": "Editor preset",
+    "editorSelectPreset": "Select an editor preset or choose Custom",
+    "editorPath": "Executable path",
+    "editorPathDescription": "Path to the editor binary",
+    "editorPathPlaceholder": "e.g. code or /usr/bin/code",
+    "editorArgs": "Arguments",
+    "editorArgsDescription": "Use $FILE as placeholder for the file path",
+    "editorNone": "None",
+    "editorPresetCustom": "Custom...",
     "advanced": "Advanced",
     "aiMcp": "AI / MCP",
     "saving": "Saving...",
@@ -1067,7 +1081,8 @@
     "openFile": "Open file",
     "showInFolder": "Show in folder",
     "copyPath": "Copy path",
-    "copyFileName": "Copy file name"
+    "copyFileName": "Copy file name",
+    "openInEditor": "Open in {{editorName}}"
   },
   "welcome": {
     "openRepository": "Open repository",

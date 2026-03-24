@@ -49,7 +49,9 @@
     "userManual": "Manuel utilisateur",
     "reportIssue": "Signaler un problème",
     "checkUpdates": "Vérifier les mises à jour...",
-    "aboutGitSmith": "À propos de GitSmith"
+    "aboutGitSmith": "À propos de GitSmith",
+    "openInEditor": "Ouvrir dans {{editorName}}",
+    "editorNotConfigured": "Aucun éditeur configuré"
   },
   "commandPalette": {
     "placeholder": "Tapez une commande...",
@@ -193,7 +195,8 @@
     "keyboardShortcuts": "Raccourcis clavier",
     "commitShortcut": "Commit (Ctrl+K)",
     "keyboardShortcutsShortcut": "Raccourcis clavier (?)",
-    "switchToTheme": "Basculer vers le thème {{theme}}"
+    "switchToTheme": "Basculer vers le thème {{theme}}",
+    "openInEditor": "Ouvrir dans {{editorName}}"
   },
   "sidebar": {
     "branches": "Branches",
@@ -863,6 +866,17 @@
     "commitTab": "Commit",
     "diffAndGraph": "Diff & Graphe",
     "mergeTool": "Outil de merge",
+    "editorTab": "Éditeur",
+    "editorDescription": "Configurer un éditeur de code externe pour ouvrir les dépôts et les fichiers",
+    "editorPreset": "Préréglage de l'éditeur",
+    "editorSelectPreset": "Sélectionner un préréglage ou choisir Personnalisé",
+    "editorPath": "Chemin de l'exécutable",
+    "editorPathDescription": "Chemin vers le binaire de l'éditeur",
+    "editorPathPlaceholder": "ex. code ou /usr/bin/code",
+    "editorArgs": "Arguments",
+    "editorArgsDescription": "Utilisez $FILE comme espace réservé pour le chemin du fichier",
+    "editorNone": "Aucun",
+    "editorPresetCustom": "Personnalisé...",
     "advanced": "Avancé",
     "aiMcp": "IA / MCP",
     "saving": "Enregistrement...",
@@ -1067,7 +1081,8 @@
     "openFile": "Ouvrir le fichier",
     "showInFolder": "Afficher dans le dossier",
     "copyPath": "Copier le chemin",
-    "copyFileName": "Copier le nom du fichier"
+    "copyFileName": "Copier le nom du fichier",
+    "openInEditor": "Ouvrir dans {{editorName}}"
   },
   "welcome": {
     "openRepository": "Ouvrir un dépôt",

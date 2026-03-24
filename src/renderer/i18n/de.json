@@ -49,7 +49,9 @@
     "userManual": "Benutzerhandbuch",
     "reportIssue": "Fehler melden",
     "checkUpdates": "Nach Updates suchen...",
-    "aboutGitSmith": "Über GitSmith"
+    "aboutGitSmith": "Über GitSmith",
+    "openInEditor": "In {{editorName}} öffnen",
+    "editorNotConfigured": "Kein Editor konfiguriert"
   },
   "commandPalette": {
     "placeholder": "Befehl eingeben...",
@@ -193,7 +195,8 @@
     "keyboardShortcuts": "Tastenkürzel",
     "commitShortcut": "Commit (Strg+K)",
     "keyboardShortcutsShortcut": "Tastenkürzel (?)",
-    "switchToTheme": "Zum {{theme}}-Design wechseln"
+    "switchToTheme": "Zum {{theme}}-Design wechseln",
+    "openInEditor": "In {{editorName}} öffnen"
   },
   "sidebar": {
     "branches": "Branches",
@@ -863,6 +866,17 @@
     "commitTab": "Commit",
     "diffAndGraph": "Diff & Graph",
     "mergeTool": "Merge-Tool",
+    "editorTab": "Editor",
+    "editorDescription": "Einen externen Code-Editor zum Öffnen von Repositories und Dateien konfigurieren",
+    "editorPreset": "Editor-Voreinstellung",
+    "editorSelectPreset": "Voreinstellung auswählen oder Benutzerdefiniert wählen",
+    "editorPath": "Pfad zur ausführbaren Datei",
+    "editorPathDescription": "Pfad zur Editor-Binärdatei",
+    "editorPathPlaceholder": "z.B. code oder /usr/bin/code",
+    "editorArgs": "Argumente",
+    "editorArgsDescription": "Verwenden Sie $FILE als Platzhalter für den Dateipfad",
+    "editorNone": "Keiner",
+    "editorPresetCustom": "Benutzerdefiniert...",
     "advanced": "Erweitert",
     "aiMcp": "KI / MCP",
     "saving": "Wird gespeichert...",
@@ -1067,7 +1081,8 @@
     "openFile": "Datei öffnen",
     "showInFolder": "Im Ordner anzeigen",
     "copyPath": "Pfad kopieren",
-    "copyFileName": "Dateiname kopieren"
+    "copyFileName": "Dateiname kopieren",
+    "openInEditor": "In {{editorName}} öffnen"
   },
   "welcome": {
     "openRepository": "Repository öffnen",

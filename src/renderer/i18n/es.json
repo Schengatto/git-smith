@@ -49,7 +49,9 @@
     "userManual": "Manual de usuario",
     "reportIssue": "Reportar un problema",
     "checkUpdates": "Buscar actualizaciones...",
-    "aboutGitSmith": "Acerca de GitSmith"
+    "aboutGitSmith": "Acerca de GitSmith",
+    "openInEditor": "Abrir en {{editorName}}",
+    "editorNotConfigured": "Ningún editor configurado"
   },
   "commandPalette": {
     "placeholder": "Escribe un comando...",
@@ -193,7 +195,8 @@
     "keyboardShortcuts": "Atajos de teclado",
     "commitShortcut": "Commit (Ctrl+K)",
     "keyboardShortcutsShortcut": "Atajos de teclado (?)",
-    "switchToTheme": "Cambiar al tema {{theme}}"
+    "switchToTheme": "Cambiar al tema {{theme}}",
+    "openInEditor": "Abrir en {{editorName}}"
   },
   "sidebar": {
     "branches": "Branches",
@@ -863,6 +866,17 @@
     "commitTab": "Commit",
     "diffAndGraph": "Diff y grafo",
     "mergeTool": "Herramienta de merge",
+    "editorTab": "Editor",
+    "editorDescription": "Configurar un editor de código externo para abrir repositorios y archivos",
+    "editorPreset": "Preset del editor",
+    "editorSelectPreset": "Seleccionar un preset o elegir Personalizado",
+    "editorPath": "Ruta del ejecutable",
+    "editorPathDescription": "Ruta al binario del editor",
+    "editorPathPlaceholder": "ej. code o /usr/bin/code",
+    "editorArgs": "Argumentos",
+    "editorArgsDescription": "Use $FILE como marcador para la ruta del archivo",
+    "editorNone": "Ninguno",
+    "editorPresetCustom": "Personalizado...",
     "advanced": "Avanzado",
     "aiMcp": "IA / MCP",
     "saving": "Guardando...",
@@ -1067,7 +1081,8 @@
     "openFile": "Abrir archivo",
     "showInFolder": "Mostrar en la carpeta",
     "copyPath": "Copiar ruta",
-    "copyFileName": "Copiar nombre de archivo"
+    "copyFileName": "Copiar nombre de archivo",
+    "openInEditor": "Abrir en {{editorName}}"
   },
   "welcome": {
     "openRepository": "Abrir repositorio",
