@@ -286,6 +286,13 @@ const IconClose = () => (
   </svg>
 );
 
+const IconEditorCode: React.FC = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </svg>
+);
+
 function repoName(path: string): string {
   const segments = path.replace(/[\\/]+$/, "").split(/[\\/]/);
   return segments[segments.length - 1] || path;
@@ -883,6 +890,22 @@ export const Toolbar: React.FC = () => {
   const [lfsOpen, setLfsOpen] = useState(false);
   const [prOpen, setPrOpen] = useState(false);
 
+  const [editorConfig, setEditorConfig] = useState<{ name: string; path: string } | null>(null);
+  useEffect(() => {
+    window.electronAPI.settings.get().then((s) => {
+      if (s.editorName && s.editorPath) {
+        setEditorConfig({ name: s.editorName, path: s.editorPath });
+      }
+    });
+  }, []);
+
+  const editorLabelMap: Record<string, string> = {
+    vscode: "VS Code",
+    "vscode-insiders": "VS Code Insiders",
+    cursor: "Cursor",
+    custom: "Editor",
+  };
+
   const changedCount = status
     ? (status.staged.length || 0) + (status.unstaged.length || 0) + (status.untracked.length || 0)
     : 0;
@@ -1359,6 +1382,23 @@ export const Toolbar: React.FC = () => {
           className="mx-1"
           style={{ width: 1, height: 18, background: "var(--border)", flexShrink: 0 }}
         />
+
+        {editorConfig && repo && (
+          <button
+            onClick={() => {
+              window.electronAPI.editor.launch(repo.path).catch((err: Error) => {
+                console.error("Editor launch failed:", err.message);
+              });
+            }}
+            className="toolbar-btn"
+            title={t("toolbar.openInEditor", {
+              editorName: editorLabelMap[editorConfig.name] || editorConfig.name,
+            })}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            <IconEditorCode />
+          </button>
+        )}
 
         <AccountSelector />
       </ScrollableActions>
