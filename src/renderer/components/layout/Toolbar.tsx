@@ -892,7 +892,7 @@ export const Toolbar: React.FC = () => {
 
   const [editorConfig, setEditorConfig] = useState<{ name: string; path: string } | null>(null);
   useEffect(() => {
-    window.electronAPI.settings.get().then((s) => {
+    window.electronAPI?.settings?.get()?.then((s) => {
       if (s.editorName && s.editorPath) {
         setEditorConfig({ name: s.editorName, path: s.editorPath });
       }

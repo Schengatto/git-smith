@@ -280,7 +280,7 @@ export const MenuBar: React.FC<{
 
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   useEffect(() => {
-    window.electronAPI.settings.get().then(setAppSettings);
+    window.electronAPI?.settings?.get()?.then(setAppSettings);
   }, []);
 
   const editorLabelMap: Record<string, string> = {

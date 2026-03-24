@@ -55,7 +55,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
   const [editorLabel, setEditorLabel] = useState<string>("");
 
   useEffect(() => {
-    window.electronAPI.settings.get().then((s) => {
+    window.electronAPI?.settings?.get()?.then((s) => {
       if (s.editorName && s.editorPath) {
         const presets: Record<string, string> = {
           vscode: "VS Code",
