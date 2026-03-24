@@ -78,4 +78,39 @@ describe("LFS IPC handlers", () => {
     await handler({}, "*.zip");
     expect(mockLfsUntrack).toHaveBeenCalledWith("*.zip");
   });
+
+  it("LFS.LIST_TRACKED delegates to gitService.lfsListTracked", async () => {
+    const mockResult = ["*.psd", "*.zip"];
+    mockLfsListTracked.mockResolvedValueOnce(mockResult);
+    registerLfsHandlers();
+
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.LFS.LIST_TRACKED);
+    const handler = call![1];
+
+    const result = await handler({});
+    expect(result).toEqual(mockResult);
+  });
+
+  it("LFS.INFO delegates to gitService.lfsInfo", async () => {
+    const mockResult = { version: "3.0.0", smudge: "git-lfs smudge" };
+    mockLfsInfo.mockResolvedValueOnce(mockResult);
+    registerLfsHandlers();
+
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.LFS.INFO);
+    const handler = call![1];
+
+    const result = await handler({});
+    expect(result).toEqual(mockResult);
+  });
+
+  it("LFS.INSTALL delegates to gitService.lfsInstall", async () => {
+    mockLfsInstall.mockResolvedValueOnce("Git LFS initialized.");
+    registerLfsHandlers();
+
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.LFS.INSTALL);
+    const handler = call![1];
+
+    const result = await handler({});
+    expect(result).toBe("Git LFS initialized.");
+  });
 });

@@ -1,6 +1,6 @@
 # GitSmith - User Manual
 
-> **Version:** 0.6.1
+> **Version:** 0.6.2
 > **License:** MIT
 > **Platforms:** Windows, macOS, Linux (DEB/RPM)
 
@@ -1312,6 +1312,10 @@ If Git is not in the system PATH, configure the path manually in **Settings > Ad
 
 ### Auto-fetch Not Working
 Verify that **Settings > General > Auto-fetch** is enabled and the interval is configured correctly.
+
+### "Dubious Ownership" Error
+
+Git may refuse to open a repository owned by a different user. GitSmith automatically handles this by passing `-c safe.directory=<path>` to every git command, so no manual configuration is needed.
 
 ### Conflicts Not Detected
 Make sure Git is updated (2.30+). Press `F5` to refresh the repository status.
