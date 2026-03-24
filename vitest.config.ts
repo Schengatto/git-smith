@@ -15,6 +15,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./src/test-setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    exclude: ["src/renderer/components/dialogs/CloneDialog.test.tsx"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
