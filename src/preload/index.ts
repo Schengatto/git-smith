@@ -356,6 +356,12 @@ const electronAPI = {
     showInFolder: (filePath: string): Promise<void> =>
       ipcRenderer.invoke(IPC.SHELL.SHOW_IN_FOLDER, filePath),
   },
+  editor: {
+    launch: (repoPath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.EDITOR.LAUNCH, repoPath),
+    launchFile: (filePath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.EDITOR.LAUNCH_FILE, filePath),
+  },
   app: {
     checkForUpdates: (): Promise<void> => ipcRenderer.invoke(IPC.APP.CHECK_FOR_UPDATES),
     getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.APP.GET_VERSION),
