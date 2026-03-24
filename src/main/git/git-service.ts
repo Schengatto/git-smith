@@ -224,7 +224,7 @@ export class GitService {
       binary: gitBinary,
       maxConcurrentProcesses: 6,
       unsafe: { allowUnsafeCustomBinary: true },
-      config: [`safe.directory=${path.replace(/\\/g, "/")}`],
+      config: ["safe.directory=*"],
     };
     this.git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
     const isRepo = await this.git.checkIsRepo();
@@ -245,7 +245,7 @@ export class GitService {
       binary: gitBinary,
       maxConcurrentProcesses: 6,
       unsafe: { allowUnsafeCustomBinary: true },
-      config: [`safe.directory=${dirPath.replace(/\\/g, "/")}`],
+      config: ["safe.directory=*"],
     };
     const git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
     await git.init();
