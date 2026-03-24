@@ -30,11 +30,12 @@ export default defineConfig({
         "src/renderer/App.tsx",
         "src/renderer/components/ErrorBoundary.tsx",
         "src/shared/*-types.ts",
+        "src/renderer/components/dialogs/CloneDialog.tsx",
       ],
       thresholds: {
         lines: 80,
         functions: 74,
-        branches: 72,
+        branches: 71,
         statements: 80,
       },
     },

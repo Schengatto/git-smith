@@ -68,6 +68,42 @@ describe("bisect IPC handlers", () => {
     expect(result).toBe("good result");
   });
 
+  it("BISECT.BAD delegates to gitService.bisectBad", async () => {
+    mockBisectBad.mockResolvedValueOnce("bad result");
+    registerBisectHandlers();
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.BISECT.BAD);
+    const result = await call![1]({}, "ref123");
+    expect(mockBisectBad).toHaveBeenCalledWith("ref123");
+    expect(result).toBe("bad result");
+  });
+
+  it("BISECT.SKIP delegates to gitService.bisectSkip", async () => {
+    mockBisectSkip.mockResolvedValueOnce("skip result");
+    registerBisectHandlers();
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.BISECT.SKIP);
+    const result = await call![1]({}, "ref123");
+    expect(mockBisectSkip).toHaveBeenCalledWith("ref123");
+    expect(result).toBe("skip result");
+  });
+
+  it("BISECT.RESET delegates to gitService.bisectReset", async () => {
+    mockBisectReset.mockResolvedValueOnce("reset");
+    registerBisectHandlers();
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.BISECT.RESET);
+    const result = await call![1]({});
+    expect(mockBisectReset).toHaveBeenCalled();
+    expect(result).toBe("reset");
+  });
+
+  it("BISECT.LOG delegates to gitService.bisectLog", async () => {
+    mockBisectLog.mockResolvedValueOnce("log output");
+    registerBisectHandlers();
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === IPC.BISECT.LOG);
+    const result = await call![1]({});
+    expect(mockBisectLog).toHaveBeenCalled();
+    expect(result).toBe("log output");
+  });
+
   it("BISECT.STATUS delegates to gitService.bisectStatus", async () => {
     const status = { active: true, good: ["a"], bad: ["b"], current: "c" };
     mockBisectStatus.mockResolvedValueOnce(status);

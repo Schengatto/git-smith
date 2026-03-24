@@ -34,6 +34,15 @@ describe("git-grep IPC handler", () => {
     expect(mockGrep).toHaveBeenCalledWith("searchTerm", options);
   });
 
+  it("passes empty object when options is undefined", async () => {
+    mockGrep.mockResolvedValue({ matches: [], totalCount: 0 });
+    const handleMock = ipcMain.handle as unknown as ReturnType<typeof vi.fn>;
+    const call = handleMock.mock.calls.find((c: unknown[]) => c[0] === "git:grep:search");
+    const handler = call![1];
+    await handler(null, "searchTerm");
+    expect(mockGrep).toHaveBeenCalledWith("searchTerm", {});
+  });
+
   it("returns grep results", async () => {
     const result = { matches: [{ file: "a.ts", line: 1, text: "hello" }], totalCount: 1 };
     mockGrep.mockResolvedValue(result);

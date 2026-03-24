@@ -136,6 +136,18 @@ describe("git-remote IPC handlers", () => {
     expect(showNotification).toHaveBeenCalled();
   });
 
+  it("REMOTE.PUSH uses fallback labels when remote/branch omitted", async () => {
+    const { showNotification } = await import("../notifications/notification-service");
+    mockPush.mockResolvedValueOnce(undefined);
+    await getHandler(IPC.REMOTE.PUSH)({});
+    expect(mockPush).toHaveBeenCalledWith(undefined, undefined, undefined, undefined);
+    expect(showNotification).toHaveBeenCalledWith(
+      "Push Successful",
+      "Pushed to origin/current branch",
+      "push"
+    );
+  });
+
   it("REMOTE.CLONE calls clone with url, directory and options", async () => {
     mockClone.mockResolvedValueOnce(undefined);
     const opts = { branch: "develop", bare: false };
