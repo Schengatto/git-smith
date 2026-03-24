@@ -57,30 +57,38 @@ jobs:
       - name: Build distributables
         run: npm run make
 
-      - name: Upload Linux installers (.deb, .rpm)
-        if: runner.os == 'Linux'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            out/make/deb/x64/*.deb
-            out/make/rpm/x64/*.rpm
-          draft: true
-          generate_release_notes: true
+      - name: Rename artifacts with OS and version
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p out/release
 
-      - name: Upload Windows installer (.msi)
-        if: runner.os == 'Windows'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            out/make/wix/x64/*.msi
-          draft: true
-          generate_release_notes: true
+          # Windows
+          for f in out/make/wix/x64/*.msi; do
+            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Windows-x64-Setup.msi"
+          done
+          for f in out/make/zip/win32/x64/*.zip; do
+            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Windows-x64-Portable.zip"
+          done
 
-      - name: Upload macOS archive (.zip)
-        if: runner.os == 'macOS'
+          # macOS
+          for f in out/make/zip/darwin/**/*.zip; do
+            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-macOS-arm64.zip"
+          done
+
+          # Linux
+          for f in out/make/deb/x64/*.deb; do
+            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Linux-x64.deb"
+          done
+          for f in out/make/rpm/x64/*.rpm; do
+            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Linux-x64.rpm"
+          done
+
+          ls -la out/release/ || true
+
+      - name: Upload release artifacts
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            out/make/zip/darwin/**/*.zip
+          files: out/release/*
           draft: true
           generate_release_notes: true
