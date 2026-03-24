@@ -92,9 +92,8 @@ describe("editor IPC handlers", () => {
       const handler = getHandler(IPC.EDITOR.LAUNCH_FILE);
       await handler({}, "src/index.ts");
       expect(mockSpawn).toHaveBeenCalled();
-      const spawnArgs = mockSpawn.mock.calls[0];
+      const spawnArgs = mockSpawn.mock.calls[0]!;
       expect(spawnArgs[0]).toBe("code");
-      // The resolved path should contain src/index.ts
       expect(spawnArgs[1][0]).toContain("index.ts");
     });
 
