@@ -39,6 +39,7 @@ const config: ForgeConfig = {
       shortcutName: "GitSmith",
       shortcutFolderName: "GitSmith",
       programFilesFolderName: "GitSmith",
+      upgradeCode: "b8e5b4a0-7c1f-4e3a-9d2f-1a5c8b6e4f30",
       ui: {
         chooseDirectory: true,
       },
