@@ -223,6 +223,7 @@ export class GitService {
       baseDir: path,
       binary: gitBinary,
       maxConcurrentProcesses: 6,
+      unsafe: { allowUnsafeCustomBinary: true },
     };
     this.git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
     const isRepo = await this.git.checkIsRepo();
@@ -242,6 +243,7 @@ export class GitService {
       baseDir: dirPath,
       binary: gitBinary,
       maxConcurrentProcesses: 6,
+      unsafe: { allowUnsafeCustomBinary: true },
     };
     const git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
     await git.init();
@@ -1590,7 +1592,10 @@ export class GitService {
       sshKeyPath?: string;
     }
   ): Promise<void> {
-    let git = simpleGit().env(GitService.NO_PROMPT_ENV);
+    const gitBinary = getSettings().gitBinaryPath || "git";
+    let git = simpleGit({ binary: gitBinary, unsafe: { allowUnsafeCustomBinary: true } }).env(
+      GitService.NO_PROMPT_ENV
+    );
     if (options?.sshKeyPath) {
       git = git.env(
         "GIT_SSH_COMMAND",
@@ -1614,7 +1619,10 @@ export class GitService {
   }
 
   async listRemoteBranches(url: string, sshKeyPath?: string): Promise<string[]> {
-    let git = simpleGit().env(GitService.NO_PROMPT_ENV);
+    const gitBinary = getSettings().gitBinaryPath || "git";
+    let git = simpleGit({ binary: gitBinary, unsafe: { allowUnsafeCustomBinary: true } }).env(
+      GitService.NO_PROMPT_ENV
+    );
     if (sshKeyPath) {
       git = git.env(
         "GIT_SSH_COMMAND",

@@ -1,6 +1,7 @@
 import { app, ipcMain, shell } from "electron";
 import { IPC } from "../../shared/ipc-channels";
 import { gitService } from "../git/git-service";
+import { getErrorLogPath } from "../logger";
 import path from "path";
 
 export function registerShellHandlers() {
@@ -9,6 +10,10 @@ export function registerShellHandlers() {
       ? path.join(process.resourcesPath, "USER_MANUAL.pdf")
       : path.join(app.getAppPath(), "USER_MANUAL.pdf");
     await shell.openPath(basePath);
+  });
+
+  ipcMain.handle(IPC.APP.OPEN_ERROR_LOG, async () => {
+    await shell.openPath(getErrorLogPath());
   });
 
   ipcMain.handle(IPC.SHELL.OPEN_FILE, async (_event, filePath: string) => {

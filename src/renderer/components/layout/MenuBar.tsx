@@ -506,6 +506,11 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
+          label: t("menu.openErrorLog"),
+          onClick: () => window.electronAPI.app.openErrorLog(),
+        },
+        { divider: true },
+        {
           label: t("menu.aboutGitSmith"),
           onClick: () => onOpenAbout(),
         },

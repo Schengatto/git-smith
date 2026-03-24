@@ -47,6 +47,7 @@
     "commandPalette": "Befehlspalette",
     "help": "Hilfe",
     "userManual": "Benutzerhandbuch",
+    "openErrorLog": "Fehlerprotokoll öffnen",
     "reportIssue": "Fehler melden",
     "checkUpdates": "Nach Updates suchen...",
     "aboutGitSmith": "Über GitSmith",

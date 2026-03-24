@@ -201,6 +201,7 @@ export const IPC = {
     GET_VERSION: "app:get-version",
     UPDATE_STATUS: "app:update-status",
     OPEN_USER_MANUAL: "app:open-user-manual",
+    OPEN_ERROR_LOG: "app:open-error-log",
   },
   MENU: {
     OPEN_REPO: "menu:open-repo",

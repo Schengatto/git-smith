@@ -47,6 +47,7 @@
     "commandPalette": "Command Palette",
     "help": "Help",
     "userManual": "User manual",
+    "openErrorLog": "Open error log",
     "reportIssue": "Report an issue",
     "checkUpdates": "Check for updates...",
     "aboutGitSmith": "About GitSmith",

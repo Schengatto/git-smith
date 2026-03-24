@@ -1,8 +1,8 @@
 # GitSmith - User Manual
 
-> **Version:** 0.4.0
+> **Version:** 0.6.1
 > **License:** MIT
-> **Platforms:** Windows, Linux (DEB/RPM)
+> **Platforms:** Windows, macOS, Linux (DEB/RPM)
 
 GitSmith is a cross-platform Git GUI desktop app inspired by [Git Extensions](https://gitextensions.github.io/), built with Electron, React, and TypeScript. It provides a modern interface with Catppuccin theming for managing Git repositories visually and comprehensively.
 
@@ -111,14 +111,51 @@ GitSmith is a cross-platform Git GUI desktop app inspired by [Git Extensions](ht
 
 - **Node.js** 20 or higher (only for building from source)
 - **Git** 2.30 or higher (must be in the system PATH)
-- **Operating System:** Windows 10+, Linux (Debian/RPM-based distributions)
+- **Operating System:** Windows 10+, macOS (Apple Silicon), Linux (Debian/RPM-based distributions)
 
 ### Install from Release
 
 Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/git-smith/releases) page:
 
-- **Windows:** Squirrel installer (`.exe`) or ZIP archive
+- **Windows:** MSI installer (`.msi`) or Portable ZIP archive
+- **macOS:** ZIP archive (`.zip`) for Apple Silicon
 - **Linux:** `.deb` package (Debian/Ubuntu) or `.rpm` package (Fedora/RHEL)
+
+### Security Warnings on First Launch
+
+GitSmith is currently distributed **without code signing certificates**. This means your operating system may show security warnings when you first run the application. These warnings are expected and can be safely bypassed.
+
+#### Windows (SmartScreen)
+
+When launching the installer or the app for the first time, Windows SmartScreen may show a warning saying **"Windows protected your PC"**:
+
+1. Click **"More info"**
+2. Click **"Run anyway"**
+
+This warning will not appear again after the first launch. If you downloaded the Portable ZIP, you may also need to right-click the `.exe` file, select **Properties**, and check **"Unblock"** before running it.
+
+#### macOS (Gatekeeper)
+
+macOS Gatekeeper will block the app because it is from an unidentified developer:
+
+**Method 1 — Right-click to open (recommended):**
+
+1. Locate `GitSmith.app` in Finder
+2. **Right-click** (or Control-click) the app and select **"Open"**
+3. In the dialog that appears, click **"Open"** again
+
+**Method 2 — Remove quarantine attribute:**
+
+```bash
+xattr -cr /Applications/GitSmith.app
+```
+
+**Method 3 — Allow in System Preferences:**
+
+1. Try to open the app normally (it will be blocked)
+2. Go to **System Settings > Privacy & Security**
+3. Scroll down — you will see a message about GitSmith being blocked
+4. Click **"Open Anyway"**
 
 ### Build from Source
 

@@ -47,6 +47,21 @@ Cross-platform Git GUI inspired by [GitExtensions](https://gitextensions.github.
 - Settings panel (git config, fetch, commit, diff, graph, advanced)
 - Keyboard shortcuts: `Ctrl+O` open, `Ctrl+K` commit, `Ctrl+F` search
 
+## Installation
+
+Download the latest release from the [GitHub Releases](https://github.com/Schengatto/git-smith/releases) page:
+
+- **Windows:** MSI installer or Portable ZIP
+- **macOS:** ZIP archive (Apple Silicon)
+- **Linux:** `.deb` (Debian/Ubuntu) or `.rpm` (Fedora/RHEL)
+
+> **Note:** GitSmith is not yet code-signed. Your OS may show a security warning on first launch:
+>
+> - **Windows:** SmartScreen will warn you — click "More info" → "Run anyway"
+> - **macOS:** Right-click the app → "Open" → "Open" again, or run `xattr -cr /Applications/GitSmith.app`
+>
+> See the [User Manual](USER_MANUAL.md#security-warnings-on-first-launch) for detailed instructions.
+
 ## Getting Started
 
 ### Prerequisites

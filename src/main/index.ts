@@ -22,6 +22,9 @@ import { initAutoUpdater } from "./auto-updater";
 import { IPC } from "../shared/ipc-channels";
 import { startMcpServer } from "./mcp/mcp-server";
 import { showNotification } from "./notifications/notification-service";
+import { initLogger } from "./logger";
+
+initLogger();
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
