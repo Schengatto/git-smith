@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
+import type { AppSettings } from "../../../shared/settings-types";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -277,6 +278,21 @@ export const MenuBar: React.FC<{
 
   const hasRepo = !!repo;
 
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  useEffect(() => {
+    window.electronAPI.settings.get().then(setAppSettings);
+  }, []);
+
+  const editorLabelMap: Record<string, string> = {
+    vscode: "VS Code",
+    "vscode-insiders": "VS Code Insiders",
+    cursor: "Cursor",
+    custom: "Editor",
+  };
+  const editorLabel = appSettings?.editorName
+    ? editorLabelMap[appSettings.editorName] || appSettings.editorName
+    : "";
+
   // Build "Favorite repositories" submenu grouped by category
   const categoryNames = [...new Set(Object.values(repoCategories))].sort();
   const favoriteItems: MenuItem[] = categoryNames.flatMap((cat, i) => {
@@ -371,6 +387,19 @@ export const MenuBar: React.FC<{
           onClick: () => {
             if (hasRepo) {
               window.electronAPI.repo.openExternal(`git-bash --cd="${repo!.path}"`);
+            }
+          },
+        },
+        {
+          label: editorLabel
+            ? t("menu.openInEditor", { editorName: editorLabel })
+            : t("menu.editorNotConfigured"),
+          disabled: !hasRepo || !appSettings?.editorPath,
+          onClick: () => {
+            if (repo?.path && appSettings?.editorPath) {
+              window.electronAPI.editor.launch(repo.path).catch((err: Error) => {
+                console.error("Editor launch failed:", err.message);
+              });
             }
           },
         },
