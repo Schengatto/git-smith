@@ -1,6 +1,6 @@
 # GitSmith - User Manual
 
-> **Version:** 0.6.2
+> **Version:** 0.6.3
 > **License:** MIT
 > **Platforms:** Windows, macOS, Linux (DEB/RPM)
 
