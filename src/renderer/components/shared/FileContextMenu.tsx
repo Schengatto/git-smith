@@ -52,6 +52,22 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     };
   }, [onClose]);
 
+  const [editorLabel, setEditorLabel] = useState<string>("");
+
+  useEffect(() => {
+    window.electronAPI.settings.get().then((s) => {
+      if (s.editorName && s.editorPath) {
+        const presets: Record<string, string> = {
+          vscode: "VS Code",
+          "vscode-insiders": "VS Code Insiders",
+          cursor: "Cursor",
+          custom: "Editor",
+        };
+        setEditorLabel(presets[s.editorName] || s.editorName);
+      }
+    });
+  }, []);
+
   const fileName = filePath.includes("/")
     ? filePath.slice(filePath.lastIndexOf("/") + 1)
     : filePath;
@@ -153,6 +169,19 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
       >
         <IconFolder size={13} /> {t("fileContextMenu.showInFolder")}
       </button>
+      {editorLabel && (
+        <button
+          style={menuItemStyle}
+          onClick={() => {
+            window.electronAPI.editor.launchFile(filePath).catch(() => {});
+            onClose();
+          }}
+          onMouseEnter={handleItemHover}
+          onMouseLeave={handleItemLeave}
+        >
+          <IconCode size={13} /> {t("fileContextMenu.openInEditor", { editorName: editorLabel })}
+        </button>
+      )}
 
       {separator}
 
@@ -252,6 +281,23 @@ const IconFolder: React.FC<{ size: number }> = ({ size }) => (
     style={{ flexShrink: 0 }}
   >
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const IconCode: React.FC<{ size: number }> = ({ size }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ flexShrink: 0 }}
+  >
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
   </svg>
 );
 
