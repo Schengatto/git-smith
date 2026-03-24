@@ -57,15 +57,40 @@ jobs:
       - name: Build distributables
         run: npm run make
 
-      - name: Rename artifacts with OS and version
+      - name: Rename artifacts and generate update manifests
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
+          RELEASE_DATE=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
           mkdir -p out/release
+
+          generate_yml() {
+            local FILE="$1" YML_NAME="$2"
+            local SIZE SHA
+            SIZE=$(stat -c%s "$FILE" 2>/dev/null || stat -f%z "$FILE")
+            SHA=$(sha512sum "$FILE" 2>/dev/null | awk '{print $1}' || shasum -a 512 "$FILE" | awk '{print $1}')
+            SHA_B64=$(echo -n "$SHA" | xxd -r -p | base64 -w0 2>/dev/null || echo -n "$SHA" | xxd -r -p | base64)
+            local NAME
+            NAME=$(basename "$FILE")
+            cat > "out/release/${YML_NAME}" <<EOYML
+          version: ${VERSION}
+          files:
+            - url: ${NAME}
+              sha512: ${SHA_B64}
+              size: ${SIZE}
+          path: ${NAME}
+          sha512: ${SHA_B64}
+          releaseDate: '${RELEASE_DATE}'
+          EOYML
+          }
 
           # Windows
           for f in out/make/wix/x64/*.msi; do
-            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Windows-x64-Setup.msi"
+            if [ -f "$f" ]; then
+              DEST="out/release/GitSmith-${VERSION}-Windows-x64-Setup.msi"
+              cp "$f" "$DEST"
+              generate_yml "$DEST" "latest.yml"
+            fi
           done
           for f in out/make/zip/win32/x64/*.zip; do
             [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Windows-x64-Portable.zip"
@@ -73,12 +98,20 @@ jobs:
 
           # macOS
           for f in out/make/zip/darwin/**/*.zip; do
-            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-macOS-arm64.zip"
+            if [ -f "$f" ]; then
+              DEST="out/release/GitSmith-${VERSION}-macOS-arm64.zip"
+              cp "$f" "$DEST"
+              generate_yml "$DEST" "latest-mac.yml"
+            fi
           done
 
           # Linux
           for f in out/make/deb/x64/*.deb; do
-            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Linux-x64.deb"
+            if [ -f "$f" ]; then
+              DEST="out/release/GitSmith-${VERSION}-Linux-x64.deb"
+              cp "$f" "$DEST"
+              generate_yml "$DEST" "latest-linux.yml"
+            fi
           done
           for f in out/make/rpm/x64/*.rpm; do
             [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Linux-x64.rpm"
