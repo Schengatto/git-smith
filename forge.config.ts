@@ -43,7 +43,7 @@ const config: ForgeConfig = {
         chooseDirectory: true,
       },
     }),
-    new MakerZIP({}, ["darwin"]),
+    new MakerZIP({}, ["darwin", "win32"]),
     new MakerDeb({
       options: {
         name: "gitsmith",
