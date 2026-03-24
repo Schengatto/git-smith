@@ -179,7 +179,10 @@ export const IPC = {
   SHELL: {
     OPEN_FILE: "shell:open-file",
     SHOW_IN_FOLDER: "shell:show-in-folder",
-    OPEN_FILE_IN_EDITOR: "shell:open-file-in-editor",
+  },
+  EDITOR: {
+    LAUNCH: "editor:launch",
+    LAUNCH_FILE: "editor:launch-file",
   },
   MCP: {
     // Server management
