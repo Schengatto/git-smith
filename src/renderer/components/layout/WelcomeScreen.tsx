@@ -175,21 +175,6 @@ const CodeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   </svg>
 );
 
-const HeartIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
 const BugIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   <svg
     width={size}
@@ -796,14 +781,9 @@ export const WelcomeScreen: React.FC = () => {
                 url: "https://github.com/Schengatto/git-smith",
               },
               {
-                icon: <HeartIcon size={13} />,
-                label: t("welcome.donate"),
-                url: "https://www.paypal.com/donate?business=schintu.enrico@gmail.com&currency_code=EUR",
-              },
-              {
                 icon: <BugIcon size={13} />,
                 label: t("welcome.issues"),
-                url: "https://github.com/Schengatto/git-smith/issues",
+                url: `https://github.com/Schengatto/git-smith/issues/new?labels=bug&title=${encodeURIComponent("[Bug]: ")}&body=${encodeURIComponent("## Description\nA clear description of the bug.\n\n## Steps to reproduce\n1. \n2. \n3. \n\n## Expected behavior\nWhat you expected to happen.\n\n## Actual behavior\nWhat actually happened.\n\n## Screenshots\nIf applicable, add screenshots.\n\n## Environment\n- OS: \n- App version: \n")}`,
               },
             ].map((item) => (
               <div

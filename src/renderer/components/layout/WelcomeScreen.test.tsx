@@ -193,10 +193,9 @@ describe("WelcomeScreen", () => {
     expect(screen.getByText("GitSmith")).toBeInTheDocument();
   });
 
-  it("shows the Contribute section with Develop, Donate, Issues links", () => {
+  it("shows the Contribute section with Develop and Issues links", () => {
     render(<WelcomeScreen />);
     expect(screen.getByText("welcome.develop")).toBeInTheDocument();
-    expect(screen.getByText("welcome.donate")).toBeInTheDocument();
     expect(screen.getByText("welcome.issues")).toBeInTheDocument();
   });
 
@@ -212,7 +211,9 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     fireEvent.click(screen.getByText("welcome.issues"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-smith/issues"
+      expect.stringContaining(
+        "https://github.com/Schengatto/git-smith/issues/new?labels=bug&title="
+      )
     );
   });
 
@@ -347,14 +348,6 @@ describe("WelcomeScreen", () => {
     const clearBtn = input.parentElement?.querySelector("div[style*='cursor: pointer']");
     if (clearBtn) fireEvent.click(clearBtn);
     expect(input).toHaveValue("");
-  });
-
-  it("calls openExternal for Donate link", () => {
-    render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText("welcome.donate"));
-    expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      expect.stringContaining("paypal")
-    );
   });
 
   it("shows 'Git GUI' subtitle in the logo area", () => {

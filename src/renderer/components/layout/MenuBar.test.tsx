@@ -43,8 +43,13 @@ vi.mock("../../store/repo-store", () => ({
 const mockElectronAPI = {
   repo: { openExternal: vi.fn() },
   app: { openUserManual: vi.fn(), checkForUpdates: vi.fn() },
-  settings: { get: vi.fn().mockResolvedValue({ editorName: "", editorPath: "", editorArgs: "$FILE" }) },
-  editor: { launch: vi.fn().mockResolvedValue(undefined), launchFile: vi.fn().mockResolvedValue(undefined) },
+  settings: {
+    get: vi.fn().mockResolvedValue({ editorName: "", editorPath: "", editorArgs: "$FILE" }),
+  },
+  editor: {
+    launch: vi.fn().mockResolvedValue(undefined),
+    launchFile: vi.fn().mockResolvedValue(undefined),
+  },
 };
 
 const defaultProps = {
@@ -371,7 +376,9 @@ describe("MenuBar", () => {
     fireEvent.mouseDown(screen.getByText("menu.help"));
     fireEvent.click(screen.getByText("menu.reportIssue"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-smith/issues"
+      expect.stringContaining(
+        "https://github.com/Schengatto/git-smith/issues/new?labels=bug&title="
+      )
     );
   });
 
