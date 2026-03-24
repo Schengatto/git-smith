@@ -48,6 +48,10 @@ export interface AppSettings {
   mergeToolName: string; // preset name or "custom"
   mergeToolPath: string; // executable path
   mergeToolArgs: string; // argument pattern with $BASE $LOCAL $REMOTE $MERGED placeholders
+  // Editor Integration
+  editorName: string; // preset name or "custom"
+  editorPath: string; // executable name (preset) or absolute path (custom)
+  editorArgs: string; // argument pattern, $FILE placeholder
   // Advanced
   maxConcurrentGitProcesses: number;
   gitBinaryPath: string; // custom git binary path, empty = use system PATH
