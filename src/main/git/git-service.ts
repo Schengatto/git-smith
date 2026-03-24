@@ -58,6 +58,13 @@ function nextId(): string {
 }
 
 export class GitService {
+  /** Env vars that prevent git/ssh from prompting for credentials (avoids hanging on fresh installs). */
+  private static readonly NO_PROMPT_ENV: Record<string, string> = {
+    ...(process.env as Record<string, string>),
+    GIT_TERMINAL_PROMPT: "0",
+    GIT_SSH_COMMAND: "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
+  };
+
   private git: SimpleGit | null = null;
   private repoPath: string | null = null;
   private mainWindow: BrowserWindow | null = null;
@@ -217,7 +224,7 @@ export class GitService {
       binary: gitBinary,
       maxConcurrentProcesses: 6,
     };
-    this.git = simpleGit(options);
+    this.git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
     const isRepo = await this.git.checkIsRepo();
     if (!isRepo) {
       this.git = null;
@@ -236,7 +243,7 @@ export class GitService {
       binary: gitBinary,
       maxConcurrentProcesses: 6,
     };
-    const git = simpleGit(options);
+    const git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
     await git.init();
     this.git = git;
     this.setupOutputHandler();
@@ -1583,9 +1590,12 @@ export class GitService {
       sshKeyPath?: string;
     }
   ): Promise<void> {
-    let git = simpleGit();
+    let git = simpleGit().env(GitService.NO_PROMPT_ENV);
     if (options?.sshKeyPath) {
-      git = git.env("GIT_SSH_COMMAND", `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes`);
+      git = git.env(
+        "GIT_SSH_COMMAND",
+        `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes -o BatchMode=yes`
+      );
     }
     const args: string[] = [];
     if (options?.branch) {
@@ -1604,9 +1614,12 @@ export class GitService {
   }
 
   async listRemoteBranches(url: string, sshKeyPath?: string): Promise<string[]> {
-    let git = simpleGit();
+    let git = simpleGit().env(GitService.NO_PROMPT_ENV);
     if (sshKeyPath) {
-      git = git.env("GIT_SSH_COMMAND", `ssh -i "${sshKeyPath}" -o IdentitiesOnly=yes`);
+      git = git.env(
+        "GIT_SSH_COMMAND",
+        `ssh -i "${sshKeyPath}" -o IdentitiesOnly=yes -o BatchMode=yes`
+      );
     }
     const result = await this.run("git ls-remote --heads", [url], () =>
       git.listRemote(["--heads", url])

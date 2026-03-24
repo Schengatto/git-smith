@@ -5,10 +5,14 @@ const mockClone = vi.fn().mockResolvedValue(undefined);
 const mockListRemote = vi.fn().mockResolvedValue("");
 
 vi.mock("simple-git", () => {
-  const fn = () => ({
-    clone: mockClone,
-    listRemote: mockListRemote,
-  });
+  const fn = () => {
+    const instance: Record<string, unknown> = {
+      clone: mockClone,
+      listRemote: mockListRemote,
+      env: vi.fn().mockReturnThis(),
+    };
+    return instance;
+  };
   fn.default = fn;
   return { default: fn };
 });

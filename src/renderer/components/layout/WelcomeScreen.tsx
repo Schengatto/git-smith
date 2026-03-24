@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useRepoStore } from "../../store/repo-store";
 import { useUIStore } from "../../store/ui-store";
-import logoUrl from "../../../../assets/gitsmith.png";
+import logoUrl from "../../../../assets/icon.png";
 
 /* ------------------------------------------------------------------ */
 /*  Icons                                                              */

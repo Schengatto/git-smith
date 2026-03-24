@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { RepoInfo, GitStatus } from "../../shared/git-types";
 import { useGraphStore } from "./graph-store";
+import { useUIStore } from "./ui-store";
 
 export interface RepoCategories {
   [repoPath: string]: string;
@@ -55,10 +56,9 @@ export const useRepoStore = create<RepoState>((set, get) => ({
           /* background fetch — failure is non-critical */
         });
     } catch (err: unknown) {
-      set({
-        loading: false,
-        error: err instanceof Error ? err.message : String(err),
-      });
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ loading: false, error: msg });
+      useUIStore.getState().showToast(msg, "error");
     }
   },
 
@@ -84,10 +84,9 @@ export const useRepoStore = create<RepoState>((set, get) => ({
         set({ loading: false });
       }
     } catch (err: unknown) {
-      set({
-        loading: false,
-        error: err instanceof Error ? err.message : String(err),
-      });
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ loading: false, error: msg });
+      useUIStore.getState().showToast(msg, "error");
     }
   },
 

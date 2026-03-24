@@ -1156,9 +1156,7 @@ const EditorTab: React.FC<{
   };
 
   const handleBrowse = async () => {
-    const selected = await window.electronAPI.repo.browseFile(
-      t("settings.editorPath")
-    );
+    const selected = await window.electronAPI.repo.browseFile(t("settings.editorPath"));
     if (selected) onChange("editorPath", selected);
   };
 
@@ -1171,10 +1169,7 @@ const EditorTab: React.FC<{
       <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
         {t("settings.editorDescription")}
       </div>
-      <SettingRow
-        label={t("settings.editorPreset")}
-        description={t("settings.editorSelectPreset")}
-      >
+      <SettingRow label={t("settings.editorPreset")} description={t("settings.editorSelectPreset")}>
         <Select
           value={settings.editorName}
           options={EDITOR_PRESETS.map((p) => ({
@@ -1994,10 +1989,8 @@ const AccountsTab: React.FC<{ mode?: "overlay" | "window" }> = ({ mode = "overla
   const [showSshImport, setShowSshImport] = useState(false);
 
   useEffect(() => {
-    if (mode === "overlay") {
-      loadAccounts();
-    }
-  }, [mode, loadAccounts]);
+    loadAccounts();
+  }, [loadAccounts]);
 
   const handleLoadSshConfig = async () => {
     const entries = await window.electronAPI.account.parseSshConfig();

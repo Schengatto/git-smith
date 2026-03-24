@@ -8,7 +8,7 @@ const APP_VERSION = __APP_VERSION__;
 /*  Logo (PNG from assets)                                              */
 /* ------------------------------------------------------------------ */
 
-import logoUrl from "../../../../assets/gitsmith.png";
+import logoUrl from "../../../../assets/icon.png";
 
 const Logo: React.FC<{ size?: number }> = ({ size = 80 }) => (
   <img src={logoUrl} alt="GitSmith" width={size} height={size} style={{ objectFit: "contain" }} />

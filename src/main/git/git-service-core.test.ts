@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GitService } from "./git-service";
 
 vi.mock("simple-git", () => {
-  const mock = {
+  const mock: Record<string, unknown> = {
     checkIsRepo: vi.fn().mockResolvedValue(true),
     status: vi.fn().mockResolvedValue({
       current: "main",
@@ -11,6 +11,7 @@ vi.mock("simple-git", () => {
     revparse: vi.fn().mockResolvedValue("abc123\n"),
     init: vi.fn().mockResolvedValue(undefined),
     outputHandler: vi.fn(),
+    env: vi.fn().mockReturnThis(),
   };
   return { default: () => mock, __mock: mock };
 });
