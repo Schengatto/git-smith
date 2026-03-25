@@ -125,3 +125,116 @@ jobs:
           name: release-artifacts-${{ matrix.name }}
           path: out/release/*
           retention-days: 1
+
+  virustotal-scan:
+    name: VirusTotal Scan
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Download all release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-artifacts-*
+          merge-multiple: true
+          path: ./artifacts
+
+      - name: List artifacts
+        run: ls -la ./artifacts/
+
+      - name: Upload to VirusTotal
+        id: vt
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: |
+            ./artifacts/*.msi
+            ./artifacts/*.zip
+            ./artifacts/*.deb
+            ./artifacts/*.rpm
+
+      - name: Poll results and check threshold
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_KEY }}
+          VT_ANALYSIS: ${{ steps.vt.outputs.analysis }}
+        shell: bash
+        run: |
+          THRESHOLD=3
+          POLL_INTERVAL=20
+          MAX_POLLS=30
+          FAILED=0
+
+          echo "## VirusTotal Scan Results" > vt-report.md
+          echo "" >> vt-report.md
+          echo "| File | Result | Report |" >> vt-report.md
+          echo "|------|--------|--------|" >> vt-report.md
+
+          # Parse analysis output — JSON object mapping glob/file to analysis URL
+          # Each value looks like: https://www.virustotal.com/gui/file-analysis/{id}
+          # NOTE: uses process substitution (< <(...)) instead of pipe to avoid
+          # subshell — variable assignments (FAILED) must survive the loop.
+          while read -r FILE_PATTERN ANALYSIS_URL; do
+            # Skip empty or null entries (glob matched no files on this OS)
+            [ -z "$ANALYSIS_URL" ] || [ "$ANALYSIS_URL" = "null" ] && continue
+
+            # Extract analysis ID from URL (last path segment)
+            ANALYSIS_ID="${ANALYSIS_URL##*/}"
+            FILENAME=$(basename "$FILE_PATTERN")
+
+            echo "Polling analysis for $FILENAME (ID: $ANALYSIS_ID)..."
+
+            # Poll until completed
+            for i in $(seq 1 $MAX_POLLS); do
+              RESPONSE=$(curl -s -H "x-apikey: $VT_API_KEY" \
+                "https://www.virustotal.com/api/v3/analyses/$ANALYSIS_ID")
+
+              STATUS=$(echo "$RESPONSE" | jq -r '.data.attributes.status')
+
+              if [ "$STATUS" = "completed" ]; then
+                MALICIOUS=$(echo "$RESPONSE" | jq -r '.data.attributes.stats.malicious')
+                UNDETECTED=$(echo "$RESPONSE" | jq -r '.data.attributes.stats.undetected')
+                TOTAL=$((MALICIOUS + UNDETECTED))
+                SHA256=$(echo "$RESPONSE" | jq -r '.meta.file_info.sha256')
+
+                PERMALINK="https://www.virustotal.com/gui/file/$SHA256"
+
+                if [ "$MALICIOUS" -ge "$THRESHOLD" ]; then
+                  echo "| $FILENAME | $MALICIOUS/$TOTAL | [View]($PERMALINK) |" >> vt-report.md
+                  echo "FAIL: $FILENAME has $MALICIOUS detections (threshold: $THRESHOLD)"
+                  FAILED=1
+                else
+                  echo "| $FILENAME | $MALICIOUS/$TOTAL | [View]($PERMALINK) |" >> vt-report.md
+                  echo "PASS: $FILENAME has $MALICIOUS detections"
+                fi
+                break
+              fi
+
+              if [ "$i" -eq "$MAX_POLLS" ]; then
+                echo "TIMEOUT: Analysis for $FILENAME did not complete in time"
+                echo "| $FILENAME | TIMEOUT | N/A |" >> vt-report.md
+                FAILED=1
+                break
+              fi
+
+              echo "  Poll $i/$MAX_POLLS: status=$STATUS, waiting ${POLL_INTERVAL}s..."
+              sleep "$POLL_INTERVAL"
+            done
+          done < <(echo "$VT_ANALYSIS" | jq -r 'to_entries[] | "\(.key) \(.value)"')
+
+          echo ""
+          echo "=== VirusTotal Report ==="
+          cat vt-report.md
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "One or more files exceeded the detection threshold or timed out."
+            exit 1
+          fi
+
+      - name: Upload VirusTotal report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: virustotal-report
+          path: vt-report.md
+          retention-days: 90
