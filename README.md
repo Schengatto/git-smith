@@ -129,6 +129,8 @@ Before contributing, please review our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 
+All release binaries are scanned with [VirusTotal](https://www.virustotal.com) (~70 antivirus engines). Scan reports are linked in each [GitHub release](https://github.com/nicenemo/gitsmith/releases).
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for a list of changes.

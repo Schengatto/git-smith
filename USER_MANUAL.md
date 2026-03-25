@@ -1194,6 +1194,10 @@ GitSmith supports automatic updates via GitHub Releases:
 
 The update is downloaded in the background and installed on restart.
 
+### Antivirus Scan
+
+Every release is automatically scanned with [VirusTotal](https://www.virustotal.com), which checks binaries against approximately 70 antivirus engines. Scan results with direct links to full reports are included in each [GitHub release](https://github.com/nicenemo/gitsmith/releases). If any file receives 3 or more malicious detections, the release is blocked until investigated.
+
 ---
 
 ## 35. Keyboard Shortcuts
