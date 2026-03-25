@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features | GitSmith</title>
+  <meta name="description" content="Explore all GitSmith features: commit graph, interactive rebase, merge conflict resolution, AI integration, and 50+ Git tools.">
+  <link rel="icon" href="images/icons/icon-32.png" type="image/png">
+  <link rel="icon" href="images/icons/icon-64.png" type="image/png" sizes="64x64">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="header-logo">
+        <img src="images/icons/icon-64.png" alt="GitSmith logo" width="32" height="32">
+        GitSmith
+      </a>
+      <div class="header-right">
+        <nav class="nav" role="navigation">
+          <a href="features.html" class="nav-active">Features</a>
+          <a href="install.html">Install</a>
+          <a href="ai-integration.html">AI Integration</a>
+          <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+        <button class="theme-toggle" aria-label="Toggle theme" title="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1>Features</h1>
+      <p class="page-hero-subtitle">A complete Git client with everything you need to manage repositories visually.</p>
+    </div>
+  </section>
+
+  <!-- Feature Categories -->
+  <section class="page-section">
+    <div class="container">
+
+      <!-- Core -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--accent">Core</span>
+          <h2>Repository & Graph</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Visual Commit Graph</h3>
+            <p>Interactive, color-coded commit graph with colored lane lines, virtualized scrolling, branch/tag decorations, and Gravatar avatars. Click any commit to inspect details, diff, and changed files.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Clone Repository</h3>
+            <p>Clone remote repositories with advanced options: select branch, bare clone, recurse submodules, and shallow clone with configurable depth.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Scan for Repositories</h3>
+            <p>Walk your filesystem to automatically discover and import existing Git repositories into GitSmith.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Favorites & Recents</h3>
+            <p>Organize repositories into favorite categories and quickly access recent repositories from the Start menu.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Branch Filter</h3>
+            <p>Filter the commit graph by branch name. Include or exclude specific branches with the visibility filter dropdown.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Search Commits</h3>
+            <p>Advanced commit search: filter by message (grep), author, or code changes (pickaxe search).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commit & Staging -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--green">Staging</span>
+          <h2>Commit & Staging</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Commit Dialog</h3>
+            <p>Full-featured commit dialog with tree view, stage/unstage buttons, amend mode, discard changes, and a commit dropdown with options.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Line & Hunk Staging</h3>
+            <p>Stage or unstage individual lines and hunks with surgical precision. Commit exactly what you need.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Commit Templates</h3>
+            <p>Conventional Commits templates built in. Quick-select type, scope, and description for consistent commit messages.</p>
+          </div>
+          <div class="feature-item">
+            <h3>AI Commit Messages</h3>
+            <p>Generate meaningful commit messages automatically from the staged diff using AI (Anthropic, OpenAI, or Gemini).</p>
+          </div>
+          <div class="feature-item">
+            <h3>Add to .gitignore</h3>
+            <p>Right-click any file in the commit dialog to quickly add it to <code>.gitignore</code>.</p>
+          </div>
+          <div class="feature-item">
+            <h3>GPG Signing</h3>
+            <p>Sign commits with your GPG key. Configure signing settings in the Git Config panel.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branching -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--mauve">Branching</span>
+          <h2>Branches & Merging</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Branch Management</h3>
+            <p>Create, rename, and delete local and remote branches. Set upstream tracking with one click.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Checkout Dialog</h3>
+            <p>Git Extensions-style checkout with branch selection and local changes handling (stash, merge, discard).</p>
+          </div>
+          <div class="feature-item">
+            <h3>Merge Dialog</h3>
+            <p>Advanced merge with branch selector, fast-forward/no-ff options, squash merge, and custom strategy flags.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Rebase</h3>
+            <p>Standard and interactive rebase. Drag-and-drop commits to reorder, squash, edit, or drop. Conflict handling with step-by-step progress.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Cherry-Pick</h3>
+            <p>Cherry-pick commits from the graph context menu with no-commit and mainline options for merge commits.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Revert Commit</h3>
+            <p>Revert any commit with no-commit and mainline options. Available from the commit graph right-click menu.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conflict Resolution -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--accent">Resolve</span>
+          <h2>Conflict Resolution</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Built-in 3-Way Editor</h3>
+            <p>Internal merge conflict resolver with file list, conflict marker parsing, and accept ours/theirs/both buttons.</p>
+          </div>
+          <div class="feature-item">
+            <h3>External Merge Tools</h3>
+            <p>Configure your preferred external merge tool: KDiff3, Meld, Beyond Compare, WinMerge, and more.</p>
+          </div>
+          <div class="feature-item">
+            <h3>AI-Assisted Resolution</h3>
+            <p>Let AI analyze the conflict and suggest a resolution with an LCS diff preview before applying.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Conflict Banner</h3>
+            <p>Visual banner shows merge/rebase/cherry-pick progress with abort, continue, skip, and resolve actions.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diff & Review -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--green">Review</span>
+          <h2>Diff & Code Review</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Side-by-Side Diff</h3>
+            <p>Syntax-highlighted diffs in side-by-side or unified mode, powered by diff2html.</p>
+          </div>
+          <div class="feature-item">
+            <h3>File History</h3>
+            <p>View the full history of any file with per-commit diffs (<code>git log --follow</code>).</p>
+          </div>
+          <div class="feature-item">
+            <h3>Blame View</h3>
+            <p>Per-line annotations showing who changed each line and when.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Commit Comparison</h3>
+            <p>Compare any two commits: right-click a commit to compare with HEAD or with a previously selected commit.</p>
+          </div>
+          <div class="feature-item">
+            <h3>File Context Menu</h3>
+            <p>Right-click any file for File History, Blame, Open in editor, Copy path, and more.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Generate Changelog</h3>
+            <p>Automatically generate a changelog grouped by conventional commit type from any range of commits.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remote & Collaboration -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--mauve">Remote</span>
+          <h2>Remote & Collaboration</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Fetch, Pull & Push</h3>
+            <p>One-click fetch (all/prune), pull (merge or rebase), and push. Ahead/behind indicators on tracked branches.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Auto-Fetch</h3>
+            <p>Configurable auto-fetch interval with smart notifications only when remote refs change.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Stale Remote Branches</h3>
+            <p>Find and delete remote branches older than a configurable threshold.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Pull Request Integration</h3>
+            <p>Create pull requests with AI-generated titles and descriptions, branch autocomplete, and template support.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Git Accounts</h3>
+            <p>Multi-account identity management with per-repo assignment, SSH key support, and toolbar selector.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Remote Management</h3>
+            <p>Add, remove, and configure remotes. Delete remote branches and tags from the context menu.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Git -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--accent">Advanced</span>
+          <h2>Advanced Git Operations</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Stash Management</h3>
+            <p>Full stash dialog with file tree, diff viewer, create, pop, apply, drop, and stash options (include untracked, keep index).</p>
+          </div>
+          <div class="feature-item">
+            <h3>Tags</h3>
+            <p>Create lightweight or annotated tags, push to remote, delete local and remote tags.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Reset</h3>
+            <p>Reset branch to any commit with soft, mixed, or hard mode.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Reflog</h3>
+            <p>Browse the reflog to recover lost commits and understand branch movements.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Bisect</h3>
+            <p>Binary search through commits to find the one that introduced a bug.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Worktrees</h3>
+            <p>Manage Git worktrees to work on multiple branches simultaneously without switching.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Submodules</h3>
+            <p>List and update submodules from the sidebar.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Git LFS</h3>
+            <p>Large File Storage support: track, untrack, and manage LFS files.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Patches</h3>
+            <p>Create and apply patches for sharing changes outside of Git remotes.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Archive & Export</h3>
+            <p>Export repository snapshots as ZIP or TAR archives.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Git Notes</h3>
+            <p>Add, edit, and view notes attached to commits.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Git Hooks</h3>
+            <p>View and manage Git hooks configured in your repository.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- UI & Experience -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--green">Interface</span>
+          <h2>UI & Experience</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Dark & Light Themes</h3>
+            <p>High-contrast Catppuccin-inspired dark and light themes, both designed for readability.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Customizable Layout</h3>
+            <p>Dockable panel layout powered by dockview. Drag, resize, and rearrange panels to fit your workflow.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Integrated Terminal</h3>
+            <p>Embedded terminal (node-pty + xterm.js) for running shell commands without leaving the app.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Command Log</h3>
+            <p>See every git command GitSmith executes, complete with arguments and output.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Keyboard Shortcuts</h3>
+            <p><code>Ctrl+O</code> open, <code>Ctrl+K</code> commit, <code>Ctrl+F</code> search, and many more.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Multi-language</h3>
+            <p>Interface available in English, Italian, and German.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Editor Integration</h3>
+            <p>Open files in VS Code, VS Code Insiders, Cursor, or any custom editor directly from GitSmith.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Auto-Update</h3>
+            <p>Automatic update notifications with one-click download from GitHub Releases.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="feature-category fade-in">
+        <div class="feature-category-header">
+          <span class="showcase-label showcase-label--mauve">Analytics</span>
+          <h2>Statistics & Insights</h2>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Author Statistics</h3>
+            <p>Leaderboard with timeframe filters, expandable author detail including sparkline, heatmap, top files, and streaks.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Codebase Statistics</h3>
+            <p>Language breakdown bars, file type grid, test ratio indicator, and overall repository health metrics.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="page-section page-cta fade-in">
+    <div class="container" style="text-align: center;">
+      <h2>Ready to get started?</h2>
+      <p class="page-hero-subtitle">Download GitSmith for free and take control of your repositories.</p>
+      <div class="hero-actions" style="margin-top: 32px;">
+        <a href="install.html" class="btn btn-primary">Install GitSmith</a>
+        <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener" class="btn btn-secondary">View on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-left">
+        &copy; 2026 GitSmith &middot; MIT License &middot; Created by <a href="https://enricoschintu.com" target="_blank" rel="noopener">Enrico Schintu</a>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Schengatto/git-smith/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/Schengatto/git-smith/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

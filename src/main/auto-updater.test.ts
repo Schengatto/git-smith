@@ -2,19 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Hoisted mock state ─────────────────────────────────────────────────────
 
-const {
-  mockShowMessageBox,
-  mockAutoUpdaterOn,
-  mockCheckForUpdates,
-  mockDownloadUpdate,
-  mockQuitAndInstall,
-} = vi.hoisted(() => ({
-  mockShowMessageBox: vi.fn().mockResolvedValue({ response: 0 }),
-  mockAutoUpdaterOn: vi.fn(),
-  mockCheckForUpdates: vi.fn().mockResolvedValue(null),
-  mockDownloadUpdate: vi.fn(),
-  mockQuitAndInstall: vi.fn(),
-}));
+const { mockShowMessageBox, mockAutoUpdaterOn, mockCheckForUpdates, mockOpenExternal } = vi.hoisted(
+  () => ({
+    mockShowMessageBox: vi.fn().mockResolvedValue({ response: 0 }),
+    mockAutoUpdaterOn: vi.fn(),
+    mockCheckForUpdates: vi.fn().mockResolvedValue(null),
+    mockOpenExternal: vi.fn().mockResolvedValue(undefined),
+  })
+);
 
 // ── Mocks ─────────────────────────────────────────────────────────────────
 
@@ -23,6 +18,7 @@ vi.mock("electron", () => ({
   BrowserWindow: vi.fn(),
   ipcMain: { handle: vi.fn() },
   dialog: { showMessageBox: mockShowMessageBox },
+  shell: { openExternal: mockOpenExternal },
 }));
 
 vi.mock("electron-updater", () => ({
@@ -31,8 +27,6 @@ vi.mock("electron-updater", () => ({
     autoInstallOnAppQuit: false,
     on: mockAutoUpdaterOn,
     checkForUpdates: mockCheckForUpdates,
-    downloadUpdate: mockDownloadUpdate,
-    quitAndInstall: mockQuitAndInstall,
     currentVersion: { version: "1.0.0" },
   },
 }));
@@ -102,19 +96,17 @@ describe("initAutoUpdater", () => {
       expect(autoUpdater.autoDownload).toBe(false);
     });
 
-    it("configures autoUpdater.autoInstallOnAppQuit = true", () => {
+    it("configures autoUpdater.autoInstallOnAppQuit = false", () => {
       initAutoUpdater(makeWindow() as never);
-      expect(autoUpdater.autoInstallOnAppQuit).toBe(true);
+      expect(autoUpdater.autoInstallOnAppQuit).toBe(false);
     });
 
-    it("registers all 6 autoUpdater event listeners", () => {
+    it("registers all 4 autoUpdater event listeners", () => {
       initAutoUpdater(makeWindow() as never);
       const events = mockAutoUpdaterOn.mock.calls.map((c: unknown[]) => c[0]);
       expect(events).toContain("checking-for-update");
       expect(events).toContain("update-available");
       expect(events).toContain("update-not-available");
-      expect(events).toContain("download-progress");
-      expect(events).toContain("update-downloaded");
       expect(events).toContain("error");
     });
 
@@ -168,7 +160,7 @@ describe("initAutoUpdater", () => {
       });
     });
 
-    it("shows a dialog offering to download the update", async () => {
+    it("shows a dialog offering to open the download page", async () => {
       Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
       const win = makeWindow();
       initAutoUpdater(win as never);
@@ -183,12 +175,12 @@ describe("initAutoUpdater", () => {
         expect.objectContaining({
           title: "Update Available",
           message: expect.stringContaining("2.0.0"),
-          buttons: ["Download", "Later"],
+          buttons: ["Open Download Page", "Later"],
         })
       );
     });
 
-    it("calls downloadUpdate when user clicks 'Download'", async () => {
+    it("opens the releases page when user clicks 'Open Download Page'", async () => {
       Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
       mockShowMessageBox.mockResolvedValue({ response: 0 });
       const win = makeWindow();
@@ -199,10 +191,12 @@ describe("initAutoUpdater", () => {
 
       await vi.runAllTimersAsync();
 
-      expect(mockDownloadUpdate).toHaveBeenCalledTimes(1);
+      expect(mockOpenExternal).toHaveBeenCalledWith(
+        "https://github.com/Schengatto/git-smith/releases/latest"
+      );
     });
 
-    it("does NOT call downloadUpdate when user clicks 'Later'", async () => {
+    it("does NOT open external link when user clicks 'Later'", async () => {
       Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
       mockShowMessageBox.mockResolvedValue({ response: 1 });
       const win = makeWindow();
@@ -213,7 +207,7 @@ describe("initAutoUpdater", () => {
 
       await vi.runAllTimersAsync();
 
-      expect(mockDownloadUpdate).not.toHaveBeenCalled();
+      expect(mockOpenExternal).not.toHaveBeenCalled();
     });
 
     it("does not show dialog when mainWindow is destroyed", async () => {
@@ -227,23 +221,6 @@ describe("initAutoUpdater", () => {
       await vi.runAllTimersAsync();
 
       expect(dialog.showMessageBox).not.toHaveBeenCalled();
-    });
-
-    it("resets manualCheckInProgress after update-available fires", async () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      // Trigger manual check
-      const checkHandler = getIpcHandler("app:check-for-updates");
-      checkHandler({} as never);
-
-      const handler = getAutoUpdaterEventHandler("update-available");
-      handler({ version: "2.0.0" });
-
-      await vi.runAllTimersAsync();
-      // manualCheckInProgress was true; after update-available it becomes false
-      // (no direct assertion possible, but verifying the reset via second update-not-available call)
     });
   });
 
@@ -347,131 +324,6 @@ describe("initAutoUpdater", () => {
       mockShowMessageBox.mockClear();
       notAvailable();
       expect(mockShowMessageBox).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── Event: download-progress ───────────────────────────────────────────────
-
-  describe("'download-progress' event", () => {
-    it("sends update status 'downloading' with percentage", () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("download-progress");
-      handler({ percent: 57.6 });
-
-      expect(win.webContents.send).toHaveBeenCalledWith("app:update-status", {
-        status: "downloading",
-        detail: "58%",
-      });
-    });
-
-    it("rounds down percentage correctly", () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("download-progress");
-      handler({ percent: 33.4 });
-
-      expect(win.webContents.send).toHaveBeenCalledWith("app:update-status", {
-        status: "downloading",
-        detail: "33%",
-      });
-    });
-
-    it("sends 100% when fully downloaded", () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("download-progress");
-      handler({ percent: 100 });
-
-      expect(win.webContents.send).toHaveBeenCalledWith("app:update-status", {
-        status: "downloading",
-        detail: "100%",
-      });
-    });
-  });
-
-  // ── Event: update-downloaded ──────────────────────────────────────────────
-
-  describe("'update-downloaded' event", () => {
-    it("sends update status 'downloaded' with version", () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("update-downloaded");
-      handler({ version: "2.1.0" });
-
-      expect(win.webContents.send).toHaveBeenCalledWith("app:update-status", {
-        status: "downloaded",
-        detail: "2.1.0",
-      });
-    });
-
-    it("shows restart dialog after download", async () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("update-downloaded");
-      handler({ version: "2.1.0" });
-
-      await vi.runAllTimersAsync();
-
-      expect(dialog.showMessageBox).toHaveBeenCalledWith(
-        win,
-        expect.objectContaining({
-          title: "Update Ready",
-          message: expect.stringContaining("2.1.0"),
-          buttons: ["Restart Now", "Later"],
-        })
-      );
-    });
-
-    it("calls quitAndInstall when user clicks 'Restart Now'", async () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      mockShowMessageBox.mockResolvedValue({ response: 0 });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("update-downloaded");
-      handler({ version: "2.1.0" });
-
-      await vi.runAllTimersAsync();
-
-      expect(mockQuitAndInstall).toHaveBeenCalledTimes(1);
-    });
-
-    it("does NOT call quitAndInstall when user clicks 'Later'", async () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      mockShowMessageBox.mockResolvedValue({ response: 1 });
-      const win = makeWindow();
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("update-downloaded");
-      handler({ version: "2.1.0" });
-
-      await vi.runAllTimersAsync();
-
-      expect(mockQuitAndInstall).not.toHaveBeenCalled();
-    });
-
-    it("does not show dialog when mainWindow is destroyed", async () => {
-      Object.defineProperty(app, "isPackaged", { value: true, configurable: true });
-      const win = makeWindow(true);
-      initAutoUpdater(win as never);
-
-      const handler = getAutoUpdaterEventHandler("update-downloaded");
-      handler({ version: "2.1.0" });
-
-      await vi.runAllTimersAsync();
-
-      expect(dialog.showMessageBox).not.toHaveBeenCalled();
     });
   });
 

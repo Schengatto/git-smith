@@ -7,8 +7,12 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { PublisherGithub } from "@electron-forge/publisher-github";
 import { createHash } from "crypto";
 import { readFile, writeFile, stat } from "fs/promises";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import fs from "fs";
 import path from "path";
+
+const execFileAsync = promisify(execFile);
 
 async function computeSha512(filePath: string): Promise<string> {
   const data = await readFile(filePath);
@@ -85,7 +89,20 @@ const config: ForgeConfig = {
       }
 
     },
-    postPackage: async (_config, { outputPaths }) => {
+    postPackage: async (_config, { outputPaths, platform }) => {
+      // Ad-hoc codesign on macOS to avoid "app is damaged" Gatekeeper error
+      if (platform === "darwin") {
+        for (const outputPath of outputPaths) {
+          const appBundles = fs.readdirSync(outputPath).filter((f) => f.endsWith(".app"));
+          for (const app of appBundles) {
+            const appPath = path.join(outputPath, app);
+            console.log(`Ad-hoc signing ${appPath}...`);
+            await execFileAsync("codesign", ["--force", "--deep", "--sign", "-", appPath]);
+            console.log(`Ad-hoc signed ${app}`);
+          }
+        }
+      }
+
       // Generate app-update.yml for electron-updater (must be in resources/, outside asar)
       const appUpdateYml = [
         "provider: github",

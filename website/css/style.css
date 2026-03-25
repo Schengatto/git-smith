@@ -535,6 +535,374 @@ a:hover {
   color: var(--text-primary);
 }
 
+/* ─── Active nav link ─── */
+.nav a.nav-active {
+  color: var(--accent);
+}
+
+/* ─── Page Hero (subpages) ─── */
+.page-hero {
+  padding: 140px 0 60px;
+  text-align: center;
+}
+
+.page-hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.page-hero-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.15rem;
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ─── Page Sections ─── */
+.page-section {
+  padding: 40px 0;
+}
+
+.page-cta {
+  padding: 80px 0;
+}
+
+/* ─── Content Card ─── */
+.content-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 40px;
+}
+
+.content-card h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.content-card p {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+
+.content-card--highlight {
+  border-color: var(--accent);
+  box-shadow: 0 0 40px var(--accent-glow);
+}
+
+/* ─── Requirements List ─── */
+.req-list {
+  list-style: none;
+  padding: 0;
+}
+
+.req-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.req-list li:last-child {
+  border-bottom: none;
+}
+
+/* ─── OS Install Card ─── */
+.os-install-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.os-install-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 40px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.os-install-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.os-install-body {
+  padding: 32px 40px;
+}
+
+.os-install-body h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 24px 0 12px;
+  color: var(--text-primary);
+}
+
+.os-install-body h3:first-child {
+  margin-top: 0;
+}
+
+/* ─── Install Steps ─── */
+.install-steps {
+  padding-left: 24px;
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.install-steps li {
+  margin-bottom: 4px;
+}
+
+.install-steps ul {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+/* ─── Code Block ─── */
+.code-block {
+  background: var(--surface-0);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  white-space: pre;
+  display: block;
+  line-height: 1.7;
+}
+
+/* ─── Callout ─── */
+.callout {
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 20px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.callout--warning {
+  background: var(--yellow-dim);
+  border-left: 4px solid var(--yellow);
+}
+
+.callout--info {
+  background: var(--accent-dim);
+  border-left: 4px solid var(--accent);
+}
+
+/* ─── Feature Grid (features page) ─── */
+.feature-category {
+  margin-bottom: 64px;
+}
+
+.feature-category-header {
+  margin-bottom: 28px;
+}
+
+.feature-category-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.feature-item {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.feature-item:hover {
+  border-color: var(--border);
+  box-shadow: 0 4px 20px var(--card-shadow);
+}
+
+.feature-item h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feature-item p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.feature-item code {
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* ─── AI Feature Rows (ai-integration page) ─── */
+.ai-feature-row {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  padding: 40px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ai-feature-row:last-child {
+  border-bottom: none;
+}
+
+.ai-feature-number {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--accent);
+  opacity: 0.3;
+  line-height: 1;
+  min-width: 80px;
+  text-align: center;
+}
+
+.ai-feature-content h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.ai-feature-content p {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+
+.ai-feature-details {
+  list-style: none;
+  padding: 0;
+}
+
+.ai-feature-details li {
+  position: relative;
+  padding-left: 24px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.ai-feature-details li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+.ai-feature-details code {
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* ─── Provider Grid ─── */
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.provider-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.provider-card:hover {
+  border-color: var(--border);
+  box-shadow: 0 4px 20px var(--card-shadow);
+}
+
+.provider-icon {
+  margin-bottom: 12px;
+}
+
+.provider-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.provider-card p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+/* ─── MCP Columns ─── */
+.mcp-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.mcp-column h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.mcp-column ul {
+  list-style: none;
+  padding: 0;
+}
+
+.mcp-column li {
+  padding: 6px 0;
+  padding-left: 20px;
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.mcp-column li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
 /* ─── Animations ─── */
 .fade-in {
   opacity: 0;
@@ -607,5 +975,38 @@ a:hover {
     flex-direction: column;
     gap: 16px;
     text-align: center;
+  }
+
+  .page-hero h1 {
+    font-size: 2rem;
+  }
+
+  .content-card,
+  .os-install-header,
+  .os-install-body {
+    padding: 24px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-feature-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ai-feature-number {
+    min-width: auto;
+    font-size: 2rem;
+    text-align: left;
+  }
+
+  .provider-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mcp-columns {
+    grid-template-columns: 1fr;
   }
 }

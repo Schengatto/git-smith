@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Install | GitSmith</title>
+  <meta name="description" content="Install GitSmith on Windows, macOS, or Linux. Step-by-step instructions for every platform.">
+  <link rel="icon" href="images/icons/icon-32.png" type="image/png">
+  <link rel="icon" href="images/icons/icon-64.png" type="image/png" sizes="64x64">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="header-logo">
+        <img src="images/icons/icon-64.png" alt="GitSmith logo" width="32" height="32">
+        GitSmith
+      </a>
+      <div class="header-right">
+        <nav class="nav" role="navigation">
+          <a href="features.html">Features</a>
+          <a href="install.html" class="nav-active">Install</a>
+          <a href="ai-integration.html">AI Integration</a>
+          <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+        <button class="theme-toggle" aria-label="Toggle theme" title="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1>How to Install</h1>
+      <p class="page-hero-subtitle">Download and install GitSmith on your operating system in a few simple steps.</p>
+    </div>
+  </section>
+
+  <!-- Requirements -->
+  <section class="page-section">
+    <div class="container">
+      <div class="content-card fade-in">
+        <h2>System Requirements</h2>
+        <ul class="req-list">
+          <li><strong>Git 2.30+</strong> must be installed and available in your system PATH</li>
+          <li><strong>Operating System:</strong> Windows 10+, macOS 11+ (Apple Silicon), Linux (Debian/Ubuntu, Fedora/RHEL)</li>
+          <li><strong>Disk space:</strong> ~250 MB</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Windows -->
+  <section class="page-section">
+    <div class="container">
+      <div class="os-install-card fade-in">
+        <div class="os-install-header">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/windows11/windows11-original.svg" alt="Windows" width="48" height="48">
+          <h2>Windows</h2>
+        </div>
+        <div class="os-install-body">
+          <h3>Option 1 &mdash; MSI Installer (recommended)</h3>
+          <ol class="install-steps">
+            <li>Go to <a href="https://github.com/Schengatto/git-smith/releases/latest" target="_blank" rel="noopener">GitHub Releases</a> and download the <code>.msi</code> file.</li>
+            <li>Double-click the <code>.msi</code> to run the installer.</li>
+            <li>If Windows SmartScreen shows <strong>"Windows protected your PC"</strong>:
+              <ul>
+                <li>Click <strong>"More info"</strong></li>
+                <li>Click <strong>"Run anyway"</strong></li>
+              </ul>
+            </li>
+            <li>Follow the installer wizard to complete the installation.</li>
+            <li>Launch GitSmith from the Start menu.</li>
+          </ol>
+
+          <h3>Option 2 &mdash; Portable ZIP</h3>
+          <ol class="install-steps">
+            <li>Download the <code>.zip</code> file from <a href="https://github.com/Schengatto/git-smith/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</li>
+            <li>Extract the archive to any folder.</li>
+            <li>Right-click <code>GitSmith.exe</code>, select <strong>Properties</strong>, and check <strong>"Unblock"</strong> if present.</li>
+            <li>Double-click <code>GitSmith.exe</code> to launch.</li>
+          </ol>
+
+          <div class="callout callout--warning">
+            <strong>SmartScreen Warning:</strong> GitSmith is not yet code-signed. The SmartScreen warning only appears on the first launch and is safe to bypass.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- macOS -->
+  <section class="page-section">
+    <div class="container">
+      <div class="os-install-card fade-in">
+        <div class="os-install-header">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/apple/apple-original.svg" alt="macOS" width="48" height="48">
+          <h2>macOS</h2>
+        </div>
+        <div class="os-install-body">
+          <ol class="install-steps">
+            <li>Download the <code>.zip</code> file from <a href="https://github.com/Schengatto/git-smith/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</li>
+            <li>Extract the archive and move <code>GitSmith.app</code> to <code>/Applications</code>.</li>
+            <li>macOS Gatekeeper will block the app on first launch. Use one of these methods:</li>
+          </ol>
+
+          <h3>Method 1 &mdash; Right-click to open (recommended)</h3>
+          <ol class="install-steps">
+            <li>Locate <code>GitSmith.app</code> in Finder.</li>
+            <li><strong>Right-click</strong> (or Control-click) the app and select <strong>"Open"</strong>.</li>
+            <li>In the dialog that appears, click <strong>"Open"</strong> again.</li>
+          </ol>
+
+          <h3>Method 2 &mdash; Remove quarantine attribute</h3>
+          <div class="code-block"><code>xattr -cr /Applications/GitSmith.app</code></div>
+
+          <h3>Method 3 &mdash; Allow in System Settings</h3>
+          <ol class="install-steps">
+            <li>Try to open the app normally (it will be blocked).</li>
+            <li>Go to <strong>System Settings &gt; Privacy &amp; Security</strong>.</li>
+            <li>Scroll down &mdash; you will see a message about GitSmith being blocked.</li>
+            <li>Click <strong>"Open Anyway"</strong>.</li>
+          </ol>
+
+          <div class="callout callout--info">
+            <strong>Apple Silicon:</strong> GitSmith is built natively for Apple Silicon (M1/M2/M3/M4). No Rosetta required.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Linux -->
+  <section class="page-section">
+    <div class="container">
+      <div class="os-install-card fade-in">
+        <div class="os-install-header">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg" alt="Linux" width="48" height="48">
+          <h2>Linux</h2>
+        </div>
+        <div class="os-install-body">
+          <h3>Debian / Ubuntu (.deb)</h3>
+          <div class="code-block"><code>sudo dpkg -i gitsmith_*.deb
+sudo apt-get install -f   # install dependencies if needed</code></div>
+
+          <h3>Fedora / RHEL (.rpm)</h3>
+          <div class="code-block"><code>sudo rpm -i gitsmith-*.rpm</code></div>
+
+          <h3>AppImage (any distro)</h3>
+          <ol class="install-steps">
+            <li>Download the <code>.AppImage</code> file from <a href="https://github.com/Schengatto/git-smith/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</li>
+            <li>Make it executable: <code>chmod +x GitSmith-*.AppImage</code></li>
+            <li>Run it: <code>./GitSmith-*.AppImage</code></li>
+          </ol>
+
+          <div class="callout callout--info">
+            <strong>Tip:</strong> Make sure <code>git</code> is installed (<code>sudo apt install git</code> or <code>sudo dnf install git</code>) before launching GitSmith.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Build from Source -->
+  <section class="page-section">
+    <div class="container">
+      <div class="content-card fade-in">
+        <h2>Build from Source</h2>
+        <p>For developers who want to build GitSmith from source:</p>
+        <div class="code-block"><code>git clone https://github.com/Schengatto/git-smith.git
+cd gitsmith
+npm install
+npm start          # Launch in development mode
+npm run make       # Create distributable packages</code></div>
+        <p><strong>Prerequisites:</strong> Node.js 20+ and Git 2.30+</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-left">
+        &copy; 2026 GitSmith &middot; MIT License &middot; Created by <a href="https://enricoschintu.com" target="_blank" rel="noopener">Enrico Schintu</a>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Schengatto/git-smith/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/Schengatto/git-smith/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

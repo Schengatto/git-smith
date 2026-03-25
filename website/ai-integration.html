@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Integration | GitSmith</title>
+  <meta name="description" content="Leverage AI in your Git workflow with GitSmith. AI commit messages, conflict resolution, PR descriptions, code review, and MCP server for AI assistants.">
+  <link rel="icon" href="images/icons/icon-32.png" type="image/png">
+  <link rel="icon" href="images/icons/icon-64.png" type="image/png" sizes="64x64">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="header-logo">
+        <img src="images/icons/icon-64.png" alt="GitSmith logo" width="32" height="32">
+        GitSmith
+      </a>
+      <div class="header-right">
+        <nav class="nav" role="navigation">
+          <a href="features.html">Features</a>
+          <a href="install.html">Install</a>
+          <a href="ai-integration.html" class="nav-active">AI Integration</a>
+          <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+        <button class="theme-toggle" aria-label="Toggle theme" title="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <h1>AI Integration</h1>
+      <p class="page-hero-subtitle">Supercharge your Git workflow with AI-powered commit messages, conflict resolution, code review, and an MCP server for AI assistants.</p>
+    </div>
+  </section>
+
+  <!-- Supported Providers -->
+  <section class="page-section">
+    <div class="container">
+      <div class="content-card fade-in">
+        <h2>Supported AI Providers</h2>
+        <p>GitSmith integrates with the most popular AI providers. Configure your preferred provider in <strong>Settings &gt; AI / MCP</strong> with your API key.</p>
+        <div class="provider-grid">
+          <div class="provider-card">
+            <div class="provider-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Anthropic</h3>
+            <p>Claude 3 Opus, Sonnet, Haiku</p>
+          </div>
+          <div class="provider-card">
+            <div class="provider-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--green)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h3>OpenAI</h3>
+            <p>GPT-4, GPT-4o, GPT-3.5</p>
+          </div>
+          <div class="provider-card">
+            <div class="provider-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--mauve)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <h3>Google Gemini</h3>
+            <p>Gemini Pro and more</p>
+          </div>
+          <div class="provider-card">
+            <div class="provider-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--peach)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <h3>Custom MCP</h3>
+            <p>Any MCP-compatible server</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Features -->
+  <section class="page-section">
+    <div class="container">
+      <div class="section-header fade-in">
+        <h2>What AI can do in GitSmith</h2>
+        <p>Four powerful AI features built into your daily Git workflow</p>
+      </div>
+
+      <!-- Feature 1: Commit Messages -->
+      <div class="ai-feature-row fade-in">
+        <div class="ai-feature-number">01</div>
+        <div class="ai-feature-content">
+          <h3>AI Commit Messages</h3>
+          <p>Stop writing commit messages manually. Click the <strong>AI</strong> button in the Commit Dialog and GitSmith will analyze your staged diff to generate a clear, descriptive commit message following the <strong>Conventional Commits</strong> convention.</p>
+          <ul class="ai-feature-details">
+            <li>Analyzes the full staged diff for context</li>
+            <li>Follows Conventional Commits format (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>, etc.)</li>
+            <li>You can edit the suggestion before committing</li>
+            <li>Works with any configured AI provider</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 2: Conflict Resolution -->
+      <div class="ai-feature-row fade-in">
+        <div class="ai-feature-number">02</div>
+        <div class="ai-feature-content">
+          <h3>AI Conflict Resolution</h3>
+          <p>When a merge conflict occurs, the built-in 3-way editor shows a <strong>"Resolve with AI"</strong> button. The AI analyzes the ours, theirs, and base versions of the file to suggest an intelligent resolution.</p>
+          <ul class="ai-feature-details">
+            <li>Understands both sides of the conflict</li>
+            <li>Shows a preview with LCS diff before applying</li>
+            <li>You accept, modify, or reject the suggestion</li>
+            <li>Handles complex multi-hunk conflicts</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 3: PR Descriptions -->
+      <div class="ai-feature-row fade-in">
+        <div class="ai-feature-number">03</div>
+        <div class="ai-feature-content">
+          <h3>AI Pull Request Descriptions</h3>
+          <p>Creating a pull request? GitSmith can generate both the <strong>title</strong> and a detailed <strong>description</strong> from your branch's commits. If a PR template exists in the repository, the AI uses it as a guide.</p>
+          <ul class="ai-feature-details">
+            <li>Auto-generates title from commit range</li>
+            <li>Creates structured description with summary, changes, and testing notes</li>
+            <li>Respects repository PR templates</li>
+            <li>Branch autocomplete for quick base/head selection</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 4: Code Review -->
+      <div class="ai-feature-row fade-in">
+        <div class="ai-feature-number">04</div>
+        <div class="ai-feature-content">
+          <h3>AI Code Review</h3>
+          <p>Right-click any commit in the graph and select <strong>AI Code Review</strong>. GitSmith sends the commit diff to your AI provider for an automated review covering bugs, style, performance, and security.</p>
+          <ul class="ai-feature-details">
+            <li>Review individual commits or ranges</li>
+            <li>Highlights potential bugs and security issues</li>
+            <li>Suggestions for code quality improvements</li>
+            <li>Results displayed in a dedicated review panel</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP Server -->
+  <section class="page-section">
+    <div class="container">
+      <div class="content-card content-card--highlight fade-in">
+        <h2>MCP Server &mdash; 50+ Git Tools for AI Assistants</h2>
+        <p>GitSmith includes a <strong>built-in MCP (Model Context Protocol) server</strong> that exposes over 50 Git operations as tools. This allows external AI assistants (Claude, ChatGPT, Copilot, custom agents) to interact with your repositories through a standardized protocol.</p>
+
+        <div class="mcp-columns">
+          <div class="mcp-column">
+            <h3>Read Operations</h3>
+            <ul>
+              <li>Repository status and info</li>
+              <li>Commit log and history</li>
+              <li>Diff between commits</li>
+              <li>Blame annotations</li>
+              <li>Branch and tag listing</li>
+              <li>File contents at any revision</li>
+              <li>Stash list and contents</li>
+            </ul>
+          </div>
+          <div class="mcp-column">
+            <h3>Write Operations</h3>
+            <ul>
+              <li>Stage and commit changes</li>
+              <li>Create and checkout branches</li>
+              <li>Merge and rebase</li>
+              <li>Push and pull</li>
+              <li>Create and delete tags</li>
+              <li>Stash and pop</li>
+              <li>Cherry-pick and revert</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout--info" style="margin-top: 24px;">
+          <strong>How to enable:</strong> Go to <strong>Settings &gt; AI / MCP &gt; MCP Server</strong> and toggle it on. Communication happens via the standard MCP stdio protocol.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Setup -->
+  <section class="page-section">
+    <div class="container">
+      <div class="content-card fade-in">
+        <h2>Quick Setup</h2>
+        <ol class="install-steps">
+          <li>Open GitSmith and go to <strong>Settings &gt; AI / MCP</strong>.</li>
+          <li>Select your AI provider (Anthropic, OpenAI, or Google Gemini).</li>
+          <li>Enter your API key.</li>
+          <li>Choose a model (e.g., <code>claude-3-sonnet</code>, <code>gpt-4</code>, <code>gemini-pro</code>).</li>
+          <li>Click <strong>Save</strong>. AI features are now active across the application.</li>
+        </ol>
+        <p style="margin-top: 16px;">To enable the MCP server for external AI assistants, toggle <strong>MCP Server &gt; Enabled</strong> in the same settings panel.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="page-section page-cta fade-in">
+    <div class="container" style="text-align: center;">
+      <h2>Start using AI in your Git workflow</h2>
+      <p class="page-hero-subtitle">Download GitSmith, plug in your API key, and let AI handle the tedious parts.</p>
+      <div class="hero-actions" style="margin-top: 32px;">
+        <a href="install.html" class="btn btn-primary">Install GitSmith</a>
+        <a href="features.html" class="btn btn-secondary">See All Features</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-left">
+        &copy; 2026 GitSmith &middot; MIT License &middot; Created by <a href="https://enricoschintu.com" target="_blank" rel="noopener">Enrico Schintu</a>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Schengatto/git-smith" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Schengatto/git-smith/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/Schengatto/git-smith/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
