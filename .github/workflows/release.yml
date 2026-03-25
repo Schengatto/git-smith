@@ -170,17 +170,22 @@ jobs:
           echo "| File | Result | Report |" >> vt-report.md
           echo "|------|--------|--------|" >> vt-report.md
 
-          # Parse analysis output — JSON object mapping glob/file to analysis URL
-          # Each value looks like: https://www.virustotal.com/gui/file-analysis/{id}
+          # Parse analysis output — comma-separated "file=analysisURL" pairs
+          # e.g.: ./artifacts/foo.msi=https://www.virustotal.com/gui/file-analysis/ABC123,...
           # NOTE: uses process substitution (< <(...)) instead of pipe to avoid
           # subshell — variable assignments (FAILED) must survive the loop.
-          while read -r FILE_PATTERN ANALYSIS_URL; do
-            # Skip empty or null entries (glob matched no files on this OS)
-            if [ -z "$ANALYSIS_URL" ] || [ "$ANALYSIS_URL" = "null" ]; then continue; fi
+          while IFS= read -r ENTRY; do
+            # Skip empty entries
+            if [ -z "$ENTRY" ]; then continue; fi
+
+            # Split on first '=' only (URLs may contain '=' in base64 analysis IDs)
+            FILE_PATH="${ENTRY%%=*}"
+            ANALYSIS_URL="${ENTRY#*=}"
+            if [ -z "$ANALYSIS_URL" ] || [ -z "$FILE_PATH" ]; then continue; fi
 
             # Extract analysis ID from URL (last path segment)
             ANALYSIS_ID="${ANALYSIS_URL##*/}"
-            FILENAME=$(basename "$FILE_PATTERN")
+            FILENAME=$(basename "$FILE_PATH")
 
             echo "Polling analysis for $FILENAME (ID: $ANALYSIS_ID)..."
 
@@ -223,7 +228,7 @@ jobs:
 
               echo "  Poll $i/$MAX_POLLS: status=$STATUS, retrying..."
             done
-          done < <(echo "$VT_ANALYSIS" | jq -r 'to_entries[] | "\(.key) \(.value)"')
+          done < <(echo "$VT_ANALYSIS" | tr ',' '\n')
 
           echo ""
           echo "=== VirusTotal Report ==="
