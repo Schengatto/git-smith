@@ -120,8 +120,8 @@ jobs:
           ls -la out/release/ || true
 
       - name: Upload release artifacts
-        uses: softprops/action-gh-release@v2
+        uses: actions/upload-artifact@v4
         with:
-          files: out/release/*
-          draft: true
-          generate_release_notes: true
+          name: release-artifacts-${{ matrix.name }}
+          path: out/release/*
+          retention-days: 1
