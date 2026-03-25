@@ -176,7 +176,7 @@ jobs:
           # subshell — variable assignments (FAILED) must survive the loop.
           while read -r FILE_PATTERN ANALYSIS_URL; do
             # Skip empty or null entries (glob matched no files on this OS)
-            [ -z "$ANALYSIS_URL" ] || [ "$ANALYSIS_URL" = "null" ] && continue
+            if [ -z "$ANALYSIS_URL" ] || [ "$ANALYSIS_URL" = "null" ]; then continue; fi
 
             # Extract analysis ID from URL (last path segment)
             ANALYSIS_ID="${ANALYSIS_URL##*/}"
@@ -184,17 +184,21 @@ jobs:
 
             echo "Polling analysis for $FILENAME (ID: $ANALYSIS_ID)..."
 
-            # Poll until completed
+            # Poll until completed (sleep before each request to respect rate limit)
             for i in $(seq 1 $MAX_POLLS); do
-              RESPONSE=$(curl -s -H "x-apikey: $VT_API_KEY" \
-                "https://www.virustotal.com/api/v3/analyses/$ANALYSIS_ID")
+              sleep "$POLL_INTERVAL"
+
+              RESPONSE=$(curl -sf -H "x-apikey: $VT_API_KEY" \
+                "https://www.virustotal.com/api/v3/analyses/$ANALYSIS_ID") || {
+                echo "  WARNING: curl failed for $FILENAME (poll $i), retrying..."
+                continue
+              }
 
               STATUS=$(echo "$RESPONSE" | jq -r '.data.attributes.status')
 
               if [ "$STATUS" = "completed" ]; then
                 MALICIOUS=$(echo "$RESPONSE" | jq -r '.data.attributes.stats.malicious')
-                UNDETECTED=$(echo "$RESPONSE" | jq -r '.data.attributes.stats.undetected')
-                TOTAL=$((MALICIOUS + UNDETECTED))
+                TOTAL=$(echo "$RESPONSE" | jq '[.data.attributes.stats | to_entries[].value] | add')
                 SHA256=$(echo "$RESPONSE" | jq -r '.meta.file_info.sha256')
 
                 PERMALINK="https://www.virustotal.com/gui/file/$SHA256"
@@ -217,8 +221,7 @@ jobs:
                 break
               fi
 
-              echo "  Poll $i/$MAX_POLLS: status=$STATUS, waiting ${POLL_INTERVAL}s..."
-              sleep "$POLL_INTERVAL"
+              echo "  Poll $i/$MAX_POLLS: status=$STATUS, retrying..."
             done
           done < <(echo "$VT_ANALYSIS" | jq -r 'to_entries[] | "\(.key) \(.value)"')
 
@@ -243,6 +246,7 @@ jobs:
     name: Publish Release
     needs: virustotal-scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Download release artifacts
