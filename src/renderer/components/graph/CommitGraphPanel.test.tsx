@@ -627,9 +627,10 @@ describe("CommitGraphPanel — author filter dropdown", () => {
   it("calls setAuthorFilter when an author is selected", () => {
     render(<CommitGraphPanel />);
     fireEvent.click(screen.getByTitle("graph.filterByAuthor"));
-    // Click the 'Bob' author item (button in dropdown)
-    const bobButton = screen.getAllByText("Bob")[0]!;
-    fireEvent.click(bobButton);
+    // Click the 'Bob' author item (button in portal dropdown)
+    const bobButtons = screen.getAllByText("Bob");
+    const bobButton = bobButtons.find((el) => el.closest("button"))?.closest("button");
+    fireEvent.click(bobButton!);
     expect(mockSetAuthorFilter).toHaveBeenCalledWith("Bob");
   });
 

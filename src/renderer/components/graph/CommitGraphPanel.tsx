@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import React, { useEffect, useRef, useCallback, useState, useMemo, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { VirtuosoHandle } from "react-virtuoso";
 import { Virtuoso } from "react-virtuoso";
@@ -162,7 +163,22 @@ export const CommitGraphPanel: React.FC = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
   const authorDropdownRef = useRef<HTMLDivElement>(null);
+  const authorBtnRef = useRef<HTMLButtonElement>(null);
+  const authorPortalRef = useRef<HTMLDivElement>(null);
+  const [authorDropdownPos, setAuthorDropdownPos] = useState<{ top: number; left: number } | null>(
+    null
+  );
   const [authorSearchInput, setAuthorSearchInput] = useState("");
+
+  // Compute fixed position when author dropdown opens
+  useLayoutEffect(() => {
+    if (authorDropdownOpen && authorBtnRef.current) {
+      const rect = authorBtnRef.current.getBoundingClientRect();
+      setAuthorDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    } else {
+      setAuthorDropdownPos(null);
+    }
+  }, [authorDropdownOpen]);
 
   const uniqueAuthors = useMemo(() => {
     const authors = new Map<string, string>();
@@ -192,6 +208,21 @@ export const CommitGraphPanel: React.FC = () => {
     new Set(branchVisibility?.branches || [])
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const branchBtnRef = useRef<HTMLButtonElement>(null);
+  const branchPortalRef = useRef<HTMLDivElement>(null);
+  const [branchDropdownPos, setBranchDropdownPos] = useState<{ top: number; left: number } | null>(
+    null
+  );
+
+  // Compute fixed position when branch dropdown opens
+  useLayoutEffect(() => {
+    if (branchDropdownOpen && branchBtnRef.current) {
+      const rect = branchBtnRef.current.getBoundingClientRect();
+      setBranchDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    } else {
+      setBranchDropdownPos(null);
+    }
+  }, [branchDropdownOpen]);
 
   // Load branches when dropdown opens
   useEffect(() => {
@@ -210,7 +241,12 @@ export const CommitGraphPanel: React.FC = () => {
   useEffect(() => {
     if (!branchDropdownOpen) return;
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        (!branchPortalRef.current || !branchPortalRef.current.contains(target))
+      ) {
         setBranchDropdownOpen(false);
       }
     };
@@ -222,7 +258,12 @@ export const CommitGraphPanel: React.FC = () => {
   useEffect(() => {
     if (!authorDropdownOpen) return;
     const handler = (e: MouseEvent) => {
-      if (authorDropdownRef.current && !authorDropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        authorDropdownRef.current &&
+        !authorDropdownRef.current.contains(target) &&
+        (!authorPortalRef.current || !authorPortalRef.current.contains(target))
+      ) {
         setAuthorDropdownOpen(false);
       }
     };
@@ -636,6 +677,7 @@ export const CommitGraphPanel: React.FC = () => {
         >
           {/* Filter button */}
           <button
+            ref={branchBtnRef}
             onClick={() => setBranchDropdownOpen((v) => !v)}
             title={t("graph.filterBranches")}
             style={{
@@ -812,30 +854,41 @@ export const CommitGraphPanel: React.FC = () => {
               {rows.length} {t("graph.commits")}
             </span>
           )}
-
-          {/* Branch dropdown panel */}
-          {branchDropdownOpen && (
-            <BranchFilterDropdown
-              branches={allBranches}
-              search={branchSearch}
-              onSearchChange={setBranchSearch}
-              mode={pendingMode}
-              onModeChange={setPendingMode}
-              selected={pendingBranches}
-              onToggle={toggleBranchSelection}
-              onApply={applyBranchVisibility}
-              onClear={() => {
-                setPendingBranches(new Set());
-                clearBranchVisibility();
-                setBranchDropdownOpen(false);
-              }}
-            />
-          )}
         </div>
+
+        {/* Branch dropdown panel - rendered in portal to escape overflow:hidden */}
+        {branchDropdownOpen &&
+          branchDropdownPos &&
+          createPortal(
+            <div ref={branchPortalRef}>
+              <BranchFilterDropdown
+                branches={allBranches}
+                search={branchSearch}
+                onSearchChange={setBranchSearch}
+                mode={pendingMode}
+                onModeChange={setPendingMode}
+                selected={pendingBranches}
+                onToggle={toggleBranchSelection}
+                onApply={applyBranchVisibility}
+                onClear={() => {
+                  setPendingBranches(new Set());
+                  clearBranchVisibility();
+                  setBranchDropdownOpen(false);
+                }}
+                portalStyle={{
+                  position: "fixed",
+                  top: branchDropdownPos.top,
+                  left: branchDropdownPos.left,
+                }}
+              />
+            </div>,
+            document.body
+          )}
 
         {/* Author filter */}
         <div ref={authorDropdownRef} style={{ position: "relative" }}>
           <button
+            ref={authorBtnRef}
             onClick={() => setAuthorDropdownOpen((v) => !v)}
             title={t("graph.filterByAuthor")}
             style={{
@@ -891,13 +944,19 @@ export const CommitGraphPanel: React.FC = () => {
               </span>
             )}
           </button>
-          {authorDropdownOpen && (
+        </div>
+
+        {/* Author dropdown - rendered in portal to escape overflow:hidden */}
+        {authorDropdownOpen &&
+          authorDropdownPos &&
+          createPortal(
             <div
+              ref={authorPortalRef}
               style={{
-                position: "absolute",
-                top: "calc(100% + 4px)",
-                left: 0,
-                zIndex: 20,
+                position: "fixed",
+                top: authorDropdownPos.top,
+                left: authorDropdownPos.left,
+                zIndex: 10000,
                 minWidth: 260,
                 maxHeight: 320,
                 background: "var(--surface-2)",
@@ -1001,9 +1060,9 @@ export const CommitGraphPanel: React.FC = () => {
                     </button>
                   ))}
               </div>
-            </div>
+            </div>,
+            document.body
           )}
-        </div>
 
         <div style={{ flex: 1 }} />
 
@@ -1629,6 +1688,7 @@ const BranchFilterDropdown: React.FC<{
   onToggle: (name: string) => void;
   onApply: () => void;
   onClear: () => void;
+  portalStyle?: React.CSSProperties;
 }> = ({
   branches,
   search,
@@ -1639,6 +1699,7 @@ const BranchFilterDropdown: React.FC<{
   onToggle,
   onApply,
   onClear,
+  portalStyle,
 }) => {
   const { t } = useTranslation();
   const localBranches = branches.filter((b) => !b.remote);
@@ -1655,20 +1716,17 @@ const BranchFilterDropdown: React.FC<{
   return (
     <div
       style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        marginTop: 4,
         width: 320,
         maxHeight: 420,
         background: "var(--surface-1)",
         border: "1px solid var(--border)",
         borderRadius: 6,
         boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-        zIndex: 1000,
+        zIndex: 10000,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
+        ...portalStyle,
       }}
     >
       {/* Mode toggle */}

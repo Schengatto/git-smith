@@ -77,7 +77,7 @@ const config: ForgeConfig = {
     }),
   ],
   hooks: {
-    packageAfterCopy: async (_config, buildPath) => {
+    packageAfterCopy: async (_config, buildPath, _electronVersion, platform, arch) => {
       // node-pty is a native module externalized from Vite — copy it into the package
       const nativeModules = ["node-pty", "node-addon-api"];
       for (const mod of nativeModules) {
@@ -88,6 +88,47 @@ const config: ForgeConfig = {
         }
       }
 
+      // Strip node-pty bloat: debug symbols, wrong-platform prebuilds, source code
+      const ptyDest = path.join(buildPath, "node_modules", "node-pty");
+      if (fs.existsSync(ptyDest)) {
+        const keepPrebuild = `${platform}-${arch}`;
+
+        // Remove prebuilds for other platforms/architectures
+        const prebuildsDir = path.join(ptyDest, "prebuilds");
+        if (fs.existsSync(prebuildsDir)) {
+          for (const dir of fs.readdirSync(prebuildsDir)) {
+            if (dir !== keepPrebuild) {
+              fs.rmSync(path.join(prebuildsDir, dir), { recursive: true, force: true });
+            }
+          }
+        }
+
+        // Remove debug symbols (.pdb) from remaining prebuilds
+        const keptDir = path.join(prebuildsDir, keepPrebuild);
+        if (fs.existsSync(keptDir)) {
+          for (const file of fs.readdirSync(keptDir)) {
+            if (file.endsWith(".pdb")) {
+              fs.rmSync(path.join(keptDir, file));
+            }
+          }
+        }
+
+        // Remove directories not needed at runtime
+        for (const dir of ["src", "vendor", "scripts", "third_party", "build"]) {
+          const p = path.join(ptyDest, dir);
+          if (fs.existsSync(p)) {
+            fs.rmSync(p, { recursive: true, force: true });
+          }
+        }
+
+        // Remove unnecessary files from root
+        for (const file of fs.readdirSync(ptyDest)) {
+          const ext = path.extname(file).toLowerCase();
+          if ([".md", ".ts", ".map", ".gyp"].includes(ext) || file === "binding.gyp") {
+            fs.rmSync(path.join(ptyDest, file), { force: true });
+          }
+        }
+      }
     },
     postPackage: async (_config, { outputPaths, platform }) => {
       // Ad-hoc codesign on macOS to avoid "app is damaged" Gatekeeper error
