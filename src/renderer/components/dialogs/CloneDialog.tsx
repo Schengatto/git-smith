@@ -126,6 +126,13 @@ export const CloneDialog: React.FC<Props> = ({ open, onClose }) => {
       setError(null);
       setProgress(null);
       setRemoteBranches([]);
+      // Pre-select the default account so credentials propagate to the clone
+      // automatically. Without this, users would have to remember to pick an
+      // account every time, and forgetting it leaves the cloned repo without
+      // core.sshCommand → subsequent fetch/pull/push fail with "Repository not found".
+      window.electronAPI.account.getDefault().then((acc) => {
+        if (acc) setSelectedAccountId(acc.id);
+      });
     }
   }, [open, loadAccounts]);
 

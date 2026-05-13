@@ -1618,6 +1618,29 @@ export class GitService {
       args.push("--depth", "1");
     }
     await this.run("git clone", [url, directory, ...args], () => git.clone(url, directory, args));
+
+    // Persist core.sshCommand to the cloned repo's local config so subsequent
+    // operations (fetch, pull, push) keep using the same SSH key. Without this,
+    // GIT_SSH_COMMAND only applies to the clone call itself and later operations
+    // fall back to default SSH — often picking the wrong key in multi-account
+    // setups and getting "Repository not found" from GitHub.
+    if (options?.sshKeyPath && !options?.bare) {
+      const cloned = simpleGit({
+        baseDir: directory,
+        binary: gitBinary,
+        unsafe: { allowUnsafeCustomBinary: true },
+      }).env(GitService.NO_PROMPT_ENV);
+      await cloned
+        .raw([
+          "config",
+          "--local",
+          "core.sshCommand",
+          `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes`,
+        ])
+        .catch(() => {
+          /* best-effort: don't fail clone if this config write fails */
+        });
+    }
   }
 
   async listRemoteBranches(url: string, sshKeyPath?: string): Promise<string[]> {

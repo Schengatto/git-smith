@@ -42,11 +42,21 @@ vi.mock("../../store/repo-store", () => ({
   }),
 }));
 
-vi.mock("../../store/account-store", () => ({
-  useAccountStore: () => ({
-    accounts: [],
+const accountStoreState = vi.hoisted(() => ({
+  current: {
+    accounts: [] as Array<{
+      id: string;
+      label: string;
+      name: string;
+      email: string;
+      sshKeyPath?: string;
+    }>,
     loadAccounts: vi.fn().mockResolvedValue(undefined),
-  }),
+  },
+}));
+
+vi.mock("../../store/account-store", () => ({
+  useAccountStore: () => accountStoreState.current,
 }));
 
 const mockElectronAPI = {
@@ -60,11 +70,17 @@ const mockElectronAPI = {
   account: {
     list: vi.fn().mockResolvedValue([]),
     setForRepo: vi.fn().mockResolvedValue(undefined),
+    getDefault: vi.fn().mockResolvedValue(null),
   },
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  accountStoreState.current = {
+    accounts: [],
+    loadAccounts: vi.fn().mockResolvedValue(undefined),
+  };
+  mockElectronAPI.account.getDefault.mockResolvedValue(null);
   (window as unknown as { electronAPI: typeof mockElectronAPI }).electronAPI = mockElectronAPI;
 });
 
@@ -379,6 +395,90 @@ describe("CloneDialog", () => {
       },
       { timeout: 1500 }
     );
+  });
+
+  it("pre-selects the default account on open when accounts and default are configured", async () => {
+    accountStoreState.current = {
+      accounts: [
+        { id: "acc-work", label: "Work", name: "W", email: "w@example.com" },
+        {
+          id: "acc-personal",
+          label: "Personal",
+          name: "P",
+          email: "p@example.com",
+          sshKeyPath: "/home/u/.ssh/id_personal",
+        },
+      ],
+      loadAccounts: vi.fn().mockResolvedValue(undefined),
+    };
+    mockElectronAPI.account.getDefault.mockResolvedValue({
+      id: "acc-personal",
+      label: "Personal",
+      name: "P",
+      email: "p@example.com",
+      sshKeyPath: "/home/u/.ssh/id_personal",
+    });
+
+    render(<CloneDialog open={true} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      const selects = screen.getAllByRole("combobox") as HTMLSelectElement[];
+      const accountSelect = selects.find((s) =>
+        Array.from(s.options).some((o) => o.value === "acc-personal")
+      );
+      expect(accountSelect).toBeDefined();
+      expect(accountSelect!.value).toBe("acc-personal");
+    });
+  });
+
+  it("passes the default account sshKeyPath to remote.clone when no manual selection is made", async () => {
+    accountStoreState.current = {
+      accounts: [
+        {
+          id: "acc-personal",
+          label: "Personal",
+          name: "P",
+          email: "p@example.com",
+          sshKeyPath: "/home/u/.ssh/id_personal",
+        },
+      ],
+      loadAccounts: vi.fn().mockResolvedValue(undefined),
+    };
+    mockElectronAPI.account.getDefault.mockResolvedValue({
+      id: "acc-personal",
+      label: "Personal",
+      name: "P",
+      email: "p@example.com",
+      sshKeyPath: "/home/u/.ssh/id_personal",
+    });
+
+    render(<CloneDialog open={true} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText("https://github.com/user/repo.git"), {
+      target: { value: "git@github.com:user/repo.git" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("C:/Projects"), {
+      target: { value: "/home/user/projects" },
+    });
+
+    await waitFor(() => {
+      const selects = screen.getAllByRole("combobox") as HTMLSelectElement[];
+      const accountSelect = selects.find((s) =>
+        Array.from(s.options).some((o) => o.value === "acc-personal")
+      );
+      expect(accountSelect).toBeDefined();
+      expect(accountSelect!.value).toBe("acc-personal");
+    });
+
+    await waitFor(() => expect(screen.getByText("Clone")).not.toBeDisabled());
+    fireEvent.click(screen.getByText("Clone"));
+
+    await waitFor(() => {
+      expect(mockElectronAPI.remote.clone).toHaveBeenCalledWith(
+        "git@github.com:user/repo.git",
+        expect.any(String),
+        expect.objectContaining({ sshKeyPath: "/home/u/.ssh/id_personal" })
+      );
+    });
   });
 
   it("resets state when dialog re-opens", async () => {

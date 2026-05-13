@@ -524,6 +524,53 @@ describe("GitService.removeRemote", () => {
   });
 });
 
+describe("GitService.clone", () => {
+  it("clones the repository with url and directory", async () => {
+    const service = makeService();
+    await service.clone("https://github.com/u/r.git", "/tmp/r");
+    expect(mockGit.clone).toHaveBeenCalledWith("https://github.com/u/r.git", "/tmp/r", []);
+  });
+
+  it("passes branch, bare, recurseSubmodules and shallow options", async () => {
+    const service = makeService();
+    await service.clone("https://github.com/u/r.git", "/tmp/r", {
+      branch: "develop",
+      bare: true,
+      recurseSubmodules: true,
+      shallow: true,
+    });
+    expect(mockGit.clone).toHaveBeenCalledWith("https://github.com/u/r.git", "/tmp/r", [
+      "--branch",
+      "develop",
+      "--bare",
+      "--recurse-submodules",
+      "--depth",
+      "1",
+    ]);
+  });
+
+  it("persists core.sshCommand to the cloned repo local config when sshKeyPath is provided", async () => {
+    const service = makeService();
+    const sshKeyPath = "/home/user/.ssh/id_personal";
+    await service.clone("git@github.com:u/r.git", "/tmp/r", { sshKeyPath });
+    expect(mockRaw).toHaveBeenCalledWith([
+      "config",
+      "--local",
+      "core.sshCommand",
+      `ssh -i "${sshKeyPath}" -o IdentitiesOnly=yes`,
+    ]);
+  });
+
+  it("does not write core.sshCommand when sshKeyPath is not provided", async () => {
+    const service = makeService();
+    await service.clone("https://github.com/u/r.git", "/tmp/r");
+    const sshCalls = mockRaw.mock.calls.filter(
+      (args) => Array.isArray(args[0]) && args[0].includes("core.sshCommand")
+    );
+    expect(sshCalls).toHaveLength(0);
+  });
+});
+
 // ─── Fetch/Pull Operations ────────────────────────────────────────────────────
 
 describe("GitService.fetch", () => {
