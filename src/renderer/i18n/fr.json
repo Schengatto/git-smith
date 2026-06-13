@@ -1047,7 +1047,8 @@
     "abortConfirm": "Êtes-vous sûr de vouloir abandonner le {{operation}} ?"
   },
   "tabBar": {
-    "closeTab": "Fermer l'onglet"
+    "closeTab": "Fermer l'onglet",
+    "openRepoList": "Ouvrir la liste des dépôts"
   },
   "commandLog": {
     "commandsWillAppearHere": "Les commandes Git apparaîtront ici",

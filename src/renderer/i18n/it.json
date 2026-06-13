@@ -1047,7 +1047,8 @@
     "abortConfirm": "Sei sicuro di voler annullare il {{operation}}?"
   },
   "tabBar": {
-    "closeTab": "Chiudi scheda"
+    "closeTab": "Chiudi scheda",
+    "openRepoList": "Apri elenco repository"
   },
   "commandLog": {
     "commandsWillAppearHere": "I comandi Git appariranno qui",

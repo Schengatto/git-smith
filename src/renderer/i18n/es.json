@@ -1047,7 +1047,8 @@
     "abortConfirm": "\u00bfEst\u00e1s seguro de que deseas abortar el {{operation}}?"
   },
   "tabBar": {
-    "closeTab": "Cerrar pesta\u00f1a"
+    "closeTab": "Cerrar pesta\u00f1a",
+    "openRepoList": "Abrir lista de repositorios"
   },
   "commandLog": {
     "commandsWillAppearHere": "Los comandos Git aparecer\u00e1n aqu\u00ed",

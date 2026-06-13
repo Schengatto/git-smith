@@ -8,7 +8,7 @@ import { useGraphStore } from "../../store/graph-store";
 export const TabBar: React.FC = () => {
   const { t } = useTranslation();
   const { tabs, activeTabId, setActiveTab, removeTab } = useWorkspaceStore();
-  const { openRepo } = useRepoStore();
+  const { openRepo, closeRepo } = useRepoStore();
   const { loadGraph } = useGraphStore();
 
   const handleSwitchTab = useCallback(
@@ -38,7 +38,13 @@ export const TabBar: React.FC = () => {
     [removeTab, openRepo, loadGraph]
   );
 
-  if (tabs.length <= 1) return null;
+  const handleNewTab = useCallback(() => {
+    // Return to the main repository list view without losing open tabs.
+    closeRepo();
+    setActiveTab(null);
+  }, [closeRepo, setActiveTab]);
+
+  if (tabs.length === 0) return null;
 
   return (
     <div
@@ -119,6 +125,37 @@ export const TabBar: React.FC = () => {
           </button>
         </div>
       ))}
+      <button
+        onClick={handleNewTab}
+        title={t("tabBar.openRepoList")}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 30,
+          height: "100%",
+          background: "transparent",
+          border: "none",
+          borderRight: "1px solid var(--border-subtle)",
+          cursor: "pointer",
+          color: "var(--text-muted)",
+          flexShrink: 0,
+        }}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
     </div>
   );
 };

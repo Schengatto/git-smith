@@ -13,7 +13,7 @@ interface WorkspaceState {
 
   addTab: (repoPath: string, repoName: string) => string;
   removeTab: (id: string) => void;
-  setActiveTab: (id: string) => void;
+  setActiveTab: (id: string | null) => void;
   updateTab: (id: string, partial: Partial<WorkspaceTab>) => void;
   moveTab: (fromIndex: number, toIndex: number) => void;
   getActiveTab: () => WorkspaceTab | null;
@@ -49,7 +49,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     });
   },
 
-  setActiveTab: (id: string) => set({ activeTabId: id }),
+  setActiveTab: (id: string | null) => set({ activeTabId: id }),
 
   updateTab: (id: string, partial: Partial<WorkspaceTab>) => {
     set((s) => ({

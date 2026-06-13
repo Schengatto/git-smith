@@ -1047,7 +1047,8 @@
     "abortConfirm": "Are you sure you want to abort the {{operation}}?"
   },
   "tabBar": {
-    "closeTab": "Close tab"
+    "closeTab": "Close tab",
+    "openRepoList": "Open repository list"
   },
   "commandLog": {
     "commandsWillAppearHere": "Git commands will appear here",

@@ -7,6 +7,7 @@ import React from "react";
 const mockSetActiveTab = vi.fn();
 const mockRemoveTab = vi.fn();
 const mockOpenRepo = vi.fn().mockResolvedValue(undefined);
+const mockCloseRepo = vi.fn();
 const mockLoadGraph = vi.fn().mockResolvedValue(undefined);
 
 type Tab = { id: string; repoPath: string; repoName: string; isDirty: boolean };
@@ -37,7 +38,7 @@ vi.mock("../../store/workspace-store", () => ({
 }));
 
 vi.mock("../../store/repo-store", () => ({
-  useRepoStore: Object.assign(() => ({ openRepo: mockOpenRepo }), {
+  useRepoStore: Object.assign(() => ({ openRepo: mockOpenRepo, closeRepo: mockCloseRepo }), {
     getState: () => ({ tabs: mockTabs, activeTabId: mockActiveTabId }),
     subscribe: () => () => {},
   }),
@@ -105,11 +106,26 @@ describe("TabBar", () => {
     expect(mockRemoveTab).toHaveBeenCalledWith("tab-1");
   });
 
-  it("returns null (renders nothing) when there is only one tab", () => {
-    mockTabs = makeTabs(1);
-    mockActiveTabId = "tab-1";
+  it("returns null (renders nothing) when there are no tabs", () => {
+    mockTabs = [];
+    mockActiveTabId = null;
     const { container } = render(<TabBar />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it("renders the bar with a single tab plus the new-tab button", () => {
+    mockTabs = makeTabs(1);
+    mockActiveTabId = "tab-1";
+    render(<TabBar />);
+    expect(screen.getByText("Repo 1")).toBeInTheDocument();
+    expect(screen.getByTitle("tabBar.openRepoList")).toBeInTheDocument();
+  });
+
+  it("closes the repo and clears active tab when clicking the new-tab button", () => {
+    render(<TabBar />);
+    fireEvent.click(screen.getByTitle("tabBar.openRepoList"));
+    expect(mockCloseRepo).toHaveBeenCalledTimes(1);
+    expect(mockSetActiveTab).toHaveBeenCalledWith(null);
   });
 
   it("renders dirty indicator dot for dirty tabs", () => {
