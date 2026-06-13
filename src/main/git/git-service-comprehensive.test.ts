@@ -2303,6 +2303,29 @@ describe("GitService.applyAccount", () => {
     expect(mockRaw).toHaveBeenCalledWith(["config", "--global", "user.name", "Alice"]);
     expect(mockRaw).toHaveBeenCalledWith(["config", "--global", "user.email", "alice@example.com"]);
   });
+
+  // Regression: GIT_SSH_COMMAND (env) overrides core.sshCommand (config), so persisting
+  // the key only to config is silently shadowed on fetch/pull/push and GitHub returns
+  // "Repository not found". The key must also be lifted into the live instance's env.
+  it("lifts the SSH key into the live git instance env when sshKeyPath is provided", async () => {
+    const service = makeService();
+    await service.applyAccount("Alice", "alice@example.com", {
+      sshKeyPath: "/home/alice/.ssh/id_ed25519",
+    });
+    expect(mockEnv).toHaveBeenCalledWith(
+      expect.objectContaining({
+        GIT_SSH_COMMAND: expect.stringContaining('-i "/home/alice/.ssh/id_ed25519"'),
+      })
+    );
+  });
+
+  it("resets the live git instance env to a key-less ssh command when no sshKeyPath is given", async () => {
+    const service = makeService();
+    await service.applyAccount("Alice", "alice@example.com");
+    const sshCmd = mockEnv.mock.calls.at(-1)?.[0]?.GIT_SSH_COMMAND as string | undefined;
+    expect(sshCmd).toBeDefined();
+    expect(sshCmd).not.toContain("-i ");
+  });
 });
 
 // ─── validateRef ─────────────────────────────────────────────────────────────

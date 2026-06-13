@@ -58,12 +58,48 @@ function nextId(): string {
 }
 
 export class GitService {
-  /** Env vars that prevent git/ssh from prompting for credentials (avoids hanging on fresh installs). */
-  private static readonly NO_PROMPT_ENV: Record<string, string> = {
-    ...(process.env as Record<string, string>),
-    GIT_TERMINAL_PROMPT: "0",
-    GIT_SSH_COMMAND: "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
-  };
+  /** Key-less ssh command that prevents prompting (avoids hanging on fresh installs). */
+  private static readonly NO_PROMPT_SSH =
+    "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new";
+
+  /**
+   * Build a FRESH environment object for a git child process. A new object every call is
+   * required because simple-git stores the env by reference and mutates it on later
+   * `.env(key, value)` calls — sharing one static object would leak one repo's SSH key
+   * into every other instance.
+   *
+   * When `sshKeyPath` is given, the key is baked into `GIT_SSH_COMMAND`. This MUST go
+   * through the env var (not only `core.sshCommand` config) because `GIT_SSH_COMMAND`
+   * takes precedence over `core.sshCommand`; setting a key-less env would otherwise shadow
+   * the per-repo config and break auth ("Repository not found" on fetch/pull/push).
+   */
+  private static buildEnv(sshKeyPath?: string): Record<string, string> {
+    return {
+      ...(process.env as Record<string, string>),
+      GIT_TERMINAL_PROMPT: "0",
+      GIT_SSH_COMMAND: sshKeyPath
+        ? `ssh -i "${sshKeyPath}" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=accept-new`
+        : GitService.NO_PROMPT_SSH,
+    };
+  }
+
+  /** Update the currently open repo's git instance to use (or stop using) an SSH key. */
+  private applySshKeyToInstance(sshKeyPath?: string): void {
+    if (!this.git) return;
+    this.git.env(GitService.buildEnv(sshKeyPath));
+  }
+
+  /** Extract the `-i <key>` path from the repo's persisted `core.sshCommand`, if any. */
+  private async readConfiguredSshKey(): Promise<string | null> {
+    if (!this.git) return null;
+    try {
+      const val = await this.git.raw(["config", "--get", "core.sshCommand"]);
+      const m = /-i\s+(?:"([^"]+)"|(\S+))/.exec(val || "");
+      return m ? (m[1] ?? m[2] ?? null) : null;
+    } catch {
+      return null;
+    }
+  }
 
   private git: SimpleGit | null = null;
   private repoPath: string | null = null;
@@ -226,7 +262,7 @@ export class GitService {
       unsafe: { allowUnsafeCustomBinary: true },
       config: ["safe.directory=*"],
     };
-    this.git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
+    this.git = simpleGit(options).env(GitService.buildEnv());
     const isRepo = await this.git.checkIsRepo();
     if (!isRepo) {
       this.git = null;
@@ -234,6 +270,11 @@ export class GitService {
     }
     this.setupOutputHandler();
     this.repoPath = path;
+    // Honor an SSH key persisted in the repo's local config (e.g. from a prior clone) so
+    // fetch/pull/push use the right identity. GIT_SSH_COMMAND overrides core.sshCommand,
+    // so the configured key must be lifted into the env or it would be shadowed.
+    const configuredKey = await this.readConfiguredSshKey();
+    if (configuredKey) this.applySshKeyToInstance(configuredKey);
     return this.getRepoInfo();
   }
 
@@ -247,7 +288,7 @@ export class GitService {
       unsafe: { allowUnsafeCustomBinary: true },
       config: ["safe.directory=*"],
     };
-    const git = simpleGit(options).env(GitService.NO_PROMPT_ENV);
+    const git = simpleGit(options).env(GitService.buildEnv());
     await git.init();
     this.git = git;
     this.setupOutputHandler();
@@ -1499,6 +1540,10 @@ export class GitService {
         `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes`,
         global
       );
+      // Lift the key into the live instance env too: GIT_SSH_COMMAND overrides
+      // core.sshCommand, so config alone is shadowed and fetch/pull/push would still
+      // use the wrong identity ("Repository not found").
+      this.applySshKeyToInstance(options.sshKeyPath);
     } else {
       // Remove core.sshCommand to fall back to default SSH behavior
       const git = this.ensureRepo();
@@ -1506,6 +1551,7 @@ export class GitService {
       await git.raw(["config", "--unset", scope, "core.sshCommand"]).catch(() => {
         /* ignore if key doesn't exist */
       });
+      this.applySshKeyToInstance(undefined);
     }
   }
 
@@ -1595,15 +1641,9 @@ export class GitService {
     }
   ): Promise<void> {
     const gitBinary = getSettings().gitBinaryPath || "git";
-    let git = simpleGit({ binary: gitBinary, unsafe: { allowUnsafeCustomBinary: true } }).env(
-      GitService.NO_PROMPT_ENV
+    const git = simpleGit({ binary: gitBinary, unsafe: { allowUnsafeCustomBinary: true } }).env(
+      GitService.buildEnv(options?.sshKeyPath)
     );
-    if (options?.sshKeyPath) {
-      git = git.env(
-        "GIT_SSH_COMMAND",
-        `ssh -i "${options.sshKeyPath}" -o IdentitiesOnly=yes -o BatchMode=yes`
-      );
-    }
     const args: string[] = [];
     if (options?.branch) {
       args.push("--branch", options.branch);
@@ -1629,7 +1669,7 @@ export class GitService {
         baseDir: directory,
         binary: gitBinary,
         unsafe: { allowUnsafeCustomBinary: true },
-      }).env(GitService.NO_PROMPT_ENV);
+      }).env(GitService.buildEnv());
       await cloned
         .raw([
           "config",
@@ -1645,15 +1685,9 @@ export class GitService {
 
   async listRemoteBranches(url: string, sshKeyPath?: string): Promise<string[]> {
     const gitBinary = getSettings().gitBinaryPath || "git";
-    let git = simpleGit({ binary: gitBinary, unsafe: { allowUnsafeCustomBinary: true } }).env(
-      GitService.NO_PROMPT_ENV
+    const git = simpleGit({ binary: gitBinary, unsafe: { allowUnsafeCustomBinary: true } }).env(
+      GitService.buildEnv(sshKeyPath)
     );
-    if (sshKeyPath) {
-      git = git.env(
-        "GIT_SSH_COMMAND",
-        `ssh -i "${sshKeyPath}" -o IdentitiesOnly=yes -o BatchMode=yes`
-      );
-    }
     const result = await this.run("git ls-remote --heads", [url], () =>
       git.listRemote(["--heads", url])
     );
