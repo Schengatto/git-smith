@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/Schengatto/git-smith/compare/v0.8.0...v0.9.0) (2026-06-13)
+
+
+### Features
+
+* **tabs:** add + tab to reopen repository list without closing tabs ([24b1d28](https://github.com/Schengatto/git-smith/commit/24b1d28a667251cf169541cfc7fa981f850b31fe))
+
+
+### Bug Fixes
+
+* **clone:** persist SSH credentials and pre-select default account ([e13af2a](https://github.com/Schengatto/git-smith/commit/e13af2aea89573b7903d5db0f7ed8ac29748abd9))
+* **ssh:** use repo SSH key on fetch/pull/push, not just clone ([a670352](https://github.com/Schengatto/git-smith/commit/a670352911db7678b81124ca54df7823dffb3a6b))
+
 ### [0.5.1](https://github.com/Schengatto/git-smith/compare/v0.5.0...v0.5.1) (2026-03-23)
 
 
