@@ -13,8 +13,7 @@ vi.mock("simple-git", () => {
     };
     return instance;
   };
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 // Mock electron

@@ -4,8 +4,7 @@ const mockRaw = vi.fn().mockResolvedValue("");
 
 vi.mock("simple-git", () => {
   const fn = () => ({ raw: mockRaw });
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 vi.mock("electron", () => ({

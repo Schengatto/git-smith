@@ -73,8 +73,7 @@ mockEnv.mockReturnValue({ ...mockGit, rebase: mockRebase });
 
 vi.mock("simple-git", () => {
   const fn = () => mockGit;
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 vi.mock("electron", () => ({

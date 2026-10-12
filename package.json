@@ -109,29 +109,29 @@
     "tmp": "0.2.4",
     "@tootallnate/once": "3.0.1",
     "yauzl": "3.2.1",
-    "fast-uri": "3.1.2",
-    "hono": "4.12.25",
-    "@hono/node-server": "1.19.14",
-    "ip-address": "10.2.0",
-    "qs": "6.15.2",
+    "fast-uri": "3.1.8",
+    "hono": "4.13.13",
+    "@hono/node-server": "1.19.17",
+    "ip-address": "10.7.4",
+    "qs": "6.16.0",
     "express": {
       "path-to-regexp": "8.4.2"
     }
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.27.1",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@xterm/addon-fit": "0.11.0",
     "@xterm/xterm": "6.0.0",
     "diff2html": "3.4.56",
     "dockview": "4.3.1",
     "electron-squirrel-startup": "1.0.1",
-    "electron-updater": "6.8.3",
+    "electron-updater": "6.8.9",
     "i18next": "25.2.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-i18next": "15.5.1",
     "react-virtuoso": "4.12.3",
-    "simple-git": "3.36.0",
+    "simple-git": "4.0.2",
     "zustand": "5.0.3"
   },
   "optionalDependencies": {

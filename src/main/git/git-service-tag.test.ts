@@ -5,8 +5,7 @@ const mockTag = vi.fn().mockResolvedValue("");
 
 vi.mock("simple-git", () => {
   const fn = () => ({ raw: mockRaw, tag: mockTag });
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 vi.mock("electron", () => ({

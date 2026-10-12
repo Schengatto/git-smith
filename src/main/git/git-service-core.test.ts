@@ -13,7 +13,7 @@ vi.mock("simple-git", () => {
     outputHandler: vi.fn(),
     env: vi.fn().mockReturnThis(),
   };
-  return { default: () => mock, __mock: mock };
+  return { simpleGit: () => mock, __mock: mock };
 });
 
 vi.mock("../store", () => ({

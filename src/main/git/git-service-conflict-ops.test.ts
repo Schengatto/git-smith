@@ -8,8 +8,7 @@ const mockCommit = vi.fn().mockResolvedValue({ commit: "abc123" });
 
 vi.mock("simple-git", () => {
   const fn = () => ({ status: mockStatus, raw: mockRaw, commit: mockCommit });
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 vi.mock("electron", () => ({

@@ -12,8 +12,7 @@ vi.mock("simple-git", () => {
     getRemotes: mockGetRemotes,
     merge: mockMerge,
   });
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 vi.mock("electron", () => ({

@@ -5,8 +5,7 @@ const mockMerge = vi.fn().mockResolvedValue({ result: "Already up to date." });
 
 vi.mock("simple-git", () => {
   const fn = () => ({ raw: mockRaw, merge: mockMerge });
-  fn.default = fn;
-  return { default: fn };
+  return { simpleGit: fn };
 });
 
 vi.mock("electron", () => ({
