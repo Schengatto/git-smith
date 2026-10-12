@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/CODEPRESS-SRL/git-press/compare/v0.9.0...v1.0.0) (2026-10-12)
+
+
+### Highlights
+
+* **GitSmith is now GitPress**, maintained by [CODEPRESS S.R.L.](https://codepress.it). The repository moved to `CODEPRESS-SRL/git-press` and release assets are now named `GitPress-<version>-…`. Existing settings, accounts and preferences are preserved.
+
+
+### Bug Fixes
+
+* **security:** resolve high-severity npm audit vulnerabilities in CI ([b4d921f](https://github.com/CODEPRESS-SRL/git-press/commit/b4d921f61011814eac2ab5346db7ca2e2c8390f5))
+* **security:** upgrade simple-git to 4.x and clear production audit ([90eb55e](https://github.com/CODEPRESS-SRL/git-press/commit/90eb55e0d7faf2adc403c3b36931b3adb74f4a7d))
+
+
+### Documentation
+
+* regenerate user manual PDF with GitPress name ([2d6da76](https://github.com/CODEPRESS-SRL/git-press/commit/2d6da764e4103fe3fa406d4326aec312ecb2854d))
+
 ## [0.9.0](https://github.com/CODEPRESS-SRL/git-press/compare/v0.8.0...v0.9.0) (2026-06-13)
 
 
