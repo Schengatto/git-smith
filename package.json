@@ -1,9 +1,12 @@
 {
-  "name": "gitsmith",
+  "name": "gitpress",
   "version": "0.9.0",
   "description": "Cross-platform Git GUI — inspired by GitExtensions",
   "license": "MIT",
-  "author": "Schengatto",
+  "author": {
+    "name": "CODEPRESS S.R.L.",
+    "url": "https://codepress.it"
+  },
   "main": ".vite/build/main.js",
   "engines": {
     "node": ">=20"
@@ -15,13 +18,13 @@
     "version-control",
     "desktop"
   ],
-  "homepage": "https://github.com/Schengatto/git-smith#readme",
+  "homepage": "https://github.com/CODEPRESS-SRL/git-press#readme",
   "bugs": {
-    "url": "https://github.com/Schengatto/git-smith/issues"
+    "url": "https://github.com/CODEPRESS-SRL/git-press/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Schengatto/git-smith.git"
+    "url": "https://github.com/CODEPRESS-SRL/git-press.git"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -33,8 +36,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "Schengatto",
-        "repo": "gitsmith"
+        "owner": "CODEPRESS-SRL",
+        "repo": "git-press"
       }
     ]
   },

@@ -24,9 +24,9 @@ const config: ForgeConfig = {
     asar: {
       unpack: "{**/*.node,**/node-pty/**}",
     },
-    name: "GitSmith",
-    executableName: "gitsmith",
-    appBundleId: "com.gitsmith.app",
+    name: "GitPress",
+    executableName: "gitpress",
+    appBundleId: "it.codepress.gitpress",
     icon: "./assets/icon",
     extraResource: ["./USER_MANUAL.pdf"],
   },
@@ -36,13 +36,13 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerWix({
-      name: "GitSmith",
-      manufacturer: "GitSmith",
-      exe: "gitsmith",
+      name: "GitPress",
+      manufacturer: "CODEPRESS S.R.L.",
+      exe: "gitpress",
       icon: "./assets/icon.ico",
-      shortcutName: "GitSmith",
-      shortcutFolderName: "GitSmith",
-      programFilesFolderName: "GitSmith",
+      shortcutName: "GitPress",
+      shortcutFolderName: "GitPress",
+      programFilesFolderName: "GitPress",
       upgradeCode: "b8e5b4a0-7c1f-4e3a-9d2f-1a5c8b6e4f30",
       ui: {
         chooseDirectory: true,
@@ -51,18 +51,18 @@ const config: ForgeConfig = {
     new MakerZIP({}, ["darwin", "win32"]),
     new MakerDeb({
       options: {
-        name: "gitsmith",
-        productName: "GitSmith",
+        name: "gitpress",
+        productName: "GitPress",
         genericName: "Git GUI",
         description: "Cross-platform Git GUI inspired by GitExtensions",
         categories: ["Development", "RevisionControl"],
-        mimeType: ["x-scheme-handler/gitsmith"],
+        mimeType: ["x-scheme-handler/gitpress"],
       },
     }),
     new MakerRpm({
       options: {
-        name: "gitsmith",
-        productName: "GitSmith",
+        name: "gitpress",
+        productName: "GitPress",
         license: "MIT",
         description: "Cross-platform Git GUI inspired by GitExtensions",
         categories: ["Development", "RevisionControl"],
@@ -71,7 +71,7 @@ const config: ForgeConfig = {
   ],
   publishers: [
     new PublisherGithub({
-      repository: { owner: "Schengatto", name: "git-smith" },
+      repository: { owner: "CODEPRESS-SRL", name: "git-press" },
       prerelease: false,
       draft: false,
     }),
@@ -147,8 +147,8 @@ const config: ForgeConfig = {
       // Generate app-update.yml for electron-updater (must be in resources/, outside asar)
       const appUpdateYml = [
         "provider: github",
-        "owner: Schengatto",
-        "repo: git-smith",
+        "owner: CODEPRESS-SRL",
+        "repo: git-press",
       ].join("\n");
       for (const outputPath of outputPaths) {
         const resourcesDir = path.join(outputPath, "resources");

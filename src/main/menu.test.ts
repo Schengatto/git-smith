@@ -9,7 +9,7 @@ const { setApplicationMenuMock, buildFromTemplateMock } = vi.hoisted(() => {
 
 vi.mock("electron", () => ({
   app: {
-    name: "GitSmith",
+    name: "GitPress",
   },
   Menu: {
     setApplicationMenu: setApplicationMenuMock,
@@ -80,7 +80,7 @@ describe("createMenu", () => {
     createMenu();
     const template = buildFromTemplateMock.mock
       .calls[0]![0] as Electron.MenuItemConstructorOptions[];
-    const appMenu = template.find((item) => item.label === "GitSmith");
+    const appMenu = template.find((item) => item.label === "GitPress");
     expect(appMenu).toBeDefined();
     Object.defineProperty(process, "platform", {
       value: process.platform,
@@ -119,7 +119,7 @@ describe("createMenu", () => {
     createMenu();
     const template = buildFromTemplateMock.mock
       .calls[0]![0] as Electron.MenuItemConstructorOptions[];
-    const appMenu = template.find((item) => item.label === "GitSmith")!;
+    const appMenu = template.find((item) => item.label === "GitPress")!;
     const submenu = appMenu.submenu as Electron.MenuItemConstructorOptions[];
     expect(submenu.some((item) => item.role === "quit")).toBe(true);
     Object.defineProperty(process, "platform", {

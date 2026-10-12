@@ -9,8 +9,8 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
-        "about.title": "About GitSmith",
-        "app.name": "GitSmith",
+        "about.title": "About GitPress",
+        "app.name": "GitPress",
         "about.description":
           "A cross-platform Git GUI desktop application inspired by Git Extensions.",
         "about.version": "Version",
@@ -45,7 +45,7 @@ describe("AboutDialog", () => {
 
   it("shows app name and description when open", () => {
     render(<AboutDialog open={true} onClose={vi.fn()} />);
-    expect(screen.getByText("GitSmith")).toBeInTheDocument();
+    expect(screen.getByText("GitPress")).toBeInTheDocument();
     expect(
       screen.getByText("A cross-platform Git GUI desktop application inspired by Git Extensions.")
     ).toBeInTheDocument();
@@ -63,15 +63,15 @@ describe("AboutDialog", () => {
 
   it("displays author name as a link", () => {
     render(<AboutDialog open={true} onClose={vi.fn()} />);
-    const authorLink = screen.getByText("Enrico Schintu");
+    const authorLink = screen.getByText("CODEPRESS S.R.L.");
     expect(authorLink).toBeInTheDocument();
   });
 
   it("opens author website on click", () => {
     render(<AboutDialog open={true} onClose={vi.fn()} />);
-    const authorLink = screen.getByText("Enrico Schintu");
+    const authorLink = screen.getByText("CODEPRESS S.R.L.");
     fireEvent.click(authorLink);
-    expect(openExternalMock).toHaveBeenCalledWith("https://enricoschintu.com");
+    expect(openExternalMock).toHaveBeenCalledWith("https://codepress.it");
   });
 
   it("calls onClose when Close button is clicked", () => {

@@ -1425,7 +1425,7 @@ export class GitService {
 
     const repoPath = this.repoPath!;
     const content = await this.getConflictFileContent(filePath);
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gitsmith-merge-"));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gitpress-merge-"));
 
     const basePath = path.join(tmpDir, "BASE_" + path.basename(filePath));
     const localPath = path.join(tmpDir, "LOCAL_" + path.basename(filePath));

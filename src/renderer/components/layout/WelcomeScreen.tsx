@@ -704,7 +704,7 @@ export const WelcomeScreen: React.FC = () => {
           >
             <img
               src={logoUrl}
-              alt="GitSmith"
+              alt="GitPress"
               width="20"
               height="20"
               style={{ objectFit: "contain" }}
@@ -719,7 +719,7 @@ export const WelcomeScreen: React.FC = () => {
                 lineHeight: 1.2,
               }}
             >
-              GitSmith
+              GitPress
             </div>
             <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{t("welcome.gitGui")}</div>
           </div>
@@ -778,12 +778,12 @@ export const WelcomeScreen: React.FC = () => {
               {
                 icon: <CodeIcon size={13} />,
                 label: t("welcome.develop"),
-                url: "https://github.com/Schengatto/git-smith",
+                url: "https://github.com/CODEPRESS-SRL/git-press",
               },
               {
                 icon: <BugIcon size={13} />,
                 label: t("welcome.issues"),
-                url: `https://github.com/Schengatto/git-smith/issues/new?labels=bug&title=${encodeURIComponent("[Bug]: ")}&body=${encodeURIComponent("## Description\nA clear description of the bug.\n\n## Steps to reproduce\n1. \n2. \n3. \n\n## Expected behavior\nWhat you expected to happen.\n\n## Actual behavior\nWhat actually happened.\n\n## Screenshots\nIf applicable, add screenshots.\n\n## Environment\n- OS: \n- App version: \n")}`,
+                url: `https://github.com/CODEPRESS-SRL/git-press/issues/new?labels=bug&title=${encodeURIComponent("[Bug]: ")}&body=${encodeURIComponent("## Description\nA clear description of the bug.\n\n## Steps to reproduce\n1. \n2. \n3. \n\n## Expected behavior\nWhat you expected to happen.\n\n## Actual behavior\nWhat actually happened.\n\n## Screenshots\nIf applicable, add screenshots.\n\n## Environment\n- OS: \n- App version: \n")}`,
               },
             ].map((item) => (
               <div

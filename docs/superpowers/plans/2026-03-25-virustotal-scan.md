@@ -285,7 +285,7 @@ Insert a new subsection inside `## 34. Automatic Updates` (after the existing co
 ```markdown
 ### Antivirus Scan
 
-Every release is automatically scanned with [VirusTotal](https://www.virustotal.com), which checks binaries against approximately 70 antivirus engines. Scan results with direct links to full reports are included in each [GitHub release](https://github.com/nicenemo/gitsmith/releases). If any file receives 3 or more malicious detections, the release is blocked until investigated.
+Every release is automatically scanned with [VirusTotal](https://www.virustotal.com), which checks binaries against approximately 70 antivirus engines. Scan results with direct links to full reports are included in each [GitHub release](https://github.com/CODEPRESS-SRL/git-press/releases). If any file receives 3 or more malicious detections, the release is blocked until investigated.
 ```
 
 - [ ] **Step 2: Add a note in README.md**
@@ -293,7 +293,7 @@ Every release is automatically scanned with [VirusTotal](https://www.virustotal.
 Insert the following line at the end of the `## Security` section (line ~130, before `## Changelog`):
 
 ```markdown
-All release binaries are scanned with [VirusTotal](https://www.virustotal.com) (~70 antivirus engines). Scan reports are linked in each [GitHub release](https://github.com/nicenemo/gitsmith/releases).
+All release binaries are scanned with [VirusTotal](https://www.virustotal.com) (~70 antivirus engines). Scan reports are linked in each [GitHub release](https://github.com/CODEPRESS-SRL/git-press/releases).
 ```
 
 - [ ] **Step 3: Commit**

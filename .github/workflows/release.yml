@@ -87,19 +87,19 @@ jobs:
           # Windows
           for f in out/make/wix/x64/*.msi; do
             if [ -f "$f" ]; then
-              DEST="out/release/GitSmith-${VERSION}-Windows-x64-Setup.msi"
+              DEST="out/release/GitPress-${VERSION}-Windows-x64-Setup.msi"
               cp "$f" "$DEST"
               generate_yml "$DEST" "latest.yml"
             fi
           done
           for f in out/make/zip/win32/x64/*.zip; do
-            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Windows-x64-Portable.zip"
+            [ -f "$f" ] && cp "$f" "out/release/GitPress-${VERSION}-Windows-x64-Portable.zip"
           done
 
           # macOS
           for f in out/make/zip/darwin/**/*.zip; do
             if [ -f "$f" ]; then
-              DEST="out/release/GitSmith-${VERSION}-macOS-arm64.zip"
+              DEST="out/release/GitPress-${VERSION}-macOS-arm64.zip"
               cp "$f" "$DEST"
               generate_yml "$DEST" "latest-mac.yml"
             fi
@@ -108,13 +108,13 @@ jobs:
           # Linux
           for f in out/make/deb/x64/*.deb; do
             if [ -f "$f" ]; then
-              DEST="out/release/GitSmith-${VERSION}-Linux-x64.deb"
+              DEST="out/release/GitPress-${VERSION}-Linux-x64.deb"
               cp "$f" "$DEST"
               generate_yml "$DEST" "latest-linux.yml"
             fi
           done
           for f in out/make/rpm/x64/*.rpm; do
-            [ -f "$f" ] && cp "$f" "out/release/GitSmith-${VERSION}-Linux-x64.rpm"
+            [ -f "$f" ] && cp "$f" "out/release/GitPress-${VERSION}-Linux-x64.rpm"
           done
 
           ls -la out/release/ || true

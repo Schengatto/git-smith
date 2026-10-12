@@ -9,7 +9,7 @@ Add a VirusTotal antivirus scan step to the release pipeline so that every relea
 
 ## Context
 
-GitSmith is an Electron desktop app distributed as `.msi`, `.deb`, `.rpm`, and `.zip` for Windows, Linux, and macOS. Unsigned Electron apps frequently trigger SmartScreen warnings and antivirus false positives. Providing VirusTotal scan reports in release notes builds trust with users.
+GitPress is an Electron desktop app distributed as `.msi`, `.deb`, `.rpm`, and `.zip` for Windows, Linux, and macOS. Unsigned Electron apps frequently trigger SmartScreen warnings and antivirus false positives. Providing VirusTotal scan reports in release notes builds trust with users.
 
 ## Design
 
@@ -77,8 +77,8 @@ Everything else (checkout, setup-node, npm ci, npm run make, rename/manifest gen
 
    | File | Result | Report |
    |------|--------|--------|
-   | GitSmith-0.7.0-Windows-x64-Setup.msi | 0/72 | [View](https://www.virustotal.com/gui/file/{sha256}) |
-   | GitSmith-0.7.0-Linux-x64.deb | 0/72 | [View](https://www.virustotal.com/gui/file/{sha256}) |
+   | GitPress-0.7.0-Windows-x64-Setup.msi | 0/72 | [View](https://www.virustotal.com/gui/file/{sha256}) |
+   | GitPress-0.7.0-Linux-x64.deb | 0/72 | [View](https://www.virustotal.com/gui/file/{sha256}) |
    ```
 
 4. **Upload report artifact**

@@ -35,7 +35,7 @@ function ghHeaders(token: string): Record<string, string> {
   return {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
-    "User-Agent": "GitSmith",
+    "User-Agent": "GitPress",
     "X-GitHub-Api-Version": "2022-11-28",
   };
 }
@@ -200,7 +200,7 @@ function glHeaders(token: string): Record<string, string> {
   return {
     "PRIVATE-TOKEN": token,
     "Content-Type": "application/json",
-    "User-Agent": "GitSmith",
+    "User-Agent": "GitPress",
   };
 }
 

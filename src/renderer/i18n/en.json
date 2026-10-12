@@ -1,10 +1,10 @@
 {
   "app": {
-    "name": "GitSmith",
+    "name": "GitPress",
     "reload": "Reload",
     "somethingWentWrong": "Something went wrong",
     "unexpectedError": "An unexpected error occurred.",
-    "loading": "Loading GitSmith…",
+    "loading": "Loading GitPress…",
     "loadingLayout": "Loading layout…"
   },
   "panels": {
@@ -50,7 +50,7 @@
     "openErrorLog": "Open error log",
     "reportIssue": "Report an issue",
     "checkUpdates": "Check for updates...",
-    "aboutGitSmith": "About GitSmith",
+    "aboutGitPress": "About GitPress",
     "openInEditor": "Open in {{editorName}}",
     "editorNotConfigured": "No editor configured"
   },
@@ -97,7 +97,7 @@
     "gitLfs": "Git LFS...",
     "pullRequestsMergeRequests": "Pull Requests / Merge Requests...",
     "toggleTheme": "Toggle Dark/Light Theme",
-    "aboutGitSmith": "About GitSmith",
+    "aboutGitPress": "About GitPress",
     "categoryRepository": "Repository",
     "categoryGit": "Git",
     "categoryDialogs": "Dialogs",
@@ -416,7 +416,7 @@
     "noData": "No data"
   },
   "about": {
-    "title": "About GitSmith",
+    "title": "About GitPress",
     "description": "A cross-platform Git GUI desktop application inspired by Git Extensions.",
     "version": "Version",
     "license": "License",

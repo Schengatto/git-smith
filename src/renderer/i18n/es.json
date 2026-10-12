@@ -1,10 +1,10 @@
 {
   "app": {
-    "name": "GitSmith",
+    "name": "GitPress",
     "reload": "Recargar",
     "somethingWentWrong": "Algo sali\u00f3 mal",
     "unexpectedError": "Se produjo un error inesperado.",
-    "loading": "Cargando GitSmith\u2026",
+    "loading": "Cargando GitPress\u2026",
     "loadingLayout": "Cargando dise\u00f1o\u2026"
   },
   "panels": {
@@ -50,7 +50,7 @@
     "openErrorLog": "Abrir registro de errores",
     "reportIssue": "Reportar un problema",
     "checkUpdates": "Buscar actualizaciones...",
-    "aboutGitSmith": "Acerca de GitSmith",
+    "aboutGitPress": "Acerca de GitPress",
     "openInEditor": "Abrir en {{editorName}}",
     "editorNotConfigured": "Ningún editor configurado"
   },
@@ -97,7 +97,7 @@
     "gitLfs": "Git LFS...",
     "pullRequestsMergeRequests": "Pull Requests / Merge Requests...",
     "toggleTheme": "Alternar tema claro/oscuro",
-    "aboutGitSmith": "Acerca de GitSmith",
+    "aboutGitPress": "Acerca de GitPress",
     "categoryRepository": "Repositorio",
     "categoryGit": "Git",
     "categoryDialogs": "Di\u00e1logos",
@@ -416,7 +416,7 @@
     "noData": "Sin datos"
   },
   "about": {
-    "title": "Acerca de GitSmith",
+    "title": "Acerca de GitPress",
     "description": "Una aplicaci\u00f3n de escritorio multiplataforma para Git, inspirada en Git Extensions.",
     "version": "Versi\u00f3n",
     "license": "Licencia",

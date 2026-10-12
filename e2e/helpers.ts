@@ -3,7 +3,7 @@ import { _electron as electron } from "playwright";
 import path from "path";
 import { execSync } from "child_process";
 
-export const TEST_REPO = "/tmp/gitsmith-test-repo";
+export const TEST_REPO = "/tmp/gitpress-test-repo";
 
 export function generateTestRepo() {
   execSync(
@@ -32,7 +32,7 @@ export async function openTestRepo(page: Page, repoPath: string) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(1500);
 
-  const repoEntry = page.locator("text=gitsmith-test-repo").first();
+  const repoEntry = page.locator("text=gitpress-test-repo").first();
   await repoEntry.click();
 
   await page.waitForTimeout(3000);

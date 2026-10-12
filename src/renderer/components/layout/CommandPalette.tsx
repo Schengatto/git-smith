@@ -395,7 +395,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onClose }) => {
       },
       {
         id: "view:about",
-        label: t("commandPalette.aboutGitSmith"),
+        label: t("commandPalette.aboutGitPress"),
         category: t("commandPalette.categoryHelp"),
         action: () => openAboutDialog(),
       },

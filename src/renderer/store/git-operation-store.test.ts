@@ -179,11 +179,11 @@ describe("Git Operation Store", () => {
 
   it("setAutoClose() persists to localStorage", () => {
     useGitOperationStore.getState().setAutoClose(false);
-    expect(mockStorage["gitsmith-operation-autoclose"]).toBe("false");
+    expect(mockStorage["gitpress-operation-autoclose"]).toBe("false");
     expect(useGitOperationStore.getState().autoClose).toBe(false);
 
     useGitOperationStore.getState().setAutoClose(true);
-    expect(mockStorage["gitsmith-operation-autoclose"]).toBe("true");
+    expect(mockStorage["gitpress-operation-autoclose"]).toBe("true");
     expect(useGitOperationStore.getState().autoClose).toBe(true);
   });
 

@@ -415,7 +415,7 @@ describe("CommandPalette", () => {
   it("shows Help category commands", () => {
     renderOpen();
     expect(screen.getByText("commandPalette.keyboardShortcuts")).toBeInTheDocument();
-    expect(screen.getByText("commandPalette.aboutGitSmith")).toBeInTheDocument();
+    expect(screen.getByText("commandPalette.aboutGitPress")).toBeInTheDocument();
   });
 
   it("shows Settings category commands", () => {
@@ -492,11 +492,11 @@ describe("CommandPalette", () => {
     vi.useRealTimers();
   });
 
-  it("clicking 'About GitSmith' calls openAboutDialog", () => {
+  it("clicking 'About GitPress' calls openAboutDialog", () => {
     vi.useFakeTimers();
     renderOpen();
     fireEvent.change(getInput(), { target: { value: "About" } });
-    fireEvent.click(screen.getByText("commandPalette.aboutGitSmith").closest("button")!);
+    fireEvent.click(screen.getByText("commandPalette.aboutGitPress").closest("button")!);
     vi.runAllTimers();
     expect(mockOpenAboutDialog).toHaveBeenCalledTimes(1);
     vi.useRealTimers();

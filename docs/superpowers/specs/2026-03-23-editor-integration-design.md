@@ -5,7 +5,7 @@
 
 ## Overview
 
-Add configurable external editor support to GitSmith. Users can specify an editor (VS Code, VS Code Insiders, Cursor, or custom) and open the repository root or individual files from the app.
+Add configurable external editor support to GitPress. Users can specify an editor (VS Code, VS Code Insiders, Cursor, or custom) and open the repository root or individual files from the app.
 
 ## Settings — New "Editor" Tab
 

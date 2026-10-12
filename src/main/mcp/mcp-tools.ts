@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { GitService } from "../git/git-service";
 
 /**
- * Register all GitSmith tools on the given MCP server.
+ * Register all GitPress tools on the given MCP server.
  * Tools are organized by domain: read-only first, then mutating.
  */
 export function registerMcpTools(server: McpServer, git: GitService): void {

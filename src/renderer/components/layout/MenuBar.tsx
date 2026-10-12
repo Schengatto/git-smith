@@ -499,7 +499,7 @@ export const MenuBar: React.FC<{
           label: t("menu.reportIssue"),
           onClick: () =>
             window.electronAPI.repo.openExternal(
-              `https://github.com/Schengatto/git-smith/issues/new?labels=bug&title=${encodeURIComponent("[Bug]: ")}&body=${encodeURIComponent("## Description\nA clear description of the bug.\n\n## Steps to reproduce\n1. \n2. \n3. \n\n## Expected behavior\nWhat you expected to happen.\n\n## Actual behavior\nWhat actually happened.\n\n## Screenshots\nIf applicable, add screenshots.\n\n## Environment\n- OS: \n- App version: \n")}`
+              `https://github.com/CODEPRESS-SRL/git-press/issues/new?labels=bug&title=${encodeURIComponent("[Bug]: ")}&body=${encodeURIComponent("## Description\nA clear description of the bug.\n\n## Steps to reproduce\n1. \n2. \n3. \n\n## Expected behavior\nWhat you expected to happen.\n\n## Actual behavior\nWhat actually happened.\n\n## Screenshots\nIf applicable, add screenshots.\n\n## Environment\n- OS: \n- App version: \n")}`
             ),
         },
         {
@@ -513,7 +513,7 @@ export const MenuBar: React.FC<{
         },
         { divider: true },
         {
-          label: t("menu.aboutGitSmith"),
+          label: t("menu.aboutGitPress"),
           onClick: () => onOpenAbout(),
         },
       ],

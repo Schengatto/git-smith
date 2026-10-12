@@ -188,9 +188,9 @@ describe("WelcomeScreen", () => {
     expect(screen.getByText("Ctrl+N")).toBeInTheDocument();
   });
 
-  it("shows the GitSmith branding text", () => {
+  it("shows the GitPress branding text", () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText("GitSmith")).toBeInTheDocument();
+    expect(screen.getByText("GitPress")).toBeInTheDocument();
   });
 
   it("shows the Contribute section with Develop and Issues links", () => {
@@ -203,7 +203,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
     fireEvent.click(screen.getByText("welcome.develop"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
-      "https://github.com/Schengatto/git-smith"
+      "https://github.com/CODEPRESS-SRL/git-press"
     );
   });
 
@@ -212,7 +212,7 @@ describe("WelcomeScreen", () => {
     fireEvent.click(screen.getByText("welcome.issues"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
       expect.stringContaining(
-        "https://github.com/Schengatto/git-smith/issues/new?labels=bug&title="
+        "https://github.com/CODEPRESS-SRL/git-press/issues/new?labels=bug&title="
       )
     );
   });

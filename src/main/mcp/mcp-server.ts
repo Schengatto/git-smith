@@ -20,7 +20,7 @@ export async function startMcpServer(repoPath: string): Promise<void> {
   await mcpGitService.openRepo(repoPath);
 
   mcpServer = new McpServer(
-    { name: "gitsmith", version: "0.2.0" },
+    { name: "gitpress", version: "0.2.0" },
     { capabilities: { tools: {} } }
   );
 
@@ -29,7 +29,7 @@ export async function startMcpServer(repoPath: string): Promise<void> {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 
-  console.error("[gitsmith-mcp] Server started for repo:", repoPath);
+  console.error("[gitpress-mcp] Server started for repo:", repoPath);
 }
 
 /** Stop the MCP server and clean up resources. */
@@ -42,7 +42,7 @@ export async function stopMcpServer(): Promise<void> {
     mcpGitService.closeRepo();
     mcpGitService = null;
   }
-  console.error("[gitsmith-mcp] Server stopped");
+  console.error("[gitpress-mcp] Server stopped");
 }
 
 /** Check if the MCP server is currently running. */

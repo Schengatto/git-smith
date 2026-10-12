@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getItemWithLegacy } from "./legacy-storage";
 
 type Theme = "dark" | "light";
 type Panel = "sidebar" | "graph" | "details" | "commandLog";
@@ -82,7 +83,7 @@ interface UIState {
 // Read persisted theme
 function getInitialTheme(): Theme {
   try {
-    const stored = localStorage.getItem("gitsmith-theme");
+    const stored = getItemWithLegacy("gitpress-theme", "gitsmith-theme");
     if (stored === "light" || stored === "dark") return stored;
   } catch {}
   return "dark";
@@ -93,7 +94,7 @@ function applyTheme(theme: Theme) {
     document.documentElement.setAttribute("data-theme", theme);
   }
   try {
-    localStorage.setItem("gitsmith-theme", theme);
+    localStorage.setItem("gitpress-theme", theme);
   } catch {}
 }
 

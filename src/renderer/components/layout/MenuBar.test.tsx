@@ -109,14 +109,14 @@ describe("MenuBar", () => {
   it("opens Help menu and shows About item", () => {
     render(<MenuBar {...defaultProps} />);
     fireEvent.mouseDown(screen.getByText("menu.help"));
-    expect(screen.getByText("menu.aboutGitSmith")).toBeInTheDocument();
+    expect(screen.getByText("menu.aboutGitPress")).toBeInTheDocument();
     expect(screen.getByText("menu.userManual")).toBeInTheDocument();
   });
 
-  it("calls onOpenAbout when 'About GitSmith' is clicked", () => {
+  it("calls onOpenAbout when 'About GitPress' is clicked", () => {
     render(<MenuBar {...defaultProps} />);
     fireEvent.mouseDown(screen.getByText("menu.help"));
-    fireEvent.click(screen.getByText("menu.aboutGitSmith"));
+    fireEvent.click(screen.getByText("menu.aboutGitPress"));
     expect(defaultProps.onOpenAbout).toHaveBeenCalledTimes(1);
   });
 
@@ -154,7 +154,7 @@ describe("MenuBar", () => {
     expect(screen.getByText("menu.openRepo")).toBeInTheDocument();
     fireEvent.mouseEnter(screen.getByText("menu.help"));
     expect(screen.queryByText("menu.openRepo")).not.toBeInTheDocument();
-    expect(screen.getByText("menu.aboutGitSmith")).toBeInTheDocument();
+    expect(screen.getByText("menu.aboutGitPress")).toBeInTheDocument();
   });
 
   /* ---- Start menu handlers ---- */
@@ -377,7 +377,7 @@ describe("MenuBar", () => {
     fireEvent.click(screen.getByText("menu.reportIssue"));
     expect(mockElectronAPI.repo.openExternal).toHaveBeenCalledWith(
       expect.stringContaining(
-        "https://github.com/Schengatto/git-smith/issues/new?labels=bug&title="
+        "https://github.com/CODEPRESS-SRL/git-press/issues/new?labels=bug&title="
       )
     );
   });

@@ -4,7 +4,7 @@ import type { BrowserWindow } from "electron";
 import { app, ipcMain, dialog, shell } from "electron";
 import { IPC } from "../shared/ipc-channels";
 
-const RELEASES_URL = "https://github.com/Schengatto/git-smith/releases/latest";
+const RELEASES_URL = "https://github.com/CODEPRESS-SRL/git-press/releases/latest";
 
 let mainWindow: BrowserWindow | null = null;
 let manualCheckInProgress = false;

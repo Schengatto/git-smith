@@ -16,11 +16,11 @@ test.describe.serial("Welcome screen", () => {
 
   test("window opens with correct title", async () => {
     const title = await page.title();
-    expect(title).toBe("GitSmith");
+    expect(title).toBe("GitPress");
   });
 
   test("welcome screen shows app heading", async () => {
-    const heading = page.locator("text=GitSmith");
+    const heading = page.locator("text=GitPress");
     await expect(heading.first()).toBeVisible();
   });
 
@@ -142,7 +142,7 @@ test.describe.serial("Repository operations", () => {
 
   test("repo selector shows repo name", async () => {
     await expect(
-      page.locator("button", { hasText: "gitsmith-test-repo" })
+      page.locator("button", { hasText: "gitpress-test-repo" })
     ).toBeVisible();
   });
 });
@@ -359,7 +359,7 @@ test.describe.serial("Close and reopen repository", () => {
 
   test("close repository via repo selector", async () => {
     // Open repo selector dropdown
-    const repoBtn = page.locator("button", { hasText: "gitsmith-test-repo" });
+    const repoBtn = page.locator("button", { hasText: "gitpress-test-repo" });
     await repoBtn.click();
     await page.waitForTimeout(500);
 
@@ -374,7 +374,7 @@ test.describe.serial("Close and reopen repository", () => {
 
   test("reopen repository from welcome screen", async () => {
     // Click on the test repo in recent repos
-    const repoEntry = page.locator("text=gitsmith-test-repo").first();
+    const repoEntry = page.locator("text=gitpress-test-repo").first();
     await repoEntry.click();
     await page.waitForTimeout(3000);
 

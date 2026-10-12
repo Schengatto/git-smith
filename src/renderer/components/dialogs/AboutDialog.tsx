@@ -11,7 +11,7 @@ const APP_VERSION = __APP_VERSION__;
 import logoUrl from "../../../../assets/icon.png";
 
 const Logo: React.FC<{ size?: number }> = ({ size = 80 }) => (
-  <img src={logoUrl} alt="GitSmith" width={size} height={size} style={{ objectFit: "contain" }} />
+  <img src={logoUrl} alt="GitPress" width={size} height={size} style={{ objectFit: "contain" }} />
 );
 
 /* ------------------------------------------------------------------ */
@@ -78,7 +78,7 @@ export const AboutDialog: React.FC<{ open: boolean; onClose: () => void }> = ({
           <InfoRow label={t("about.version")} value={APP_VERSION} />
           <InfoRow label={t("about.license")} value="MIT" />
           <InfoRow label={t("about.author")}>
-            <ExternalLink href="https://enricoschintu.com">Enrico Schintu</ExternalLink>
+            <ExternalLink href="https://codepress.it">CODEPRESS S.R.L.</ExternalLink>
           </InfoRow>
           <InfoRow label={t("about.macOsTester")}>
             <ExternalLink href="https://github.com/amritpal1011">amritpal1011</ExternalLink>

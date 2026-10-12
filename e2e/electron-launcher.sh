@@ -4,7 +4,7 @@
 # This wrapper filters it out before passing args to the packaged Electron binary.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ELECTRON="$SCRIPT_DIR/../out/GitSmith-linux-x64/gitsmith"
+ELECTRON="$SCRIPT_DIR/../out/GitPress-linux-x64/gitpress"
 
 if [ ! -f "$ELECTRON" ]; then
   echo "ERROR: Packaged app not found at $ELECTRON" >&2

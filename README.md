@@ -1,13 +1,13 @@
-# GitSmith
+# GitPress
 
-[![CI](https://github.com/Schengatto/git-smith/actions/workflows/ci.yml/badge.svg)](https://github.com/Schengatto/git-smith/actions/workflows/ci.yml)
+[![CI](https://github.com/CODEPRESS-SRL/git-press/actions/workflows/ci.yml/badge.svg)](https://github.com/CODEPRESS-SRL/git-press/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Cross-platform Git GUI inspired by [GitExtensions](https://gitextensions.github.io/), built with **Electron**, **React**, and **TypeScript**.
 
 <p align="center">
-  <img src="assets/icon.png" alt="GitSmith" width="128" />
+  <img src="assets/icon.png" alt="GitPress" width="128" />
 </p>
 
 ## Features
@@ -49,16 +49,16 @@ Cross-platform Git GUI inspired by [GitExtensions](https://gitextensions.github.
 
 ## Installation
 
-Download the latest release from the [GitHub Releases](https://github.com/Schengatto/git-smith/releases) page:
+Download the latest release from the [GitHub Releases](https://github.com/CODEPRESS-SRL/git-press/releases) page:
 
 - **Windows:** MSI installer or Portable ZIP
 - **macOS:** ZIP archive (Apple Silicon)
 - **Linux:** `.deb` (Debian/Ubuntu) or `.rpm` (Fedora/RHEL)
 
-> **Note:** GitSmith is not yet code-signed. Your OS may show a security warning on first launch:
+> **Note:** GitPress is not yet code-signed. Your OS may show a security warning on first launch:
 >
 > - **Windows:** SmartScreen will warn you — click "More info" → "Run anyway"
-> - **macOS:** Right-click the app → "Open" → "Open" again, or run `xattr -cr /Applications/GitSmith.app`
+> - **macOS:** Right-click the app → "Open" → "Open" again, or run `xattr -cr /Applications/GitPress.app`
 >
 > See the [User Manual](USER_MANUAL.md#security-warnings-on-first-launch) for detailed instructions.
 
@@ -72,8 +72,8 @@ Download the latest release from the [GitHub Releases](https://github.com/Scheng
 ### Install & Run
 
 ```bash
-git clone https://github.com/Schengatto/git-smith.git
-cd gitsmith
+git clone https://github.com/CODEPRESS-SRL/git-press.git
+cd git-press
 npm install
 npm start
 ```
@@ -129,7 +129,7 @@ Before contributing, please review our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 To report a vulnerability, please see [SECURITY.md](SECURITY.md).
 
-All release binaries are scanned with [VirusTotal](https://www.virustotal.com) (~70 antivirus engines). Scan reports are linked in each [GitHub release](https://github.com/nicenemo/gitsmith/releases).
+All release binaries are scanned with [VirusTotal](https://www.virustotal.com) (~70 antivirus engines). Scan reports are linked in each [GitHub release](https://github.com/CODEPRESS-SRL/git-press/releases).
 
 ## Changelog
 

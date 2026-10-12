@@ -1,10 +1,10 @@
-# GitSmith - User Manual
+# GitPress - User Manual
 
 > **Version:** 0.9.0
 > **License:** MIT
 > **Platforms:** Windows, macOS, Linux (DEB/RPM)
 
-GitSmith is a cross-platform Git GUI desktop app inspired by [Git Extensions](https://gitextensions.github.io/), built with Electron, React, and TypeScript. It provides a modern interface with Catppuccin theming for managing Git repositories visually and comprehensively.
+GitPress is a cross-platform Git GUI desktop app inspired by [Git Extensions](https://gitextensions.github.io/), built with Electron, React, and TypeScript. It provides a modern interface with Catppuccin theming for managing Git repositories visually and comprehensively.
 
 ---
 
@@ -115,7 +115,7 @@ GitSmith is a cross-platform Git GUI desktop app inspired by [Git Extensions](ht
 
 ### Install from Release
 
-Download the appropriate installer from the [GitHub Releases](https://github.com/Schengatto/git-smith/releases) page:
+Download the appropriate installer from the [GitHub Releases](https://github.com/CODEPRESS-SRL/git-press/releases) page:
 
 - **Windows:** MSI installer (`.msi`) or Portable ZIP archive
 - **macOS:** ZIP archive (`.zip`) for Apple Silicon
@@ -123,7 +123,7 @@ Download the appropriate installer from the [GitHub Releases](https://github.com
 
 ### Security Warnings on First Launch
 
-GitSmith is currently distributed **without code signing certificates**. This means your operating system may show security warnings when you first run the application. These warnings are expected and can be safely bypassed.
+GitPress is currently distributed **without code signing certificates**. This means your operating system may show security warnings when you first run the application. These warnings are expected and can be safely bypassed.
 
 #### Windows (SmartScreen)
 
@@ -140,28 +140,28 @@ macOS Gatekeeper will block the app because it is from an unidentified developer
 
 **Method 1 — Right-click to open (recommended):**
 
-1. Locate `GitSmith.app` in Finder
+1. Locate `GitPress.app` in Finder
 2. **Right-click** (or Control-click) the app and select **"Open"**
 3. In the dialog that appears, click **"Open"** again
 
 **Method 2 — Remove quarantine attribute:**
 
 ```bash
-xattr -cr /Applications/GitSmith.app
+xattr -cr /Applications/GitPress.app
 ```
 
 **Method 3 — Allow in System Preferences:**
 
 1. Try to open the app normally (it will be blocked)
 2. Go to **System Settings > Privacy & Security**
-3. Scroll down — you will see a message about GitSmith being blocked
+3. Scroll down — you will see a message about GitPress being blocked
 4. Click **"Open Anyway"**
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/Schengatto/git-smith.git
-cd gitsmith
+git clone https://github.com/CODEPRESS-SRL/git-press.git
+cd git-press
 npm install
 npm start          # Launch in development mode
 npm run make       # Create distributable packages
@@ -171,7 +171,7 @@ npm run make       # Create distributable packages
 
 ## 2. First Launch
 
-On first launch, GitSmith shows a **welcome screen** with:
+On first launch, GitPress shows a **welcome screen** with:
 
 - **Quick actions:** Create, Open, Clone, or Scan for repositories
 - **Recent repositories:** List of recently opened repositories (initially empty)
@@ -219,7 +219,7 @@ The top menu bar provides four main menus:
 | User manual | Open the online documentation (GitHub wiki) |
 | Report an issue | Open the bug report page on GitHub |
 | Check for updates... | Check for available updates |
-| About GitSmith | Show version, license, and information |
+| About GitPress | Show version, license, and information |
 
 ### 3.2 Toolbar
 
@@ -371,7 +371,7 @@ Available buttons:
 
 1. Click **Start > Create new repository...** or press the **Init** button in the toolbar
 2. Select the directory where you want to create the repository
-3. GitSmith will run `git init` in the chosen directory
+3. GitPress will run `git init` in the chosen directory
 4. The new repository will be opened automatically
 
 ### 4.2 Open a Repository
@@ -639,7 +639,7 @@ This is useful for cleaning up a series of small, incremental commits into a sin
 
 ## 12. Conflict Resolution
 
-When an operation generates conflicts, GitSmith offers three resolution methods:
+When an operation generates conflicts, GitPress offers three resolution methods:
 
 ### 12.1 Built-in 3-Way Editor
 
@@ -661,7 +661,7 @@ The file list on the left shows the conflict count and resolution status for eac
 
 ### 12.2 External Merge Tool
 
-GitSmith supports external merge tools:
+GitPress supports external merge tools:
 - **KDiff3**
 - **Meld**
 - **Beyond Compare**
@@ -955,7 +955,7 @@ Notes are useful for adding review comments, deployment metadata, or other annot
 
 ## 26. Pull Request Integration
 
-GitSmith integrates with popular Git hosting providers for pull request management:
+GitPress integrates with popular Git hosting providers for pull request management:
 
 ### Supported Providers
 - **GitHub**
@@ -996,7 +996,7 @@ The dialog can also be opened as a separate window.
 
 ## 28. Integrated Console
 
-GitSmith includes a built-in terminal (similar to the Console in Git Extensions):
+GitPress includes a built-in terminal (similar to the Console in Git Extensions):
 
 - **Shell:** Automatically detects the system shell (bash/zsh on Linux, cmd/PowerShell on Windows)
 - **Font:** Cascadia Code (fallback: Consolas, Courier New)
@@ -1062,7 +1062,7 @@ The **Codebase Statistics** panel analyzes the repository's code:
 
 ## 31. Git Accounts
 
-GitSmith supports managing multiple Git identities:
+GitPress supports managing multiple Git identities:
 
 ### Account Configuration
 In **Settings > Accounts**:
@@ -1080,7 +1080,7 @@ In **Settings > Accounts**:
 - Changing the account automatically updates `user.name` and `user.email` in the local repo config
 
 ### SSH Import
-GitSmith can parse the `~/.ssh/config` file to import existing SSH configurations.
+GitPress can parse the `~/.ssh/config` file to import existing SSH configurations.
 
 ---
 
@@ -1163,7 +1163,7 @@ Direct editing of Git configuration keys:
 
 ### 33.2 MCP Server
 
-GitSmith includes a **built-in MCP server** that exposes 50+ Git operations as tools for external AI assistants:
+GitPress includes a **built-in MCP server** that exposes 50+ Git operations as tools for external AI assistants:
 
 - Read operations: status, log, diff, blame, branch list, etc.
 - Write operations: commit, checkout, merge, push, etc.
@@ -1186,7 +1186,7 @@ When an AI provider is configured, the following features become available:
 
 ## 34. Automatic Updates
 
-GitSmith supports automatic updates via GitHub Releases:
+GitPress supports automatic updates via GitHub Releases:
 
 1. **Manual check:** Menu **Help > Check for updates...**
 2. **Automatic notification:** The application periodically checks for new versions
@@ -1196,7 +1196,7 @@ The update is downloaded in the background and installed on restart.
 
 ### Antivirus Scan
 
-Every release is automatically scanned with [VirusTotal](https://www.virustotal.com), which checks binaries against approximately 70 antivirus engines. Scan results with direct links to full reports are included in each [GitHub release](https://github.com/nicenemo/gitsmith/releases). If any file receives 3 or more malicious detections, the release is blocked until investigated.
+Every release is automatically scanned with [VirusTotal](https://www.virustotal.com), which checks binaries against approximately 70 antivirus engines. Scan results with direct links to full reports are included in each [GitHub release](https://github.com/CODEPRESS-SRL/git-press/releases). If any file receives 3 or more malicious detections, the release is blocked until investigated.
 
 ---
 
@@ -1248,7 +1248,7 @@ Every release is automatically scanned with [VirusTotal](https://www.virustotal.
 
 ## 36. Themes
 
-GitSmith offers two themes based on the **Catppuccin** palette:
+GitPress offers two themes based on the **Catppuccin** palette:
 
 ### Dark Theme (Catppuccin Mocha)
 - Dark background with light text
@@ -1296,7 +1296,7 @@ If the layout becomes problematic: **Dashboard > Reset layout** restores the def
 
 ## 38. Internationalization
 
-GitSmith supports multiple languages via the internationalization (i18n) system:
+GitPress supports multiple languages via the internationalization (i18n) system:
 
 - Change the language from **Settings > General > Language**
 - All UI elements, menus, dialogs, and messages are translated
@@ -1319,13 +1319,13 @@ Verify that **Settings > General > Auto-fetch** is enabled and the interval is c
 
 ### "Dubious Ownership" Error
 
-Git may refuse to open a repository owned by a different user. GitSmith automatically handles this by passing `-c safe.directory=<path>` to every git command, so no manual configuration is needed.
+Git may refuse to open a repository owned by a different user. GitPress automatically handles this by passing `-c safe.directory=<path>` to every git command, so no manual configuration is needed.
 
 ### Conflicts Not Detected
 Make sure Git is updated (2.30+). Press `F5` to refresh the repository status.
 
 ---
 
-*GitSmith is open-source software released under the MIT license.*
-*Repository: https://github.com/Schengatto/git-smith*
-*Report bugs: https://github.com/Schengatto/git-smith/issues*
+*GitPress is open-source software released under the MIT license.*
+*Repository: https://github.com/CODEPRESS-SRL/git-press*
+*Report bugs: https://github.com/CODEPRESS-SRL/git-press/issues*

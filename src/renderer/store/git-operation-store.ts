@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { CommandLogEntry, CommandOutputLine } from "../../shared/git-types";
+import { getItemWithLegacy } from "./legacy-storage";
 
 export interface OutputLine {
   stream: "stdout" | "stderr";
@@ -16,11 +17,11 @@ export class GitOperationCancelledError extends Error {
   }
 }
 
-const AUTOCLOSE_KEY = "gitsmith-operation-autoclose";
+const AUTOCLOSE_KEY = "gitpress-operation-autoclose";
 
 function getPersistedAutoClose(): boolean {
   try {
-    return localStorage.getItem(AUTOCLOSE_KEY) !== "false";
+    return getItemWithLegacy(AUTOCLOSE_KEY, "gitsmith-operation-autoclose") !== "false";
   } catch {
     return true;
   }

@@ -24,6 +24,10 @@ import { startMcpServer } from "./mcp/mcp-server";
 import { showNotification } from "./notifications/notification-service";
 import { initLogger } from "./logger";
 
+// Pre-rename (GitSmith) installs stored config and logs under "gitsmith":
+// keep using that folder so users don't lose their settings.
+app.setPath("userData", path.join(app.getPath("appData"), "gitsmith"));
+
 initLogger();
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
@@ -46,7 +50,7 @@ function createWindow() {
     y: bounds.y,
     minWidth: 800,
     minHeight: 600,
-    title: "GitSmith",
+    title: "GitPress",
     icon: path.join(__dirname, "../../assets/icon.png"),
     backgroundColor: "#1e1e2e",
     show: false,
@@ -129,7 +133,7 @@ if (app.commandLine.hasSwitch("mcp-server")) {
   const repoPath = app.commandLine.getSwitchValue("repo") || process.cwd();
   app.whenReady().then(() => {
     startMcpServer(repoPath).catch((err) => {
-      console.error("[gitsmith] MCP server failed:", err.message);
+      console.error("[gitpress] MCP server failed:", err.message);
       app.quit();
     });
   });
@@ -195,7 +199,7 @@ if (app.commandLine.hasSwitch("mcp-server")) {
       startAutoFetch();
       if (mainWindow) initAutoUpdater(mainWindow);
     } catch (err) {
-      console.error("[gitsmith] Failed to initialize:", err);
+      console.error("[gitpress] Failed to initialize:", err);
     }
   });
 

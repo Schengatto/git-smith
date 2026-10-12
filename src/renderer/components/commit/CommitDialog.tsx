@@ -1641,7 +1641,7 @@ const FileListPanel: React.FC<{
             ? (e) => {
                 e.preventDefault();
                 setDragOver(false);
-                const data = e.dataTransfer.getData("application/gitsmith-files");
+                const data = e.dataTransfer.getData("application/gitpress-files");
                 if (data) onDropFiles(JSON.parse(data));
               }
             : undefined
@@ -1997,7 +1997,7 @@ const FileRow: React.FC<{
         draggable
         onDragStart={(e) => {
           const paths = dragPaths && dragPaths.length > 0 ? dragPaths : [file.path];
-          e.dataTransfer.setData("application/gitsmith-files", JSON.stringify(paths));
+          e.dataTransfer.setData("application/gitpress-files", JSON.stringify(paths));
           e.dataTransfer.effectAllowed = "move";
         }}
         className="file-item-row"

@@ -1,6 +1,6 @@
 # Roadmap
 
-This document outlines the planned direction for GitSmith. Priorities may shift based on community feedback.
+This document outlines the planned direction for GitPress. Priorities may shift based on community feedback.
 
 ## v0.5 — Stability & Polish
 
@@ -33,4 +33,4 @@ This document outlines the planned direction for GitSmith. Priorities may shift 
 
 ## Community Contributions
 
-We welcome contributions! Check the [issues](https://github.com/Schengatto/git-smith/issues) page for `good first issue` and `help wanted` labels.
+We welcome contributions! Check the [issues](https://github.com/CODEPRESS-SRL/git-press/issues) page for `good first issue` and `help wanted` labels.

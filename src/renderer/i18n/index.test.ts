@@ -20,7 +20,7 @@ describe("i18n index", () => {
   });
 
   it("translates known keys", () => {
-    expect(i18n.t("app.name")).toBe("GitSmith");
+    expect(i18n.t("app.name")).toBe("GitPress");
   });
 
   it("translates commit namespace keys", () => {
@@ -63,8 +63,8 @@ describe("i18n index", () => {
 
   it("Italian falls back to English for missing keys", async () => {
     setAppLanguage("it");
-    // app.name should be "GitSmith" in both languages
-    expect(i18n.t("app.name")).toBe("GitSmith");
+    // app.name should be "GitPress" in both languages
+    expect(i18n.t("app.name")).toBe("GitPress");
     setAppLanguage("en");
   });
 
@@ -81,6 +81,6 @@ describe("i18n index", () => {
   it("has escapeValue set to false (no HTML escaping)", () => {
     // Verify by translating a key that would be escaped if escapeValue were true
     const result = i18n.t("app.name");
-    expect(result).toBe("GitSmith");
+    expect(result).toBe("GitPress");
   });
 });

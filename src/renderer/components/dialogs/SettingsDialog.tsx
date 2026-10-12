@@ -1960,7 +1960,7 @@ const AiTab: React.FC<{ settings: AppSettings; onChange: OnChange }> = ({ settin
         >
           {t("settings.mcpStartWith")}{" "}
           <code style={{ fontSize: 11, color: "var(--accent)" }}>
-            gitsmith --mcp-server --repo /path/to/repo
+            gitpress --mcp-server --repo /path/to/repo
           </code>
         </div>
       )}
